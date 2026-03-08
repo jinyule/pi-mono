@@ -1,0 +1,57 @@
+schema: spec-driven
+
+# 项目上下文
+# 提供给 AI 创建 artifacts 时的背景信息
+context: |
+  ## 项目概述
+  Pi 是一个极简的终端编码工具 (terminal coding harness)，一个在终端中运行的 AI 编码助手。
+  这个 monorepo 包含构建 AI agents 和管理 LLM 部署的核心包。
+
+  ## 技术栈
+  - 语言: TypeScript
+  - 运行时: Node.js 18+
+  - 构建工具: npm workspaces (monorepo)
+  - 代码检查: Biome
+  - 测试框架: Vitest
+  - 包管理: npm, 支持 git 和 npm 分发
+
+  ## 架构模式
+  - 分层架构: ai → agent → coding-agent (依赖层级)
+  - 事件驱动: Agent 使用事件流进行状态通知
+  - 差分渲染: TUI 使用三策略渲染系统避免闪烁
+  - 插件系统: Skills, Extensions, Prompt Templates, Themes
+
+  ## 开发约定
+  - 锁步版本控制: 所有包共享相同版本号
+  - 无 any 类型: 除非绝对必要
+  - 禁止内联导入: 使用标准顶层 import
+  - 可配置快捷键: 使用 DEFAULT_EDITOR_KEYBINDINGS 或 DEFAULT_APP_KEYBINDINGS
+  - 技术性文档: 简洁直接，无废话
+
+  ## 包依赖关系
+  ai (基础层，无内部依赖)
+    ↓
+  agent (依赖 ai)
+    ↓
+  coding-agent (依赖 ai, agent, tui)
+
+  tui (独立，终端 UI 组件)
+  mom (依赖 coding-agent/agent，Slack bot)
+  web-ui (依赖 agent/ai，Web UI 组件)
+  pods (独立，vLLM 部署管理)
+
+# Per-artifact 规则 (可选)
+rules:
+  spec:
+    - 使用中文撰写，专业术语保留英文
+    - 包含概述、核心概念、API 参考、使用示例
+    - 为开发者提供清晰的接口文档
+  proposal:
+    - 使用中文撰写，专业术语保留英文
+    - 包含目标、范围、非目标、影响分析
+  design:
+    - 使用中文撰写，专业术语保留英文
+    - 包含架构图、数据流、关键决策
+  tasks:
+    - 使用中文撰写，专业术语保留英文
+    - 任务粒度适中，每个任务可独立完成
