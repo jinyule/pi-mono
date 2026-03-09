@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-`pi-java` 已从“纯设计文档目录”推进到“可运行的阶段 0 工程骨架 + 阶段 1 的前两种 `pi-ai` provider”。
+`pi-java` 已从“纯设计文档目录”推进到“可运行的阶段 0 工程骨架 + 阶段 1 的前三种 `pi-ai` provider”。
 
 本次工作只改动了 `pi-java/`，没有改动现有 TypeScript 包的实现逻辑。
 
@@ -165,6 +165,23 @@
 - 响应流已支持 `content`、`reasoning_content`、`tool_calls`、`usage`、`finish_reason` 的标准化事件映射，并复用 `AssistantMessageAssembler` 组装 partial/final assistant message。
 - 当前 contract test 使用 fixture + fake transport 驱动，不依赖真实网络请求。
 
+### 10. 阶段 1：`anthropic-messages` provider 首版
+
+已在 `modules/pi-ai/src/main/java/dev/pi/ai/provider/anthropic/` 下补上第一版 `anthropic-messages` provider：
+
+- `AnthropicMessagesProvider`
+- `AnthropicMessagesTransport`
+- `HttpAnthropicMessagesTransport`
+
+当前这批 provider 代码的实现特点：
+
+- `AnthropicMessagesProvider` 已实现 `stream()` / `streamSimple()`，并通过 `HttpClient + SSE` 路径读取 Anthropic Messages 流。
+- 请求体已支持 `systemPrompt`、`user text/image`、`assistant text/thinking/toolCall`、`toolResult`、`tools`、`cache_control`、`thinking`、`output_config.effort`、`metadata.user_id` 等基础字段映射。
+- `streamSimple()` 已支持 Anthropic 的两种 reasoning 路径：自适应 thinking（Opus/Sonnet 4.6）和 budget-based thinking（旧模型）。
+- 消息回放前已补了最小 compat 变换：跨模型 thinking 降级、tool call id 归一化、跳过 error/aborted assistant turn、缺失 tool result 的 synthetic 填充。
+- 响应流已支持 `message_start`、`content_block_*`、`message_delta`、`message_stop`、`error` 的标准化事件映射，并复用 `AssistantMessageAssembler` 组装 partial/final assistant message。
+- 当前 contract test 使用 fixture + fake transport 驱动，不依赖真实网络请求。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -188,6 +205,7 @@ npm.cmd run check
 - `WebSocketStreamAdapter` 的 fragmented text / binary frame 归并与 close/error 终结语义
 - `openai-responses` provider 的 payload 构造、SSE event 映射、tool call / reasoning / usage 归一化、error 终结语义
 - `openai-completions` provider 的 payload 构造、SSE chunk 映射、tool call / reasoning / usage 归一化、error 终结语义
+- `anthropic-messages` provider 的 payload 构造、SSE event 映射、adaptive/budget thinking、tool call / reasoning / usage 归一化、error 终结语义
 
 对应测试文件：
 
@@ -203,6 +221,7 @@ npm.cmd run check
 - `modules/pi-ai/src/test/java/dev/pi/ai/stream/WebSocketStreamAdapterTest.java`
 - `modules/pi-ai/src/test/java/dev/pi/ai/provider/openai/OpenAiResponsesProviderTest.java`
 - `modules/pi-ai/src/test/java/dev/pi/ai/provider/openai/OpenAiCompletionsProviderTest.java`
+- `modules/pi-ai/src/test/java/dev/pi/ai/provider/anthropic/AnthropicMessagesProviderTest.java`
 
 ## 未完成 / 已知缺口
 
@@ -210,7 +229,6 @@ npm.cmd run check
 
 以下内容还没开始或只完成了骨架：
 
-- `anthropic-messages`
 - `google-generative-ai`
 - `bedrock-converse-stream`
 - message transform / validation / compat 层
@@ -252,15 +270,15 @@ npm.cmd run check
 
 建议严格按 `docs/tasks.md` 的顺序继续：
 
-1. 继续按 provider 顺序补 `anthropic-messages`，复用当前 transport / assembler / contract test 模式。
-2. 再补 `message transform / validation / compat`，把“请求前整理”和“结果后归一化”边界做出来。
-3. 然后继续 `google-generative-ai` / `bedrock-converse-stream`，不要过早切到更高层模块。
+1. 继续按 provider 顺序补 `google-generative-ai`，复用当前 transport / assembler / contract test 模式。
+2. 然后继续 `bedrock-converse-stream`，把主流 provider 链接齐。
+3. 再把 `message transform / validation / compat` 抽成独立边界，不要继续散落在各个 provider 内部。
 
 更具体的下一步切片建议：
 
-1. `pi-ai`：`anthropic-messages` provider。
-2. `pi-ai`：message transform / validation / compat。
-3. `pi-session`：先做 JSONL 读取和 replay，不要先做写入。
+1. `pi-ai`：`google-generative-ai` provider。
+2. `pi-ai`：`bedrock-converse-stream` provider。
+3. `pi-ai`：message transform / validation / compat。
 
 并行拆分文档入口：
 
