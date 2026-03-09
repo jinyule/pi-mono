@@ -16,6 +16,7 @@
 - [docs/tasks.md](docs/tasks.md)：分阶段实施任务清单
 - [docs/tdd.md](docs/tdd.md)：TDD 落地模板、fixture/golden 策略、模块级测试清单
 - [docs/handoff.md](docs/handoff.md)：当前实现进度、验证结果与后续交接说明
+- [docs/subtasks/README.md](docs/subtasks/README.md)：按依赖边界拆分的并行 workstream 文档
 
 当前实现状态：
 
