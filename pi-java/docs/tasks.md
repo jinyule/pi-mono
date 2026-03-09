@@ -9,6 +9,15 @@
 5. 每个阶段收尾都要先清空该阶段测试红灯，再进入下一阶段。
 6. 具体测试模板、命名、fixture/golden 策略以 `docs/tdd.md` 为准。
 
+## 当前任务状态
+
+更新时间：2026-03-09
+
+- 阶段 0：已完成。
+- 阶段 1：已完成 `core model / event types`、`AssistantMessageEventStream / EventStream`、`ApiProviderRegistry / ModelRegistry / CredentialResolver / PiAiClient facade`。
+- 阶段 1：下一步继续 `SSE parser`、`WebSocket adapter`、`AssistantMessage partial assembler`，然后进入第一个 provider。
+- 阶段 2 到阶段 9：未开始。
+
 ## 阶段 0：项目骨架
 
 1. 建立 Gradle 多模块骨架，至少包含 `pi-ai`、`pi-agent-runtime`、`pi-session`、`pi-tools`、`pi-extension-spi`、`pi-tui`、`pi-cli`、`pi-sdk`。

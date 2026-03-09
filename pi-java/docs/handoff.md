@@ -85,6 +85,26 @@
 - `done` / `error` 事件都会完成 `result()`。
 - `error` 不会把 `result()` 变成异常，而是返回错误态的 `AssistantMessage`，与现有 TS 语义一致。
 
+### 5. 阶段 1：`pi-ai` control plane 首版
+
+已在 `modules/pi-ai/src/main/java/dev/pi/ai/` 下补上第一批主干组件：
+
+- `provider/ApiProvider`
+- `registry/ApiProviderRegistry`
+- `registry/ModelRegistry`
+- `auth/CredentialResolver`
+- `auth/CredentialSource`
+- `auth/EnvironmentCredentialSource`
+- `PiAiClient`
+
+当前这批主干的实现特点：
+
+- `PiAiClient` 已提供 `stream()` / `complete()` / `streamSimple()` / `completeSimple()` facade。
+- provider 分发按 `model.api` 进行，缺失 provider 时会明确报错。
+- 凭证解析按 `model.provider` 进行，显式 `apiKey` 优先，环境变量 resolver 作为 fallback。
+- `ApiProviderRegistry` 支持按 `sourceId` 卸载，便于后续插件/扩展场景接入。
+- `ModelRegistry` 已支持按 provider 维度注册、查询和列举模型。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -99,12 +119,20 @@
 - `SimpleStreamOptions` builder 行为
 - `AssistantMessage` 的 JSON round-trip
 - `AssistantMessageEventStream` 对 `done` / `error` 的终结语义
+- `ApiProviderRegistry` 的注册 / 查询 / source 卸载
+- `ModelRegistry` 的注册 / 查询
+- `CredentialResolver` 的 source 顺序、环境变量映射、显式 `apiKey` 优先级
+- `PiAiClient` 的 facade 分发与凭证注入
 
 对应测试文件：
 
 - `modules/pi-ai/src/test/java/dev/pi/ai/model/SimpleStreamOptionsTest.java`
 - `modules/pi-ai/src/test/java/dev/pi/ai/model/AssistantMessageJsonTest.java`
 - `modules/pi-ai/src/test/java/dev/pi/ai/stream/AssistantMessageEventStreamTest.java`
+- `modules/pi-ai/src/test/java/dev/pi/ai/registry/ApiProviderRegistryTest.java`
+- `modules/pi-ai/src/test/java/dev/pi/ai/registry/ModelRegistryTest.java`
+- `modules/pi-ai/src/test/java/dev/pi/ai/auth/CredentialResolverTest.java`
+- `modules/pi-ai/src/test/java/dev/pi/ai/PiAiClientTest.java`
 
 ## 未完成 / 已知缺口
 
@@ -112,12 +140,9 @@
 
 以下内容还没开始或只完成了骨架：
 
-- API provider registry
-- model registry
-- `stream()` / `complete()` / `streamSimple()` / `completeSimple()` facade
-- credential resolution
 - SSE / WebSocket 适配
 - provider 实现
+- `AssistantMessage` partial assembler
 - message transform / validation / compat 层
 
 ### 其他模块
@@ -132,22 +157,26 @@
 - `pi-cli`
 - `pi-sdk`
 
-## 环境阻塞项
+## 当前环境状态
 
-按仓库要求尝试过根目录检查：
+当前仓库检查已经可以通过，但前置条件需要写清楚。
+
+已验证通过：
 
 ```bash
+npm.cmd ci --ignore-scripts
+npx.cmd tsgo -p tsconfig.build.json   # packages/ai
+npx.cmd tsgo -p tsconfig.build.json   # packages/agent
+npx.cmd tsgo -p tsconfig.build.json   # packages/web-ui
 npm.cmd run check
 ```
 
-当前无法真正执行到检查阶段，原因不是这次 Java 改动，而是工作区缺少 `node_modules`，导致脚本第一步就失败：
+说明：
 
-- `biome is not recognized as an internal or external command`
-
-结论：
-
-- `pi-java` 自己的 Gradle 侧验证是可用的。
-- monorepo 根级 `npm run check` 需要先安装 Node 依赖后才能继续判断。
+- `npm.cmd ci` 直接执行会在当前 Windows 环境卡在 `canvas` 原生编译。
+- 使用 `npm.cmd ci --ignore-scripts` 可以先把静态检查需要的 Node 依赖装齐。
+- 由于根 `check` 会进入 `packages/web-ui` 及其 example，需要先为 `packages/ai`、`packages/agent`、`packages/web-ui` 产出声明文件。
+- 在当前环境里，上述前置步骤完成后，`npm.cmd run check` 已通过。
 
 ## 建议下一步
 
@@ -159,12 +188,17 @@ npm.cmd run check
 
 更具体的下一步切片建议：
 
-1. `pi-ai`：`ApiProvider` 接口、provider registry、`stream/complete` facade。
-2. `pi-ai`：最小 `AssistantMessage` partial assembler。
-3. `pi-session`：先做 JSONL 读取和 replay，不要先做写入。
+1. `pi-ai`：最小 `AssistantMessage` partial assembler。
+2. `pi-ai`：通用 `SSE parser` 与 `WebSocket adapter`。
+3. `pi-ai`：第一个 `openai-responses` provider。
+4. `pi-session`：先做 JSONL 读取和 replay，不要先做写入。
+
+并行拆分文档入口：
+
+- `docs/subtasks/README.md`
 
 ## 交接注意事项
 
-- 当前所有 `pi-java` 改动都还在工作区，尚未提交。
-- `pi-java/README.md` 已补充当前阶段说明，但没有把交接文档入口再反向链接进去。
+- `pi-java` 当前进度已提交并推送到 GitHub。
+- `pi-java/README.md` 已链接 `handoff.md` 和 `docs/subtasks/README.md`。
 - `pi-java` 下的 `.gradle/` 和 `build/` 已通过本地 `.gitignore` 忽略。
