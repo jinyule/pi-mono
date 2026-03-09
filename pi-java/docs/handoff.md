@@ -116,6 +116,22 @@
 - `toolcall_delta` 会累积 JSON 字符串，并在可解析时更新 `ToolCall.arguments`。
 - 对 block 类型错配和未初始化索引会明确抛错，便于 provider contract test 直接定位问题。
 
+### 7. 阶段 1：transport primitives 首版
+
+已在 `modules/pi-ai/src/main/java/dev/pi/ai/stream/` 下补上第一批通用 transport 组件：
+
+- `SseEvent`
+- `SseEventParser`
+- `WebSocketMessageEvent`
+- `WebSocketStreamAdapter`
+
+当前这批 transport 组件的实现特点：
+
+- `SseEventParser` 支持增量解析 chunked 输入，兼容 `CRLF/LF`、注释行、`id`、`retry`、多行 `data`、EOF flush。
+- `SseEventParser` 会保留 SSE 的 `lastEventId` / `retry` 语义，便于后续 provider 直接复用。
+- `WebSocketStreamAdapter` 直接实现 `java.net.http.WebSocket.Listener`，可把 fragmented text / binary frame 归一成完整文本消息。
+- `WebSocketStreamAdapter` 通过统一事件流暴露 `message` / `close` / `error`，后续 provider 可以直接订阅而不必自己管理 frame 拼接。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -135,6 +151,8 @@
 - `CredentialResolver` 的 source 顺序、环境变量映射、显式 `apiKey` 优先级
 - `PiAiClient` 的 facade 分发与凭证注入
 - `AssistantMessageAssembler` 的 text / thinking / toolcall 组装与 error 终结语义
+- `SseEventParser` 的 chunk / multiline / retry / EOF flush 解析语义
+- `WebSocketStreamAdapter` 的 fragmented text / binary frame 归并与 close/error 终结语义
 
 对应测试文件：
 
@@ -146,6 +164,8 @@
 - `modules/pi-ai/src/test/java/dev/pi/ai/auth/CredentialResolverTest.java`
 - `modules/pi-ai/src/test/java/dev/pi/ai/PiAiClientTest.java`
 - `modules/pi-ai/src/test/java/dev/pi/ai/stream/AssistantMessageAssemblerTest.java`
+- `modules/pi-ai/src/test/java/dev/pi/ai/stream/SseEventParserTest.java`
+- `modules/pi-ai/src/test/java/dev/pi/ai/stream/WebSocketStreamAdapterTest.java`
 
 ## 未完成 / 已知缺口
 
@@ -153,7 +173,6 @@
 
 以下内容还没开始或只完成了骨架：
 
-- SSE / WebSocket 适配
 - provider 实现
 - message transform / validation / compat 层
 
@@ -200,9 +219,8 @@ npm.cmd run check
 
 更具体的下一步切片建议：
 
-1. `pi-ai`：通用 `SSE parser` 与 `WebSocket adapter`。
-2. `pi-ai`：第一个 `openai-responses` provider。
-3. `pi-session`：先做 JSONL 读取和 replay，不要先做写入。
+1. `pi-ai`：第一个 `openai-responses` provider。
+2. `pi-session`：先做 JSONL 读取和 replay，不要先做写入。
 
 并行拆分文档入口：
 
