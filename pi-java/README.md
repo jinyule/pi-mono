@@ -15,6 +15,22 @@
 - [docs/design.md](docs/design.md)：模块划分、核心接口、数据流、关键技术决策
 - [docs/tasks.md](docs/tasks.md)：分阶段实施任务清单
 - [docs/tdd.md](docs/tdd.md)：TDD 落地模板、fixture/golden 策略、模块级测试清单
+- [docs/handoff.md](docs/handoff.md)：当前实现进度、验证结果与后续交接说明
+
+当前实现状态：
+
+- 阶段 0 的 Gradle 多模块骨架已经落地在 `modules/`
+- 已建立 `settings.gradle.kts`、`build.gradle.kts`、`gradle/libs.versions.toml` 与 Gradle wrapper 入口
+- 已导入两份来自现有 TypeScript 仓库的种子 fixture：
+  - `modules/pi-ai/src/test/resources/fixtures/ts/assistant-message-with-thinking-code.json`
+  - `modules/pi-session/src/test/resources/fixtures/ts/large-session.jsonl`
+
+本地验证入口：
+
+```bash
+./gradlew test
+./gradlew projects
+```
 
 结论先行：
 
