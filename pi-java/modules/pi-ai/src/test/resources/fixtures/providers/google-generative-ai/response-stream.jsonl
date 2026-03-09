@@ -1,0 +1,4 @@
+{"candidates":[{"content":{"parts":[{"text":"Need to inspect README.md","thought":true,"thoughtSignature":"c2lnbmF0dXJlMQ=="}]}}],"usageMetadata":{"promptTokenCount":80,"candidatesTokenCount":0,"thoughtsTokenCount":12,"cachedContentTokenCount":8,"totalTokenCount":100}}
+{"candidates":[{"content":{"parts":[{"text":"I'll read README.md next.","thoughtSignature":"dGV4dC1zaWduYXR1cmU="}]}}],"usageMetadata":{"promptTokenCount":80,"candidatesTokenCount":10,"thoughtsTokenCount":12,"cachedContentTokenCount":8,"totalTokenCount":110}}
+{"candidates":[{"content":{"parts":[{"functionCall":{"name":"read","args":{"path":"README.md"}}}]}}],"usageMetadata":{"promptTokenCount":80,"candidatesTokenCount":20,"thoughtsTokenCount":12,"cachedContentTokenCount":8,"totalTokenCount":112}}
+{"candidates":[{"finishReason":"STOP"}],"usageMetadata":{"promptTokenCount":80,"candidatesTokenCount":20,"thoughtsTokenCount":12,"cachedContentTokenCount":8,"totalTokenCount":112}}

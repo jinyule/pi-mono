@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-`pi-java` 已从“纯设计文档目录”推进到“可运行的阶段 0 工程骨架 + 阶段 1 的前三种 `pi-ai` provider”。
+`pi-java` 已从“纯设计文档目录”推进到“可运行的阶段 0 工程骨架 + 阶段 1 的前四种 `pi-ai` provider”。
 
 本次工作只改动了 `pi-java/`，没有改动现有 TypeScript 包的实现逻辑。
 
@@ -182,6 +182,23 @@
 - 响应流已支持 `message_start`、`content_block_*`、`message_delta`、`message_stop`、`error` 的标准化事件映射，并复用 `AssistantMessageAssembler` 组装 partial/final assistant message。
 - 当前 contract test 使用 fixture + fake transport 驱动，不依赖真实网络请求。
 
+### 11. 阶段 1：`google-generative-ai` provider 首版
+
+已在 `modules/pi-ai/src/main/java/dev/pi/ai/provider/google/` 下补上第一版 `google-generative-ai` provider：
+
+- `GoogleGenerativeAiProvider`
+- `GoogleGenerativeAiTransport`
+- `HttpGoogleGenerativeAiTransport`
+
+当前这批 provider 代码的实现特点：
+
+- `GoogleGenerativeAiProvider` 已实现 `stream()` / `streamSimple()`，并通过 `HttpClient + SSE` 路径读取 Gemini API 流。
+- 请求体已支持 `systemInstruction`、`user text/image`、`assistant text/thinking/toolCall`、`toolResult`、`tools`、`generationConfig.temperature`、`generationConfig.maxOutputTokens`、`generationConfig.thinkingConfig` 等基础字段映射。
+- `streamSimple()` 已支持 Gemini 3 的 `thinkingLevel` 路径，以及 Gemini 2.5 的 budget-based thinking 路径。
+- 消息回放前已补了最小 compat 变换：跨模型 thinking 降级、历史 thought signature 保留、Gemini 3 下 unsigned historical tool call 降级为文本提示、缺失 tool result 的 synthetic 填充。
+- 响应流已支持 `thinking`、`text`、`functionCall` 的标准化事件映射，并复用 `AssistantMessageAssembler` 组装 partial/final assistant message。
+- 当前 contract test 使用 fixture + fake transport 驱动，不依赖真实网络请求。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -206,6 +223,7 @@ npm.cmd run check
 - `openai-responses` provider 的 payload 构造、SSE event 映射、tool call / reasoning / usage 归一化、error 终结语义
 - `openai-completions` provider 的 payload 构造、SSE chunk 映射、tool call / reasoning / usage 归一化、error 终结语义
 - `anthropic-messages` provider 的 payload 构造、SSE event 映射、adaptive/budget thinking、tool call / reasoning / usage 归一化、error 终结语义
+- `google-generative-ai` provider 的 payload 构造、SSE event 映射、Gemini 3 thinking level / Gemini 2.5 budget thinking、tool call / reasoning / usage 归一化、error 终结语义
 
 对应测试文件：
 
@@ -222,6 +240,7 @@ npm.cmd run check
 - `modules/pi-ai/src/test/java/dev/pi/ai/provider/openai/OpenAiResponsesProviderTest.java`
 - `modules/pi-ai/src/test/java/dev/pi/ai/provider/openai/OpenAiCompletionsProviderTest.java`
 - `modules/pi-ai/src/test/java/dev/pi/ai/provider/anthropic/AnthropicMessagesProviderTest.java`
+- `modules/pi-ai/src/test/java/dev/pi/ai/provider/google/GoogleGenerativeAiProviderTest.java`
 
 ## 未完成 / 已知缺口
 
@@ -229,7 +248,6 @@ npm.cmd run check
 
 以下内容还没开始或只完成了骨架：
 
-- `google-generative-ai`
 - `bedrock-converse-stream`
 - message transform / validation / compat 层
 
@@ -270,15 +288,15 @@ npm.cmd run check
 
 建议严格按 `docs/tasks.md` 的顺序继续：
 
-1. 继续按 provider 顺序补 `google-generative-ai`，复用当前 transport / assembler / contract test 模式。
-2. 然后继续 `bedrock-converse-stream`，把主流 provider 链接齐。
-3. 再把 `message transform / validation / compat` 抽成独立边界，不要继续散落在各个 provider 内部。
+1. 继续按 provider 顺序补 `bedrock-converse-stream`，复用当前 transport / assembler / contract test 模式。
+2. 然后把 `message transform / validation / compat` 抽成独立边界，减少 provider 内重复逻辑。
+3. 再进入 `pi-agent-runtime`，先补 core types 与 loop skeleton。
 
 更具体的下一步切片建议：
 
-1. `pi-ai`：`google-generative-ai` provider。
-2. `pi-ai`：`bedrock-converse-stream` provider。
-3. `pi-ai`：message transform / validation / compat。
+1. `pi-ai`：`bedrock-converse-stream` provider。
+2. `pi-ai`：message transform / validation / compat。
+3. `pi-agent-runtime`：core types + loop skeleton。
 
 并行拆分文档入口：
 
