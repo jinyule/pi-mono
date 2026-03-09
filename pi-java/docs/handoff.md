@@ -105,6 +105,17 @@
 - `ApiProviderRegistry` 支持按 `sourceId` 卸载，便于后续插件/扩展场景接入。
 - `ModelRegistry` 已支持按 provider 维度注册、查询和列举模型。
 
+### 6. 阶段 1：`AssistantMessage` partial assembler 首版
+
+已在 `modules/pi-ai/src/main/java/dev/pi/ai/stream/AssistantMessageAssembler.java` 下补上最小 partial assembler。
+
+当前这批 assembler 的实现特点：
+
+- 以 `Model` 元信息初始化 partial assistant message。
+- 支持 `start`、`text_*`、`thinking_*`、`toolcall_*`、`done`、`error` 事件的渐进组装。
+- `toolcall_delta` 会累积 JSON 字符串，并在可解析时更新 `ToolCall.arguments`。
+- 对 block 类型错配和未初始化索引会明确抛错，便于 provider contract test 直接定位问题。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -123,6 +134,7 @@
 - `ModelRegistry` 的注册 / 查询
 - `CredentialResolver` 的 source 顺序、环境变量映射、显式 `apiKey` 优先级
 - `PiAiClient` 的 facade 分发与凭证注入
+- `AssistantMessageAssembler` 的 text / thinking / toolcall 组装与 error 终结语义
 
 对应测试文件：
 
@@ -133,6 +145,7 @@
 - `modules/pi-ai/src/test/java/dev/pi/ai/registry/ModelRegistryTest.java`
 - `modules/pi-ai/src/test/java/dev/pi/ai/auth/CredentialResolverTest.java`
 - `modules/pi-ai/src/test/java/dev/pi/ai/PiAiClientTest.java`
+- `modules/pi-ai/src/test/java/dev/pi/ai/stream/AssistantMessageAssemblerTest.java`
 
 ## 未完成 / 已知缺口
 
@@ -142,7 +155,6 @@
 
 - SSE / WebSocket 适配
 - provider 实现
-- `AssistantMessage` partial assembler
 - message transform / validation / compat 层
 
 ### 其他模块
@@ -188,10 +200,9 @@ npm.cmd run check
 
 更具体的下一步切片建议：
 
-1. `pi-ai`：最小 `AssistantMessage` partial assembler。
-2. `pi-ai`：通用 `SSE parser` 与 `WebSocket adapter`。
-3. `pi-ai`：第一个 `openai-responses` provider。
-4. `pi-session`：先做 JSONL 读取和 replay，不要先做写入。
+1. `pi-ai`：通用 `SSE parser` 与 `WebSocket adapter`。
+2. `pi-ai`：第一个 `openai-responses` provider。
+3. `pi-session`：先做 JSONL 读取和 replay，不要先做写入。
 
 并行拆分文档入口：
 
