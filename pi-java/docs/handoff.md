@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-`pi-java` 已从“纯设计文档目录”推进到“可运行的阶段 0 工程骨架 + 阶段 1 的首批 `pi-ai` 核心类型”。
+`pi-java` 已从“纯设计文档目录”推进到“可运行的阶段 0 工程骨架 + 阶段 1 的前两种 `pi-ai` provider”。
 
 本次工作只改动了 `pi-java/`，没有改动现有 TypeScript 包的实现逻辑。
 
@@ -82,6 +82,7 @@
 当前行为：
 
 - 支持订阅事件。
+- 新订阅者会回放历史事件，避免错过已发出的 `start` / 增量事件。
 - `done` / `error` 事件都会完成 `result()`。
 - `error` 不会把 `result()` 变成异常，而是返回错误态的 `AssistantMessage`，与现有 TS 语义一致。
 
@@ -148,13 +149,29 @@
 - 当前 contract test 使用 fixture + fake transport 驱动，不依赖真实网络请求。
 - `AssistantMessageAssembler` 新增了 tool call final-arguments 覆写入口，便于 provider 在 `function_call_arguments.done` / `output_item.done` 阶段做最终归一化。
 
+### 9. 阶段 1：`openai-completions` provider 首版
+
+已在 `modules/pi-ai/src/main/java/dev/pi/ai/provider/openai/` 下补上第一版 `openai-completions` provider：
+
+- `OpenAiCompletionsProvider`
+- `OpenAiCompletionsTransport`
+- `HttpOpenAiCompletionsTransport`
+
+当前这批 provider 代码的实现特点：
+
+- `OpenAiCompletionsProvider` 已实现 `stream()` / `streamSimple()`，并通过 `HttpClient + SSE` 路径读取 Chat Completions 流。
+- 请求体已支持 `systemPrompt`、`user text/image`、`assistant text/thinking/toolCall`、`toolResult`、`tools`、`temperature`、`reasoning_effort`、`max_completion_tokens` 等基础字段映射。
+- 兼容层已覆盖 `supportsStore`、`supportsDeveloperRole`、`supportsReasoningEffort`、`maxTokensField`、`requiresToolResultName`、`requiresThinkingAsText`、`requiresMistralToolIds`、`thinkingFormat` 等关键差异。
+- 响应流已支持 `content`、`reasoning_content`、`tool_calls`、`usage`、`finish_reason` 的标准化事件映射，并复用 `AssistantMessageAssembler` 组装 partial/final assistant message。
+- 当前 contract test 使用 fixture + fake transport 驱动，不依赖真实网络请求。
+
 ## 已完成的验证
 
 已通过的命令：
 
 ```bash
 .\gradlew.bat :pi-ai:test --no-daemon
-.\gradlew.bat test --no-daemon
+npm.cmd run check
 ```
 
 其中 `pi-ai` 新增测试覆盖了：
@@ -170,6 +187,7 @@
 - `SseEventParser` 的 chunk / multiline / retry / EOF flush 解析语义
 - `WebSocketStreamAdapter` 的 fragmented text / binary frame 归并与 close/error 终结语义
 - `openai-responses` provider 的 payload 构造、SSE event 映射、tool call / reasoning / usage 归一化、error 终结语义
+- `openai-completions` provider 的 payload 构造、SSE chunk 映射、tool call / reasoning / usage 归一化、error 终结语义
 
 对应测试文件：
 
@@ -184,6 +202,7 @@
 - `modules/pi-ai/src/test/java/dev/pi/ai/stream/SseEventParserTest.java`
 - `modules/pi-ai/src/test/java/dev/pi/ai/stream/WebSocketStreamAdapterTest.java`
 - `modules/pi-ai/src/test/java/dev/pi/ai/provider/openai/OpenAiResponsesProviderTest.java`
+- `modules/pi-ai/src/test/java/dev/pi/ai/provider/openai/OpenAiCompletionsProviderTest.java`
 
 ## 未完成 / 已知缺口
 
@@ -191,7 +210,6 @@
 
 以下内容还没开始或只完成了骨架：
 
-- `openai-completions`
 - `anthropic-messages`
 - `google-generative-ai`
 - `bedrock-converse-stream`
@@ -234,13 +252,13 @@ npm.cmd run check
 
 建议严格按 `docs/tasks.md` 的顺序继续：
 
-1. 继续按 provider 顺序补 `openai-completions`，复用当前 transport / assembler / contract test 模式。
+1. 继续按 provider 顺序补 `anthropic-messages`，复用当前 transport / assembler / contract test 模式。
 2. 再补 `message transform / validation / compat`，把“请求前整理”和“结果后归一化”边界做出来。
-3. 然后继续 `anthropic-messages` / `google-generative-ai` / `bedrock-converse-stream`，不要过早切到更高层模块。
+3. 然后继续 `google-generative-ai` / `bedrock-converse-stream`，不要过早切到更高层模块。
 
 更具体的下一步切片建议：
 
-1. `pi-ai`：`openai-completions` provider。
+1. `pi-ai`：`anthropic-messages` provider。
 2. `pi-ai`：message transform / validation / compat。
 3. `pi-session`：先做 JSONL 读取和 replay，不要先做写入。
 

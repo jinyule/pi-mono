@@ -14,8 +14,8 @@
 更新时间：2026-03-09
 
 - 阶段 0：已完成。
-- 阶段 1：已完成 `core model / event types`、`AssistantMessageEventStream / EventStream`、`ApiProviderRegistry / ModelRegistry / CredentialResolver / PiAiClient facade`、`AssistantMessage partial assembler`、`SSE parser / WebSocket adapter`、`openai-responses provider`。
-- 阶段 1：下一步进入第二个 provider：`openai-completions`。
+- 阶段 1：已完成 `core model / event types`、`AssistantMessageEventStream / EventStream`、`ApiProviderRegistry / ModelRegistry / CredentialResolver / PiAiClient facade`、`AssistantMessage partial assembler`、`SSE parser / WebSocket adapter`、`openai-responses provider`、`openai-completions provider`。
+- 阶段 1：下一步进入第三个 provider：`anthropic-messages`。
 - 阶段 2 到阶段 9：未开始。
 
 ## 阶段 0：项目骨架

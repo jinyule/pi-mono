@@ -1,6 +1,7 @@
 package dev.pi.ai.stream;
 
 import java.util.Objects;
+import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -12,8 +13,10 @@ public class EventStream<TEvent, TResult> implements AutoCloseable {
     private final Predicate<TEvent> terminalEvent;
     private final Function<TEvent, TResult> terminalResult;
     private final CopyOnWriteArrayList<Consumer<TEvent>> subscribers = new CopyOnWriteArrayList<>();
+    private final ArrayList<TEvent> history = new ArrayList<>();
     private final CompletableFuture<TResult> result = new CompletableFuture<>();
     private final AtomicBoolean closed = new AtomicBoolean(false);
+    private final Object monitor = new Object();
 
     public EventStream(Predicate<TEvent> terminalEvent, Function<TEvent, TResult> terminalResult) {
         this.terminalEvent = Objects.requireNonNull(terminalEvent, "terminalEvent");
@@ -22,39 +25,63 @@ public class EventStream<TEvent, TResult> implements AutoCloseable {
 
     public Subscription subscribe(Consumer<TEvent> listener) {
         Objects.requireNonNull(listener, "listener");
-        subscribers.add(listener);
-        return () -> subscribers.remove(listener);
+        synchronized (monitor) {
+            for (var event : history) {
+                listener.accept(event);
+            }
+            if (!closed.get()) {
+                subscribers.add(listener);
+            }
+        }
+        return () -> {
+            synchronized (monitor) {
+                subscribers.remove(listener);
+            }
+        };
     }
 
     public void push(TEvent event) {
         Objects.requireNonNull(event, "event");
-        if (closed.get()) {
-            return;
-        }
+        synchronized (monitor) {
+            if (closed.get()) {
+                return;
+            }
 
-        for (var subscriber : subscribers) {
-            subscriber.accept(event);
-        }
+            history.add(event);
+            for (var subscriber : subscribers) {
+                subscriber.accept(event);
+            }
 
-        if (terminalEvent.test(event) && closed.compareAndSet(false, true)) {
-            result.complete(terminalResult.apply(event));
+            if (terminalEvent.test(event) && closed.compareAndSet(false, true)) {
+                subscribers.clear();
+                result.complete(terminalResult.apply(event));
+            }
         }
     }
 
     public void end(TResult finalResult) {
         if (closed.compareAndSet(false, true)) {
+            synchronized (monitor) {
+                subscribers.clear();
+            }
             result.complete(finalResult);
         }
     }
 
     public void fail(Throwable throwable) {
         if (closed.compareAndSet(false, true)) {
+            synchronized (monitor) {
+                subscribers.clear();
+            }
             result.completeExceptionally(throwable);
         }
     }
 
     public void cancel() {
         if (closed.compareAndSet(false, true)) {
+            synchronized (monitor) {
+                subscribers.clear();
+            }
             result.cancel(true);
         }
     }
@@ -72,4 +99,3 @@ public class EventStream<TEvent, TResult> implements AutoCloseable {
         cancel();
     }
 }
-

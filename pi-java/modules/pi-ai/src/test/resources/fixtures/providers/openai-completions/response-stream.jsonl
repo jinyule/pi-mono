@@ -1,0 +1,6 @@
+{"choices":[{"delta":{"reasoning_content":"Need repo summary first."},"finish_reason":null}]}
+{"choices":[{"delta":{"content":"Reading README.md"},"finish_reason":null}]}
+{"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call-1","type":"function","function":{"name":"read","arguments":"{\"path\":\"README"}}]},"finish_reason":null}]}
+{"choices":[{"delta":{"tool_calls":[{"index":0,"type":"function","function":{"arguments":".md\"}"}}]},"finish_reason":null}]}
+{"choices":[],"usage":{"prompt_tokens":128,"completion_tokens":64,"total_tokens":192,"prompt_tokens_details":{"cached_tokens":28}}}
+{"choices":[{"delta":{},"finish_reason":"tool_calls"}]}
