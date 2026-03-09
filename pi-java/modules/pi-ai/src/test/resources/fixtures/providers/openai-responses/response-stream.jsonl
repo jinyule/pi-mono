@@ -1,0 +1,11 @@
+{"type":"response.output_item.added","item":{"type":"reasoning"}}
+{"type":"response.reasoning_summary_text.delta","delta":"Need repo summary first."}
+{"type":"response.output_item.done","item":{"type":"reasoning","summary":[{"text":"Need repo summary first."}]}}
+{"type":"response.output_item.added","item":{"type":"message"}}
+{"type":"response.output_text.delta","delta":"Reading README.md"}
+{"type":"response.output_item.done","item":{"type":"message","id":"msg-1","content":[{"type":"output_text","text":"Reading README.md","annotations":[]}]}}
+{"type":"response.output_item.added","item":{"type":"function_call","call_id":"call-1","id":"fc_1","name":"read","arguments":""}}
+{"type":"response.function_call_arguments.delta","delta":"{\"path\":\"README"}
+{"type":"response.function_call_arguments.delta","delta":".md\"}"}
+{"type":"response.output_item.done","item":{"type":"function_call","call_id":"call-1","id":"fc_1","name":"read","arguments":"{\"path\":\"README.md\"}"}}
+{"type":"response.completed","response":{"status":"completed","usage":{"input_tokens":128,"output_tokens":64,"total_tokens":192,"input_tokens_details":{"cached_tokens":28}}}}

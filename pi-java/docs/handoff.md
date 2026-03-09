@@ -132,6 +132,22 @@
 - `WebSocketStreamAdapter` 直接实现 `java.net.http.WebSocket.Listener`，可把 fragmented text / binary frame 归一成完整文本消息。
 - `WebSocketStreamAdapter` 通过统一事件流暴露 `message` / `close` / `error`，后续 provider 可以直接订阅而不必自己管理 frame 拼接。
 
+### 8. 阶段 1：`openai-responses` provider 首版
+
+已在 `modules/pi-ai/src/main/java/dev/pi/ai/provider/openai/` 下补上第一版 `openai-responses` provider：
+
+- `OpenAiResponsesProvider`
+- `OpenAiResponsesTransport`
+- `HttpOpenAiResponsesTransport`
+
+当前这批 provider 代码的实现特点：
+
+- `OpenAiResponsesProvider` 已实现 `stream()` / `streamSimple()`，并通过 `HttpClient + SSE` 路径读取 OpenAI Responses API 流。
+- 请求体已支持 `systemPrompt`、`user text/image`、`assistant text/thinking/toolCall`、`toolResult`、`tools`、`reasoning`、`prompt cache` 等基础字段映射。
+- 响应流已支持 `reasoning`、`message`、`function_call` 三类 output item 的标准化事件映射，并复用 `AssistantMessageAssembler` 组装 partial/final assistant message。
+- 当前 contract test 使用 fixture + fake transport 驱动，不依赖真实网络请求。
+- `AssistantMessageAssembler` 新增了 tool call final-arguments 覆写入口，便于 provider 在 `function_call_arguments.done` / `output_item.done` 阶段做最终归一化。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -153,6 +169,7 @@
 - `AssistantMessageAssembler` 的 text / thinking / toolcall 组装与 error 终结语义
 - `SseEventParser` 的 chunk / multiline / retry / EOF flush 解析语义
 - `WebSocketStreamAdapter` 的 fragmented text / binary frame 归并与 close/error 终结语义
+- `openai-responses` provider 的 payload 构造、SSE event 映射、tool call / reasoning / usage 归一化、error 终结语义
 
 对应测试文件：
 
@@ -166,6 +183,7 @@
 - `modules/pi-ai/src/test/java/dev/pi/ai/stream/AssistantMessageAssemblerTest.java`
 - `modules/pi-ai/src/test/java/dev/pi/ai/stream/SseEventParserTest.java`
 - `modules/pi-ai/src/test/java/dev/pi/ai/stream/WebSocketStreamAdapterTest.java`
+- `modules/pi-ai/src/test/java/dev/pi/ai/provider/openai/OpenAiResponsesProviderTest.java`
 
 ## 未完成 / 已知缺口
 
@@ -173,7 +191,10 @@
 
 以下内容还没开始或只完成了骨架：
 
-- provider 实现
+- `openai-completions`
+- `anthropic-messages`
+- `google-generative-ai`
+- `bedrock-converse-stream`
 - message transform / validation / compat 层
 
 ### 其他模块
@@ -213,14 +234,15 @@ npm.cmd run check
 
 建议严格按 `docs/tasks.md` 的顺序继续：
 
-1. 先补 `pi-ai` 的 registry 与 facade，把当前类型接成真正可调用的主干。
-2. 再补 `simple options` 映射、message transform、validation，先把“请求前整理”和“结果后归一化”边界做出来。
-3. 然后开始 `pi-session` 或 `pi-agent-runtime`，不要同时大面积推进多个模块。
+1. 继续按 provider 顺序补 `openai-completions`，复用当前 transport / assembler / contract test 模式。
+2. 再补 `message transform / validation / compat`，把“请求前整理”和“结果后归一化”边界做出来。
+3. 然后继续 `anthropic-messages` / `google-generative-ai` / `bedrock-converse-stream`，不要过早切到更高层模块。
 
 更具体的下一步切片建议：
 
-1. `pi-ai`：第一个 `openai-responses` provider。
-2. `pi-session`：先做 JSONL 读取和 replay，不要先做写入。
+1. `pi-ai`：`openai-completions` provider。
+2. `pi-ai`：message transform / validation / compat。
+3. `pi-session`：先做 JSONL 读取和 replay，不要先做写入。
 
 并行拆分文档入口：
 

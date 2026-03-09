@@ -116,6 +116,24 @@ public final class AssistantMessageAssembler {
         return new AssistantMessageEvent.ToolcallDelta(contentIndex, delta, snapshot());
     }
 
+    public void replaceToolCallArguments(int contentIndex, String argumentsJson) {
+        var current = requireToolCall(contentIndex);
+        var buffer = requireToolCallBuffer(contentIndex);
+        buffer.setLength(0);
+        if (argumentsJson != null) {
+            buffer.append(argumentsJson);
+        }
+        putContent(
+            contentIndex,
+            new ToolCall(
+                current.id(),
+                current.name(),
+                parseStreamingJson(buffer.toString(), current.arguments()),
+                current.thoughtSignature()
+            )
+        );
+    }
+
     public AssistantMessageEvent.ToolcallEnd endToolCall(int contentIndex) {
         var current = requireToolCall(contentIndex);
         var buffer = toolCallJsonBuffers.remove(contentIndex);
