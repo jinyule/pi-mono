@@ -8,5 +8,8 @@ public final class PiCliModule {
     public String description() {
         return "CLI entrypoint and runtime orchestration across interactive and non-interactive modes.";
     }
-}
 
+    public PiCliParser parser() {
+        return new PiCliParser();
+    }
+}

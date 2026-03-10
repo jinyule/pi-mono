@@ -11,6 +11,6 @@ class PiCliModuleTest {
 
         assertThat(module.id()).isEqualTo("pi-cli");
         assertThat(module.description()).contains("CLI entrypoint");
+        assertThat(module.parser()).isNotNull();
     }
 }
-

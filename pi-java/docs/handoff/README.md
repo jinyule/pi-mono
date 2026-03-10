@@ -9,6 +9,7 @@
 ## 当前文件
 
 - `pi-java/docs/handoff/phase-6-pi-tui.md`
+- `pi-java/docs/handoff/phase-7-pi-cli-sdk.md`
 - `pi-java/docs/handoff/archive-2026-03-10.md`
 
 ## 维护规则
@@ -19,5 +20,5 @@
 
 ## 当前重点
 
-- 当前活跃阶段：`pi-tui`
-- 当前活跃交接文件：`pi-java/docs/handoff/phase-6-pi-tui.md`
+- 当前活跃阶段：`pi-cli` / `pi-sdk`
+- 当前活跃交接文件：`pi-java/docs/handoff/phase-7-pi-cli-sdk.md`
