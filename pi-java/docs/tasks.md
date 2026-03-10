@@ -25,7 +25,8 @@
 - 阶段 4：已完成 `edit` 工具、fuzzy/exact match、CRLF/BOM 保留、diff details contract tests。
 - 阶段 4：已完成 `bash` 工具、streaming output、timeout、abort、tail truncation、full output temp file。
 - 阶段 4：已完成 `grep` 工具、context/limit、long-line truncation、match-limit notices contract tests。
-- 阶段 4：下一步实现 `find`、`ls`。
+- 阶段 4：已完成 `find` 工具、hidden files、root .gitignore、result-limit notices contract tests。
+- 阶段 4：下一步实现 `ls`。
 - 阶段 5 到阶段 9：未开始。
 
 ## 阶段 0：项目骨架
@@ -75,7 +76,7 @@
 3. 实现 `write` 工具，支持自动建目录。（已完成）
 4. 实现 `edit` 工具，支持 exact match + diff details。（已完成）
 5. 实现 `bash` 工具，支持 streaming output、timeout、abort、tail truncation、full output temp file。（已完成）
-6. 实现 `grep`、`find`、`ls`。（已完成 `grep`）
+6. 实现 `grep`、`find`、`ls`。（已完成 `grep` / `find`）
 7. 增加内置工具 golden tests，确认输出格式与 TS 版本一致。
 
 ## 阶段 5：`pi-extension-spi`

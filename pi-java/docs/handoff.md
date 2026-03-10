@@ -863,6 +863,53 @@
 - 还没有补 `grep` tool 的 golden fixture / TS 输出对拍。
 - 默认运行时依赖本地 `rg`；如果环境缺失，会报 `ripgrep (rg) is not available`。
 
+### 32. 阶段 4：`find` tool
+
+已继续在 `modules/pi-tools/src/main/java/dev/pi/tools/` 与 `modules/pi-tools/src/test/java/dev/pi/tools/FindToolTest.java` 下补上第一版 `find` tool。
+
+本次新增的入口：
+
+- `FindTool`
+- `FindToolOptions`
+- `FindOperations`
+- `FindToolDetails`
+- `FindToolTest`
+
+当前这版 `find` 的实现特点：
+
+- 已接到 `AgentTool` contract：
+  - `parametersSchema()` 暴露 `pattern` / `path` / `limit`
+  - `execute()` 返回 `AgentToolResult<FindToolDetails>`
+  - 执行改成 virtual thread 异步，避免直接阻塞调用线程
+- 搜索语义当前覆盖了 TS 测试面的关键 contract：
+  - 默认搜索 cwd
+  - 返回相对路径
+  - 匹配 `**/*.txt` 时，根目录文件也会命中
+  - hidden files 会参与结果集
+  - root `.gitignore` 会参与过滤
+  - 无结果时返回 `No files found matching pattern`
+- 本次没有走 `fd` 子进程，而是先落了纯 Java 文件树实现：
+  - `FindOperations.local()` 用 `walkFileTree`
+  - 内建跳过 `.git` / `node_modules`
+  - 内建最小 root `.gitignore` 规则解析
+  - `limit` 达到时直接终止遍历
+- 输出收敛语义已对齐当前 TS contract：
+  - result limit notice：`[N results limit reached. Use limit=... for more, or refine pattern]`
+  - byte truncation notice：`[50.0KB limit reached]`
+  - details 已保留 `truncation` / `resultLimitReached`
+
+这批 contract tests 已覆盖：
+
+- hidden files that are not gitignored
+- root `.gitignore`
+- result limit notice
+
+这一刀的边界：
+
+- 还没有开始 `ls` 的实际 tool 实现。
+- 还没有补 `find` tool 的 golden fixture / TS 输出对拍。
+- 当前 `.gitignore` 支持是 root-level 最小实现，还没有追平嵌套 `.gitignore` / negation rule 的完整 Git 语义。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -911,6 +958,7 @@ npm.cmd run check
 - `pi-tools` 的 `edit` tool：exact/fuzzy match、duplicate/not-found 拒绝、CRLF/BOM 保留、diff details
 - `pi-tools` 的 `bash` tool：streaming update、timeout/abort、tail truncation、full output path
 - `pi-tools` 的 `grep` tool：rg JSON search、context lines、match limit notice、line truncation notice
+- `pi-tools` 的 `find` tool：pure-Java tree walk、hidden files、root `.gitignore`、result limit notice
 - `pi-agent-runtime` 的 tool cancellation：close event stream -> tool cancel supplier
 
 对应测试文件：
@@ -952,6 +1000,7 @@ npm.cmd run check
 - `modules/pi-tools/src/test/java/dev/pi/tools/EditToolTest.java`
 - `modules/pi-tools/src/test/java/dev/pi/tools/BashToolTest.java`
 - `modules/pi-tools/src/test/java/dev/pi/tools/GrepToolTest.java`
+- `modules/pi-tools/src/test/java/dev/pi/tools/FindToolTest.java`
 
 ## 未完成 / 已知缺口
 
@@ -961,12 +1010,12 @@ npm.cmd run check
 
 ### `pi-tools`
 
-阶段 4 当前已完成 truncation / diff / shell / path policy / image resize primitives，以及 `read` / `write` / `edit` / `bash` / `grep` tool。
+阶段 4 当前已完成 truncation / diff / shell / path policy / image resize primitives，以及 `read` / `write` / `edit` / `bash` / `grep` / `find` tool。
 
 下一步按任务顺序应继续：
 
 - `pi-tools`
-- `find` / `ls`
+- `ls`
 - golden output / fixture 对拍
 
 ### 其他模块
@@ -1003,14 +1052,14 @@ npm.cmd run check
 
 建议严格按 `docs/tasks.md` 的顺序继续：
 
-1. 继续 `pi-tools`，先补 `find` / `ls`。
+1. 继续 `pi-tools`，先补 `ls`。
 2. 然后推进工具层 golden tests。
 3. 再进入阶段 5 `pi-extension-spi`。
 
 更具体的下一步切片建议：
 
-1. `pi-tools`：`find` tool contract tests + 实现。
-2. `pi-tools`：`ls` + golden output 固化。
+1. `pi-tools`：`ls` tool contract tests + 实现。
+2. `pi-tools`：工具层 golden output 固化。
 3. `pi-tools`：补工具层 golden fixture，对拍 TS 输出。
 
 并行拆分文档入口：
