@@ -534,6 +534,83 @@
 - 目前只实现了 instruction/context 这条最小 resource assembly 线，还没有补技能、prompt templates、themes、extensions 的完整 Java 版 resource loader。
 - 还没有做基于 settings 的 resource include/exclude、path metadata、collision diagnostics、热重载集成。
 
+### 26. 阶段 4：`pi-tools` primitives
+
+已继续在 `modules/pi-tools/src/main/java/dev/pi/tools/` 与 `modules/pi-tools/src/test/java/dev/pi/tools/` 下补上阶段 4 的第一批工具侧支撑类。
+
+本次新增的入口：
+
+- `TruncationLimit`
+- `TruncationOptions`
+- `TruncationResult`
+- `LineTruncationResult`
+- `TextTruncator`
+- `ToolPaths`
+- `EditDiffPreview`
+- `EditDiffResult`
+- `EditDiffError`
+- `FuzzyMatchResult`
+- `BomStrippedText`
+- `EditDiffs`
+- `ShellConfig`
+- `ShellExecutionOptions`
+- `ShellExecutionResult`
+- `ShellExecutor`
+- `Shells`
+- `DefaultShellExecutor`
+- `ImageResizeOptions`
+- `ResizedImage`
+- `ImageResizer`
+- `TextTruncatorTest`
+- `ToolPathsTest`
+- `EditDiffsTest`
+- `DefaultShellExecutorTest`
+- `ImageResizerTest`
+
+当前这批 primitives 的实现特点：
+
+- truncation 已覆盖 head / tail 两种策略：
+  - 独立处理 line limit 与 byte limit
+  - head 截断时保持完整行，不回传 partial line
+  - first line 单独超限时返回空内容并显式标记 `firstLineExceedsLimit`
+  - tail 截断时保留 TS 一致的“超长单行只回最后一段”边界行为
+  - `truncateLine()` 与 `formatSize()` 已补齐 grep / read / bash 侧通用格式化基础
+- path policy 已覆盖 `@` / `~` 扩展与读路径兼容回退：
+  - Unicode 空格归一化
+  - 相对路径按 cwd 解析
+  - `resolveReadPath()` 会尝试 macOS screenshot `AM/PM` 变体、NFD 变体、curly quote 变体及组合变体
+- diff primitive 已覆盖 edit preview 需要的最小 contract：
+  - line ending detect / normalize / restore
+  - fuzzy match（trailing whitespace / smart quotes / dash / Unicode space 归一化）
+  - UTF-8 BOM strip
+  - 稳定的 line-number diff 文本生成
+  - `computeEditDiff()` 的 not-found / duplicate / no-op 错误分支
+- shell primitive 已提供后续 `bash` tool 需要的执行基础：
+  - shell config 解析
+  - binary/control char sanitize
+  - timeout / cancel / process tree kill
+  - 大输出 spill 到 temp file
+  - rolling tail buffer + tail truncation
+- image primitive 已提供后续 `read` tool 的图片输入基础：
+  - JDK `ImageIO` 读取与 resize
+  - PNG / JPEG 双格式尝试并选择更小产物
+  - dimension note 生成
+  - 不可读图片时回退原始 bytes，不抛 hard failure
+
+这批 contract / unit tests 已覆盖：
+
+- truncation 的 no-op、oversized first line、tail partial line、line truncation suffix、size formatting
+- path expansion、cwd resolve、macOS screenshot / NFD / curly quote fallback
+- diff 文本稳定性、fuzzy match、duplicate match 拒绝、BOM strip
+- shell output streaming、temp file spill、tail truncation、timeout、sanitize 规则
+- image resize 的 dimension limit、byte limit、dimension note、decode fallback
+
+这一刀的边界：
+
+- 目前只完成了工具支撑层，还没有开始 `read` / `write` / `edit` / `bash` / `grep` / `find` / `ls` 的实际 tool 实现。
+- shell env 目前只做了基础 environment merge，还没有接 CLI 侧 bin-dir prepend 或 tool-specific command prefix。
+- diff 目前服务于 edit preview / exact replacement primitive，还没有连到具体 tool result 文案与 golden output。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -542,6 +619,7 @@
 .\gradlew.bat :pi-ai:test --no-daemon
 .\gradlew.bat :pi-agent-runtime:test --no-daemon
 .\gradlew.bat :pi-session:test --no-daemon
+.\gradlew.bat :pi-tools:test --no-daemon
 npm.cmd run check
 ```
 
@@ -575,6 +653,7 @@ npm.cmd run check
 - `pi-session` 的 branch summary、in-memory fork path 裁剪与 label 保留、persisted fork delayed/immediate flush、fork 后 JSONL header/id 稳定性
 - `pi-session` 的 settings deep merge、legacy settings migration、latest-on-disk merge、project override、file lock 序列化、reload parse-error 恢复语义
 - `pi-session` 的 instruction resource assembly：global/ancestor context file 顺序、`AGENTS.md` 优先级、project/global system prompt 覆盖、append prompt 回退语义
+- `pi-tools` 的 truncation line/byte limit 语义、path fallback、edit diff primitive、shell timeout/spill/truncation、image resize/dimension note/fallback 语义
 
 对应测试文件：
 
@@ -604,24 +683,32 @@ npm.cmd run check
 - `modules/pi-session/src/test/java/dev/pi/session/SessionManagerTest.java`
 - `modules/pi-session/src/test/java/dev/pi/session/SettingsManagerTest.java`
 - `modules/pi-session/src/test/java/dev/pi/session/InstructionResourceLoaderTest.java`
+- `modules/pi-tools/src/test/java/dev/pi/tools/TextTruncatorTest.java`
+- `modules/pi-tools/src/test/java/dev/pi/tools/ToolPathsTest.java`
+- `modules/pi-tools/src/test/java/dev/pi/tools/EditDiffsTest.java`
+- `modules/pi-tools/src/test/java/dev/pi/tools/DefaultShellExecutorTest.java`
+- `modules/pi-tools/src/test/java/dev/pi/tools/ImageResizerTest.java`
 
 ## 未完成 / 已知缺口
 
 ### `pi-session`
 
-阶段 3 当前已完成 session model、JSONL parse/write skeleton、migration、replay contract tests、`SessionManager` skeleton、session tree / fork / persisted append contract tests、fork / branched session file 提取、`Settings` / `SettingsManager`、settings deep merge / lock / migration tests、instruction resource assembly。
+阶段 3 已收尾，当前没有新的 blocker。
+
+### `pi-tools`
+
+阶段 4 当前已完成 truncation / diff / shell / path policy / image resize primitives。
 
 下一步按任务顺序应继续：
 
 - `pi-tools`
-- truncation / diff / shell / path policy / image resize primitives
+- `read` tool
+- 文本 / 图片 / `offset` / `limit` / 截断提示 contract tests + 实现
 
 ### 其他模块
 
 以下模块目前还只是最小工程骨架，尚未开始功能实现：
 
-- `pi-session`
-- `pi-tools`
 - `pi-extension-spi`
 - `pi-tui`
 - `pi-cli`
@@ -652,15 +739,15 @@ npm.cmd run check
 
 建议严格按 `docs/tasks.md` 的顺序继续：
 
-1. 进入 `pi-tools`，先补 truncation / diff / shell / path policy / image resize primitives。
-2. 再补 `read` 工具。
-3. 然后推进 `write` / `edit` / `bash`。
+1. 继续 `pi-tools`，先补 `read` 工具。
+2. 再补 `write` / `edit` / `bash`。
+3. 然后推进 `grep` / `find` / `ls` 与 golden tests。
 
 更具体的下一步切片建议：
 
-1. `pi-tools`：truncation / diff / shell / path policy / image resize primitives。
-2. `pi-tools`：`read` tool contract tests + 实现。
-3. `pi-tools`：`write` / `edit` / `bash` primitives。
+1. `pi-tools`：`read` tool contract tests + 实现。
+2. `pi-tools`：`write` / `edit` / `bash` tool primitives + 输出文案。
+3. `pi-tools`：`grep` / `find` / `ls` + golden output 固化。
 
 并行拆分文档入口：
 
