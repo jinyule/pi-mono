@@ -13,6 +13,7 @@
 5. 基础文本组件第一批：`Container`、`Text`、`TruncatedText`
 6. 输入组件第一批：`Input`、`EditorKeybindings`、`KeyMatcher`、`KillRing`、`UndoStack`
 7. 多行编辑组件第一批：`Editor`
+8. `Markdown` 第一批
 
 ## 当前关键入口
 
@@ -25,11 +26,14 @@
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/Container.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/Text.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/TruncatedText.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/DefaultTextStyle.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/Input.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/InputSupport.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/EditorAction.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/EditorKeybindings.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/Editor.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/MarkdownTheme.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/Markdown.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/KeyMatcher.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/KillRing.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/UndoStack.java`
@@ -122,6 +126,23 @@
 - `InputSupport` 已抽出共享字符分类，供 `Input` / `Editor` 复用
 - `EditorAction` / `EditorKeybindings` / `KeyMatcher` 已补 `CURSOR_UP`、`CURSOR_DOWN`、`NEW_LINE` 及默认键位
 
+### 8. `Markdown` 第一批
+
+- 已接 `commonmark-java`
+- 已接 `GFM tables`、`autolink`、`strikethrough` 扩展
+- `Markdown` 已支持：
+  - heading / paragraph / hr
+  - nested list
+  - blockquote
+  - fenced / indented code block
+  - inline code / bold / italic / strikethrough / link
+  - width-aware table render
+  - `paddingX` / `paddingY`
+  - default text style 与整行 background
+  - render cache
+- `TerminalText.dropVisibleColumns()` 已补 ANSI style carry，用于长 token/table cell 的换行保样式
+- 当前 nested list contract 先固定到 `commonmark-java` 可稳定解析的四空格嵌套
+
 ## 当前测试
 
 已覆盖的测试入口：
@@ -134,6 +155,7 @@
 - `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/BasicComponentsTest.java`
 - `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/InputTest.java`
 - `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/EditorTest.java`
+- `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/MarkdownTest.java`
 
 最近验证通过：
 
@@ -146,7 +168,6 @@ npm.cmd run check
 
 还没有完成：
 
-- `Markdown`
 - `Loader`
 - `SelectList`
 - `SettingsList`
@@ -158,8 +179,7 @@ npm.cmd run check
 
 建议继续按这个顺序推进：
 
-1. `Markdown`
-2. `Loader`
-3. `SelectList` / `SettingsList`
-4. `Image`
-5. `VirtualTerminal` 与 golden tests
+1. `Loader`
+2. `SelectList` / `SettingsList`
+3. `Image`
+4. `VirtualTerminal` 与 golden tests

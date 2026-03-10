@@ -1,6 +1,7 @@
 [versions]
 assertj = "3.27.3"
 awsSdk = "2.30.38"
+commonmark = "0.27.1"
 googleAuth = "1.32.1"
 jackson = "2.18.3"
 jline = "3.29.0"
@@ -11,6 +12,10 @@ picocli = "4.7.6"
 assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
 aws-sdk-bom = { module = "software.amazon.awssdk:bom", version.ref = "awsSdk" }
 aws-sdk-bedrock-runtime = { module = "software.amazon.awssdk:bedrockruntime" }
+commonmark = { module = "org.commonmark:commonmark", version.ref = "commonmark" }
+commonmark-ext-autolink = { module = "org.commonmark:commonmark-ext-autolink", version.ref = "commonmark" }
+commonmark-ext-gfm-strikethrough = { module = "org.commonmark:commonmark-ext-gfm-strikethrough", version.ref = "commonmark" }
+commonmark-ext-gfm-tables = { module = "org.commonmark:commonmark-ext-gfm-tables", version.ref = "commonmark" }
 google-auth-library-oauth2-http = { module = "com.google.auth:google-auth-library-oauth2-http", version.ref = "googleAuth" }
 jackson-bom = { module = "com.fasterxml.jackson:jackson-bom", version.ref = "jackson" }
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind" }

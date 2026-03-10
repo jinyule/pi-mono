@@ -60,17 +60,27 @@ public final class TerminalText {
         }
         var visible = 0;
         var index = 0;
+        var activeSgr = new StringBuilder();
         while (index < text.length() && visible < width) {
             var ch = text.charAt(index);
             if (ch == ESC) {
-                index = consumeEscape(text, index);
+                var next = consumeEscape(text, index);
+                recordSgrState(text.substring(index, next), activeSgr);
+                index = next;
                 continue;
             }
             var codePoint = text.codePointAt(index);
             visible += 1;
             index += Character.charCount(codePoint);
         }
-        return text.substring(index);
+        if (index >= text.length()) {
+            return "";
+        }
+        var remainder = text.substring(index);
+        if (activeSgr.isEmpty() || remainder.startsWith(activeSgr.toString())) {
+            return remainder;
+        }
+        return activeSgr + remainder;
     }
 
     public static String padRightVisible(String text, int width) {
@@ -237,5 +247,23 @@ public final class TerminalText {
             current += 1;
         }
         return text.length();
+    }
+
+    private static void recordSgrState(String escape, StringBuilder activeSgr) {
+        if (!escape.startsWith(ESC + "[") || !escape.endsWith("m")) {
+            return;
+        }
+        var params = escape.substring(2, escape.length() - 1);
+        if (params.isEmpty()) {
+            activeSgr.setLength(0);
+            return;
+        }
+        for (var part : params.split(";")) {
+            if ("0".equals(part)) {
+                activeSgr.setLength(0);
+                break;
+            }
+        }
+        activeSgr.append(escape);
     }
 }
