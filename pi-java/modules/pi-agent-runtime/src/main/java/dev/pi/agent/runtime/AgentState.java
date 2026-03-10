@@ -2,6 +2,7 @@ package dev.pi.agent.runtime;
 
 import dev.pi.ai.model.Model;
 import dev.pi.ai.model.ThinkingLevel;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -21,10 +22,89 @@ public record AgentState(
     public AgentState {
         systemPrompt = systemPrompt == null ? "" : systemPrompt;
         Objects.requireNonNull(model, "model");
-        thinkingLevel = thinkingLevel == null ? ThinkingLevel.MINIMAL : thinkingLevel;
         tools = tools == null ? List.of() : List.copyOf(tools);
         messages = List.copyOf(Objects.requireNonNull(messages, "messages"));
         pendingToolCalls = Set.copyOf(Objects.requireNonNullElseGet(pendingToolCalls, LinkedHashSet::new));
+    }
+
+    public AgentState withSystemPrompt(String systemPrompt) {
+        return new AgentState(
+            systemPrompt,
+            model,
+            thinkingLevel,
+            tools,
+            messages,
+            isStreaming,
+            streamMessage,
+            pendingToolCalls,
+            error
+        );
+    }
+
+    public AgentState withModel(Model model) {
+        return new AgentState(
+            systemPrompt,
+            model,
+            thinkingLevel,
+            tools,
+            messages,
+            isStreaming,
+            streamMessage,
+            pendingToolCalls,
+            error
+        );
+    }
+
+    public AgentState withThinkingLevel(ThinkingLevel thinkingLevel) {
+        return new AgentState(
+            systemPrompt,
+            model,
+            thinkingLevel,
+            tools,
+            messages,
+            isStreaming,
+            streamMessage,
+            pendingToolCalls,
+            error
+        );
+    }
+
+    public AgentState withTools(List<AgentTool<?>> tools) {
+        return new AgentState(
+            systemPrompt,
+            model,
+            thinkingLevel,
+            tools,
+            messages,
+            isStreaming,
+            streamMessage,
+            pendingToolCalls,
+            error
+        );
+    }
+
+    public AgentState withMessages(List<AgentMessage> messages) {
+        return new AgentState(
+            systemPrompt,
+            model,
+            thinkingLevel,
+            tools,
+            messages,
+            isStreaming,
+            streamMessage,
+            pendingToolCalls,
+            error
+        );
+    }
+
+    public AgentState appendMessage(AgentMessage message) {
+        var updatedMessages = new ArrayList<>(messages);
+        updatedMessages.add(message);
+        return withMessages(List.copyOf(updatedMessages));
+    }
+
+    public AgentState clearMessages() {
+        return withMessages(List.of());
     }
 
     public AgentState startStreaming(AgentMessage streamMessage) {
@@ -38,6 +118,20 @@ public record AgentState(
             streamMessage,
             pendingToolCalls,
             null
+        );
+    }
+
+    public AgentState withStreamingMessage(AgentMessage streamMessage) {
+        return new AgentState(
+            systemPrompt,
+            model,
+            thinkingLevel,
+            tools,
+            messages,
+            isStreaming,
+            streamMessage,
+            pendingToolCalls,
+            error
         );
     }
 
@@ -55,6 +149,52 @@ public record AgentState(
         );
     }
 
+    public AgentState addPendingToolCall(String toolCallId) {
+        var updatedPendingToolCalls = new LinkedHashSet<>(pendingToolCalls);
+        updatedPendingToolCalls.add(toolCallId);
+        return new AgentState(
+            systemPrompt,
+            model,
+            thinkingLevel,
+            tools,
+            messages,
+            isStreaming,
+            streamMessage,
+            updatedPendingToolCalls,
+            error
+        );
+    }
+
+    public AgentState removePendingToolCall(String toolCallId) {
+        var updatedPendingToolCalls = new LinkedHashSet<>(pendingToolCalls);
+        updatedPendingToolCalls.remove(toolCallId);
+        return new AgentState(
+            systemPrompt,
+            model,
+            thinkingLevel,
+            tools,
+            messages,
+            isStreaming,
+            streamMessage,
+            updatedPendingToolCalls,
+            error
+        );
+    }
+
+    public AgentState clearPendingToolCalls() {
+        return new AgentState(
+            systemPrompt,
+            model,
+            thinkingLevel,
+            tools,
+            messages,
+            isStreaming,
+            streamMessage,
+            Set.of(),
+            error
+        );
+    }
+
     public AgentState withError(String error) {
         return new AgentState(
             systemPrompt,
@@ -66,6 +206,20 @@ public record AgentState(
             null,
             pendingToolCalls,
             error
+        );
+    }
+
+    public AgentState clearError() {
+        return new AgentState(
+            systemPrompt,
+            model,
+            thinkingLevel,
+            tools,
+            messages,
+            isStreaming,
+            streamMessage,
+            pendingToolCalls,
+            null
         );
     }
 }

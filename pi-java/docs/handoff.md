@@ -302,6 +302,19 @@
 - 当 agent 在当前轮没有更多 tool call 且没有 steering message 时，runtime 会轮询 follow-up source；若拿到 follow-up message，则继续开启下一轮 turn，而不是直接结束 agent。
 - 当前 queue 行为仍保持最小 runtime 语义：一次 `MessageSource.get()` 返回多少条消息，就在下一轮一并注入多少条；更高层的 one-at-a-time / all 模式留给后续 `Agent` facade 管理。
 
+### 18. 阶段 2：`Agent` facade 与订阅接口首版
+
+已在 `modules/pi-agent-runtime/src/main/java/dev/pi/agent/runtime/Agent.java` 下补上第一版高层 facade。
+
+当前这批 facade 代码的实现特点：
+
+- `Agent` 现在统一管理 `AgentState`、steering / follow-up 队列、运行中的 `AgentEventStream`、以及事件/状态订阅者。
+- facade 已提供最小可用的高层入口：`prompt(String|AgentMessage|List<AgentMessage>)`、`resume()`、`steer()`、`followUp()`、`waitForIdle()`、`reset()`、消息/模型/工具等 state mutator。
+- facade 会把 `AgentLoop` 发出的 runtime events 重新折叠进本地 `AgentState`：`message_start/update/end` 驱动 `streamMessage/messages`，`tool_execution_*` 驱动 `pendingToolCalls`，`agent_end` 驱动 `isStreaming=false`。
+- 当前已补事件订阅与状态订阅两层接口：事件订阅只接收后续 runtime event；状态订阅会先收到当前快照，再接收后续 state 变化。
+- `AgentState` 当前允许 `thinkingLevel=null` 表示不下发 reasoning，这样 Java facade 的默认行为才和 TS 侧的 `off` 对齐。
+- 当前 `abort()` 还是最小实现：它会关闭本地 `AgentEventStream` 并收敛 facade state，但还没有把取消信号一直传到 provider/transport；完整 interrupt 语义留到下一刀测试驱动时再补。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -334,6 +347,7 @@ npm.cmd run check
 - `pi-agent-runtime` 的单轮 loop lifecycle、`transformContext -> convertToLlm` 顺序、`continueLoop()` 前置条件校验
 - `pi-agent-runtime` 的顺序 tool execution、多轮 tool-result 续跑、tool execution update/end lifecycle、参数校验失败 -> error tool result 语义
 - `pi-agent-runtime` 的 steering after tool -> skip remaining tool calls 语义、follow-up message -> reopen turn 语义
+- `pi-agent-runtime` 的 `Agent` facade 事件订阅、状态订阅、`prompt()` / `resume()` 与 follow-up 集成语义
 
 对应测试文件：
 
@@ -356,17 +370,18 @@ npm.cmd run check
 - `modules/pi-ai/src/test/java/dev/pi/ai/provider/ProviderBehaviorMatrixTest.java`
 - `modules/pi-agent-runtime/src/test/java/dev/pi/agent/runtime/AgentLoopContractTest.java`
 - `modules/pi-agent-runtime/src/test/java/dev/pi/agent/runtime/AgentLoopToolExecutionTest.java`
+- `modules/pi-agent-runtime/src/test/java/dev/pi/agent/runtime/AgentTest.java`
 
 ## 未完成 / 已知缺口
 
 ### `pi-agent-runtime`
 
-阶段 2 当前已完成 core types、上下文管线、单轮/多轮 tool loop skeleton、顺序工具执行、基础参数校验、steering / follow-up 队列。
+阶段 2 当前已完成 core types、上下文管线、单轮/多轮 tool loop skeleton、顺序工具执行、基础参数校验、steering / follow-up 队列、`Agent` facade 与订阅接口。
 
 下一步按任务顺序应继续：
 
-- `Agent` facade 与订阅接口
 - agent loop 生命周期与工具中断测试补全
+- `abort` 传递到 provider/transport 的完整 interrupt 语义
 
 ### 其他模块
 
@@ -404,15 +419,15 @@ npm.cmd run check
 
 建议严格按 `docs/tasks.md` 的顺序继续：
 
-1. 在 `pi-agent-runtime` 内补 `Agent` facade 与订阅接口，把 runtime state 接起来。
-2. 再补更完整的生命周期 / 工具中断 / steering skip tests。
-3. 然后进入 `pi-session`。
+1. 在 `pi-agent-runtime` 内补完整的 interrupt / lifecycle tests，并把 `abort` 传到 provider/transport。
+2. 收尾 runtime 后进入 `pi-session`。
+3. 再往 `pi-tools` 推。
 
 更具体的下一步切片建议：
 
-1. `pi-agent-runtime`：`Agent` facade + state 订阅。
-2. `pi-agent-runtime`：interrupt / lifecycle tests。
-3. `pi-session`：session model + JSONL parse/write skeleton。
+1. `pi-agent-runtime`：interrupt / lifecycle tests。
+2. `pi-session`：session model + JSONL parse/write skeleton。
+3. `pi-tools`：read/write/edit/bash primitives。
 
 并行拆分文档入口：
 
