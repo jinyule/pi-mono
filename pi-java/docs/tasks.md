@@ -33,7 +33,8 @@
 - 阶段 5：已收尾。
 - 阶段 6：已完成 `Terminal / Component / Focusable / Overlay` 核心接口、`OverlayOptions / OverlayMargin / OverlayAnchor` 最小值对象、`InputHandler`、基础 contract tests。
 - 阶段 6：已完成 `ProcessTerminal`、`TerminalInputBuffer`、JLine-backed raw mode / resize、title / cursor / clear、bracketed paste、kitty keyboard protocol 基础支持与 contract tests。
-- 阶段 6：下一步实现 diff renderer 与 synchronized output。
+- 阶段 6：已完成 `DiffRenderer`、`SynchronizedOutput`、首帧/宽度变化/追加行/viewport 外变更的 differential rendering tests。
+- 阶段 6：下一步实现 overlay stack、IME cursor marker、hardware cursor positioning。
 - 阶段 7 到阶段 9：未开始。
 
 ## 阶段 0：项目骨架
@@ -100,7 +101,7 @@
 
 1. 定义 `Terminal`、`Component`、`Focusable`、`Overlay` 接口。（已完成）
 2. 实现 terminal raw mode、resize、title、cursor、bracketed paste、kitty keyboard protocol 基础支持。（已完成）
-3. 实现 diff renderer 与 synchronized output。
+3. 实现 diff renderer 与 synchronized output。（已完成）
 4. 实现 overlay stack、IME cursor marker、hardware cursor positioning。
 5. 实现基础组件：`Container`、`Text`、`TruncatedText`、`Input`、`Editor`、`Markdown`、`Loader`、`SelectList`、`SettingsList`、`Image`。
 6. 构建 `VirtualTerminal` 测试工具，做渲染与键位 golden tests。

@@ -1394,6 +1394,49 @@
 - 还没有开始 overlay stack、IME cursor marker 或 hardware cursor positioning。
 - 还没有做 `VirtualTerminal` 测试夹具。
 
+### 43. 阶段 6：`pi-tui` diff renderer 与 synchronized output
+
+已继续在 `modules/pi-tui/src/main/java/dev/pi/tui/` 与 `modules/pi-tui/src/test/java/dev/pi/tui/` 下补上第一版差分渲染器。
+
+本次新增的入口：
+
+- `SynchronizedOutput`
+- `DiffRenderer`
+- `DiffRendererTest`
+
+本次收敛的实现点：
+
+- `SynchronizedOutput` 先把 `CSI ? 2026 h/l` 封成稳定工具，供后续 renderer / overlay / cursor reposition 统一复用。
+- `DiffRenderer` 先以独立状态机落地，而不是过早绑定完整 `Tui` 容器：
+  - 跟踪 `previousLines`
+  - 跟踪 `previousWidth`
+  - 跟踪 `cursorRow`
+  - 跟踪 `maxLinesRendered`
+  - 跟踪 `previousViewportTop`
+- 目前已接通三段式差分策略：
+  - 首帧：同步输出包裹的全量 render
+  - 宽度变化 / shrink：clear scrollback + clear screen + full redraw
+  - 普通更新：只重绘 changed region
+- 当前增量更新已经覆盖：
+  - append-only tail render
+  - viewport 之外的历史行变更时 full redraw fallback
+  - `clearOnShrink` 默认开启
+- 目前 `DiffRenderer` 还没有绑定 overlay compositing，也还没有接 IME cursor marker 扫描；这些会在下一刀补。
+
+这批 tests 已覆盖：
+
+- 首帧 full render 的 synchronized output 包裹
+- terminal width 变化触发 full redraw
+- append-only 行追加只重绘 tail region
+- shrink 时 clear-and-redraw
+- viewport 外变更触发 full redraw fallback
+
+这一刀的边界：
+
+- 还没有 `Tui` 主类、component tree、render scheduler。
+- 还没有 overlay stack、IME cursor marker、hardware cursor positioning。
+- 还没有 `VirtualTerminal` golden render fixture。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -1565,14 +1608,14 @@ npm.cmd run check
 建议严格按 `docs/tasks.md` 的顺序继续：
 
 1. 继续阶段 6 `pi-tui`。
-2. 先补 diff renderer 与 synchronized output。
-3. 再补 overlay stack、IME cursor marker、hardware cursor positioning。
+2. 先补 overlay stack、IME cursor marker、hardware cursor positioning。
+3. 再补 `VirtualTerminal` 与渲染 / 键位 golden tests。
 
 更具体的下一步切片建议：
 
-1. `pi-tui`：diff renderer 与 synchronized output 骨架。
-2. `pi-tui`：overlay stack、IME cursor marker、hardware cursor positioning。
-3. `pi-tui`：`VirtualTerminal` 与渲染 / 键位 golden tests。
+1. `pi-tui`：overlay stack、IME cursor marker、hardware cursor positioning。
+2. `pi-tui`：`VirtualTerminal` 与渲染 / 键位 golden tests。
+3. `pi-tui`：基础组件 `Container` / `Text` / `TruncatedText`。
 
 并行拆分文档入口：
 
