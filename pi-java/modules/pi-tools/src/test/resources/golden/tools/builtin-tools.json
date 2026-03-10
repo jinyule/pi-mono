@@ -1,0 +1,67 @@
+{
+  "read": {
+    "bigLine": {
+      "text": "[Line 1 is 60.0KB, exceeds 50.0KB limit. Use bash: sed -n '1p' read-big-line.txt | head -c 51200]",
+      "details": {
+        "truncation": {
+          "content": "",
+          "truncated": true,
+          "truncatedBy": "bytes",
+          "totalLines": 1,
+          "totalBytes": 61440,
+          "outputLines": 0,
+          "outputBytes": 0,
+          "lastLinePartial": false,
+          "firstLineExceedsLimit": true,
+          "maxLines": 2000,
+          "maxBytes": 51200
+        }
+      }
+    }
+  },
+  "write": {
+    "basic": {
+      "text": "Successfully wrote 5 bytes to nested/out.txt",
+      "details": null
+    }
+  },
+  "edit": {
+    "basic": {
+      "text": "Successfully replaced text in edit.txt.",
+      "details": {
+        "diff": " 1 alpha\n-2 beta\n+2 BETA\n 3 gamma",
+        "firstChangedLine": 2
+      }
+    }
+  },
+  "bash": {
+    "basic": {
+      "text": "stdout line 1\nstdout line 2",
+      "details": null
+    }
+  },
+  "grep": {
+    "contextLimit": {
+      "text": "context.txt-1- before\ncontext.txt:2: match one\ncontext.txt-3- after\n\n[1 matches limit reached. Use limit=2 for more, or refine pattern]",
+      "details": {
+        "matchLimitReached": 1
+      }
+    }
+  },
+  "find": {
+    "limit": {
+      "text": "a.txt\n\n[1 results limit reached. Use limit=2 for more, or refine pattern]",
+      "details": {
+        "resultLimitReached": 1
+      }
+    }
+  },
+  "ls": {
+    "limit": {
+      "text": ".hidden\nfolder/\n\n[2 entries limit reached. Use limit=4 for more]",
+      "details": {
+        "entryLimitReached": 2
+      }
+    }
+  }
+}

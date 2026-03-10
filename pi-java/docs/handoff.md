@@ -957,6 +957,45 @@
 - 还没有补 `ls` tool 的 golden fixture / TS 输出对拍。
 - 当前 `ls` 仍是本地文件系统实现；后续若要接远端文件系统，可继续沿 `LsOperations` 注入扩展。
 
+### 34. 阶段 4：内置工具 golden tests
+
+已继续在 `modules/pi-tools/src/test/java/dev/pi/tools/BuiltinToolsGoldenTest.java` 与 `modules/pi-tools/src/test/resources/golden/tools/builtin-tools.json` 下补上第一版内置工具 golden tests，并顺手修了 tool details JSON 与 TS 的兼容问题。
+
+本次新增的入口：
+
+- `BuiltinToolsGoldenTest`
+- `src/test/resources/golden/tools/builtin-tools.json`
+
+本次收敛的实现点：
+
+- 已为 `read` / `write` / `edit` / `bash` / `grep` / `find` / `ls` 固化第一批 golden 输出 fixture：
+  - `read` oversized first line bash hint + truncation details
+  - `write` success 文案
+  - `edit` success 文案 + diff/details
+  - `bash` 基础 stdout 输出
+  - `grep` context + limit notice
+  - `find` result-limit notice
+  - `ls` directory suffix + entry-limit notice
+- 为了让 Java 侧 details JSON 真正对齐 TS，本次补了两类兼容修正：
+  - `TruncationLimit` 改成通过 `@JsonValue` 序列化为小写 `lines/bytes`
+  - `ReadToolDetails` / `EditToolDetails` / `BashToolDetails` / `GrepToolDetails` / `FindToolDetails` / `LsToolDetails` 改成 `@JsonInclude(NON_NULL)`，避免把 TS 里的 `undefined` 字段序列化成显式 `null`
+- 这批 golden tests 全部走 fake/injected operations，不依赖本地 shell、`rg`、`fd` 或真实文件系统状态，专门盯输出格式与 details shape
+
+这批 golden tests 已覆盖：
+
+- `read`：超长首行提示文案与 truncation JSON 形状
+- `write`：success 文案
+- `edit`：success 文案、diff 文本、`firstChangedLine`
+- `bash`：基础 stdout 输出
+- `grep`：context 行格式、match-limit notice、details shape
+- `find`：result-limit notice、details shape
+- `ls`：directory suffix、entry-limit notice、details shape
+
+这一刀的边界：
+
+- 当前 golden fixture 仍是“按 TS 合同手工固化”的第一版，不是自动从 TS 运行时录制产物生成。
+- `bash` / `grep` / `find` 的更复杂 truncation/full-output 场景，后续若要继续追平，可以再补第二批 golden cases。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -1007,6 +1046,7 @@ npm.cmd run check
 - `pi-tools` 的 `grep` tool：rg JSON search、context lines、match limit notice、line truncation notice
 - `pi-tools` 的 `find` tool：pure-Java tree walk、hidden files、root `.gitignore`、result limit notice
 - `pi-tools` 的 `ls` tool：dotfiles、directory suffix、entry limit notice、empty directory
+- `pi-tools` 的内置工具 golden fixtures：tool text output、limit notice、diff/details JSON shape、`TruncationLimit` 小写序列化
 - `pi-agent-runtime` 的 tool cancellation：close event stream -> tool cancel supplier
 
 对应测试文件：
@@ -1050,6 +1090,7 @@ npm.cmd run check
 - `modules/pi-tools/src/test/java/dev/pi/tools/GrepToolTest.java`
 - `modules/pi-tools/src/test/java/dev/pi/tools/FindToolTest.java`
 - `modules/pi-tools/src/test/java/dev/pi/tools/LsToolTest.java`
+- `modules/pi-tools/src/test/java/dev/pi/tools/BuiltinToolsGoldenTest.java`
 
 ## 未完成 / 已知缺口
 
@@ -1059,12 +1100,12 @@ npm.cmd run check
 
 ### `pi-tools`
 
-阶段 4 当前已完成 truncation / diff / shell / path policy / image resize primitives，以及 `read` / `write` / `edit` / `bash` / `grep` / `find` / `ls` tool。
+阶段 4 当前已完成 truncation / diff / shell / path policy / image resize primitives，以及 `read` / `write` / `edit` / `bash` / `grep` / `find` / `ls` tool 和第一批 golden output fixtures。
 
 下一步按任务顺序应继续：
 
-- `pi-tools`
-- golden output / fixture 对拍
+- `pi-extension-spi`
+- core types / extension discovery skeleton
 
 ### 其他模块
 
@@ -1100,15 +1141,15 @@ npm.cmd run check
 
 建议严格按 `docs/tasks.md` 的顺序继续：
 
-1. 继续 `pi-tools`，先补 `ls`。
-2. 然后推进工具层 golden tests。
-3. 再进入阶段 5 `pi-extension-spi`。
+1. 进入阶段 5 `pi-extension-spi`。
+2. 先补 core types + extension discovery skeleton。
+3. 再补 event bus 与 tool/command 注册。
 
 更具体的下一步切片建议：
 
-1. `pi-tools`：工具层 golden output 固化。
-2. `pi-tools`：补工具层 golden fixture，对拍 TS 输出。
-3. `pi-extension-spi`：core types + extension discovery skeleton。
+1. `pi-extension-spi`：`ExtensionApi` / `ExtensionContext` / `ToolDefinition` 等 core types。
+2. `pi-extension-spi`：`ServiceLoader + isolated ClassLoader` discovery skeleton。
+3. `pi-extension-spi`：最小扩展加载 contract test。
 
 并行拆分文档入口：
 

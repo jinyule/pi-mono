@@ -27,7 +27,9 @@
 - 阶段 4：已完成 `grep` 工具、context/limit、long-line truncation、match-limit notices contract tests。
 - 阶段 4：已完成 `find` 工具、hidden files、root .gitignore、result-limit notices contract tests。
 - 阶段 4：已完成 `ls` 工具、dotfiles、directory suffix、entry-limit notices contract tests。
-- 阶段 4：下一步实现内置工具 golden tests。
+- 阶段 4：已完成内置工具 golden tests、details JSON 兼容（省略 `null` 字段、`truncatedBy` 小写）。
+- 阶段 4：已收尾。
+- 阶段 5：下一步实现 `core types / extension discovery skeleton`。
 - 阶段 5 到阶段 9：未开始。
 
 ## 阶段 0：项目骨架
@@ -78,7 +80,7 @@
 4. 实现 `edit` 工具，支持 exact match + diff details。（已完成）
 5. 实现 `bash` 工具，支持 streaming output、timeout、abort、tail truncation、full output temp file。（已完成）
 6. 实现 `grep`、`find`、`ls`。（已完成）
-7. 增加内置工具 golden tests，确认输出格式与 TS 版本一致。
+7. 增加内置工具 golden tests，确认输出格式与 TS 版本一致。（已完成）
 
 ## 阶段 5：`pi-extension-spi`
 
