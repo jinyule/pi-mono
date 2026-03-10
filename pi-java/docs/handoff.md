@@ -490,6 +490,50 @@
 - 还没有补齐 TypeScript `SettingsManager` 的全部 typed getter/setter surface；当前先以通用 JSON foundation 为主，后续按 CLI/runtime 消费点逐步加 typed facade。
 - 还没有实现 `AGENTS.md` / `CLAUDE.md` / `SYSTEM.md` / `APPEND_SYSTEM.md` 资源装配。
 
+### 25. 阶段 3：`AGENTS.md` / `CLAUDE.md` / `SYSTEM.md` / `APPEND_SYSTEM.md` 资源装配
+
+已继续在 `modules/pi-session/src/main/java/dev/pi/session/` 与 `modules/pi-session/src/test/java/dev/pi/session/InstructionResourceLoaderTest.java` 下补上第一版 instruction resource loader。
+
+本次新增的入口：
+
+- `InstructionFile`
+- `InstructionResources`
+- `InstructionResourceLoader`
+- `InstructionResourceLoaderTest`
+
+当前这批资源装配代码的实现特点：
+
+- `InstructionResourceLoader` 现在会把 resource assembly 限定在阶段 3 需要的四类输入：
+  - 目录级上下文文件：`AGENTS.md` / `CLAUDE.md`
+  - project/global system prompt：`SYSTEM.md`
+  - project/global append system prompt：`APPEND_SYSTEM.md`
+- context file 发现顺序已对齐现有 TS 语义：
+  - 先加载 global `agentDir` 下的 `AGENTS.md|CLAUDE.md`
+  - 再从文件系统 root -> cwd 方向加载祖先目录上下文文件
+  - 同一个目录里优先 `AGENTS.md`，没有再退到 `CLAUDE.md`
+  - 重复 path 会去重
+- `SYSTEM.md` 和 `APPEND_SYSTEM.md` 的优先级已对齐 TS：
+  - 先找项目级 `.pi/`
+  - 项目不存在时再回退到 global `agentDir`
+- `APPEND_SYSTEM.md` 当前按 TS 一致性先实现为“0 或 1 个 append prompt”；返回类型仍保留为 `List<String>`，为后续 extension/runtime append 扩展预留空间。
+- loader 现在已支持 `reload()` 与 `drainErrors()`：
+  - 读取失败的文件会被跳过
+  - `IOException` 会进入 error buffer，避免因为单个不可读文件把整次 resource discovery 弄成 hard failure
+
+这批 contract tests 已覆盖：
+
+- reload 前的空状态
+- global + ancestor context file 的稳定顺序
+- 同目录 `AGENTS.md` 优先于 `CLAUDE.md`
+- project `SYSTEM.md` 覆盖 global
+- project `APPEND_SYSTEM.md` 覆盖 global
+- 缺少 project 文件时回退 global
+
+这一刀的边界：
+
+- 目前只实现了 instruction/context 这条最小 resource assembly 线，还没有补技能、prompt templates、themes、extensions 的完整 Java 版 resource loader。
+- 还没有做基于 settings 的 resource include/exclude、path metadata、collision diagnostics、热重载集成。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -530,6 +574,7 @@ npm.cmd run check
 - `pi-session` 的 `SessionManager` in-memory append/navigation/tree、persistent delayed flush、legacy open-and-migrate 语义
 - `pi-session` 的 branch summary、in-memory fork path 裁剪与 label 保留、persisted fork delayed/immediate flush、fork 后 JSONL header/id 稳定性
 - `pi-session` 的 settings deep merge、legacy settings migration、latest-on-disk merge、project override、file lock 序列化、reload parse-error 恢复语义
+- `pi-session` 的 instruction resource assembly：global/ancestor context file 顺序、`AGENTS.md` 优先级、project/global system prompt 覆盖、append prompt 回退语义
 
 对应测试文件：
 
@@ -558,17 +603,18 @@ npm.cmd run check
 - `modules/pi-session/src/test/java/dev/pi/session/SessionContextReplayTest.java`
 - `modules/pi-session/src/test/java/dev/pi/session/SessionManagerTest.java`
 - `modules/pi-session/src/test/java/dev/pi/session/SettingsManagerTest.java`
+- `modules/pi-session/src/test/java/dev/pi/session/InstructionResourceLoaderTest.java`
 
 ## 未完成 / 已知缺口
 
 ### `pi-session`
 
-阶段 3 当前已完成 session model、JSONL parse/write skeleton、migration、replay contract tests、`SessionManager` skeleton、session tree / fork / persisted append contract tests、fork / branched session file 提取、`Settings` / `SettingsManager`、settings deep merge / lock / migration tests。
+阶段 3 当前已完成 session model、JSONL parse/write skeleton、migration、replay contract tests、`SessionManager` skeleton、session tree / fork / persisted append contract tests、fork / branched session file 提取、`Settings` / `SettingsManager`、settings deep merge / lock / migration tests、instruction resource assembly。
 
 下一步按任务顺序应继续：
 
-- `AGENTS.md` / `CLAUDE.md` / `SYSTEM.md` / `APPEND_SYSTEM.md` 资源装配
-- resources merge / precedence tests
+- `pi-tools`
+- truncation / diff / shell / path policy / image resize primitives
 
 ### 其他模块
 
@@ -606,15 +652,15 @@ npm.cmd run check
 
 建议严格按 `docs/tasks.md` 的顺序继续：
 
-1. 继续 `pi-session`，先补 `AGENTS.md` / `CLAUDE.md` / `SYSTEM.md` / `APPEND_SYSTEM.md` 资源装配。
-2. 再补 resources precedence / merge tests。
-3. 然后进入 `pi-tools`。
+1. 进入 `pi-tools`，先补 truncation / diff / shell / path policy / image resize primitives。
+2. 再补 `read` 工具。
+3. 然后推进 `write` / `edit` / `bash`。
 
 更具体的下一步切片建议：
 
-1. `pi-session`：资源装配与 precedence。
-2. `pi-session`：resource merge / reload tests。
-3. `pi-tools`：read/write/edit/bash primitives。
+1. `pi-tools`：truncation / diff / shell / path policy / image resize primitives。
+2. `pi-tools`：`read` tool contract tests + 实现。
+3. `pi-tools`：`write` / `edit` / `bash` primitives。
 
 并行拆分文档入口：
 
