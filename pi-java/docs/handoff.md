@@ -1246,6 +1246,48 @@
 - 还没有把 resource discovery 结果接到 skills / prompts / themes runtime loader。
 - 还没有落仓库内最小示例插件源码。
 
+### 40. 阶段 5：仓库内最小示例插件
+
+已继续在 `examples/minimal-extension/` 与 `modules/pi-extension-spi/src/test/java/dev/pi/extension/spi/` 下补上第一版 checked-in example plugin，并用真实源码热重载测试验证它。
+
+本次新增的入口：
+
+- `examples/minimal-extension/README.md`
+- `examples/minimal-extension/src/main/java/dev/pi/examples/MinimalExtension.java`
+- `examples/minimal-extension/src/main/resources/META-INF/services/dev.pi.extension.spi.PiExtension`
+- `ExampleExtensionPluginTest`
+
+本次收敛的实现点：
+
+- 仓库里现在已有一个最小可读的 Java 插件示例，覆盖：
+  - `PiExtension` 入口
+  - `SessionStartEvent` 订阅
+  - command 注册
+  - shortcut 注册
+  - flag 注册
+  - `META-INF/services` service entry
+- `examples/minimal-extension/README.md` 说明了这个示例的结构和当前测试验证点，后续可继续扩成真正的 sample plugin 文档入口。
+- `ExtensionTestJars` 现在已支持从真实项目目录编译示例源码并打包 jar，不再只支持测试内的 inline source string。
+- `ExampleExtensionPluginTest` 现在会：
+  - 复制仓库内 example project 到临时目录
+  - 把它编译成 jar
+  - 通过 `ExtensionRuntime` 实际加载
+  - 修改示例源码中的 command 名称
+  - 重新编译并调用 `reload()`
+  - 验证旧 classloader 已关闭且新注册项生效
+
+这批 contract tests 已覆盖：
+
+- checked-in example plugin 可以被 loader 真实发现并加载
+- example plugin 的 command / shortcut / flag / event handler 注册可进入 `LoadedExtension`
+- 修改示例源码后，`ExtensionRuntime.reload()` 会加载新版本并关闭旧 classloader
+
+这一刀的边界：
+
+- example plugin 目前还是最小骨架，没有接内置 tools、message renderer、resource discovery 或 UI 交互。
+- 还没有给 example plugin 单独配 Gradle subproject；当前以仓库内源码 + 测试编译打包为主。
+- 阶段 5 的 SPI 目标已基本收口，后续更完整的 skills / prompts / themes runtime 接线将随应用层推进。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -1303,6 +1345,7 @@ npm.cmd run check
 - `pi-extension-spi` 的 registration surface：shortcut/flag 捕获、flag default lookup、duplicate shortcut failure 收敛
 - `pi-extension-spi` 的 resource discovery：resource path 聚合、扩展 source 相对路径归一化、invalid path / handler failure 收敛
 - `pi-extension-spi` 的 reload runtime：snapshot rebuild、old classloader close、event bus / resource discovery rebuild
+- `pi-extension-spi` 的 checked-in example plugin：真实源码编译、service entry、热重载验证
 - `pi-agent-runtime` 的 tool cancellation：close event stream -> tool cancel supplier
 
 对应测试文件：
@@ -1352,6 +1395,7 @@ npm.cmd run check
 - `modules/pi-extension-spi/src/test/java/dev/pi/extension/spi/ExtensionRegistrationSurfaceTest.java`
 - `modules/pi-extension-spi/src/test/java/dev/pi/extension/spi/ExtensionResourceDiscoveryTest.java`
 - `modules/pi-extension-spi/src/test/java/dev/pi/extension/spi/ExtensionRuntimeReloadTest.java`
+- `modules/pi-extension-spi/src/test/java/dev/pi/extension/spi/ExampleExtensionPluginTest.java`
 
 ## 未完成 / 已知缺口
 
@@ -1370,13 +1414,13 @@ npm.cmd run check
 
 ### `pi-extension-spi`
 
-阶段 5 当前已完成 core types、`ServiceLoader + isolated ClassLoader` discovery skeleton、最小扩展加载 contract tests、扩展事件总线与 typed event contract、tool / command / shortcut / flag / renderer 注册面收敛、资源发现扩展点、`/reload` runtime rebuild。
+阶段 5 当前已完成 core types、`ServiceLoader + isolated ClassLoader` discovery skeleton、最小扩展加载 contract tests、扩展事件总线与 typed event contract、tool / command / shortcut / flag / renderer 注册面收敛、资源发现扩展点、`/reload` runtime rebuild、仓库内最小示例插件。
 
 下一步按任务顺序应继续：
 
-- 最小示例插件
-- skills / prompts / themes runtime loader 接线
-- app runtime 层完整 reload 串接
+- `pi-tui`
+- `Terminal` / `Component` / `Focusable` / `Overlay` 接口
+- terminal raw mode / resize / title / cursor 基础支持
 
 ### 其他模块
 
@@ -1412,14 +1456,14 @@ npm.cmd run check
 建议严格按 `docs/tasks.md` 的顺序继续：
 
 1. 进入阶段 5 `pi-extension-spi`。
-2. 先补最小示例插件。
-3. 再补 skills / prompts / themes runtime loader 接线与 app runtime 层完整 reload 串接。
+2. 先进入阶段 6 `pi-tui`。
+3. 从 `Terminal` / `Component` / `Focusable` / `Overlay` 接口开始。
 
 更具体的下一步切片建议：
 
-1. `pi-extension-spi`：仓库内最小示例插件与热重载验证。
-2. `pi-extension-spi`：skills / prompts / themes runtime loader 接线。
-3. app runtime：`session_shutdown -> settings reload -> resources reload -> runtime rebuild -> session_start` 串接。
+1. `pi-tui`：`Terminal` / `Component` / `Focusable` / `Overlay` 核心接口。
+2. `pi-tui`：terminal raw mode / resize / title / cursor / bracketed paste 基础支持。
+3. `pi-tui`：diff renderer 与 synchronized output 骨架。
 
 并行拆分文档入口：
 
