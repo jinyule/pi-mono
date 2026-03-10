@@ -20,16 +20,20 @@ import dev.pi.ai.model.ToolCall;
 import dev.pi.ai.model.Usage;
 import dev.pi.ai.model.UserContent;
 import dev.pi.ai.provider.ApiProvider;
+import dev.pi.ai.provider.MessageHistoryCompat;
 import dev.pi.ai.stream.AssistantMessageAssembler;
 import dev.pi.ai.stream.AssistantMessageEventStream;
 import java.net.URI;
 import java.time.Clock;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 
 public final class OpenAiResponsesProvider implements ApiProvider {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final Set<String> OPENAI_TOOL_CALL_PROVIDERS = Set.of("openai", "openai-codex", "opencode");
 
     private final OpenAiResponsesTransport transport;
     private final Clock clock;
@@ -166,6 +170,7 @@ public final class OpenAiResponsesProvider implements ApiProvider {
 
     private ArrayNode convertMessages(Model model, Context context) {
         var input = OBJECT_MAPPER.createArrayNode();
+        var transformedMessages = transformMessages(context.messages(), model, clock.millis());
 
         if (context.systemPrompt() != null && !context.systemPrompt().isBlank()) {
             var role = model.reasoning() ? "developer" : "system";
@@ -174,7 +179,7 @@ public final class OpenAiResponsesProvider implements ApiProvider {
                 .put("content", context.systemPrompt()));
         }
 
-        for (Message message : context.messages()) {
+        for (Message message : transformedMessages) {
             switch (message) {
                 case Message.UserMessage userMessage -> {
                     var content = convertUserContent(model, userMessage.content());
@@ -184,7 +189,7 @@ public final class OpenAiResponsesProvider implements ApiProvider {
                             .set("content", content));
                     }
                 }
-                case Message.AssistantMessage assistantMessage -> convertAssistantMessage(input, assistantMessage);
+                case Message.AssistantMessage assistantMessage -> convertAssistantMessage(input, model, assistantMessage);
                 case Message.ToolResultMessage toolResultMessage -> convertToolResultMessage(input, model, toolResultMessage);
             }
         }
@@ -214,8 +219,12 @@ public final class OpenAiResponsesProvider implements ApiProvider {
         return content;
     }
 
-    private void convertAssistantMessage(ArrayNode input, Message.AssistantMessage message) {
+    private void convertAssistantMessage(ArrayNode input, Model model, Message.AssistantMessage message) {
         int textIndex = 0;
+        var differentModelSameProvider =
+            message.provider().equals(model.provider()) &&
+                message.api().equals(model.api()) &&
+                !message.model().equals(model.id());
         for (AssistantContent block : message.content()) {
             switch (block) {
                 case ThinkingContent thinkingContent -> {
@@ -247,7 +256,7 @@ public final class OpenAiResponsesProvider implements ApiProvider {
                         .put("call_id", ids.callId())
                         .put("name", toolCall.name())
                         .put("arguments", stringifyJson(toolCall.arguments()));
-                    if (ids.itemId() != null) {
+                    if (ids.itemId() != null && !(differentModelSameProvider && ids.itemId().startsWith("fc_"))) {
                         item.put("id", ids.itemId());
                     }
                     input.add(item);
@@ -305,6 +314,61 @@ public final class OpenAiResponsesProvider implements ApiProvider {
             array.add(item);
         }
         return array;
+    }
+
+    private List<Message> transformMessages(List<Message> messages, Model model, long syntheticTimestamp) {
+        return MessageHistoryCompat.transformMessages(messages, model, syntheticTimestamp, this::transformAssistantMessage);
+    }
+
+    private Message.AssistantMessage transformAssistantMessage(
+        Message.AssistantMessage assistantMessage,
+        Model model,
+        MessageHistoryCompat.CompatContext compatContext
+    ) {
+        var sameModel = compatContext.sameProviderAndModel(assistantMessage, model);
+        var transformedContent = new ArrayList<AssistantContent>(assistantMessage.content().size());
+
+        for (AssistantContent block : assistantMessage.content()) {
+            switch (block) {
+                case TextContent textContent -> transformedContent.add(sameModel
+                    ? textContent
+                    : new TextContent(textContent.text(), null));
+                case ThinkingContent thinkingContent -> {
+                    if (thinkingContent.redacted()) {
+                        if (sameModel) {
+                            transformedContent.add(thinkingContent);
+                        }
+                        continue;
+                    }
+                    if (sameModel && thinkingContent.thinkingSignature() != null && !thinkingContent.thinkingSignature().isBlank()) {
+                        transformedContent.add(thinkingContent);
+                        continue;
+                    }
+                    if (thinkingContent.thinking().isBlank()) {
+                        continue;
+                    }
+                    transformedContent.add(sameModel
+                        ? thinkingContent
+                        : new TextContent(thinkingContent.thinking(), null));
+                }
+                case ToolCall toolCall -> {
+                    var normalized = !sameModel && toolCall.thoughtSignature() != null
+                        ? new ToolCall(toolCall.id(), toolCall.name(), toolCall.arguments(), null)
+                        : toolCall;
+                    if (!sameModel) {
+                        var normalizedId = normalizeResponsesToolCallId(toolCall.id(), model);
+                        if (!normalizedId.equals(toolCall.id())) {
+                            compatContext.remapToolCallId(toolCall.id(), normalizedId);
+                            normalized = new ToolCall(normalizedId, normalized.name(), normalized.arguments(), normalized.thoughtSignature());
+                        }
+                    }
+                    transformedContent.add(normalized);
+                }
+                default -> transformedContent.add(block);
+            }
+        }
+
+        return MessageHistoryCompat.rebuildAssistantMessage(assistantMessage, transformedContent);
     }
 
     private void processEvent(
@@ -470,6 +534,32 @@ public final class OpenAiResponsesProvider implements ApiProvider {
             return new ToolCallIds(value, null);
         }
         return new ToolCallIds(value.substring(0, separator), value.substring(separator + 1));
+    }
+
+    private static String normalizeResponsesToolCallId(String value, Model model) {
+        if (!OPENAI_TOOL_CALL_PROVIDERS.contains(model.provider()) || !value.contains("|")) {
+            return value;
+        }
+
+        var ids = splitToolCallId(value);
+        var callId = ids.callId().replaceAll("[^a-zA-Z0-9_-]", "_");
+        var itemId = ids.itemId() == null ? "" : ids.itemId().replaceAll("[^a-zA-Z0-9_-]", "_");
+
+        if (!itemId.startsWith("fc")) {
+            itemId = "fc_" + itemId;
+        }
+
+        callId = trimTrailingUnderscores(truncate(callId, 64));
+        itemId = trimTrailingUnderscores(truncate(itemId, 64));
+        return callId + "|" + itemId;
+    }
+
+    private static String truncate(String value, int maxLength) {
+        return value.length() <= maxLength ? value : value.substring(0, maxLength);
+    }
+
+    private static String trimTrailingUnderscores(String value) {
+        return value.replaceFirst("_+$", "");
     }
 
     private static String stringifyJson(JsonNode jsonNode) {

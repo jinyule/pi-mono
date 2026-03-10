@@ -14,8 +14,8 @@
 更新时间：2026-03-10
 
 - 阶段 0：已完成。
-- 阶段 1：已完成 `core model / event types`、`AssistantMessageEventStream / EventStream`、`ApiProviderRegistry / ModelRegistry / CredentialResolver / PiAiClient facade`、`AssistantMessage partial assembler`、`SSE parser / WebSocket adapter`、`openai-responses provider`、`openai-completions provider`、`anthropic-messages provider`、`google-generative-ai provider`、`bedrock-converse-stream provider`、`message transform / validation / compat` 抽象层。
-- 阶段 1：下一步进入 provider 交叉行为测试矩阵，优先回补 `abort` / `handoff` / `image input` / cross-provider coverage。
+- 阶段 1：已完成 `core model / event types`、`AssistantMessageEventStream / EventStream`、`ApiProviderRegistry / ModelRegistry / CredentialResolver / PiAiClient facade`、`AssistantMessage partial assembler`、`SSE parser / WebSocket adapter`、`openai-responses provider`、`openai-completions provider`、`anthropic-messages provider`、`google-generative-ai provider`、`bedrock-converse-stream provider`、`message transform / validation / compat` 抽象层、provider 交叉行为测试矩阵（`abort` / `handoff` / `image input` / `cross-provider coverage`）。
+- 阶段 1：已收尾，下一步进入阶段 2 的 `pi-agent-runtime`。
 - 阶段 2 到阶段 9：未开始。
 
 ## 阶段 0：项目骨架

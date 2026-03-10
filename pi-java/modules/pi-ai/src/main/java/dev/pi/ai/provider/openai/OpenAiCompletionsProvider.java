@@ -20,10 +20,12 @@ import dev.pi.ai.model.ToolCall;
 import dev.pi.ai.model.Usage;
 import dev.pi.ai.model.UserContent;
 import dev.pi.ai.provider.ApiProvider;
+import dev.pi.ai.provider.MessageHistoryCompat;
 import dev.pi.ai.stream.AssistantMessageAssembler;
 import dev.pi.ai.stream.AssistantMessageEventStream;
 import java.net.URI;
 import java.time.Clock;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -165,6 +167,7 @@ public final class OpenAiCompletionsProvider implements ApiProvider {
 
     private ArrayNode convertMessages(Model model, Context context, Compat compat) {
         var messages = OBJECT_MAPPER.createArrayNode();
+        var transformedMessages = transformMessages(context.messages(), model);
         if (context.systemPrompt() != null && !context.systemPrompt().isBlank()) {
             var role = model.reasoning() && compat.supportsDeveloperRole() ? "developer" : "system";
             messages.add(OBJECT_MAPPER.createObjectNode()
@@ -173,7 +176,7 @@ public final class OpenAiCompletionsProvider implements ApiProvider {
         }
 
         String lastRole = null;
-        for (Message message : context.messages()) {
+        for (Message message : transformedMessages) {
             if (compat.requiresAssistantAfterToolResult() && "toolResult".equals(lastRole) && message instanceof Message.UserMessage) {
                 messages.add(OBJECT_MAPPER.createObjectNode()
                     .put("role", "assistant")
@@ -196,6 +199,62 @@ public final class OpenAiCompletionsProvider implements ApiProvider {
         }
 
         return messages;
+    }
+
+    private List<Message> transformMessages(List<Message> messages, Model model) {
+        return MessageHistoryCompat.transformMessages(messages, model, clock.millis(), this::transformAssistantMessage);
+    }
+
+    private Message.AssistantMessage transformAssistantMessage(
+        Message.AssistantMessage assistantMessage,
+        Model model,
+        MessageHistoryCompat.CompatContext compatContext
+    ) {
+        var sameModel = compatContext.sameProviderAndModel(assistantMessage, model);
+        var compat = resolveCompat(model);
+        var transformedContent = new ArrayList<AssistantContent>(assistantMessage.content().size());
+
+        for (AssistantContent block : assistantMessage.content()) {
+            switch (block) {
+                case TextContent textContent -> transformedContent.add(sameModel
+                    ? textContent
+                    : new TextContent(textContent.text(), null));
+                case ThinkingContent thinkingContent -> {
+                    if (thinkingContent.redacted()) {
+                        if (sameModel) {
+                            transformedContent.add(thinkingContent);
+                        }
+                        continue;
+                    }
+                    if (sameModel && thinkingContent.thinkingSignature() != null && !thinkingContent.thinkingSignature().isBlank()) {
+                        transformedContent.add(thinkingContent);
+                        continue;
+                    }
+                    if (thinkingContent.thinking().isBlank()) {
+                        continue;
+                    }
+                    transformedContent.add(sameModel
+                        ? thinkingContent
+                        : new TextContent(thinkingContent.thinking(), null));
+                }
+                case ToolCall toolCall -> {
+                    var normalized = !sameModel && toolCall.thoughtSignature() != null
+                        ? new ToolCall(toolCall.id(), toolCall.name(), toolCall.arguments(), null)
+                        : toolCall;
+                    if (!sameModel) {
+                        var normalizedId = normalizeToolCallId(toolCall.id(), model, compat);
+                        if (!normalizedId.equals(toolCall.id())) {
+                            compatContext.remapToolCallId(toolCall.id(), normalizedId);
+                            normalized = new ToolCall(normalizedId, normalized.name(), normalized.arguments(), normalized.thoughtSignature());
+                        }
+                    }
+                    transformedContent.add(normalized);
+                }
+                default -> transformedContent.add(block);
+            }
+        }
+
+        return MessageHistoryCompat.rebuildAssistantMessage(assistantMessage, transformedContent);
     }
 
     private ObjectNode convertUserMessage(Model model, Message.UserMessage userMessage) {

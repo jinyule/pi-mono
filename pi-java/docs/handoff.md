@@ -227,8 +227,26 @@
 - 公共层已统一处理 `error` / `aborted` assistant turn 跳过、pending tool call 追踪、tool result id remap、缺失 tool result 自动补齐。
 - `CompatContext` 提供 `sameProviderAndModel()`、`normalizeToolCallId()`、`remapToolCallId()`，把 provider 的兼容策略和 replay 管线解耦。
 - `MessageHistoryCompat.rebuildAssistantMessage()` 统一重建 assistant message，减少各 provider 内重复 record 拷贝逻辑。
-- 目前 `AnthropicMessagesProvider`、`GoogleGenerativeAiProvider`、`BedrockConverseStreamProvider` 已切到这层公共 compat/replay 逻辑。
-- 当前还没有把 OpenAI 两条 provider 线也并入这层；它们的 compat 规则更细，适合在下一轮统一抽象。
+- 目前 `OpenAiResponsesProvider`、`OpenAiCompletionsProvider`、`AnthropicMessagesProvider`、`GoogleGenerativeAiProvider`、`BedrockConverseStreamProvider` 都已切到这层 compat/replay 语义。
+- OpenAI 两条 provider 线额外补了各自的 provider-specific tool call id normalize / replay 兼容规则；公共层保留统一 synthetic tool result 与 aborted skip 管线。
+
+### 14. 阶段 1：provider 交叉行为测试矩阵首版
+
+已在 `modules/pi-ai/src/test/java/dev/pi/ai/provider/ProviderBehaviorMatrixTest.java` 下补上第一版 provider 交叉行为测试矩阵。
+
+当前这批矩阵测试覆盖的行为：
+
+- `openai-responses`、`openai-completions`、`anthropic-messages`、`google-generative-ai`、`bedrock-converse-stream` 五条 provider 线统一验证 `abort` -> `StopReason.ABORTED` 终结语义。
+- 统一验证 cross-provider handoff replay：缺失 tool result 会被 synthetic 补齐，aborted assistant turn 不会进入后续请求 payload。
+- 统一验证 image input replay：provider request payload 会保留用户图片输入，并按各自协议落到 `input_image` / `image_url` / `inlineData` / Bedrock image block。
+- 统一验证 OpenAI 两条 provider 线已接到公共 compat/replay 语义：现在也会跳过 `error` / `aborted` assistant turn，并在 user follow-up 前补 `No result provided` synthetic tool result。
+
+本次顺手收敛的实现点：
+
+- `OpenAiResponsesProvider` 已补 `MessageHistoryCompat` 接线，并补上 OpenAI Responses 风格的 tool call id normalize（`call_id|fc_id`）。
+- `OpenAiResponsesProvider` 现在对 same-provider-different-model 的 historical function call 会跳过 `fc_*` item id 回放，避免 pairing 校验问题。
+- `OpenAiCompletionsProvider` 已补 `MessageHistoryCompat` 接线，tool result synthetic 补齐与 aborted assistant skip 语义已追平 TypeScript 版。
+- 现在五条 provider 线都走统一的 handoff/replay 测试入口，后续新增 provider 时可以直接往矩阵里挂。
 
 ## 已完成的验证
 
@@ -257,6 +275,7 @@ npm.cmd run check
 - `google-generative-ai` provider 的 payload 构造、SSE event 映射、Gemini 3 thinking level / Gemini 2.5 budget thinking、tool call / reasoning / usage 归一化、error 终结语义
 - `bedrock-converse-stream` provider 的 payload 构造、ConverseStream event 映射、Claude adaptive/budget thinking、tool call / reasoning / usage 归一化、error 终结语义
 - `message transform / validation / compat` 公共 replay 层、tool result synthetic 填充、tool call id remap、assistant turn 跳过规则
+- provider 交叉行为测试矩阵、OpenAI provider 的 compat/replay 收敛、abort/handoff/image input cross-provider coverage
 
 对应测试文件：
 
@@ -276,14 +295,13 @@ npm.cmd run check
 - `modules/pi-ai/src/test/java/dev/pi/ai/provider/google/GoogleGenerativeAiProviderTest.java`
 - `modules/pi-ai/src/test/java/dev/pi/ai/provider/bedrock/BedrockConverseStreamProviderTest.java`
 - `modules/pi-ai/src/test/java/dev/pi/ai/provider/MessageHistoryCompatTest.java`
+- `modules/pi-ai/src/test/java/dev/pi/ai/provider/ProviderBehaviorMatrixTest.java`
 
 ## 未完成 / 已知缺口
 
 ### `pi-ai`
 
-以下内容还没开始或只完成了骨架：
-
-- provider 交叉行为测试矩阵（`abort` / `handoff` / `image input` / cross-provider parity）
+阶段 1 当前已收尾；下一步进入 `pi-agent-runtime`。
 
 ### 其他模块
 
@@ -322,15 +340,15 @@ npm.cmd run check
 
 建议严格按 `docs/tasks.md` 的顺序继续：
 
-1. 先回补 `pi-ai` 的 `abort` / `handoff` / `image input` / cross-provider 测试矩阵。
-2. 然后评估是否把 OpenAI 两条 provider 线也并入公共 compat/replay 抽象。
-3. 再进入 `pi-agent-runtime`，先补 core types 与 loop skeleton。
+1. 进入 `pi-agent-runtime`，先补 core types 与 loop skeleton。
+2. 落第一版 `convertToLlm` / `transformContext` 两阶段上下文管线。
+3. 再补 streaming assistant response 组装器与 loop 生命周期测试。
 
 更具体的下一步切片建议：
 
-1. `pi-ai`：provider 交叉行为测试矩阵。
-2. `pi-ai`：OpenAI compat/replay 抽象收敛。
-3. `pi-agent-runtime`：core types + loop skeleton。
+1. `pi-agent-runtime`：core types + loop skeleton。
+2. `pi-agent-runtime`：context transform pipeline。
+3. `pi-agent-runtime`：streaming response assembler + lifecycle tests。
 
 并行拆分文档入口：
 
