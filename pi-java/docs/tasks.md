@@ -45,7 +45,7 @@
 - 阶段 6：已完成 `Image` 第一批：terminal image capability detect、Kitty/iTerm2 sequence encode、base64 dimension detect、fallback placeholder、基础 image tests。
 - 阶段 6：已完成 `VirtualTerminal` 第一批：lightweight ANSI emulator、viewport/scroll buffer/input/resize hooks、viewport-level render/key golden tests。
 - 阶段 6：已收尾。
-- 阶段 7：已开始，已完成 `pi-cli` CLI 参数解析（运行模式、通用启动选项、初始 file/message 输入拆分、未知 flag 保留）、`PiAgentSession` skeleton、最小 `interactive` mode shell（state render、prompt submit、session persistence bridge）、`print` mode（stdout/stderr output、final assistant selection）、`json` mode（JSONL event/state envelope）、`rpc` mode（command/response + notification JSONL）、`pi-sdk` facade（`PiSdk` / `PiSdkSession` / `createAgentSession()` / session helpers）、CLI startup dispatcher（`PiCliApplication`）。
+- 阶段 7：已开始，已完成 `pi-cli` CLI 参数解析（运行模式、通用启动选项、初始 file/message 输入拆分、未知 flag 保留）、`PiAgentSession` skeleton、最小 `interactive` mode shell（state render、prompt submit、session persistence bridge）、`print` mode（stdout/stderr output、final assistant selection）、`json` mode（JSONL event/state envelope）、`rpc` mode（command/response + notification JSONL）、`pi-sdk` facade（`PiSdk` / `PiSdkSession` / `createAgentSession()` / session helpers）、CLI startup dispatcher（`PiCliApplication`）、`list-models` command。
 - 阶段 8 到阶段 9：未开始。
 
 ## 阶段 0：项目骨架
@@ -126,7 +126,8 @@
 5. 实现 `rpc` mode。（已完成首版）
 6. 实现 `pi-sdk` facade：`createAgentSession()`、`ModelRegistry`、`SessionManager`。（已完成首版）
 7. 实现 CLI main entry / startup pipeline。（已完成 skeleton）
-8. 实现 `list-models`、`resume`、`new`、`export`、`copy`、`tree`、`fork`、`compact`、`reload`。
+8. 实现 `list-models`。（已完成首版）
+9. 实现 `resume`、`new`、`export`、`copy`、`tree`、`fork`、`compact`、`reload`。
 
 ## 阶段 8：行为追平
 

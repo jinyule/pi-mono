@@ -6,6 +6,7 @@ import java.util.concurrent.CompletionStage;
 
 public final class PiCliApplication {
     private final PiCliParser parser;
+    private final ListModelsHandler listModelsHandler;
     private final SessionFactory sessionFactory;
     private final ModeHandler interactiveHandler;
     private final ModeHandler printHandler;
@@ -14,6 +15,7 @@ public final class PiCliApplication {
 
     private PiCliApplication(Builder builder) {
         this.parser = builder.parser;
+        this.listModelsHandler = builder.listModelsHandler;
         this.sessionFactory = builder.sessionFactory;
         this.interactiveHandler = builder.interactiveHandler;
         this.printHandler = builder.printHandler;
@@ -27,6 +29,9 @@ public final class PiCliApplication {
 
     public CompletionStage<Void> run(String... argv) {
         var args = parser.parse(argv);
+        if (args.listModelsRequested()) {
+            return listModelsHandler.run(args);
+        }
         var session = sessionFactory.create(args);
         return switch (args.mode()) {
             case INTERACTIVE -> interactiveHandler.run(args, session);
@@ -42,6 +47,11 @@ public final class PiCliApplication {
     }
 
     @FunctionalInterface
+    public interface ListModelsHandler {
+        CompletionStage<Void> run(PiCliArgs args);
+    }
+
+    @FunctionalInterface
     public interface ModeHandler {
         CompletionStage<Void> run(PiCliArgs args, PiInteractiveSession session);
     }
@@ -49,6 +59,7 @@ public final class PiCliApplication {
     public static final class Builder {
         private final SessionFactory sessionFactory;
         private PiCliParser parser = new PiCliParser();
+        private ListModelsHandler listModelsHandler = noOpCommand();
         private ModeHandler interactiveHandler = noOp();
         private ModeHandler printHandler = noOp();
         private ModeHandler jsonHandler = noOp();
@@ -60,6 +71,11 @@ public final class PiCliApplication {
 
         public Builder parser(PiCliParser parser) {
             this.parser = Objects.requireNonNull(parser, "parser");
+            return this;
+        }
+
+        public Builder listModelsHandler(ListModelsHandler listModelsHandler) {
+            this.listModelsHandler = Objects.requireNonNull(listModelsHandler, "listModelsHandler");
             return this;
         }
 
@@ -89,6 +105,10 @@ public final class PiCliApplication {
 
         private static ModeHandler noOp() {
             return (args, session) -> CompletableFuture.completedFuture(null);
+        }
+
+        private static ListModelsHandler noOpCommand() {
+            return args -> CompletableFuture.completedFuture(null);
         }
     }
 }

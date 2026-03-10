@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
@@ -56,6 +57,26 @@ class PiCliApplicationTest {
         app.run("--mode", "rpc").toCompletableFuture().join();
 
         assertThat(invoked).containsExactly("print:hello|world", "json", "rpc");
+    }
+
+    @Test
+    void dispatchesListModelsWithoutCreatingSession() {
+        var sessionCreated = new AtomicBoolean(false);
+        var listModelsQuery = new AtomicReference<String>();
+        var app = PiCliApplication.builder(args -> {
+            sessionCreated.set(true);
+            return new StubSession();
+        })
+            .listModelsHandler(args -> {
+                listModelsQuery.set(args.listModelsQuery());
+                return CompletableFuture.completedFuture(null);
+            })
+            .build();
+
+        app.run("--list-models", "sonnet").toCompletableFuture().join();
+
+        assertThat(sessionCreated).isFalse();
+        assertThat(listModelsQuery.get()).isEqualTo("sonnet");
     }
 
     private static final class StubSession implements PiInteractiveSession {
