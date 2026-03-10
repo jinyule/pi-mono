@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-`pi-java` 已从“纯设计文档目录”推进到“可运行的阶段 0 工程骨架 + 已收尾的阶段 1 `pi-ai` + 已收尾的阶段 2 `pi-agent-runtime` + 已收尾的阶段 3 `pi-session` + 已启动的阶段 4 `pi-tools`”。
+`pi-java` 已从“纯设计文档目录”推进到“可运行的阶段 0 工程骨架 + 已收尾的阶段 1 `pi-ai` + 已收尾的阶段 2 `pi-agent-runtime` + 已收尾的阶段 3 `pi-session` + 已收尾的阶段 4 `pi-tools` + 已启动的阶段 5 `pi-extension-spi`”。
 
 本次工作只改动了 `pi-java/`，没有改动现有 TypeScript 包的实现逻辑。
 
@@ -996,6 +996,61 @@
 - 当前 golden fixture 仍是“按 TS 合同手工固化”的第一版，不是自动从 TS 运行时录制产物生成。
 - `bash` / `grep` / `find` 的更复杂 truncation/full-output 场景，后续若要继续追平，可以再补第二批 golden cases。
 
+### 35. 阶段 5：`pi-extension-spi` core types + discovery skeleton
+
+已继续在 `modules/pi-extension-spi/src/main/java/dev/pi/extension/spi/` 与 `modules/pi-extension-spi/src/test/java/dev/pi/extension/spi/ExtensionLoaderContractTest.java` 下补上第一版 SPI 类型面和扩展发现骨架。
+
+本次新增的入口：
+
+- `PiExtension`
+- `ExtensionApi`
+- `ExtensionContext`
+- `ExtensionCommandContext`
+- `ExtensionUiContext`
+- `ToolDefinition`
+- `CommandDefinition`
+- `CommandHandler`
+- `MessageRenderer`
+- `MessageRenderContext`
+- `ExtensionClassLoader`
+- `LoadedExtension`
+- `ExtensionLoadFailure`
+- `ExtensionLoadResult`
+- `ExtensionLoader`
+- `ExtensionLoaderContractTest`
+
+当前这版 `pi-extension-spi` 的实现特点：
+
+- 先把 Java-native SPI 面固化成最小可用 contract：
+  - `PiExtension` 作为 `ServiceLoader` 入口
+  - `ExtensionApi` 先支持 `registerTool` / `registerCommand` / `registerMessageRenderer`
+  - `ToolDefinition` 直接复用 `AgentTool`，避免重复定义 tool 执行契约
+  - `CommandDefinition` / `CommandHandler` 先落异步命令处理骨架
+  - `ExtensionContext` / `ExtensionCommandContext` / `ExtensionUiContext` 先保留 cwd / session / settings / reload 这组最稳定的骨架能力
+- discovery skeleton 已可工作：
+  - `ExtensionLoader` 会为每个 jar/path 建 `ExtensionClassLoader`
+  - 通过 `ServiceLoader.load(PiExtension.class, classLoader)` 发现扩展
+  - 调用 `extension.register(api)` 捕获 tool / command / renderer 注册项
+  - 返回 `LoadedExtension` / `ExtensionLoadResult`，并支持关闭 classloader
+- 当前注册面已补最小防御：
+  - 同一扩展内 duplicate tool / command / renderer name 会直接报错
+  - 没有 `PiExtension` service entry 的 jar 会收敛成 `ExtensionLoadFailure`
+
+这批 contract tests 已覆盖：
+
+- 运行时动态编译一个最小扩展 jar，并通过 `ServiceLoader` 成功加载
+- 成功捕获 tool / command / message renderer 三类注册项
+- `LoadedExtension` 暴露 `id` / `version` / `source` / `classLoader` 元信息
+- `ExtensionLoadResult.close()` 后 classloader 可关闭
+- 空 jar / 缺 service entry 时会返回 `ExtensionLoadFailure`
+
+这一刀的边界：
+
+- 还没有开始扩展事件总线。
+- 还没有开始 shortcut / flag / provider / custom entry 等更完整注册面。
+- 还没有把 loader 真正接到 runtime `/reload` 生命周期里。
+- 还没有落仓库内置的示例插件源码；当前只有测试内动态编译的最小扩展示例。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -1005,6 +1060,7 @@
 .\gradlew.bat :pi-agent-runtime:test --no-daemon
 .\gradlew.bat :pi-session:test --no-daemon
 .\gradlew.bat :pi-tools:test --no-daemon
+.\gradlew.bat :pi-extension-spi:test --no-daemon
 npm.cmd run check
 ```
 
@@ -1047,6 +1103,7 @@ npm.cmd run check
 - `pi-tools` 的 `find` tool：pure-Java tree walk、hidden files、root `.gitignore`、result limit notice
 - `pi-tools` 的 `ls` tool：dotfiles、directory suffix、entry limit notice、empty directory
 - `pi-tools` 的内置工具 golden fixtures：tool text output、limit notice、diff/details JSON shape、`TruncationLimit` 小写序列化
+- `pi-extension-spi` 的 core types / loader skeleton：`ServiceLoader` 扩展发现、tool/command/renderer 注册捕获、classloader close、no-service failure 收敛
 - `pi-agent-runtime` 的 tool cancellation：close event stream -> tool cancel supplier
 
 对应测试文件：
@@ -1091,6 +1148,7 @@ npm.cmd run check
 - `modules/pi-tools/src/test/java/dev/pi/tools/FindToolTest.java`
 - `modules/pi-tools/src/test/java/dev/pi/tools/LsToolTest.java`
 - `modules/pi-tools/src/test/java/dev/pi/tools/BuiltinToolsGoldenTest.java`
+- `modules/pi-extension-spi/src/test/java/dev/pi/extension/spi/ExtensionLoaderContractTest.java`
 
 ## 未完成 / 已知缺口
 
@@ -1107,11 +1165,20 @@ npm.cmd run check
 - `pi-extension-spi`
 - core types / extension discovery skeleton
 
+### `pi-extension-spi`
+
+阶段 5 当前已完成 core types、`ServiceLoader + isolated ClassLoader` discovery skeleton、最小扩展加载 contract tests。
+
+下一步按任务顺序应继续：
+
+- 扩展事件总线
+- tool / command / shortcut / flag / renderer 注册面收敛
+- `/reload` 生命周期接线
+
 ### 其他模块
 
 以下模块目前还只是最小工程骨架，尚未开始功能实现：
 
-- `pi-extension-spi`
 - `pi-tui`
 - `pi-cli`
 - `pi-sdk`
@@ -1142,14 +1209,14 @@ npm.cmd run check
 建议严格按 `docs/tasks.md` 的顺序继续：
 
 1. 进入阶段 5 `pi-extension-spi`。
-2. 先补 core types + extension discovery skeleton。
-3. 再补 event bus 与 tool/command 注册。
+2. 先补扩展事件总线。
+3. 再补 tool / command / shortcut / flag 注册面。
 
 更具体的下一步切片建议：
 
-1. `pi-extension-spi`：`ExtensionApi` / `ExtensionContext` / `ToolDefinition` 等 core types。
-2. `pi-extension-spi`：`ServiceLoader + isolated ClassLoader` discovery skeleton。
-3. `pi-extension-spi`：最小扩展加载 contract test。
+1. `pi-extension-spi`：扩展事件总线 + typed event contract。
+2. `pi-extension-spi`：shortcut / flag / renderer 注册面收敛。
+3. `pi-extension-spi`：runtime `/reload` 接线与 classloader 回收 contract test。
 
 并行拆分文档入口：
 
