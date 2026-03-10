@@ -7,7 +7,7 @@
 `pi-java` 当前状态：
 
 - 阶段 0 到阶段 5：已收尾。
-- 阶段 6 `pi-tui`：进行中，已完成 core contracts、terminal base support、diff renderer、overlay/cursor、`Container`/`Text`/`TruncatedText`、`Input`、`Editor`、`Markdown`、`Loader`、`SelectList`。
+- 阶段 6 `pi-tui`：进行中，已完成 core contracts、terminal base support、diff renderer、overlay/cursor、`Container`/`Text`/`TruncatedText`、`Input`、`Editor`、`Markdown`、`Loader`、`SelectList`、`SettingsList`。
 - 阶段 7 到阶段 9：未开始。
 
 ## 文档结构
@@ -47,6 +47,6 @@ npm.cmd run check
 
 按 `docs/tasks.md` 当前顺序，下一刀建议：
 
-1. `pi-tui`：`SettingsList`
-2. `pi-tui`：`Image`
-3. `pi-tui`：`VirtualTerminal` / golden tests
+1. `pi-tui`：`Image`
+2. `pi-tui`：`VirtualTerminal`
+3. `pi-tui`：golden tests

@@ -16,6 +16,7 @@
 8. `Markdown` 第一批
 9. `Loader` 第一批
 10. `SelectList` 第一批
+11. `SettingsList` 第一批
 
 ## 当前关键入口
 
@@ -40,6 +41,11 @@
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/SelectItem.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/SelectListTheme.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/SelectList.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/SettingItem.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/SettingSubmenuFactory.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/SettingsListOptions.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/SettingsListTheme.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/SettingsList.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/KeyMatcher.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/KillRing.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/UndoStack.java`
@@ -172,6 +178,18 @@
   - scroll indicator
 - 当前实现直接复用 `EditorKeybindings.global()` 的 `CURSOR_UP` / `CURSOR_DOWN` / `SUBMIT` / `SELECT_CANCEL`
 
+### 11. `SettingsList` 第一批
+
+- `SettingsList` 已支持：
+  - label/value 双列 render
+  - Enter/Space cycle values
+  - submenu open/delegate/close
+  - optional search input
+  - description 区块与 hint 行
+  - `updateValue()`
+- `SettingsList` 实现了 `Focusable`，会把 focus 传给内部 `Input`
+- 当前 search 采用轻量 subsequence fuzzy match，不是 TS 版完整 fuzzy scorer
+
 ## 当前测试
 
 已覆盖的测试入口：
@@ -187,6 +205,7 @@
 - `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/MarkdownTest.java`
 - `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/LoaderTest.java`
 - `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/SelectListTest.java`
+- `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/SettingsListTest.java`
 
 最近验证通过：
 
@@ -199,7 +218,6 @@ npm.cmd run check
 
 还没有完成：
 
-- `SettingsList`
 - `Image`
 - `VirtualTerminal`
 - render / key golden tests
@@ -208,6 +226,6 @@ npm.cmd run check
 
 建议继续按这个顺序推进：
 
-1. `SettingsList`
-2. `Image`
-3. `VirtualTerminal` 与 golden tests
+1. `Image`
+2. `VirtualTerminal`
+3. render / key golden tests
