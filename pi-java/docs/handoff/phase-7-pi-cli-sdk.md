@@ -5,9 +5,10 @@
 ## 当前状态
 
 - 阶段 7 已开始。
-- 已完成前两刀：
+- 已完成前三刀：
   - `pi-cli` CLI 参数解析
   - `PiAgentSession` skeleton + 最小 `interactive` mode
+  - `print` mode
 - `pi-sdk` 仍未开始实现。
 
 ## 已落地内容
@@ -21,9 +22,12 @@
 - `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiInteractiveSession.java`
 - `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiAgentSession.java`
 - `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiInteractiveMode.java`
+- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiMessageRenderer.java`
+- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiPrintMode.java`
 - `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiCliParserTest.java`
 - `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiAgentSessionTest.java`
 - `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiInteractiveModeTest.java`
+- `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiPrintModeTest.java`
 
 调整：
 
@@ -58,6 +62,7 @@
 - 还没接 model discovery / settings-driven startup pipeline / extension runtime / built-in tools registry。
 - transcript renderer 目前是 plain-text flatten，不是 `Markdown` / rich message renderer。
 - 还没有把 `PiCliParser`、session/model resolution、`PiInteractiveMode` 串成真正的 CLI main entry。
+- `print` mode 目前输出 final assistant text，不做 token-by-token streaming。
 
 ## 已确认语义
 
@@ -80,6 +85,7 @@
 - session context replay -> agent state
 - prompt 后 session persistence bridge
 - virtual terminal 下的 interactive header / prompt submit render
+- print mode 的 stdout/stderr 选择与 blank prompt 校验
 
 ## 验证
 
@@ -94,6 +100,6 @@ npm.cmd run check
 
 按依赖顺序，下一刀建议进入非交互模式：
 
-1. `print` mode：共享 `PiAgentSession`，补非交互 prompt -> wait -> stdout 输出。
-2. `json` mode：事件流 / state 归一化输出。
-3. `rpc` mode：命令协议和 session lifecycle。
+1. `json` mode：事件流 / state 归一化输出。
+2. `rpc` mode：命令协议和 session lifecycle。
+3. `pi-sdk` facade。

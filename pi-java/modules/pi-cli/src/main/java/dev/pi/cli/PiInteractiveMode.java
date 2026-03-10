@@ -1,13 +1,6 @@
 package dev.pi.cli;
 
-import dev.pi.agent.runtime.AgentMessage;
 import dev.pi.agent.runtime.AgentState;
-import dev.pi.ai.model.AssistantContent;
-import dev.pi.ai.model.ImageContent;
-import dev.pi.ai.model.TextContent;
-import dev.pi.ai.model.ThinkingContent;
-import dev.pi.ai.model.ToolCall;
-import dev.pi.ai.model.UserContent;
 import dev.pi.ai.stream.Subscription;
 import dev.pi.tui.Input;
 import dev.pi.tui.ProcessTerminal;
@@ -15,7 +8,6 @@ import dev.pi.tui.Terminal;
 import dev.pi.tui.Text;
 import dev.pi.tui.Tui;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 public final class PiInteractiveMode implements AutoCloseable {
@@ -109,10 +101,10 @@ public final class PiInteractiveMode implements AutoCloseable {
     private String renderTranscript(AgentState state) {
         var lines = new ArrayList<String>();
         for (var message : state.messages()) {
-            lines.addAll(renderMessage(message));
+            lines.add(PiMessageRenderer.renderMessage(message));
         }
         if (state.isStreaming() && state.streamMessage() != null) {
-            lines.addAll(renderStreamingMessage(state.streamMessage()));
+            lines.add(PiMessageRenderer.renderStreamingMessage(state.streamMessage()));
         }
         return String.join("\n\n", lines);
     }
@@ -128,55 +120,5 @@ public final class PiInteractiveMode implements AutoCloseable {
             return "Streaming response...";
         }
         return "Ready";
-    }
-
-    private static List<String> renderMessage(AgentMessage message) {
-        return switch (message) {
-            case AgentMessage.UserMessage userMessage -> List.of("You: " + renderUserContent(userMessage.content()));
-            case AgentMessage.AssistantMessage assistantMessage -> List.of("Assistant: " + renderAssistantContent(assistantMessage.content()));
-            case AgentMessage.ToolResultMessage toolResultMessage ->
-                List.of("Tool %s: %s".formatted(toolResultMessage.toolName(), renderUserContent(toolResultMessage.content())));
-            case AgentMessage.CustomMessage customMessage ->
-                List.of("%s: %s".formatted(customMessage.role(), String.valueOf(customMessage.payload())));
-        };
-    }
-
-    private static List<String> renderStreamingMessage(AgentMessage message) {
-        return switch (message) {
-            case AgentMessage.AssistantMessage assistantMessage ->
-                List.of("Assistant (streaming): " + renderAssistantContent(assistantMessage.content()));
-            default -> renderMessage(message);
-        };
-    }
-
-    private static String renderUserContent(List<UserContent> content) {
-        return content.stream()
-            .map(PiInteractiveMode::renderUserBlock)
-            .filter(text -> !text.isBlank())
-            .reduce((left, right) -> left + "\n" + right)
-            .orElse("");
-    }
-
-    private static String renderAssistantContent(List<AssistantContent> content) {
-        return content.stream()
-            .map(PiInteractiveMode::renderAssistantBlock)
-            .filter(text -> !text.isBlank())
-            .reduce((left, right) -> left + "\n" + right)
-            .orElse("");
-    }
-
-    private static String renderUserBlock(UserContent block) {
-        return switch (block) {
-            case TextContent textContent -> textContent.text();
-            case ImageContent imageContent -> "[image " + imageContent.mimeType() + "]";
-        };
-    }
-
-    private static String renderAssistantBlock(AssistantContent block) {
-        return switch (block) {
-            case TextContent textContent -> textContent.text();
-            case ThinkingContent thinkingContent -> "Thinking: " + thinkingContent.thinking();
-            case ToolCall toolCall -> "Tool call %s(%s)".formatted(toolCall.name(), toolCall.arguments());
-        };
     }
 }
