@@ -8,7 +8,7 @@
 
 - 阶段 0 到阶段 5：已收尾。
 - 阶段 6 `pi-tui`：已收尾，已完成 core contracts、terminal base support、diff renderer、overlay/cursor、`Container`/`Text`/`TruncatedText`、`Input`、`Editor`、`Markdown`、`Loader`、`SelectList`、`SettingsList`、`Image`、`VirtualTerminal`。
-- 阶段 7 `pi-cli` / `pi-sdk`：已开始，已完成 `pi-cli` CLI 参数解析首版、`PiAgentSession` skeleton、最小 `interactive` mode、`print` mode 首版、`json` mode 首版、`rpc` mode 首版、`pi-sdk` facade 首版、CLI startup dispatcher skeleton、`list-models` 首版、resume/new session resolution 首版、`--resume` picker 首版、`--resume` all-sessions scope 首版、`--resume` richer search 首版、`--resume` delete 首版、`--export` 首版、`/copy` 首版、`/tree` 首版、`/fork` 首版、`/compact` 首版、`/reload` 首版。
+- 阶段 7 `pi-cli` / `pi-sdk`：已开始，已完成 `pi-cli` CLI 参数解析首版、`PiAgentSession` skeleton、最小 `interactive` mode、`print` mode 首版、`json` mode 首版、`rpc` mode 首版、`pi-sdk` facade 首版、CLI startup dispatcher skeleton、`list-models` 首版、resume/new session resolution 首版、`--resume` picker 首版、`--resume` all-sessions scope 首版、`--resume` richer search 首版、`--resume` delete 首版、`--resume` rename 首版、`--export` 首版、`/copy` 首版、`/tree` 首版、`/fork` 首版、`/compact` 首版、`/reload` 首版。
 - 阶段 8 到阶段 9：未开始。
 
 ## 文档结构
@@ -51,6 +51,6 @@ npm.cmd run check
 
 按 `docs/tasks.md` 当前顺序，下一刀建议：
 
-1. `pi-cli`：补 `--resume` rename，以及 richer HTML export
+1. `pi-cli`：补 richer HTML export
 2. `pi-cli` / `pi-sdk`：收敛 startup/session shell 共享核心，减少重复
 3. `pi-cli`：把 `reload` 从 settings/resources 首版继续接到 extension runtime / startup pipeline

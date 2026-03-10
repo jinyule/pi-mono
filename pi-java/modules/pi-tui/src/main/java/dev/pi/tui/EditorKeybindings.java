@@ -25,6 +25,7 @@ public final class EditorKeybindings {
         Map.entry(EditorAction.SUBMIT, List.of("enter")),
         Map.entry(EditorAction.SELECT_CANCEL, List.of("escape", "ctrl+c")),
         Map.entry(EditorAction.SESSION_DELETE, List.of("ctrl+d")),
+        Map.entry(EditorAction.SESSION_RENAME, List.of("ctrl+r")),
         Map.entry(EditorAction.YANK, List.of("ctrl+y")),
         Map.entry(EditorAction.YANK_POP, List.of("alt+y")),
         Map.entry(EditorAction.UNDO, List.of("ctrl+-"))

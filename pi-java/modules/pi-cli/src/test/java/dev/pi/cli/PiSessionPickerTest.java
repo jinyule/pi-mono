@@ -2,6 +2,11 @@ package dev.pi.cli;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import dev.pi.ai.model.Message;
+import dev.pi.ai.model.StopReason;
+import dev.pi.ai.model.TextContent;
+import dev.pi.ai.model.Usage;
+import dev.pi.session.SessionManager;
 import dev.pi.session.SessionInfo;
 import dev.pi.tui.VirtualTerminal;
 import java.nio.charset.StandardCharsets;
@@ -114,6 +119,35 @@ class PiSessionPickerTest {
         terminal.sendInput("\u001b");
     }
 
+    @Test
+    void renamesSelectedSessionAfterConfirmation(@TempDir Path tempDir) throws Exception {
+        var terminal = new VirtualTerminal(100, 12);
+        var picker = new PiSessionPicker(terminal);
+        var sessionManager = SessionManager.create(tempDir.resolve("rename-me.jsonl"), "/workspace/api");
+        sessionManager.appendMessage(userMessage("hello", 1L));
+        sessionManager.appendMessage(assistantMessage("done", 2L));
+        sessionManager.appendSessionInfo("Old name");
+        var sessions = SessionManager.list(tempDir);
+
+        Thread.ofVirtual().start(() -> picker.pick(sessions));
+
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Resume session")));
+
+        terminal.sendInput("\u0012");
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Rename session")));
+        terminal.sendInput("New name");
+        terminal.sendInput("\r");
+
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("New name")));
+
+        assertThat(SessionManager.list(tempDir))
+            .extracting(SessionInfo::name)
+            .contains("New name");
+        assertThat(String.join("\n", terminal.getViewport())).contains("New name");
+
+        terminal.sendInput("\u001b");
+    }
+
     private static SessionInfo session(String fileName, String firstMessage, int messageCount, Instant modified) {
         return session(fileName, firstMessage, messageCount, modified, "/workspace");
     }
@@ -145,6 +179,23 @@ class PiSessionPickerTest {
             messageCount,
             firstMessage,
             firstMessage
+        );
+    }
+
+    private static Message.UserMessage userMessage(String text, long timestamp) {
+        return new Message.UserMessage(List.of(new TextContent(text, null)), timestamp);
+    }
+
+    private static Message.AssistantMessage assistantMessage(String text, long timestamp) {
+        return new Message.AssistantMessage(
+            List.of(new TextContent(text, null)),
+            "anthropic-messages",
+            "anthropic",
+            "claude-test",
+            new Usage(1, 1, 0, 0, 2, new Usage.Cost(0.0, 0.0, 0.0, 0.0, 0.0)),
+            StopReason.STOP,
+            null,
+            timestamp
         );
     }
 

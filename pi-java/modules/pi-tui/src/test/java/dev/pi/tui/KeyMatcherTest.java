@@ -1,0 +1,12 @@
+package dev.pi.tui;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import org.junit.jupiter.api.Test;
+
+class KeyMatcherTest {
+    @Test
+    void matchesConfiguredCtrlRSequence() {
+        assertThat(KeyMatcher.matches("\u0012", "ctrl+r")).isTrue();
+    }
+}

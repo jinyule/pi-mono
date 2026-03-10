@@ -38,6 +38,8 @@
   - `--resume` richer search first cut
 - 已完成第十九刀：
   - `--resume` delete first cut
+- 已完成第二十刀：
+  - `--resume` rename first cut
 
 ## 已落地内容
 
@@ -160,6 +162,10 @@
   - 新增 `SESSION_DELETE` keybinding action，默认 `ctrl+d`
   - 首次触发进入 confirm 状态，`Enter` 确认，`Esc` 取消
   - 删除后会从磁盘删掉 session file，并立即刷新 picker 列表
+- `PiSessionPicker` 现在也已具备最小 rename 语义：
+  - 新增 `SESSION_RENAME` keybinding action，默认 `ctrl+r`
+  - 进入独立 rename mode，输入新名字后回车提交
+  - 通过 `SessionManager.open(...).appendSessionInfo(name)` 写回 session，并立即刷新 picker 列表
 - `PiExportCommand` 当前输出的是 basic standalone HTML transcript；还未追平 TS 版的 tree sidebar、theme colors、tool rich render、JSONL download、branch highlighting。
 - `/copy` 当前只复制最近一条 assistant 的 plain-text flatten 文本；未覆盖图片块、富文本选择、历史消息 picker，也还未抽出统一 slash-command registry。
 - `/tree` 当前是首版 selector：只覆盖 prefix search、up/down/enter/esc、基础树前缀渲染和当前 leaf 高亮；尚未接 TS 版的 summarize prompt、custom prompt、label edit、user-only/all-entry filter toggle、bookmark 语义。
@@ -182,6 +188,7 @@
 - `--resume` 当前默认已切到 all-sessions 聚合；但尚未实现 TS 版在 picker 内 current/all scope 切换。
 - `--resume` 当前 search 已支持大小写不敏感的 token contains；但仍未追平 TS 版的 regex、quoted phrase、sort mode、current/all scope toggle。
 - `--resume` 当前已支持 delete first cut；但仍未追平 TS 版的 trash CLI、rename、status banner、sort mode、current/all scope toggle。
+- `--resume` 当前已支持 rename first cut；但仍未追平 TS 版的 trash CLI、status banner、sort mode、current/all scope toggle。
 - `--export <session.jsonl> [output.html]` 现在会在 session/runtime 之外短路执行，默认输出 `pi-java-session-<basename>.html`。
 - `/copy` 优先同时写入 OSC52 与 system clipboard；只要任一后端成功即视为成功。
 - `/tree` 首版默认隐藏 `label` / `session_info` / `model_change` / `thinking_level_change` / `custom` 等非导航主节点，只显示 message / compaction / branch summary / custom_message。
@@ -221,6 +228,7 @@
 - `--resume` 在未传 `--session-dir` 时跨 project 聚合 session 列表，以及 picker 描述里附带 `cwd`
 - `--resume` token-based richer search：覆盖 label/path/cwd，多关键词按 AND 语义过滤
 - `--resume` delete first cut：`ctrl+d` 进入确认态，确认后删除文件并刷新列表
+- `--resume` rename first cut：`ctrl+r` 进入 rename mode，提交后追加 `session_info` 并刷新列表
 
 ## 验证
 
@@ -235,6 +243,6 @@ npm.cmd run check
 
 按依赖顺序，下一刀建议进入 CLI 收口：
 
-1. `--resume` rename，以及 richer HTML export。
+1. richer HTML export。
 2. 真实 `main()` / module wiring，把 `PiCliApplication`、`list-models`、session resolver / picker / export 接到启动入口。
 3. 把 `reload` 从 settings/resources 首版继续接到 extension runtime / startup pipeline。

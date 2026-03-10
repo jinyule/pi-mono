@@ -1,5 +1,6 @@
 package dev.pi.cli;
 
+import dev.pi.session.SessionManager;
 import dev.pi.session.SessionInfo;
 import dev.pi.tui.Component;
 import dev.pi.tui.EditorAction;
@@ -91,6 +92,7 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
 
     private static final class PickerComponent implements Component, Focusable {
         private final Input search = new Input();
+        private final Input rename = new Input();
         private final List<SessionInfo> sessionInfos;
         private final java.util.function.Consumer<Path> onSelect;
         private final Runnable onCancel;
@@ -98,6 +100,8 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
         private SelectList sessions;
         private boolean focused;
         private String pendingDeletePath;
+        private String renamingPath;
+        private String renamingCurrentName;
 
         private PickerComponent(
             List<SessionInfo> sessionInfos,
@@ -115,10 +119,22 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
 
         @Override
         public List<String> render(int width) {
+            if (renamingPath != null) {
+                var lines = new ArrayList<String>();
+                lines.add("Rename session");
+                lines.add(renamingCurrentName == null || renamingCurrentName.isBlank()
+                    ? "Enter new name. Enter saves. Esc cancels."
+                    : "Current name: " + renamingCurrentName);
+                lines.add("");
+                lines.addAll(rename.render(width));
+                lines.add("");
+                lines.add("Enter saves. Esc cancels.");
+                return List.copyOf(lines);
+            }
             var lines = new java.util.ArrayList<String>();
             lines.add("Resume session");
             lines.add(pendingDeletePath == null
-                ? "Type to filter. Enter selects. Ctrl+D deletes. Esc cancels."
+                ? "Type to filter. Enter selects. Ctrl+D deletes. Ctrl+R renames. Esc cancels."
                 : "Delete selected session? Enter confirms. Esc cancels.");
             lines.add("");
             lines.addAll(search.render(width));
@@ -130,6 +146,24 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
         @Override
         public void handleInput(String data) {
             var keybindings = EditorKeybindings.global();
+            if (renamingPath != null) {
+                if (keybindings.matches(data, EditorAction.SUBMIT)) {
+                    renameSession();
+                    return;
+                }
+                if (keybindings.matches(data, EditorAction.SELECT_CANCEL)) {
+                    renamingPath = null;
+                    renamingCurrentName = null;
+                    rename.setValue("");
+                    search.setFocused(true);
+                    rename.setFocused(false);
+                    requestRender.run();
+                    return;
+                }
+                rename.handleInput(data);
+                requestRender.run();
+                return;
+            }
             if (pendingDeletePath != null) {
                 if (keybindings.matches(data, EditorAction.SUBMIT)) {
                     deletePendingSession();
@@ -158,6 +192,13 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
                 }
                 return;
             }
+            if (keybindings.matches(data, EditorAction.SESSION_RENAME)) {
+                var selected = sessions.getSelectedItem();
+                if (selected != null) {
+                    startRename(decodePath(selected.value()));
+                }
+                return;
+            }
 
             search.handleInput(data);
             sessions.setFilter(search.getValue());
@@ -173,6 +214,7 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
         public void setFocused(boolean focused) {
             this.focused = focused;
             search.setFocused(focused);
+            rename.setFocused(focused && renamingPath != null);
         }
 
         private void rebuildSessionList() {
@@ -199,6 +241,63 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             }
             rebuildSessionList();
             requestRender.run();
+        }
+
+        private void startRename(String targetPath) {
+            renamingPath = targetPath;
+            renamingCurrentName = currentNameFor(Path.of(targetPath));
+            rename.setValue("");
+            search.setFocused(false);
+            rename.setFocused(true);
+            requestRender.run();
+        }
+
+        private void renameSession() {
+            var targetPath = Path.of(renamingPath);
+            var nextName = rename.getValue() == null ? "" : rename.getValue().trim();
+            if (nextName.isEmpty()) {
+                return;
+            }
+            try {
+                var manager = SessionManager.open(targetPath);
+                manager.appendSessionInfo(nextName);
+                refreshSessionInfo(targetPath);
+            } catch (java.io.IOException exception) {
+                throw new IllegalStateException("Failed to rename session: " + targetPath.getFileName(), exception);
+            }
+            renamingPath = null;
+            renamingCurrentName = null;
+            rename.setValue("");
+            rename.setFocused(false);
+            search.setFocused(true);
+            rebuildSessionList();
+            requestRender.run();
+        }
+
+        private void refreshSessionInfo(Path targetPath) throws java.io.IOException {
+            var refreshed = SessionManager.list(targetPath.getParent()).stream()
+                .filter(session -> session.path().equals(targetPath.toAbsolutePath().normalize()))
+                .findFirst()
+                .orElse(null);
+            if (refreshed == null) {
+                return;
+            }
+            for (var index = 0; index < sessionInfos.size(); index += 1) {
+                if (sessionInfos.get(index).path().equals(refreshed.path())) {
+                    sessionInfos.set(index, refreshed);
+                    return;
+                }
+            }
+        }
+
+        private String currentNameFor(Path targetPath) {
+            var normalized = targetPath.toAbsolutePath().normalize();
+            for (var sessionInfo : sessionInfos) {
+                if (sessionInfo.path().equals(normalized)) {
+                    return sessionInfo.name() == null ? "" : sessionInfo.name();
+                }
+            }
+            return "";
         }
 
         private static SelectItem toSelectItem(SessionInfo session) {
