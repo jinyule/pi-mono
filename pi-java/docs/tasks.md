@@ -15,8 +15,9 @@
 
 - 阶段 0：已完成。
 - 阶段 1：已完成 `core model / event types`、`AssistantMessageEventStream / EventStream`、`ApiProviderRegistry / ModelRegistry / CredentialResolver / PiAiClient facade`、`AssistantMessage partial assembler`、`SSE parser / WebSocket adapter`、`openai-responses provider`、`openai-completions provider`、`anthropic-messages provider`、`google-generative-ai provider`、`bedrock-converse-stream provider`、`message transform / validation / compat` 抽象层、provider 交叉行为测试矩阵（`abort` / `handoff` / `image input` / `cross-provider coverage`）。
-- 阶段 1：已收尾，下一步进入阶段 2 的 `pi-agent-runtime`。
-- 阶段 2 到阶段 9：未开始。
+- 阶段 1：已收尾。
+- 阶段 2：已完成 `AgentMessage / AgentTool / AgentToolResult / AgentState / AgentEvent / AgentLoopConfig` 核心类型、`AgentEventStream`、`convertToLlm / transformContext` 两阶段上下文管线、单轮 `AgentLoop` skeleton、`AssistantMessageEvent -> AgentEvent` 生命周期桥接、基础 loop contract tests；下一步实现顺序工具执行与参数校验。
+- 阶段 3 到阶段 9：未开始。
 
 ## 阶段 0：项目骨架
 

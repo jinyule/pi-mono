@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-`pi-java` 已从“纯设计文档目录”推进到“可运行的阶段 0 工程骨架 + 阶段 1 的前五种 `pi-ai` provider”。
+`pi-java` 已从“纯设计文档目录”推进到“可运行的阶段 0 工程骨架 + 已收尾的阶段 1 `pi-ai` + 已启动的阶段 2 `pi-agent-runtime`”。
 
 本次工作只改动了 `pi-java/`，没有改动现有 TypeScript 包的实现逻辑。
 
@@ -248,12 +248,39 @@
 - `OpenAiCompletionsProvider` 已补 `MessageHistoryCompat` 接线，tool result synthetic 补齐与 aborted assistant skip 语义已追平 TypeScript 版。
 - 现在五条 provider 线都走统一的 handoff/replay 测试入口，后续新增 provider 时可以直接往矩阵里挂。
 
+### 15. 阶段 2：`pi-agent-runtime` core types + loop skeleton 首版
+
+已在 `modules/pi-agent-runtime/src/main/java/dev/pi/agent/runtime/` 下补上第一版 runtime 核心类型与 loop 骨架：
+
+- `AgentMessage`
+- `AgentMessages`
+- `AgentTool`
+- `AgentToolResult`
+- `AgentContext`
+- `AgentState`
+- `AgentEvent`
+- `AgentEventStream`
+- `AgentLoopConfig`
+- `AgentLoop`
+
+当前这批 runtime 代码的实现特点：
+
+- `AgentMessage` 定义了 runtime 原生消息层级：`UserMessage`、`AssistantMessage`、`ToolResultMessage`、`CustomMessage`，与 `pi-ai` 的 `Message` 通过 `AgentMessages` 做双向映射。
+- `AgentTool` / `AgentToolResult` 给后续顺序工具执行、参数校验和 tool result 注入预留了统一契约。
+- `AgentEvent` 定义了 agent loop 的基础生命周期事件：`agent_start`、`agent_end`、`turn_start`、`turn_end`、`message_start`、`message_update`、`message_end`，并为后续工具执行事件预留了类型。
+- `AgentEventStream` 复用 `pi-ai` 的事件流基础设施，结果值统一收敛为本轮新增的 `AgentMessage` 列表。
+- `AgentLoopConfig` 已支持 `convertToLlm` 与 `transformContext` 两阶段上下文管线，支持 model、thinking、transport、headers、api key、stream function 等最小运行时配置。
+- `AgentLoop` 已支持两条基础入口：`start()` 和 `continueLoop()`；当前可完成单轮 prompt -> provider stream -> assistant lifecycle 转发。
+- `AgentLoop` 会把 `AssistantMessageEvent` 的 `start` / `text_*` / `thinking_*` / `toolcall_*` / `done` / `error` 事件桥接为 runtime 层的 `message_start` / `message_update` / `message_end`。
+- 当前 loop skeleton 还没有进入工具执行、steering/follow-up 队列、multi-turn 续跑；这些是下一批切片。
+
 ## 已完成的验证
 
 已通过的命令：
 
 ```bash
 .\gradlew.bat :pi-ai:test --no-daemon
+.\gradlew.bat :pi-agent-runtime:test --no-daemon
 npm.cmd run check
 ```
 
@@ -276,6 +303,7 @@ npm.cmd run check
 - `bedrock-converse-stream` provider 的 payload 构造、ConverseStream event 映射、Claude adaptive/budget thinking、tool call / reasoning / usage 归一化、error 终结语义
 - `message transform / validation / compat` 公共 replay 层、tool result synthetic 填充、tool call id remap、assistant turn 跳过规则
 - provider 交叉行为测试矩阵、OpenAI provider 的 compat/replay 收敛、abort/handoff/image input cross-provider coverage
+- `pi-agent-runtime` 的单轮 loop lifecycle、`transformContext -> convertToLlm` 顺序、`continueLoop()` 前置条件校验
 
 对应测试文件：
 
@@ -296,18 +324,25 @@ npm.cmd run check
 - `modules/pi-ai/src/test/java/dev/pi/ai/provider/bedrock/BedrockConverseStreamProviderTest.java`
 - `modules/pi-ai/src/test/java/dev/pi/ai/provider/MessageHistoryCompatTest.java`
 - `modules/pi-ai/src/test/java/dev/pi/ai/provider/ProviderBehaviorMatrixTest.java`
+- `modules/pi-agent-runtime/src/test/java/dev/pi/agent/runtime/AgentLoopContractTest.java`
 
 ## 未完成 / 已知缺口
 
-### `pi-ai`
+### `pi-agent-runtime`
 
-阶段 1 当前已收尾；下一步进入 `pi-agent-runtime`。
+阶段 2 当前只完成了 core types、上下文管线和单轮 loop skeleton。
+
+下一步按任务顺序应继续：
+
+- 顺序工具执行与参数校验
+- steering / follow-up 队列
+- `Agent` facade 与订阅接口
+- agent loop 生命周期与工具中断测试补全
 
 ### 其他模块
 
 以下模块目前还只是最小工程骨架，尚未开始功能实现：
 
-- `pi-agent-runtime`
 - `pi-session`
 - `pi-tools`
 - `pi-extension-spi`
@@ -340,15 +375,15 @@ npm.cmd run check
 
 建议严格按 `docs/tasks.md` 的顺序继续：
 
-1. 进入 `pi-agent-runtime`，先补 core types 与 loop skeleton。
-2. 落第一版 `convertToLlm` / `transformContext` 两阶段上下文管线。
-3. 再补 streaming assistant response 组装器与 loop 生命周期测试。
+1. 在 `pi-agent-runtime` 内继续补顺序工具执行与参数校验。
+2. 再补 steering / follow-up 队列，形成真正可续跑的 loop。
+3. 最后补 `Agent` facade 与更完整的生命周期 / 中断测试。
 
 更具体的下一步切片建议：
 
-1. `pi-agent-runtime`：core types + loop skeleton。
-2. `pi-agent-runtime`：context transform pipeline。
-3. `pi-agent-runtime`：streaming response assembler + lifecycle tests。
+1. `pi-agent-runtime`：顺序工具执行 + tool event 发射。
+2. `pi-agent-runtime`：steering / follow-up 管线。
+3. `pi-agent-runtime`：`Agent` facade + interrupt/lifecycle tests。
 
 并行拆分文档入口：
 
