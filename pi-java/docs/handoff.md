@@ -1153,6 +1153,55 @@
 - 还没有把 flag 真正接到 CLI args / settings overlay。
 - 还没有把 resource discovery 与 `/reload` runtime rebuild 接起来。
 
+### 38. 阶段 5：资源发现扩展点
+
+已继续在 `modules/pi-extension-spi/src/main/java/dev/pi/extension/spi/` 与 `modules/pi-extension-spi/src/test/java/dev/pi/extension/spi/` 下补上第一版 resource discovery 聚合器。
+
+本次新增的入口：
+
+- `ExtensionResourcePath`
+- `ExtensionResourceDiscoveryResult`
+- `ExtensionResourceDiscovery`
+- `ExtensionResourceDiscoveryTest`
+
+本次收敛的实现点：
+
+- `ExtensionResourceDiscovery` 现在会顺序执行所有 `ResourcesDiscoverEvent` handlers，并把扩展返回的资源路径收敛成可消费的结构化结果。
+- 聚合结果按资源类型拆分：
+  - `skillPaths`
+  - `promptPaths`
+  - `themePaths`
+- 每条资源路径现在都会带上最小来源元信息：
+  - `declaredPath`
+  - `resolvedPath`
+  - `extensionId`
+  - `extensionSource`
+  - `baseDir`
+- 当前路径归一化策略如下：
+  - 绝对路径直接规范化
+  - `~` / `~/...` 会展开到用户目录
+  - 相对路径默认解析到扩展 source 所在目录（jar 用父目录，目录扩展用目录本身）
+- 聚合阶段会按规范化后的绝对路径去重，保持首次出现顺序，避免同一扩展或多个扩展重复提供完全相同的资源路径。
+- handler 抛错和无效返回路径不会中断后续扩展；它们都会继续收敛到 `ExtensionEventFailure`，便于后续 `/reload` 与 resource loader 统一消费。
+- 这一步没有直接接 `pi-session` 的 `InstructionResourceLoader`，因为那一层目前只负责上下文文件与 system prompt；skills / prompts / themes 的真正 runtime 接线留给下一刀 `/reload` 和应用层 resource loader。
+
+这批 contract tests 已覆盖：
+
+- 运行时动态编译一个最小扩展 jar，并验证：
+  - `skills` / `./skills` 会归一到同一个 `resolvedPath`
+  - prompt / theme 路径会相对扩展 source 正确解析
+  - `ExtensionResourcePath` 会保留 extension source 与 baseDir
+- 运行时动态编译一个返回空白路径且后续 handler 抛错的扩展 jar，并验证：
+  - 无效路径会被收敛成 failure
+  - handler 异常会被收敛成 failure
+  - 后续 handlers 不会因前一个失败而被中断
+
+这一刀的边界：
+
+- 还没有把 discovery result 真正接到 skills / prompts / themes 的 runtime loader。
+- 还没有给资源路径补 package/source metadata 与 enable/disable overlay。
+- 还没有把这条链路接到 `/reload` 生命周期和 classloader rebuild。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -1208,6 +1257,7 @@ npm.cmd run check
 - `pi-extension-spi` 的 core types / loader skeleton：`ServiceLoader` 扩展发现、tool/command/renderer 注册捕获、classloader close、no-service failure 收敛
 - `pi-extension-spi` 的 event bus：typed event handler 捕获、顺序派发、async handler 归一化、dispatch failure 收敛
 - `pi-extension-spi` 的 registration surface：shortcut/flag 捕获、flag default lookup、duplicate shortcut failure 收敛
+- `pi-extension-spi` 的 resource discovery：resource path 聚合、扩展 source 相对路径归一化、invalid path / handler failure 收敛
 - `pi-agent-runtime` 的 tool cancellation：close event stream -> tool cancel supplier
 
 对应测试文件：
@@ -1255,6 +1305,7 @@ npm.cmd run check
 - `modules/pi-extension-spi/src/test/java/dev/pi/extension/spi/ExtensionLoaderContractTest.java`
 - `modules/pi-extension-spi/src/test/java/dev/pi/extension/spi/ExtensionEventBusTest.java`
 - `modules/pi-extension-spi/src/test/java/dev/pi/extension/spi/ExtensionRegistrationSurfaceTest.java`
+- `modules/pi-extension-spi/src/test/java/dev/pi/extension/spi/ExtensionResourceDiscoveryTest.java`
 
 ## 未完成 / 已知缺口
 
@@ -1273,13 +1324,13 @@ npm.cmd run check
 
 ### `pi-extension-spi`
 
-阶段 5 当前已完成 core types、`ServiceLoader + isolated ClassLoader` discovery skeleton、最小扩展加载 contract tests、扩展事件总线与 typed event contract、tool / command / shortcut / flag / renderer 注册面收敛。
+阶段 5 当前已完成 core types、`ServiceLoader + isolated ClassLoader` discovery skeleton、最小扩展加载 contract tests、扩展事件总线与 typed event contract、tool / command / shortcut / flag / renderer 注册面收敛、资源发现扩展点。
 
 下一步按任务顺序应继续：
 
-- 资源发现扩展点接线
 - `/reload` 生命周期接线
 - 最小示例插件
+- skills / prompts / themes runtime loader 接线
 
 ### 其他模块
 
@@ -1315,14 +1366,14 @@ npm.cmd run check
 建议严格按 `docs/tasks.md` 的顺序继续：
 
 1. 进入阶段 5 `pi-extension-spi`。
-2. 先补资源发现扩展点。
-3. 再补 `/reload` 生命周期接线与最小示例插件。
+2. 先补 `/reload` 生命周期接线。
+3. 再补最小示例插件与 skills / prompts / themes runtime loader 接线。
 
 更具体的下一步切片建议：
 
-1. `pi-extension-spi`：resource discovery 扩展点接线。
-2. `pi-extension-spi`：runtime `/reload` 接线与 classloader 回收 contract test。
-3. `pi-extension-spi`：仓库内最小示例插件与热重载验证。
+1. `pi-extension-spi`：runtime `/reload` 接线与 classloader 回收 contract test。
+2. `pi-extension-spi`：仓库内最小示例插件与热重载验证。
+3. `pi-extension-spi`：skills / prompts / themes runtime loader 接线。
 
 并行拆分文档入口：
 
