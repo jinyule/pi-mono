@@ -22,7 +22,8 @@
 - 阶段 4：已完成 truncation / diff / shell / path policy / image resize primitives。
 - 阶段 4：已完成 `read` 工具、图片魔数识别、文本 / 图片输出、`offset` / `limit` / 截断提示 contract tests。
 - 阶段 4：已完成 `write` 工具、自动建目录 contract tests。
-- 阶段 4：下一步实现 `edit` 工具，支持 exact match + diff details。
+- 阶段 4：已完成 `edit` 工具、fuzzy/exact match、CRLF/BOM 保留、diff details contract tests。
+- 阶段 4：下一步实现 `bash` 工具，支持 streaming output、timeout、abort、tail truncation、full output temp file。
 - 阶段 5 到阶段 9：未开始。
 
 ## 阶段 0：项目骨架
@@ -70,7 +71,7 @@
 1. 实现 truncation、diff、shell、path policy、image resize 支撑类。（已完成）
 2. 实现 `read` 工具，支持文本、图片、offset/limit、截断提示。（已完成）
 3. 实现 `write` 工具，支持自动建目录。（已完成）
-4. 实现 `edit` 工具，支持 exact match + diff details。
+4. 实现 `edit` 工具，支持 exact match + diff details。（已完成）
 5. 实现 `bash` 工具，支持 streaming output、timeout、abort、tail truncation、full output temp file。
 6. 实现 `grep`、`find`、`ls`。
 7. 增加内置工具 golden tests，确认输出格式与 TS 版本一致。

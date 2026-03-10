@@ -704,6 +704,53 @@
 - 还没有补 `write` tool 的 golden fixture / TS 输出对拍。
 - 当前成功文案只覆盖最小 TS contract，还没有扩展 write-side metadata/details。
 
+### 29. 阶段 4：`edit` tool
+
+已继续在 `modules/pi-tools/src/main/java/dev/pi/tools/` 与 `modules/pi-tools/src/test/java/dev/pi/tools/EditToolTest.java` 下补上第一版 `edit` tool。
+
+本次新增的入口：
+
+- `EditTool`
+- `EditToolOptions`
+- `EditOperations`
+- `EditToolDetails`
+- `EditToolTest`
+
+当前这版 `edit` 的实现特点：
+
+- 已接到 `AgentTool` contract：
+  - `parametersSchema()` 暴露 `path` / `oldText` / `newText`
+  - `execute()` 返回 `AgentToolResult<EditToolDetails>`
+- 编辑语义已对齐当前 TS contract：
+  - 相对路径按 cwd 解析
+  - 先校验文件可读写，不存在时返回 `File not found`
+  - 先做 exact match，失败后再做 fuzzy match
+  - duplicate match 会拒绝执行
+  - no-op replacement 会拒绝执行
+- 已复用阶段 4 的 diff primitives，并把 Java 侧 fuzzy 归一化细节修正到与 TS 一致：
+  - trailing whitespace per-line trim
+  - smart quotes / Unicode dash / Unicode spaces 归一化
+  - 保留末尾空行语义，避免 fuzzy replacement 多插一行
+  - 保留原文件的 `CRLF/LF` line ending 与 UTF-8 BOM
+- tool result details 当前对齐最小 TS contract：
+  - `EditToolDetails.diff`
+  - `EditToolDetails.firstChangedLine`
+
+这批 contract tests 已覆盖：
+
+- 正常替换文本
+- text not found 错误
+- duplicate match 错误
+- trailing whitespace fuzzy match
+- CRLF 文件编辑后保持 `CRLF`
+- UTF-8 BOM 保留
+
+这一刀的边界：
+
+- 还没有开始 `bash` / `grep` / `find` / `ls` 的实际 tool 实现。
+- 还没有补 `edit` tool 的 golden fixture / TS 输出对拍。
+- 当前 `edit` 仍是单次整文件读写；后续若要追平更复杂的 remote filesystem 场景，再在 `EditOperations` 上扩展即可。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -749,6 +796,7 @@ npm.cmd run check
 - `pi-tools` 的 truncation line/byte limit 语义、path fallback、edit diff primitive、shell timeout/spill/truncation、image resize/dimension note/fallback 语义
 - `pi-tools` 的 `read` tool：文本读取、图片魔数识别、`offset` / `limit` / truncation prompt、oversized line bash hint、auto-resize 开关
 - `pi-tools` 的 `write` tool：文件覆盖写入、父目录自动创建、相对路径 cwd resolve、成功文案
+- `pi-tools` 的 `edit` tool：exact/fuzzy match、duplicate/not-found 拒绝、CRLF/BOM 保留、diff details
 
 对应测试文件：
 
@@ -785,6 +833,7 @@ npm.cmd run check
 - `modules/pi-tools/src/test/java/dev/pi/tools/ImageResizerTest.java`
 - `modules/pi-tools/src/test/java/dev/pi/tools/ReadToolTest.java`
 - `modules/pi-tools/src/test/java/dev/pi/tools/WriteToolTest.java`
+- `modules/pi-tools/src/test/java/dev/pi/tools/EditToolTest.java`
 
 ## 未完成 / 已知缺口
 
@@ -794,13 +843,13 @@ npm.cmd run check
 
 ### `pi-tools`
 
-阶段 4 当前已完成 truncation / diff / shell / path policy / image resize primitives，以及 `read` / `write` tool。
+阶段 4 当前已完成 truncation / diff / shell / path policy / image resize primitives，以及 `read` / `write` / `edit` tool。
 
 下一步按任务顺序应继续：
 
 - `pi-tools`
-- `edit` tool
-- exact match + diff details contract tests + 实现
+- `bash` tool
+- streaming output / timeout / abort / tail truncation / full output temp file
 
 ### 其他模块
 
@@ -842,9 +891,9 @@ npm.cmd run check
 
 更具体的下一步切片建议：
 
-1. `pi-tools`：`edit` tool contract tests + 实现。
-2. `pi-tools`：`bash` tool primitives + 输出文案。
-3. `pi-tools`：`grep` / `find` / `ls` + golden output 固化。
+1. `pi-tools`：`bash` tool contract tests + 实现。
+2. `pi-tools`：`grep` / `find` / `ls` + golden output 固化。
+3. `pi-tools`：补工具层 golden fixture，对拍 TS 输出。
 
 并行拆分文档入口：
 

@@ -224,9 +224,6 @@ public final class EditDiffs {
         for (var line : lines) {
             result.add(line.stripTrailing());
         }
-        if (text.endsWith("\n") && !result.isEmpty()) {
-            result.removeLast();
-        }
         return result;
     }
 
