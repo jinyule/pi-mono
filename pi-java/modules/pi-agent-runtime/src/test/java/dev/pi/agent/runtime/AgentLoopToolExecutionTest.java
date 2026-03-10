@@ -122,6 +122,98 @@ class AgentLoopToolExecutionTest {
         }
     }
 
+    @Test
+    void startSkipsRemainingToolsWhenSteeringMessagesArrive() {
+        var executionOrder = new CopyOnWriteArrayList<String>();
+        var capturedContexts = new CopyOnWriteArrayList<List<Message>>();
+        var steeringCalls = new AtomicInteger();
+        var model = model();
+
+        var firstAssistant = assistant(
+            model,
+            List.of(
+                new ToolCall("call-1", "search", objectNode("query", "alpha"), null),
+                new ToolCall("call-2", "search", objectNode("query", "beta"), null)
+            ),
+            StopReason.TOOL_USE,
+            null,
+            10L
+        );
+        var secondAssistant = assistant(
+            model,
+            List.of(new TextContent("Steering applied.", null)),
+            StopReason.STOP,
+            null,
+            20L
+        );
+
+        var stream = AgentLoop.start(
+            List.of(new AgentMessage.UserMessage(List.of(new TextContent("Run tools", null)), 1L)),
+            new AgentContext("System", List.of(), List.of(searchTool(executionOrder))),
+            builder(model, scriptedStream(capturedContexts, firstAssistant, secondAssistant))
+                .steeringMessages(() -> CompletableFuture.completedFuture(
+                    steeringCalls.getAndIncrement() == 1
+                        ? List.of(new AgentMessage.UserMessage(List.of(new TextContent("Please stop after first tool.", null)), 30L))
+                        : List.of()
+                ))
+                .build()
+        );
+
+        var result = stream.result().join();
+
+        assertThat(executionOrder).containsExactly("alpha");
+        assertThat(result).extracting(AgentMessage::role)
+            .containsExactly("user", "assistant", "toolResult", "toolResult", "user", "assistant");
+        var skippedResult = (AgentMessage.ToolResultMessage) result.get(3);
+        assertThat(skippedResult.isError()).isTrue();
+        assertThat(((TextContent) skippedResult.content().get(0)).text()).isEqualTo("Skipped due to queued user message.");
+        assertThat(capturedContexts).hasSize(2);
+        assertThat(capturedContexts.get(1)).extracting(Message::role)
+            .containsExactly("user", "assistant", "toolResult", "toolResult", "user");
+    }
+
+    @Test
+    void startContinuesWhenFollowUpMessagesArriveAfterAgentWouldStop() {
+        var capturedContexts = new CopyOnWriteArrayList<List<Message>>();
+        var followUpCalls = new AtomicInteger();
+        var model = model();
+
+        var firstAssistant = assistant(
+            model,
+            List.of(new TextContent("First answer.", null)),
+            StopReason.STOP,
+            null,
+            10L
+        );
+        var secondAssistant = assistant(
+            model,
+            List.of(new TextContent("Follow-up handled.", null)),
+            StopReason.STOP,
+            null,
+            20L
+        );
+
+        var stream = AgentLoop.start(
+            List.of(new AgentMessage.UserMessage(List.of(new TextContent("Start", null)), 1L)),
+            new AgentContext("System", List.of(), List.of()),
+            builder(model, scriptedStream(capturedContexts, firstAssistant, secondAssistant))
+                .followUpMessages(() -> CompletableFuture.completedFuture(
+                    followUpCalls.getAndIncrement() == 0
+                        ? List.of(new AgentMessage.UserMessage(List.of(new TextContent("One more thing.", null)), 40L))
+                        : List.of()
+                ))
+                .build()
+        );
+
+        var result = stream.result().join();
+
+        assertThat(result).extracting(AgentMessage::role)
+            .containsExactly("user", "assistant", "user", "assistant");
+        assertThat(capturedContexts).hasSize(2);
+        assertThat(capturedContexts.get(1)).extracting(Message::role)
+            .containsExactly("user", "assistant", "user");
+    }
+
     private static AgentLoopConfig.Builder builder(
         Model model,
         AgentLoopConfig.AssistantStreamFunction streamFunction

@@ -92,43 +92,74 @@ public final class AgentLoop {
         AgentEventStream stream
     ) {
         var currentContext = context;
-        var currentPendingMessages = List.copyOf(pendingMessages);
+        var currentPendingMessages = combinePendingMessages(pendingMessages, pollMessages(config.steeringMessages()));
+        var firstTurn = true;
 
         while (true) {
-            stream.push(new AgentEvent.TurnStart());
+            var hasMoreToolCalls = true;
+            List<AgentMessage> steeringAfterTools = null;
 
-            if (!currentPendingMessages.isEmpty()) {
-                currentContext = currentContext.appendMessages(currentPendingMessages);
-                for (var pendingMessage : currentPendingMessages) {
-                    newMessages.add(pendingMessage);
-                    stream.push(new AgentEvent.MessageStart(pendingMessage));
-                    stream.push(new AgentEvent.MessageEnd(pendingMessage));
+            while (hasMoreToolCalls || !currentPendingMessages.isEmpty()) {
+                if (!firstTurn) {
+                    stream.push(new AgentEvent.TurnStart());
+                } else {
+                    firstTurn = false;
+                    stream.push(new AgentEvent.TurnStart());
                 }
-                currentPendingMessages = List.of();
+
+                if (!currentPendingMessages.isEmpty()) {
+                    currentContext = currentContext.appendMessages(currentPendingMessages);
+                    for (var pendingMessage : currentPendingMessages) {
+                        newMessages.add(pendingMessage);
+                        stream.push(new AgentEvent.MessageStart(pendingMessage));
+                        stream.push(new AgentEvent.MessageEnd(pendingMessage));
+                    }
+                    currentPendingMessages = List.of();
+                }
+
+                var assistantMessage = streamAssistantResponse(currentContext, config, stream);
+                newMessages.add(assistantMessage);
+                currentContext = currentContext.appendMessage(assistantMessage);
+
+                if (assistantMessage.stopReason() == StopReason.ERROR || assistantMessage.stopReason() == StopReason.ABORTED) {
+                    stream.push(new AgentEvent.TurnEnd(assistantMessage, List.of()));
+                    stream.push(new AgentEvent.AgentEnd(List.copyOf(newMessages)));
+                    return;
+                }
+
+                var toolExecution = executeToolCalls(
+                    currentContext.tools(),
+                    assistantMessage,
+                    stream,
+                    config.steeringMessages()
+                );
+                var toolResults = toolExecution.toolResults();
+                hasMoreToolCalls = !toolResults.isEmpty();
+                steeringAfterTools = toolExecution.steeringMessages();
+
+                if (!toolResults.isEmpty()) {
+                    currentContext = currentContext.appendMessages(new ArrayList<>(toolResults));
+                    newMessages.addAll(toolResults);
+                }
+
+                stream.push(new AgentEvent.TurnEnd(assistantMessage, toolResults));
+
+                if (steeringAfterTools != null && !steeringAfterTools.isEmpty()) {
+                    currentPendingMessages = List.copyOf(steeringAfterTools);
+                    steeringAfterTools = null;
+                } else {
+                    currentPendingMessages = pollMessages(config.steeringMessages());
+                }
             }
 
-            var assistantMessage = streamAssistantResponse(currentContext, config, stream);
-            newMessages.add(assistantMessage);
-            currentContext = currentContext.appendMessage(assistantMessage);
-
-            if (assistantMessage.stopReason() == StopReason.ERROR || assistantMessage.stopReason() == StopReason.ABORTED) {
-                stream.push(new AgentEvent.TurnEnd(assistantMessage, List.of()));
-                stream.push(new AgentEvent.AgentEnd(List.copyOf(newMessages)));
-                return;
+            var followUpMessages = pollMessages(config.followUpMessages());
+            if (!followUpMessages.isEmpty()) {
+                currentPendingMessages = followUpMessages;
+                continue;
             }
 
-            var toolResults = executeToolCalls(currentContext.tools(), assistantMessage, stream);
-            if (!toolResults.isEmpty()) {
-                currentContext = currentContext.appendMessages(new ArrayList<>(toolResults));
-                newMessages.addAll(toolResults);
-            }
-
-            stream.push(new AgentEvent.TurnEnd(assistantMessage, toolResults));
-
-            if (toolResults.isEmpty()) {
-                stream.push(new AgentEvent.AgentEnd(List.copyOf(newMessages)));
-                return;
-            }
+            stream.push(new AgentEvent.AgentEnd(List.copyOf(newMessages)));
+            return;
         }
     }
 
@@ -191,21 +222,24 @@ public final class AgentLoop {
         };
     }
 
-    private static List<AgentMessage.ToolResultMessage> executeToolCalls(
+    private static ToolExecutionResult executeToolCalls(
         List<AgentTool<?>> tools,
         AgentMessage.AssistantMessage assistantMessage,
-        AgentEventStream stream
+        AgentEventStream stream,
+        AgentLoopConfig.MessageSource steeringMessagesSource
     ) {
         var toolCalls = assistantMessage.content().stream()
             .filter(ToolCall.class::isInstance)
             .map(ToolCall.class::cast)
             .toList();
         if (toolCalls.isEmpty()) {
-            return List.of();
+            return new ToolExecutionResult(List.of(), null);
         }
 
         var toolResults = new ArrayList<AgentMessage.ToolResultMessage>(toolCalls.size());
-        for (var toolCall : toolCalls) {
+        List<AgentMessage> steeringMessages = null;
+        for (int index = 0; index < toolCalls.size(); index++) {
+            var toolCall = toolCalls.get(index);
             stream.push(new AgentEvent.ToolExecutionStart(toolCall.id(), toolCall.name(), toolCall.arguments()));
 
             AgentToolResult<?> result;
@@ -241,9 +275,20 @@ public final class AgentLoop {
             toolResults.add(toolResultMessage);
             stream.push(new AgentEvent.MessageStart(toolResultMessage));
             stream.push(new AgentEvent.MessageEnd(toolResultMessage));
+
+            if (steeringMessagesSource != null) {
+                var polledMessages = pollMessages(steeringMessagesSource);
+                if (!polledMessages.isEmpty()) {
+                    steeringMessages = polledMessages;
+                    for (var skippedToolCall : toolCalls.subList(index + 1, toolCalls.size())) {
+                        toolResults.add(skipToolCall(skippedToolCall, stream));
+                    }
+                    break;
+                }
+            }
         }
 
-        return List.copyOf(toolResults);
+        return new ToolExecutionResult(List.copyOf(toolResults), steeringMessages == null ? null : List.copyOf(steeringMessages));
     }
 
     private static String resolveApiKey(AgentLoopConfig config) {
@@ -256,11 +301,60 @@ public final class AgentLoop {
         return config.apiKey();
     }
 
+    private static List<AgentMessage> pollMessages(AgentLoopConfig.MessageSource messageSource) {
+        if (messageSource == null) {
+            return List.of();
+        }
+        var messages = await(messageSource.get());
+        return messages == null ? List.of() : List.copyOf(messages);
+    }
+
+    private static List<AgentMessage> combinePendingMessages(
+        List<AgentMessage> initialMessages,
+        List<AgentMessage> queuedMessages
+    ) {
+        if (initialMessages.isEmpty()) {
+            return queuedMessages;
+        }
+        if (queuedMessages.isEmpty()) {
+            return List.copyOf(initialMessages);
+        }
+        var combined = new ArrayList<AgentMessage>(initialMessages.size() + queuedMessages.size());
+        combined.addAll(initialMessages);
+        combined.addAll(queuedMessages);
+        return List.copyOf(combined);
+    }
+
     private static AgentTool<?> findTool(List<AgentTool<?>> tools, String toolName) {
         return tools.stream()
             .filter(tool -> tool.name().equals(toolName))
             .findFirst()
             .orElseThrow(() -> new IllegalArgumentException("Tool " + toolName + " not found"));
+    }
+
+    private static AgentMessage.ToolResultMessage skipToolCall(
+        ToolCall toolCall,
+        AgentEventStream stream
+    ) {
+        var result = new AgentToolResult<>(
+            List.of(new TextContent("Skipped due to queued user message.", null)),
+            Map.of()
+        );
+
+        stream.push(new AgentEvent.ToolExecutionStart(toolCall.id(), toolCall.name(), toolCall.arguments()));
+        stream.push(new AgentEvent.ToolExecutionEnd(toolCall.id(), toolCall.name(), result, true));
+
+        var toolResultMessage = new AgentMessage.ToolResultMessage(
+            toolCall.id(),
+            toolCall.name(),
+            result.content(),
+            toJsonNode(result.details()),
+            true,
+            System.currentTimeMillis()
+        );
+        stream.push(new AgentEvent.MessageStart(toolResultMessage));
+        stream.push(new AgentEvent.MessageEnd(toolResultMessage));
+        return toolResultMessage;
     }
 
     private static void emitLoopFailure(
@@ -319,5 +413,11 @@ public final class AgentLoop {
 
     private static <T> T await(CompletionStage<T> stage) {
         return stage.toCompletableFuture().join();
+    }
+
+    private record ToolExecutionResult(
+        List<AgentMessage.ToolResultMessage> toolResults,
+        List<AgentMessage> steeringMessages
+    ) {
     }
 }

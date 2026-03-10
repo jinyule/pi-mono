@@ -272,7 +272,7 @@
 - `AgentLoopConfig` 已支持 `convertToLlm` 与 `transformContext` 两阶段上下文管线，支持 model、thinking、transport、headers、api key、stream function 等最小运行时配置。
 - `AgentLoop` 已支持两条基础入口：`start()` 和 `continueLoop()`；当前可完成单轮 prompt -> provider stream -> assistant lifecycle 转发。
 - `AgentLoop` 会把 `AssistantMessageEvent` 的 `start` / `text_*` / `thinking_*` / `toolcall_*` / `done` / `error` 事件桥接为 runtime 层的 `message_start` / `message_update` / `message_end`。
-- 当前 loop skeleton 还没有进入工具执行、steering/follow-up 队列、multi-turn 续跑；这些是下一批切片。
+- 基于这版 skeleton，后续切片已继续补上顺序工具执行、steering / follow-up 队列与 multi-turn 续跑，详见后面的阶段 16 / 17 记录。
 
 ### 16. 阶段 2：顺序工具执行与参数校验首版
 
@@ -289,6 +289,18 @@
 - tool 未找到、参数校验失败、执行抛错三类失败路径，当前都会统一收敛为 `ToolResultMessage(isError=true)`，与 TS 侧 agent loop 的错误承载方式保持一致。
 - `ToolArgumentsValidator` 当前实现了基础 JSON Schema 子集：`type`、`required`、`properties`、`additionalProperties`、`items`、`enum`、`const`、`minimum/maximum`、`minLength/maxLength`，并对 `boolean` / `integer` / `number` 做了最小字符串 coercion。
 - 当前这批参数校验还不是完整 JSON Schema 实现；复杂组合规则（如 `oneOf` / `anyOf` / `allOf`）留到后续确实需要时再补。
+
+### 17. 阶段 2：steering / follow-up 队列首版
+
+已继续在 `modules/pi-agent-runtime/src/main/java/dev/pi/agent/runtime/AgentLoop.java` 下补上第一版 queue 语义。
+
+当前这批 runtime 代码的实现特点：
+
+- `AgentLoop` 现在会在 loop 开始前先轮询一次 steering source，和 TypeScript 版保持一致，允许用户在 assistant 请求发出前插入待处理消息。
+- 每次 tool 执行结束后，runtime 都会再次轮询 steering source；一旦拿到 steering message，会跳过当前 assistant 余下的 tool calls，并把 steering message 插入下一轮 assistant 请求前。
+- 被跳过的 tool call 会稳定生成 `ToolResultMessage(isError=true)`，内容固定为 `Skipped due to queued user message.`，同时照常发出 `tool_execution_start` / `tool_execution_end` 与消息生命周期事件。
+- 当 agent 在当前轮没有更多 tool call 且没有 steering message 时，runtime 会轮询 follow-up source；若拿到 follow-up message，则继续开启下一轮 turn，而不是直接结束 agent。
+- 当前 queue 行为仍保持最小 runtime 语义：一次 `MessageSource.get()` 返回多少条消息，就在下一轮一并注入多少条；更高层的 one-at-a-time / all 模式留给后续 `Agent` facade 管理。
 
 ## 已完成的验证
 
@@ -321,6 +333,7 @@ npm.cmd run check
 - provider 交叉行为测试矩阵、OpenAI provider 的 compat/replay 收敛、abort/handoff/image input cross-provider coverage
 - `pi-agent-runtime` 的单轮 loop lifecycle、`transformContext -> convertToLlm` 顺序、`continueLoop()` 前置条件校验
 - `pi-agent-runtime` 的顺序 tool execution、多轮 tool-result 续跑、tool execution update/end lifecycle、参数校验失败 -> error tool result 语义
+- `pi-agent-runtime` 的 steering after tool -> skip remaining tool calls 语义、follow-up message -> reopen turn 语义
 
 对应测试文件：
 
@@ -348,11 +361,10 @@ npm.cmd run check
 
 ### `pi-agent-runtime`
 
-阶段 2 当前已完成 core types、上下文管线、单轮/多轮 tool loop skeleton、顺序工具执行与基础参数校验。
+阶段 2 当前已完成 core types、上下文管线、单轮/多轮 tool loop skeleton、顺序工具执行、基础参数校验、steering / follow-up 队列。
 
 下一步按任务顺序应继续：
 
-- steering / follow-up 队列
 - `Agent` facade 与订阅接口
 - agent loop 生命周期与工具中断测试补全
 
@@ -392,15 +404,15 @@ npm.cmd run check
 
 建议严格按 `docs/tasks.md` 的顺序继续：
 
-1. 在 `pi-agent-runtime` 内补 steering / follow-up 队列，形成真正可打断的 loop。
-2. 再补 `Agent` facade 与订阅接口，把 runtime state 接起来。
-3. 最后补更完整的生命周期 / 工具中断 / steering skip tests。
+1. 在 `pi-agent-runtime` 内补 `Agent` facade 与订阅接口，把 runtime state 接起来。
+2. 再补更完整的生命周期 / 工具中断 / steering skip tests。
+3. 然后进入 `pi-session`。
 
 更具体的下一步切片建议：
 
-1. `pi-agent-runtime`：steering / follow-up 管线。
-2. `pi-agent-runtime`：`Agent` facade + state 订阅。
-3. `pi-agent-runtime`：interrupt / steering skip / lifecycle tests。
+1. `pi-agent-runtime`：`Agent` facade + state 订阅。
+2. `pi-agent-runtime`：interrupt / lifecycle tests。
+3. `pi-session`：session model + JSONL parse/write skeleton。
 
 并行拆分文档入口：
 
