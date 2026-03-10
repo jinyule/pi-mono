@@ -11,6 +11,7 @@
 3. differential rendering：`DiffRenderer`、`SynchronizedOutput`
 4. overlay / IME / hardware cursor：`Tui`、`OverlayHandle`、`CursorPosition`
 5. 基础文本组件第一批：`Container`、`Text`、`TruncatedText`
+6. 输入组件第一批：`Input`、`EditorKeybindings`、`KeyMatcher`、`KillRing`、`UndoStack`
 
 ## 当前关键入口
 
@@ -23,6 +24,12 @@
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/Container.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/Text.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/TruncatedText.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/Input.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/EditorAction.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/EditorKeybindings.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/KeyMatcher.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/KillRing.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/UndoStack.java`
 
 ## 已完成切片
 
@@ -74,6 +81,30 @@
 - `TerminalText.truncateToWidth()`
 - `TerminalText.applyBackgroundToLine()`
 
+### 6. 输入组件第一批
+
+- `Input` 已支持：
+  - 单行编辑
+  - horizontal scrolling
+  - fake cursor render
+  - `CURSOR_MARKER` 注入
+  - submit / escape callback
+  - bracketed paste
+  - 左右 / 行首 / 行尾移动
+  - 按词移动
+  - backspace / delete
+  - delete word backward / forward
+  - delete to line start / end
+  - yank / yank-pop
+  - undo
+- 新增最小可配置键位层：
+  - `EditorAction`
+  - `EditorKeybindings`
+  - `KeyMatcher`
+- 新增最小编辑支撑：
+  - `KillRing`
+  - `UndoStack`
+
 ## 当前测试
 
 已覆盖的测试入口：
@@ -84,6 +115,7 @@
 - `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/DiffRendererTest.java`
 - `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/TuiTest.java`
 - `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/BasicComponentsTest.java`
+- `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/InputTest.java`
 
 最近验证通过：
 
@@ -110,7 +142,7 @@ npm.cmd run check
 
 建议继续按这个顺序推进：
 
-1. `Input` / `Editor`
+1. `Editor`
 2. `Markdown` / `Loader`
 3. `SelectList` / `SettingsList`
 4. `Image`
