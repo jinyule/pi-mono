@@ -12,6 +12,8 @@
   - `json` mode
   - `rpc` mode
   - `pi-sdk` facade
+- 已完成第七刀：
+  - CLI startup dispatcher skeleton
 
 ## 已落地内容
 
@@ -28,6 +30,7 @@
 - `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiPrintMode.java`
 - `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiJsonMode.java`
 - `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiRpcMode.java`
+- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiCliApplication.java`
 - `pi-java/modules/pi-sdk/src/main/java/dev/pi/sdk/CreateAgentSessionOptions.java`
 - `pi-java/modules/pi-sdk/src/main/java/dev/pi/sdk/PiSdk.java`
 - `pi-java/modules/pi-sdk/src/main/java/dev/pi/sdk/PiSdkSession.java`
@@ -37,6 +40,7 @@
 - `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiPrintModeTest.java`
 - `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiJsonModeTest.java`
 - `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiRpcModeTest.java`
+- `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiCliApplicationTest.java`
 - `pi-java/modules/pi-sdk/src/test/java/dev/pi/sdk/PiSdkTest.java`
 
 调整：
@@ -76,6 +80,7 @@
 - `json` mode 当前输出的是最小归一化 JSONL，不是最终 RPC schema，也不包含完整 tool/state payload。
 - `rpc` mode 当前只覆盖最小命令集：`prompt` / `state` / `resume` / `abort`。
 - `pi-sdk` facade 当前与 `pi-cli` 的 session shell 逻辑仍有重复，后续可考虑收敛到共享核心。
+- `PiCliApplication` 当前只负责 `parse -> create session -> dispatch mode` 的启动编排，尚未接真实 `main()`、DI 装配、settings/model resolution 和 built-in tool/runtime bootstrap。
 
 ## 已确认语义
 
@@ -83,6 +88,7 @@
 - `--mode text` 作为 TS 兼容别名保留。
 - 未知 flag 当前按 TS 第一遍解析语义处理：flag 自身被保留，但后续普通参数仍按 message 处理。
 - `PiCliThinkingLevel` 保留 `off`，后续可在 runtime 层映射为“无 reasoning”。
+- `PiCliApplication` 的 `SessionFactory` 与 `ModeHandler` 采用注入式接口，优先保证 main entry 可测试，再在后续切片接真实模块装配。
 
 ## 测试
 
@@ -102,6 +108,7 @@
 - json mode 的 event/state envelope 与 blank prompt 校验
 - rpc mode 的 command/response、状态读取、错误响应
 - sdk facade 的 session helpers 与 `createAgentSession()` 集成
+- cli startup dispatcher 的 mode dispatch 与参数透传
 
 ## 验证
 
@@ -116,6 +123,6 @@ npm.cmd run check
 
 按依赖顺序，下一刀建议进入 CLI 收口：
 
-1. CLI main entry / startup pipeline。
-2. `list-models` / `resume` / `new` 等 CLI command。
-3. `export` / `copy` / `tree` / `fork` / `compact` / `reload`。
+1. `list-models` / `resume` / `new` 等 CLI command。
+2. `export` / `copy` / `tree` / `fork` / `compact` / `reload`。
+3. 真实 `main()` / module wiring，把 `PiCliApplication` 接到启动入口。
