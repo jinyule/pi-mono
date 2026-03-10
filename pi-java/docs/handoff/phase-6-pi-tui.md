@@ -17,6 +17,7 @@
 9. `Loader` 第一批
 10. `SelectList` 第一批
 11. `SettingsList` 第一批
+12. `Image` 第一批
 
 ## 当前关键入口
 
@@ -46,6 +47,15 @@
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/SettingsListOptions.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/SettingsListTheme.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/SettingsList.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/ImageProtocol.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/TerminalCapabilities.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/CellDimensions.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/ImageDimensions.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/ImageRenderOptions.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/ImageOptions.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/ImageTheme.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/TerminalImages.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/Image.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/KeyMatcher.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/KillRing.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/UndoStack.java`
@@ -190,6 +200,23 @@
 - `SettingsList` 实现了 `Focusable`，会把 focus 传给内部 `Input`
 - 当前 search 采用轻量 subsequence fuzzy match，不是 TS 版完整 fuzzy scorer
 
+### 12. `Image` 第一批
+
+- `TerminalImages` 已支持：
+  - terminal capability detect
+  - Kitty / iTerm2 sequence encode
+  - Kitty delete sequence
+  - base64 image dimension detect
+  - image rows 计算
+  - fallback placeholder
+- `Image` 组件已支持：
+  - fallback 文本 render
+  - Kitty / iTerm2 inline image sequence render
+  - reserved rows + cursor-up 输出布局
+  - width cache
+  - `imageId` 透传
+- 当前能力以静态图片为主，动画/替换/清理生命周期还没接进 `Tui`
+
 ## 当前测试
 
 已覆盖的测试入口：
@@ -206,6 +233,7 @@
 - `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/LoaderTest.java`
 - `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/SelectListTest.java`
 - `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/SettingsListTest.java`
+- `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/ImageTest.java`
 
 最近验证通过：
 
@@ -218,7 +246,6 @@ npm.cmd run check
 
 还没有完成：
 
-- `Image`
 - `VirtualTerminal`
 - render / key golden tests
 
@@ -226,6 +253,6 @@ npm.cmd run check
 
 建议继续按这个顺序推进：
 
-1. `Image`
-2. `VirtualTerminal`
-3. render / key golden tests
+1. `VirtualTerminal`
+2. render / key golden tests
+3. `pi-cli` interactive 前置接线
