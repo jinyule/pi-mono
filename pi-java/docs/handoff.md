@@ -1288,6 +1288,57 @@
 - 还没有给 example plugin 单独配 Gradle subproject；当前以仓库内源码 + 测试编译打包为主。
 - 阶段 5 的 SPI 目标已基本收口，后续更完整的 skills / prompts / themes runtime 接线将随应用层推进。
 
+### 41. 阶段 6：`pi-tui` 核心接口
+
+已继续在 `modules/pi-tui/src/main/java/dev/pi/tui/` 与 `modules/pi-tui/src/test/java/dev/pi/tui/` 下补上第一版 TUI 核心接口与最小值对象。
+
+本次新增的入口：
+
+- `InputHandler`
+- `Component`
+- `Focusable`
+- `Terminal`
+- `Overlay`
+- `OverlayAnchor`
+- `OverlayMargin`
+- `OverlayOptions`
+- `PiTuiContractsTest`
+
+本次收敛的实现点：
+
+- `Component` 先按最稳定 contract 落地：
+  - `render(int width)`
+  - `handleInput(String data)` default no-op
+  - `invalidate()` default no-op
+- `Focusable` 先用 Java 接口表达 focus state：
+  - `isFocused()`
+  - `setFocused(boolean)`
+- `Terminal` 先固化第一层终端抽象：
+  - `start(InputHandler, Runnable onResize)`
+  - `stop()`
+  - `write()`
+  - `columns()` / `rows()`
+  - cursor / clear / title 相关方法先给 default no-op，便于后续逐步补 JLine-backed 实现
+- `Overlay` 先表达最小 overlay state：
+  - `component()`
+  - `options()`
+  - `isHidden()`
+  - `setHidden(boolean)`
+- `OverlayAnchor` / `OverlayMargin` / `OverlayOptions` 先把 overlay 的最小定位和 margin 值对象定下来，为后续 overlay stack 和 responsive 布局留稳定形状。
+
+这批 contract tests 已覆盖：
+
+- 一个组件可以同时实现 `Component + Focusable`
+- `Terminal` contract 可以被最小 fake terminal 实现
+- `OverlayOptions.defaults()` 会稳定给出 centered + zero-margin 的默认值
+- `Overlay` contract 可以被最小 fake overlay 实现
+
+这一刀的边界：
+
+- 还没有接 JLine terminal 实现。
+- 还没有实现 raw mode、resize、title、cursor、bracketed paste、kitty keyboard protocol。
+- 还没有开始 diff renderer、overlay stack、IME cursor marker 或任何具体组件。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -1346,6 +1397,7 @@ npm.cmd run check
 - `pi-extension-spi` 的 resource discovery：resource path 聚合、扩展 source 相对路径归一化、invalid path / handler failure 收敛
 - `pi-extension-spi` 的 reload runtime：snapshot rebuild、old classloader close、event bus / resource discovery rebuild
 - `pi-extension-spi` 的 checked-in example plugin：真实源码编译、service entry、热重载验证
+- `pi-tui` 的 core contracts：`Terminal` / `Component` / `Focusable` / `Overlay` 接口与最小值对象
 - `pi-agent-runtime` 的 tool cancellation：close event stream -> tool cancel supplier
 
 对应测试文件：
@@ -1396,6 +1448,7 @@ npm.cmd run check
 - `modules/pi-extension-spi/src/test/java/dev/pi/extension/spi/ExtensionResourceDiscoveryTest.java`
 - `modules/pi-extension-spi/src/test/java/dev/pi/extension/spi/ExtensionRuntimeReloadTest.java`
 - `modules/pi-extension-spi/src/test/java/dev/pi/extension/spi/ExampleExtensionPluginTest.java`
+- `modules/pi-tui/src/test/java/dev/pi/tui/PiTuiContractsTest.java`
 
 ## 未完成 / 已知缺口
 
@@ -1414,13 +1467,13 @@ npm.cmd run check
 
 ### `pi-extension-spi`
 
-阶段 5 当前已完成 core types、`ServiceLoader + isolated ClassLoader` discovery skeleton、最小扩展加载 contract tests、扩展事件总线与 typed event contract、tool / command / shortcut / flag / renderer 注册面收敛、资源发现扩展点、`/reload` runtime rebuild、仓库内最小示例插件。
+阶段 5 当前已收尾。
 
 下一步按任务顺序应继续：
 
 - `pi-tui`
-- `Terminal` / `Component` / `Focusable` / `Overlay` 接口
-- terminal raw mode / resize / title / cursor 基础支持
+- terminal raw mode / resize / title / cursor / bracketed paste / kitty keyboard protocol
+- diff renderer 与 synchronized output
 
 ### 其他模块
 
@@ -1456,14 +1509,14 @@ npm.cmd run check
 建议严格按 `docs/tasks.md` 的顺序继续：
 
 1. 进入阶段 5 `pi-extension-spi`。
-2. 先进入阶段 6 `pi-tui`。
-3. 从 `Terminal` / `Component` / `Focusable` / `Overlay` 接口开始。
+2. 继续阶段 6 `pi-tui`。
+3. 先补 terminal raw mode / resize / title / cursor / bracketed paste。
 
 更具体的下一步切片建议：
 
-1. `pi-tui`：`Terminal` / `Component` / `Focusable` / `Overlay` 核心接口。
-2. `pi-tui`：terminal raw mode / resize / title / cursor / bracketed paste 基础支持。
-3. `pi-tui`：diff renderer 与 synchronized output 骨架。
+1. `pi-tui`：terminal raw mode / resize / title / cursor / bracketed paste / kitty keyboard protocol。
+2. `pi-tui`：diff renderer 与 synchronized output 骨架。
+3. `pi-tui`：overlay stack、IME cursor marker、hardware cursor positioning。
 
 并行拆分文档入口：
 
