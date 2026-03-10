@@ -1202,6 +1202,50 @@
 - 还没有给资源路径补 package/source metadata 与 enable/disable overlay。
 - 还没有把这条链路接到 `/reload` 生命周期和 classloader rebuild。
 
+### 39. 阶段 5：`/reload` runtime rebuild
+
+已继续在 `modules/pi-extension-spi/src/main/java/dev/pi/extension/spi/` 与 `modules/pi-extension-spi/src/test/java/dev/pi/extension/spi/` 下补上第一版 reloadable extension runtime。
+
+本次新增的入口：
+
+- `ExtensionRuntimeSnapshot`
+- `ExtensionRuntime`
+- `ExtensionRuntimeReloadTest`
+
+本次收敛的实现点：
+
+- `ExtensionRuntime` 现在把扩展加载结果和后续运行时视图绑定到一个可重载对象里：
+  - 固定持有 `sources`
+  - 持有当前 `ExtensionLoadResult`
+  - 暴露当前 `ExtensionRuntimeSnapshot`
+- `ExtensionRuntimeSnapshot` 会把当前 reload 之后需要消费的视图收敛在一起：
+  - `extensions`
+  - `failures`
+  - `eventBus`
+  - `resourceDiscovery`
+- `reload()` 现在会执行最小 rebuild 流程：
+  - 重新从相同 source 列表加载扩展
+  - 基于新 load result 重建 `ExtensionEventBus`
+  - 基于新 load result 重建 `ExtensionResourceDiscovery`
+  - 关闭旧 `ExtensionLoadResult` 上关联的 classloaders
+- `close()` 现在会关闭当前 runtime 持有的 classloaders，并把 snapshot 清空为 empty runtime，避免旧扩展对象继续被 runtime 持有。
+- 这一层先只做 `pi-extension-spi` 模块内的 runtime rebuild，不直接负责 settings reload、resource loader reload、tool registry rebuild；这些仍属于后续 `PiAgentSession` / app runtime 的职责。
+
+这批 contract tests 已覆盖：
+
+- 运行时动态编译一个扩展 jar，构建 `ExtensionRuntime` 后再覆写同一路径 jar，并验证：
+  - `reload()` 后旧 classloader 会被关闭
+  - 新 snapshot 会看到新的 command 注册
+  - `eventBus` / `resourceDiscovery` 会基于新扩展内容重建
+- 调用 `close()` 后会关闭当前 classloader，并把 snapshot 清空
+
+这一刀的边界：
+
+- 还没有把 `session_shutdown -> settings reload -> resources reload -> runtime rebuild -> session_start` 串成应用层完整流程。
+- 还没有恢复前一次 reload 之前的 flag values / active tools / UI bindings。
+- 还没有把 resource discovery 结果接到 skills / prompts / themes runtime loader。
+- 还没有落仓库内最小示例插件源码。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -1258,6 +1302,7 @@ npm.cmd run check
 - `pi-extension-spi` 的 event bus：typed event handler 捕获、顺序派发、async handler 归一化、dispatch failure 收敛
 - `pi-extension-spi` 的 registration surface：shortcut/flag 捕获、flag default lookup、duplicate shortcut failure 收敛
 - `pi-extension-spi` 的 resource discovery：resource path 聚合、扩展 source 相对路径归一化、invalid path / handler failure 收敛
+- `pi-extension-spi` 的 reload runtime：snapshot rebuild、old classloader close、event bus / resource discovery rebuild
 - `pi-agent-runtime` 的 tool cancellation：close event stream -> tool cancel supplier
 
 对应测试文件：
@@ -1306,6 +1351,7 @@ npm.cmd run check
 - `modules/pi-extension-spi/src/test/java/dev/pi/extension/spi/ExtensionEventBusTest.java`
 - `modules/pi-extension-spi/src/test/java/dev/pi/extension/spi/ExtensionRegistrationSurfaceTest.java`
 - `modules/pi-extension-spi/src/test/java/dev/pi/extension/spi/ExtensionResourceDiscoveryTest.java`
+- `modules/pi-extension-spi/src/test/java/dev/pi/extension/spi/ExtensionRuntimeReloadTest.java`
 
 ## 未完成 / 已知缺口
 
@@ -1324,13 +1370,13 @@ npm.cmd run check
 
 ### `pi-extension-spi`
 
-阶段 5 当前已完成 core types、`ServiceLoader + isolated ClassLoader` discovery skeleton、最小扩展加载 contract tests、扩展事件总线与 typed event contract、tool / command / shortcut / flag / renderer 注册面收敛、资源发现扩展点。
+阶段 5 当前已完成 core types、`ServiceLoader + isolated ClassLoader` discovery skeleton、最小扩展加载 contract tests、扩展事件总线与 typed event contract、tool / command / shortcut / flag / renderer 注册面收敛、资源发现扩展点、`/reload` runtime rebuild。
 
 下一步按任务顺序应继续：
 
-- `/reload` 生命周期接线
 - 最小示例插件
 - skills / prompts / themes runtime loader 接线
+- app runtime 层完整 reload 串接
 
 ### 其他模块
 
@@ -1366,14 +1412,14 @@ npm.cmd run check
 建议严格按 `docs/tasks.md` 的顺序继续：
 
 1. 进入阶段 5 `pi-extension-spi`。
-2. 先补 `/reload` 生命周期接线。
-3. 再补最小示例插件与 skills / prompts / themes runtime loader 接线。
+2. 先补最小示例插件。
+3. 再补 skills / prompts / themes runtime loader 接线与 app runtime 层完整 reload 串接。
 
 更具体的下一步切片建议：
 
-1. `pi-extension-spi`：runtime `/reload` 接线与 classloader 回收 contract test。
-2. `pi-extension-spi`：仓库内最小示例插件与热重载验证。
-3. `pi-extension-spi`：skills / prompts / themes runtime loader 接线。
+1. `pi-extension-spi`：仓库内最小示例插件与热重载验证。
+2. `pi-extension-spi`：skills / prompts / themes runtime loader 接线。
+3. app runtime：`session_shutdown -> settings reload -> resources reload -> runtime rebuild -> session_start` 串接。
 
 并行拆分文档入口：
 
