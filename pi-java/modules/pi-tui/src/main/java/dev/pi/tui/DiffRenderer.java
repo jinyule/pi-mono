@@ -10,6 +10,7 @@ public final class DiffRenderer {
     private List<String> previousLines = List.of();
     private int previousWidth;
     private int cursorRow;
+    private int hardwareCursorRow;
     private int maxLinesRendered;
     private int previousViewportTop;
     private int fullRedrawCount;
@@ -20,25 +21,35 @@ public final class DiffRenderer {
     }
 
     public synchronized void render(List<String> lines) {
+        render(lines, null, false, false);
+    }
+
+    public synchronized void render(
+        List<String> lines,
+        CursorPosition cursorPosition,
+        boolean overlaysActive,
+        boolean showHardwareCursor
+    ) {
         Objects.requireNonNull(lines, "lines");
 
         var width = terminal.columns();
         var height = terminal.rows();
         var newLines = List.copyOf(new ArrayList<>(lines));
         var widthChanged = previousWidth != 0 && previousWidth != width;
+        var clearOnShrinkActive = clearOnShrink && !overlaysActive;
 
         if (previousLines.isEmpty() && !widthChanged) {
-            fullRender(newLines, width, height, false);
+            fullRender(newLines, width, height, false, cursorPosition, showHardwareCursor);
             return;
         }
 
         if (widthChanged) {
-            fullRender(newLines, width, height, true);
+            fullRender(newLines, width, height, true, cursorPosition, showHardwareCursor);
             return;
         }
 
-        if (clearOnShrink && newLines.size() < maxLinesRendered) {
-            fullRender(newLines, width, height, true);
+        if (clearOnShrinkActive && newLines.size() < maxLinesRendered) {
+            fullRender(newLines, width, height, true, cursorPosition, showHardwareCursor);
             return;
         }
 
@@ -66,17 +77,18 @@ public final class DiffRenderer {
 
         if (firstChanged == -1) {
             previousViewportTop = Math.max(0, maxLinesRendered - height);
+            positionHardwareCursor(cursorPosition, newLines.size(), showHardwareCursor);
             return;
         }
 
         var previousContentViewportTop = Math.max(0, previousLines.size() - height);
         if (firstChanged < previousContentViewportTop) {
-            fullRender(newLines, width, height, true);
+            fullRender(newLines, width, height, true, cursorPosition, showHardwareCursor);
             return;
         }
 
         if (firstChanged >= newLines.size()) {
-            fullRender(newLines, width, height, true);
+            fullRender(newLines, width, height, true, cursorPosition, showHardwareCursor);
             return;
         }
 
@@ -86,9 +98,10 @@ public final class DiffRenderer {
         var moveTargetRow = appendStart ? firstChanged - 1 : firstChanged;
         var buffer = new StringBuilder();
         var previousViewportBottom = previousViewportTopLocal + height - 1;
+        var hardwareCursorRowLocal = hardwareCursorRow;
 
         if (moveTargetRow > previousViewportBottom) {
-            var currentScreenRow = Math.max(0, Math.min(height - 1, cursorRow - previousViewportTopLocal));
+            var currentScreenRow = Math.max(0, Math.min(height - 1, hardwareCursorRowLocal - previousViewportTopLocal));
             var moveToBottom = height - 1 - currentScreenRow;
             if (moveToBottom > 0) {
                 buffer.append("\u001b[").append(moveToBottom).append('B');
@@ -98,10 +111,10 @@ public final class DiffRenderer {
             buffer.append("\r\n".repeat(scroll));
             previousViewportTopLocal += scroll;
             viewportTop += scroll;
-            cursorRow = moveTargetRow;
+            hardwareCursorRowLocal = moveTargetRow;
         }
 
-        var lineDiff = computeLineDiff(cursorRow, previousViewportTopLocal, moveTargetRow, viewportTop);
+        var lineDiff = computeLineDiff(hardwareCursorRowLocal, previousViewportTopLocal, moveTargetRow, viewportTop);
         if (lineDiff > 0) {
             buffer.append("\u001b[").append(lineDiff).append('B');
         } else if (lineDiff < 0) {
@@ -121,16 +134,19 @@ public final class DiffRenderer {
         terminal.write(SynchronizedOutput.wrap(buffer.toString()));
 
         cursorRow = Math.max(0, newLines.size() - 1);
+        hardwareCursorRow = renderEnd;
         maxLinesRendered = Math.max(maxLinesRendered, newLines.size());
         previousViewportTop = Math.max(0, maxLinesRendered - height);
         previousLines = newLines;
         previousWidth = width;
+        positionHardwareCursor(cursorPosition, newLines.size(), showHardwareCursor);
     }
 
     public synchronized void reset() {
         previousLines = List.of();
         previousWidth = 0;
         cursorRow = 0;
+        hardwareCursorRow = 0;
         maxLinesRendered = 0;
         previousViewportTop = 0;
         fullRedrawCount = 0;
@@ -152,7 +168,14 @@ public final class DiffRenderer {
         return previousLines;
     }
 
-    private void fullRender(List<String> newLines, int width, int height, boolean clear) {
+    private void fullRender(
+        List<String> newLines,
+        int width,
+        int height,
+        boolean clear,
+        CursorPosition cursorPosition,
+        boolean showHardwareCursor
+    ) {
         fullRedrawCount += 1;
         var buffer = new StringBuilder();
         if (clear) {
@@ -166,10 +189,38 @@ public final class DiffRenderer {
         }
         terminal.write(SynchronizedOutput.wrap(buffer.toString()));
         cursorRow = Math.max(0, newLines.size() - 1);
+        hardwareCursorRow = cursorRow;
         maxLinesRendered = clear ? newLines.size() : Math.max(maxLinesRendered, newLines.size());
         previousViewportTop = Math.max(0, maxLinesRendered - height);
         previousLines = newLines;
         previousWidth = width;
+        positionHardwareCursor(cursorPosition, newLines.size(), showHardwareCursor);
+    }
+
+    private void positionHardwareCursor(CursorPosition cursorPosition, int totalLines, boolean showHardwareCursor) {
+        if (cursorPosition == null || totalLines <= 0) {
+            terminal.hideCursor();
+            return;
+        }
+
+        var targetRow = Math.max(0, Math.min(cursorPosition.row(), totalLines - 1));
+        var targetColumn = Math.max(0, cursorPosition.column());
+        var buffer = new StringBuilder();
+        var rowDelta = targetRow - hardwareCursorRow;
+        if (rowDelta > 0) {
+            buffer.append("\u001b[").append(rowDelta).append('B');
+        } else if (rowDelta < 0) {
+            buffer.append("\u001b[").append(-rowDelta).append('A');
+        }
+        buffer.append("\u001b[").append(targetColumn + 1).append('G');
+        terminal.write(buffer.toString());
+        hardwareCursorRow = targetRow;
+
+        if (showHardwareCursor) {
+            terminal.showCursor();
+        } else {
+            terminal.hideCursor();
+        }
     }
 
     private static int computeLineDiff(int currentRow, int previousViewportTop, int targetRow, int viewportTop) {

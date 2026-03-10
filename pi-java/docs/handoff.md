@@ -1437,6 +1437,73 @@
 - 还没有 overlay stack、IME cursor marker、hardware cursor positioning。
 - 还没有 `VirtualTerminal` golden render fixture。
 
+### 44. 阶段 6：`pi-tui` overlay stack、IME cursor 与 hardware cursor
+
+已继续在 `modules/pi-tui/src/main/java/dev/pi/tui/` 与 `modules/pi-tui/src/test/java/dev/pi/tui/` 下补上第一版 `Tui` 主骨架。
+
+本次新增的入口：
+
+- `CursorPosition`
+- `OverlayHandle`
+- `TerminalText`
+- `Tui`
+- `TuiTest`
+
+本次收敛的实现点：
+
+- `DiffRenderer` 已扩成可接收可选 `CursorPosition`，并在 render 后做 hardware cursor reposition：
+  - 无 cursor marker 时隐藏 cursor
+  - 有 cursor marker 时按 row delta + absolute column (`CSI n G`) 定位
+  - `showHardwareCursor` 为真时显示真实 cursor
+- `Tui` 已提供第一版应用级容器骨架：
+  - child list
+  - `setFocus()`
+  - `start()` / `stop()`
+  - `requestRender()`
+  - focused component input forwarding
+- `Tui.CURSOR_MARKER` 已对齐 TS 现有 APC 序列：`ESC _ pi:c BEL`
+- `Tui` render 管线当前顺序已接通：
+  - render base children
+  - composite overlays
+  - extract cursor marker
+  - append per-line reset
+  - call `DiffRenderer`
+- overlay stack 当前已支持：
+  - `showOverlay()`
+  - `hideOverlay()`
+  - `hasOverlay()`
+  - `OverlayHandle.hide()`
+  - `OverlayHandle.setHidden()`
+  - `OverlayHandle.isHidden()`
+  - topmost visible overlay focus restore
+- `TerminalText` 提供了 overlay/cursor 所需的最小 ANSI 感知文本能力：
+  - `visibleWidth()`
+  - `takeVisibleColumns()`
+  - `dropVisibleColumns()`
+  - `padRightVisible()`
+- 这一版 overlay layout 先复用现有 Java `OverlayOptions` 的整数形状：
+  - `width`
+  - `minWidth`
+  - `maxHeight`
+  - `anchor`
+  - `row` / `column`
+  - `offsetX` / `offsetY`
+  - `margin`
+
+这批 tests 已覆盖：
+
+- focused component 输出 `CURSOR_MARKER` 时，`Tui` 会把 marker 从渲染内容剥离并把 hardware cursor 放到正确列
+- `showOverlay()` 会把 focus 切到 topmost overlay
+- overlay hidden/show/hide 生命周期下的 focus restore
+- overlay render 结果确实进入 diff renderer 输出
+
+这一刀的边界：
+
+- 还没有 render scheduler / debounced `requestRender()`。
+- 还没有 input listeners、debug key、kitty key release 过滤。
+- 还没有 `Container` / `Text` / `Input` / `Editor` 等基础组件。
+- 还没有 `VirtualTerminal` fixture 与 golden tests。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -1608,14 +1675,14 @@ npm.cmd run check
 建议严格按 `docs/tasks.md` 的顺序继续：
 
 1. 继续阶段 6 `pi-tui`。
-2. 先补 overlay stack、IME cursor marker、hardware cursor positioning。
-3. 再补 `VirtualTerminal` 与渲染 / 键位 golden tests。
+2. 先补基础组件：`Container` / `Text` / `TruncatedText`。
+3. 再补 `Input` / `Editor` / `Markdown` / `SelectList` / `SettingsList` / `Image`。
 
 更具体的下一步切片建议：
 
-1. `pi-tui`：overlay stack、IME cursor marker、hardware cursor positioning。
-2. `pi-tui`：`VirtualTerminal` 与渲染 / 键位 golden tests。
-3. `pi-tui`：基础组件 `Container` / `Text` / `TruncatedText`。
+1. `pi-tui`：基础组件 `Container` / `Text` / `TruncatedText`。
+2. `pi-tui`：`Input` / `Editor` / `Markdown` / `Loader` / `SelectList` / `SettingsList` / `Image`。
+3. `pi-tui`：`VirtualTerminal` 与渲染 / 键位 golden tests。
 
 并行拆分文档入口：
 
