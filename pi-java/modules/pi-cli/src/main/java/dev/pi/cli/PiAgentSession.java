@@ -15,7 +15,9 @@ import dev.pi.ai.model.Transport;
 import dev.pi.ai.stream.Subscription;
 import dev.pi.session.InstructionFile;
 import dev.pi.session.InstructionResources;
+import dev.pi.session.SessionEntry;
 import dev.pi.session.SessionManager;
+import dev.pi.session.SessionTreeNode;
 import dev.pi.session.SettingsManager;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -117,10 +119,72 @@ public final class PiAgentSession implements PiInteractiveSession {
         agent.abort();
     }
 
+    @Override
+    public String leafId() {
+        return sessionManager.leafId();
+    }
+
+    @Override
+    public List<SessionTreeNode> tree() {
+        return sessionManager.tree();
+    }
+
+    @Override
+    public TreeNavigationResult navigateTree(String targetId) {
+        Objects.requireNonNull(targetId, "targetId");
+        if (agent.state().isStreaming()) {
+            throw new IllegalStateException("Cannot navigate tree while agent is processing");
+        }
+
+        var entry = sessionManager.entry(targetId);
+        if (entry == null) {
+            throw new IllegalArgumentException("Unknown session entry: " + targetId);
+        }
+
+        var editorText = switch (entry) {
+            case SessionEntry.MessageEntry messageEntry when "user".equals(messageEntry.message().path("role").asText()) -> {
+                sessionManager.navigate(messageEntry.parentId());
+                yield extractUserEditorText(messageEntry);
+            }
+            default -> {
+                sessionManager.navigate(targetId);
+                yield null;
+            }
+        };
+
+        var restoredMessages = sessionManager.buildSessionContext().messages().stream()
+            .map(AgentMessages::fromLlmMessage)
+            .toList();
+        agent.replaceMessages(restoredMessages);
+        return new TreeNavigationResult(sessionManager.leafId(), editorText);
+    }
+
     public List<SessionPersistenceError> drainPersistenceErrors() {
         var drained = List.copyOf(persistenceErrors);
         persistenceErrors.clear();
         return drained;
+    }
+
+    private static String extractUserEditorText(SessionEntry.MessageEntry entry) {
+        var content = entry.message().path("content");
+        if (content.isTextual()) {
+            return content.asText("");
+        }
+        if (!content.isArray()) {
+            return "";
+        }
+
+        var lines = new ArrayList<String>();
+        for (var item : content) {
+            if (!"text".equals(item.path("type").asText())) {
+                continue;
+            }
+            var text = item.path("text").asText("");
+            if (!text.isBlank()) {
+                lines.add(text);
+            }
+        }
+        return String.join("\n", lines);
     }
 
     private void persistEvent(AgentEvent event) {

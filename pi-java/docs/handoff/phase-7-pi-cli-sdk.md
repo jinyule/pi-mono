@@ -24,6 +24,8 @@
   - `--export` first cut
 - 已完成第十二刀：
   - `/copy` first cut
+- 已完成第十三刀：
+  - `/tree` first cut
 
 ## 已落地内容
 
@@ -47,6 +49,7 @@
 - `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiExportCommand.java`
 - `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiClipboard.java`
 - `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiCopyCommand.java`
+- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiTreeSelector.java`
 - `pi-java/modules/pi-sdk/src/main/java/dev/pi/sdk/CreateAgentSessionOptions.java`
 - `pi-java/modules/pi-sdk/src/main/java/dev/pi/sdk/PiSdk.java`
 - `pi-java/modules/pi-sdk/src/main/java/dev/pi/sdk/PiSdkSession.java`
@@ -90,7 +93,12 @@
   - prompt submit
   - escape -> abort
   - `/copy` -> 最近 assistant 文本复制到剪贴板
+  - `/tree` -> session tree overlay、entry select、in-place leaf navigation
   - fake session / virtual terminal contract tests
+- `PiAgentSession` 现在已具备最小 tree navigation 语义：
+  - 暴露当前 `leafId()` 与 `tree()`
+  - 选择 assistant / compaction / branch summary 等节点时直接切 leaf 并 replay context
+  - 选择 user message 时切到其 parent，并把 user 文本预填回 editor，形成原位分支
 
 ## 当前边界
 
@@ -108,6 +116,7 @@
 - `PiSessionPicker` 当前只覆盖当前目录 sessions、prefix filter、up/down/enter/esc；all-scope toggle、fuzzy/regex search、rename/delete 仍未落地。
 - `PiExportCommand` 当前输出的是 basic standalone HTML transcript；还未追平 TS 版的 tree sidebar、theme colors、tool rich render、JSONL download、branch highlighting。
 - `/copy` 当前只复制最近一条 assistant 的 plain-text flatten 文本；未覆盖图片块、富文本选择、历史消息 picker，也还未抽出统一 slash-command registry。
+- `/tree` 当前是首版 selector：只覆盖 prefix search、up/down/enter/esc、基础树前缀渲染和当前 leaf 高亮；尚未接 TS 版的 summarize prompt、custom prompt、label edit、user-only/all-entry filter toggle、bookmark 语义。
 
 ## 已确认语义
 
@@ -124,6 +133,8 @@
 - `--resume` 当前只在 `sessionDirectory` 范围内做选择；未实现 TS 版的 current/all scope 切换。
 - `--export <session.jsonl> [output.html]` 现在会在 session/runtime 之外短路执行，默认输出 `pi-java-session-<basename>.html`。
 - `/copy` 优先同时写入 OSC52 与 system clipboard；只要任一后端成功即视为成功。
+- `/tree` 首版默认隐藏 `label` / `session_info` / `model_change` / `thinking_level_change` / `custom` 等非导航主节点，只显示 message / compaction / branch summary / custom_message。
+- `/tree` 目前不做 branch summarization；切 leaf 仅更新内存中的 session leaf，并立即用 `SessionManager.buildSessionContext()` replay 到 `Agent`。
 
 ## 测试
 
@@ -149,6 +160,7 @@
 - current-directory `--resume` picker，以及 `SessionInfo` 元数据列表
 - basic HTML export command
 - copy command 的最近 assistant 选择、空文本/无 assistant 校验、interactive slash-command dispatch
+- tree navigation 的 assistant/user 分流语义、interactive overlay 选择、user message prefill 后继续提交流程
 
 ## 验证
 
@@ -163,6 +175,6 @@ npm.cmd run check
 
 按依赖顺序，下一刀建议进入 CLI 收口：
 
-1. `tree` / `fork` / `compact` / `reload`。
+1. `fork` / `compact` / `reload`。
 2. `--resume` all-sessions scope / richer search / session mutations，以及 richer HTML export。
 3. 真实 `main()` / module wiring，把 `PiCliApplication`、`list-models`、session resolver / picker / export 接到启动入口。

@@ -54,6 +54,68 @@ class PiAgentSessionTest {
         assertThat(session.drainPersistenceErrors()).isEmpty();
     }
 
+    @Test
+    void navigatesToAssistantEntryInPlace() {
+        var model = testModel();
+        var sessionManager = SessionManager.inMemory("/workspace");
+        String firstAssistantId;
+        try {
+            sessionManager.appendMessage(new Message.UserMessage(List.of(new TextContent("first", null)), 100L));
+            firstAssistantId = sessionManager.appendMessage(assistantMessage(model, "ack:first", 200L));
+            sessionManager.appendMessage(new Message.UserMessage(List.of(new TextContent("second", null)), 300L));
+            sessionManager.appendMessage(assistantMessage(model, "ack:second", 400L));
+        } catch (Exception exception) {
+            throw new AssertionError(exception);
+        }
+
+        var session = PiAgentSession.builder(
+            model,
+            sessionManager,
+            SettingsManager.inMemory(),
+            new InstructionResources(List.of(), "", List.of())
+        )
+            .streamFunction(fakeAssistant("Ack"))
+            .build();
+
+        var result = session.navigateTree(firstAssistantId);
+
+        assertThat(result.editorText()).isNull();
+        assertThat(session.leafId()).isEqualTo(firstAssistantId);
+        assertThat(session.state().messages())
+            .extracting(message -> message.role())
+            .containsExactly("user", "assistant");
+    }
+
+    @Test
+    void selectingRootUserLoadsEditorTextAndMovesLeafToParent() {
+        var model = testModel();
+        var sessionManager = SessionManager.inMemory("/workspace");
+        String firstUserId;
+        try {
+            firstUserId = sessionManager.appendMessage(new Message.UserMessage(List.of(new TextContent("first", null)), 100L));
+            sessionManager.appendMessage(assistantMessage(model, "ack:first", 200L));
+            sessionManager.appendMessage(new Message.UserMessage(List.of(new TextContent("second", null)), 300L));
+            sessionManager.appendMessage(assistantMessage(model, "ack:second", 400L));
+        } catch (Exception exception) {
+            throw new AssertionError(exception);
+        }
+
+        var session = PiAgentSession.builder(
+            model,
+            sessionManager,
+            SettingsManager.inMemory(),
+            new InstructionResources(List.of(), "", List.of())
+        )
+            .streamFunction(fakeAssistant("Ack"))
+            .build();
+
+        var result = session.navigateTree(firstUserId);
+
+        assertThat(result.editorText()).isEqualTo("first");
+        assertThat(session.leafId()).isNull();
+        assertThat(session.state().messages()).isEmpty();
+    }
+
     private static Model testModel() {
         return new Model(
             "test-model",
@@ -89,5 +151,18 @@ class PiAgentSessionTest {
             )));
             return stream;
         };
+    }
+
+    private static Message.AssistantMessage assistantMessage(Model model, String text, long timestamp) {
+        return new Message.AssistantMessage(
+            List.of(new TextContent(text, null)),
+            model.api(),
+            model.provider(),
+            model.id(),
+            new Usage(1, 1, 0, 0, 2, new Usage.Cost(0.0, 0.0, 0.0, 0.0, 0.0)),
+            StopReason.STOP,
+            null,
+            timestamp
+        );
     }
 }

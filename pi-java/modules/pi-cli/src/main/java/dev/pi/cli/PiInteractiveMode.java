@@ -2,6 +2,9 @@ package dev.pi.cli;
 
 import dev.pi.agent.runtime.AgentState;
 import dev.pi.ai.stream.Subscription;
+import dev.pi.tui.OverlayAnchor;
+import dev.pi.tui.OverlayMargin;
+import dev.pi.tui.OverlayOptions;
 import dev.pi.tui.Input;
 import dev.pi.tui.ProcessTerminal;
 import dev.pi.tui.Terminal;
@@ -9,6 +12,7 @@ import dev.pi.tui.Text;
 import dev.pi.tui.Tui;
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 
 public final class PiInteractiveMode implements AutoCloseable {
     private final PiInteractiveSession session;
@@ -92,6 +96,11 @@ public final class PiInteractiveMode implements AutoCloseable {
             handleCopyCommand();
             return;
         }
+        if ("/tree".equals(value.trim())) {
+            input.setValue("");
+            handleTreeCommand();
+            return;
+        }
         manualStatus = null;
         input.setValue("");
         tui.requestRender();
@@ -154,6 +163,59 @@ public final class PiInteractiveMode implements AutoCloseable {
             manualStatus = "Copied last agent message to clipboard";
         } catch (RuntimeException exception) {
             manualStatus = "Error: " + rootMessage(exception);
+        }
+        renderState(session.state());
+    }
+
+    private void handleTreeCommand() {
+        var tree = session.tree();
+        if (tree.isEmpty()) {
+            manualStatus = "No session history to navigate yet.";
+            renderState(session.state());
+            return;
+        }
+
+        var overlayRef = new AtomicReference<dev.pi.tui.OverlayHandle>();
+        var selector = new PiTreeSelector(
+            tree,
+            session.leafId(),
+            targetId -> selectTreeEntry(targetId, overlayRef.get()),
+            () -> {
+                var overlay = overlayRef.get();
+                if (overlay != null) {
+                    overlay.hide();
+                }
+            },
+            tui::requestRender
+        );
+        var width = Math.max(40, Math.min(100, terminal.columns() - 2));
+        var maxHeight = Math.max(8, Math.floorDiv(terminal.rows(), 2));
+        overlayRef.set(tui.showOverlay(
+            selector,
+            new OverlayOptions(
+                width,
+                40,
+                maxHeight,
+                OverlayAnchor.CENTER,
+                0,
+                0,
+                null,
+                null,
+                OverlayMargin.uniform(1)
+            )
+        ));
+    }
+
+    private void selectTreeEntry(String targetId, dev.pi.tui.OverlayHandle overlay) {
+        try {
+            var result = session.navigateTree(targetId);
+            input.setValue(result.editorText() == null ? "" : result.editorText());
+            manualStatus = "Moved to selected tree entry";
+        } catch (RuntimeException exception) {
+            manualStatus = "Error: " + rootMessage(exception);
+        }
+        if (overlay != null) {
+            overlay.hide();
         }
         renderState(session.state());
     }
