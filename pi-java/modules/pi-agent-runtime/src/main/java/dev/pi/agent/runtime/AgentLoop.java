@@ -1,14 +1,22 @@
 package dev.pi.agent.runtime;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import dev.pi.ai.model.Context;
 import dev.pi.ai.model.Message;
+import dev.pi.ai.model.StopReason;
+import dev.pi.ai.model.TextContent;
+import dev.pi.ai.model.ToolCall;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.atomic.AtomicReference;
 
 public final class AgentLoop {
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     private AgentLoop() {
     }
 
@@ -51,22 +59,11 @@ public final class AgentLoop {
         AgentLoopConfig config,
         AgentEventStream stream
     ) {
-        var newMessages = new ArrayList<>(prompts);
-        var currentContext = context.appendMessages(prompts);
+        var newMessages = new ArrayList<AgentMessage>();
 
         try {
             stream.push(new AgentEvent.AgentStart());
-            stream.push(new AgentEvent.TurnStart());
-            for (AgentMessage prompt : prompts) {
-                stream.push(new AgentEvent.MessageStart(prompt));
-                stream.push(new AgentEvent.MessageEnd(prompt));
-            }
-
-            var assistantMessage = streamAssistantResponse(currentContext, config, stream);
-            newMessages.add(assistantMessage);
-
-            stream.push(new AgentEvent.TurnEnd(assistantMessage, List.of()));
-            stream.push(new AgentEvent.AgentEnd(List.copyOf(newMessages)));
+            runLoop(context, List.copyOf(prompts), newMessages, config, stream);
         } catch (Exception exception) {
             emitLoopFailure(config, newMessages, exception, stream);
         }
@@ -81,15 +78,57 @@ public final class AgentLoop {
 
         try {
             stream.push(new AgentEvent.AgentStart());
-            stream.push(new AgentEvent.TurnStart());
-
-            var assistantMessage = streamAssistantResponse(context, config, stream);
-            newMessages.add(assistantMessage);
-
-            stream.push(new AgentEvent.TurnEnd(assistantMessage, List.of()));
-            stream.push(new AgentEvent.AgentEnd(List.copyOf(newMessages)));
+            runLoop(context, List.of(), newMessages, config, stream);
         } catch (Exception exception) {
             emitLoopFailure(config, newMessages, exception, stream);
+        }
+    }
+
+    private static void runLoop(
+        AgentContext context,
+        List<AgentMessage> pendingMessages,
+        List<AgentMessage> newMessages,
+        AgentLoopConfig config,
+        AgentEventStream stream
+    ) {
+        var currentContext = context;
+        var currentPendingMessages = List.copyOf(pendingMessages);
+
+        while (true) {
+            stream.push(new AgentEvent.TurnStart());
+
+            if (!currentPendingMessages.isEmpty()) {
+                currentContext = currentContext.appendMessages(currentPendingMessages);
+                for (var pendingMessage : currentPendingMessages) {
+                    newMessages.add(pendingMessage);
+                    stream.push(new AgentEvent.MessageStart(pendingMessage));
+                    stream.push(new AgentEvent.MessageEnd(pendingMessage));
+                }
+                currentPendingMessages = List.of();
+            }
+
+            var assistantMessage = streamAssistantResponse(currentContext, config, stream);
+            newMessages.add(assistantMessage);
+            currentContext = currentContext.appendMessage(assistantMessage);
+
+            if (assistantMessage.stopReason() == StopReason.ERROR || assistantMessage.stopReason() == StopReason.ABORTED) {
+                stream.push(new AgentEvent.TurnEnd(assistantMessage, List.of()));
+                stream.push(new AgentEvent.AgentEnd(List.copyOf(newMessages)));
+                return;
+            }
+
+            var toolResults = executeToolCalls(currentContext.tools(), assistantMessage, stream);
+            if (!toolResults.isEmpty()) {
+                currentContext = currentContext.appendMessages(new ArrayList<>(toolResults));
+                newMessages.addAll(toolResults);
+            }
+
+            stream.push(new AgentEvent.TurnEnd(assistantMessage, toolResults));
+
+            if (toolResults.isEmpty()) {
+                stream.push(new AgentEvent.AgentEnd(List.copyOf(newMessages)));
+                return;
+            }
         }
     }
 
@@ -112,29 +151,25 @@ public final class AgentLoop {
             llmContext,
             config.toRequestOptions(resolveApiKey(config))
         );
-        var finalMessage = new AtomicReference<AgentMessage.AssistantMessage>();
 
-        try (var ignored = assistantStream.subscribe(event -> handleAssistantEvent(event, stream, finalMessage))) {
+        try (var ignored = assistantStream.subscribe(event -> handleAssistantEvent(event, stream))) {
             return asAssistant(assistantStream.result().join());
         }
     }
 
     private static void handleAssistantEvent(
         dev.pi.ai.model.AssistantMessageEvent event,
-        AgentEventStream stream,
-        AtomicReference<AgentMessage.AssistantMessage> finalMessage
+        AgentEventStream stream
     ) {
         switch (event) {
             case dev.pi.ai.model.AssistantMessageEvent.Start start ->
                 stream.push(new AgentEvent.MessageStart(asAssistant(start.partial())));
             case dev.pi.ai.model.AssistantMessageEvent.Done done -> {
                 var assistant = asAssistant(done.message());
-                finalMessage.set(assistant);
                 stream.push(new AgentEvent.MessageEnd(assistant));
             }
             case dev.pi.ai.model.AssistantMessageEvent.Error error -> {
                 var assistant = asAssistant(error.error());
-                finalMessage.set(assistant);
                 stream.push(new AgentEvent.MessageEnd(assistant));
             }
             default -> stream.push(new AgentEvent.MessageUpdate(asAssistant(partialMessage(event)), event));
@@ -156,6 +191,61 @@ public final class AgentLoop {
         };
     }
 
+    private static List<AgentMessage.ToolResultMessage> executeToolCalls(
+        List<AgentTool<?>> tools,
+        AgentMessage.AssistantMessage assistantMessage,
+        AgentEventStream stream
+    ) {
+        var toolCalls = assistantMessage.content().stream()
+            .filter(ToolCall.class::isInstance)
+            .map(ToolCall.class::cast)
+            .toList();
+        if (toolCalls.isEmpty()) {
+            return List.of();
+        }
+
+        var toolResults = new ArrayList<AgentMessage.ToolResultMessage>(toolCalls.size());
+        for (var toolCall : toolCalls) {
+            stream.push(new AgentEvent.ToolExecutionStart(toolCall.id(), toolCall.name(), toolCall.arguments()));
+
+            AgentToolResult<?> result;
+            var isError = false;
+            try {
+                var tool = findTool(tools, toolCall.name());
+                var validatedArguments = ToolArgumentsValidator.validate(tool, toolCall);
+                result = await(tool.execute(
+                    toolCall.id(),
+                    validatedArguments,
+                    partialResult -> stream.push(new AgentEvent.ToolExecutionUpdate(
+                        toolCall.id(),
+                        toolCall.name(),
+                        toolCall.arguments(),
+                        partialResult
+                    ))
+                ));
+            } catch (Exception exception) {
+                result = errorToolResult(exception);
+                isError = true;
+            }
+
+            stream.push(new AgentEvent.ToolExecutionEnd(toolCall.id(), toolCall.name(), result, isError));
+
+            var toolResultMessage = new AgentMessage.ToolResultMessage(
+                toolCall.id(),
+                toolCall.name(),
+                result.content(),
+                toJsonNode(result.details()),
+                isError,
+                System.currentTimeMillis()
+            );
+            toolResults.add(toolResultMessage);
+            stream.push(new AgentEvent.MessageStart(toolResultMessage));
+            stream.push(new AgentEvent.MessageEnd(toolResultMessage));
+        }
+
+        return List.copyOf(toolResults);
+    }
+
     private static String resolveApiKey(AgentLoopConfig config) {
         if (config.apiKeyProvider() != null) {
             var resolved = await(config.apiKeyProvider().resolve(config.model().provider()));
@@ -164,6 +254,13 @@ public final class AgentLoop {
             }
         }
         return config.apiKey();
+    }
+
+    private static AgentTool<?> findTool(List<AgentTool<?>> tools, String toolName) {
+        return tools.stream()
+            .filter(tool -> tool.name().equals(toolName))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("Tool " + toolName + " not found"));
     }
 
     private static void emitLoopFailure(
@@ -193,6 +290,31 @@ public final class AgentLoop {
             return assistantMessage;
         }
         throw new IllegalStateException("Expected assistant message");
+    }
+
+    private static AgentToolResult<Map<String, Object>> errorToolResult(Exception exception) {
+        return new AgentToolResult<>(
+            List.of(new TextContent(messageOf(exception), null)),
+            Map.of()
+        );
+    }
+
+    private static JsonNode toJsonNode(Object value) {
+        if (value instanceof JsonNode jsonNode) {
+            return jsonNode.deepCopy();
+        }
+        if (value == null) {
+            return JsonNodeFactory.instance.nullNode();
+        }
+        return OBJECT_MAPPER.valueToTree(value);
+    }
+
+    private static String messageOf(Throwable throwable) {
+        var current = throwable;
+        while (current.getCause() != null && current.getCause() != current) {
+            current = current.getCause();
+        }
+        return current.getMessage() == null ? current.getClass().getSimpleName() : current.getMessage();
     }
 
     private static <T> T await(CompletionStage<T> stage) {
