@@ -1,0 +1,117 @@
+# 阶段 6：pi-tui 交接
+
+更新时间：2026-03-10
+
+## 当前状态
+
+阶段 6 当前已完成：
+
+1. core contracts：`Terminal`、`Component`、`Focusable`、`Overlay`
+2. terminal base support：`ProcessTerminal`、`TerminalInputBuffer`
+3. differential rendering：`DiffRenderer`、`SynchronizedOutput`
+4. overlay / IME / hardware cursor：`Tui`、`OverlayHandle`、`CursorPosition`
+5. 基础文本组件第一批：`Container`、`Text`、`TruncatedText`
+
+## 当前关键入口
+
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/ProcessTerminal.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/TerminalInputBuffer.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/DiffRenderer.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/SynchronizedOutput.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/Tui.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/TerminalText.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/Container.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/Text.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/TruncatedText.java`
+
+## 已完成切片
+
+### 1. Core contracts
+
+- `Terminal`、`Component`、`Focusable`、`Overlay`
+- `OverlayOptions`、`OverlayMargin`、`OverlayAnchor`
+- `InputHandler`
+
+### 2. Terminal base support
+
+- `ProcessTerminal` 已接 JLine system terminal
+- raw mode / resize / title / cursor / clear
+- bracketed paste
+- kitty keyboard protocol query/enable
+- `TerminalInputBuffer` 已支持 escape sequence buffering 和 bracketed paste 聚合
+
+### 3. Diff renderer
+
+- `SynchronizedOutput` 封装 `CSI ? 2026 h/l`
+- `DiffRenderer` 已支持：
+  - 首帧全量 render
+  - 宽度变化 full redraw
+  - shrink full redraw
+  - append-only tail render
+  - viewport 外变更 fallback
+
+### 4. Overlay / cursor
+
+- `Tui.CURSOR_MARKER` 对齐 TS APC marker
+- `Tui` 已支持：
+  - child list
+  - focus 切换
+  - `showOverlay()` / `hideOverlay()` / `hasOverlay()`
+  - overlay hidden/show/hide 生命周期
+  - cursor marker 提取
+  - hardware cursor reposition
+- `TerminalText` 已提供当前需要的 ANSI 感知宽度/切片能力
+
+### 5. 基础文本组件第一批
+
+- `Container`
+- `Text`
+- `TruncatedText`
+
+本次新增/扩展的文本能力：
+
+- `TerminalText.wrapText()`
+- `TerminalText.truncateToWidth()`
+- `TerminalText.applyBackgroundToLine()`
+
+## 当前测试
+
+已覆盖的测试入口：
+
+- `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/PiTuiContractsTest.java`
+- `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/ProcessTerminalTest.java`
+- `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/TerminalInputBufferTest.java`
+- `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/DiffRendererTest.java`
+- `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/TuiTest.java`
+- `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/BasicComponentsTest.java`
+
+最近验证通过：
+
+```bash
+.\gradlew.bat :pi-tui:test --no-daemon
+npm.cmd run check
+```
+
+## 当前边界
+
+还没有完成：
+
+- `Input`
+- `Editor`
+- `Markdown`
+- `Loader`
+- `SelectList`
+- `SettingsList`
+- `Image`
+- `VirtualTerminal`
+- render / key golden tests
+
+## 下一步建议
+
+建议继续按这个顺序推进：
+
+1. `Input` / `Editor`
+2. `Markdown` / `Loader`
+3. `SelectList` / `SettingsList`
+4. `Image`
+5. `VirtualTerminal` 与 golden tests
