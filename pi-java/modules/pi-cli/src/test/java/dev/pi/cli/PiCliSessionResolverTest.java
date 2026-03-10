@@ -8,9 +8,12 @@ import dev.pi.ai.model.StopReason;
 import dev.pi.ai.model.TextContent;
 import dev.pi.ai.model.Usage;
 import dev.pi.session.SessionManager;
+import dev.pi.session.SessionInfo;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -85,11 +88,45 @@ class PiCliSessionResolverTest {
 
     @Test
     void rejectsResumePickerFlagForNow(@TempDir Path tempDir) {
-        var resolver = new PiCliSessionResolver(tempDir);
+        var resolver = new PiCliSessionResolver(tempDir, sessions -> null);
 
         assertThatThrownBy(() -> resolver.resolve(new PiCliParser().parse("--resume")))
-            .isInstanceOf(UnsupportedOperationException.class)
-            .hasMessageContaining("--resume");
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("No sessions available");
+    }
+
+    @Test
+    void resumesSelectedSessionFromPicker(@TempDir Path tempDir) throws Exception {
+        var sessionsDir = tempDir.resolve("sessions");
+        var sessionFile = sessionsDir.resolve("selected.jsonl");
+        var existing = SessionManager.create(sessionFile, tempDir.toString());
+        existing.appendMessage(userMessage("resume me", 1L));
+        existing.appendMessage(assistantMessage("done"));
+
+        var resolver = new PiCliSessionResolver(tempDir, sessions -> {
+            assertThat(sessions).extracting(SessionInfo::path).containsExactly(sessionFile.toAbsolutePath().normalize());
+            return sessionFile;
+        });
+
+        var session = resolver.resolve(new PiCliParser().parse("--resume", "--session-dir", sessionsDir.toString()));
+
+        assertThat(session.sessionFile()).isEqualTo(sessionFile);
+        assertThat(session.buildSessionContext().messages()).hasSize(2);
+    }
+
+    @Test
+    void reportsCancelledSessionSelection(@TempDir Path tempDir) throws Exception {
+        var sessionsDir = tempDir.resolve("sessions");
+        var sessionFile = sessionsDir.resolve("selected.jsonl");
+        var existing = SessionManager.create(sessionFile, tempDir.toString());
+        existing.appendMessage(userMessage("resume me", 1L));
+        existing.appendMessage(assistantMessage("done"));
+
+        var resolver = new PiCliSessionResolver(tempDir, sessions -> null);
+
+        assertThatThrownBy(() -> resolver.resolve(new PiCliParser().parse("--resume", "--session-dir", sessionsDir.toString())))
+            .isInstanceOf(CancellationException.class)
+            .hasMessageContaining("cancelled");
     }
 
     private static Message.UserMessage userMessage(String text, long timestamp) {

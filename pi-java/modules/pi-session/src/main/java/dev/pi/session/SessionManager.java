@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
+import java.time.DateTimeException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -115,6 +116,27 @@ public final class SessionManager {
                 .max(Comparator.comparing(SessionManager::lastModifiedTime))
                 .orElse(null);
         }
+    }
+
+    public static List<SessionInfo> list(Path sessionDirectory) throws IOException {
+        Objects.requireNonNull(sessionDirectory, "sessionDirectory");
+        if (!Files.isDirectory(sessionDirectory)) {
+            return List.of();
+        }
+        var sessions = new ArrayList<SessionInfo>();
+        try (var stream = Files.list(sessionDirectory)) {
+            for (var path : stream
+                .filter(candidate -> candidate.getFileName().toString().endsWith(".jsonl"))
+                .sorted(Comparator.comparing(SessionManager::lastModifiedTime).reversed())
+                .toList()) {
+                var info = buildSessionInfo(path);
+                if (info != null) {
+                    sessions.add(info);
+                }
+            }
+        }
+        sessions.sort(Comparator.comparing(SessionInfo::modified).reversed());
+        return List.copyOf(sessions);
     }
 
     public String sessionId() {
@@ -460,6 +482,138 @@ public final class SessionManager {
             }
         }
         return false;
+    }
+
+    private static SessionInfo buildSessionInfo(Path sessionFile) {
+        try {
+            var codec = new SessionJsonlCodec();
+            var document = codec.readDocument(sessionFile)
+                .map(SessionMigrations::migrateToCurrentVersion)
+                .orElse(null);
+            if (document == null) {
+                return null;
+            }
+
+            var header = document.header();
+            var created = parseInstant(header.timestamp(), Instant.EPOCH);
+            var modified = lastModifiedInstant(document.entries(), created, sessionFile);
+            var sessionName = "";
+            var messageCount = 0;
+            var firstMessage = "";
+            var allMessages = new ArrayList<String>();
+
+            for (var entry : document.entries()) {
+                if (entry instanceof SessionEntry.SessionInfoEntry infoEntry && infoEntry.name() != null && !infoEntry.name().isBlank()) {
+                    sessionName = infoEntry.name().trim();
+                    continue;
+                }
+                if (!(entry instanceof SessionEntry.MessageEntry messageEntry)) {
+                    continue;
+                }
+
+                var message = messageEntry.message();
+                var role = message.path("role").asText("");
+                if (!"user".equals(role) && !"assistant".equals(role)) {
+                    continue;
+                }
+
+                messageCount += 1;
+                var text = extractTextContent(message);
+                if (text.isBlank()) {
+                    continue;
+                }
+
+                allMessages.add(text);
+                if (firstMessage.isBlank() && "user".equals(role)) {
+                    firstMessage = text;
+                }
+            }
+
+            return new SessionInfo(
+                sessionFile,
+                header.id(),
+                header.cwd(),
+                sessionName.isBlank() ? null : sessionName,
+                header.parentSession(),
+                created,
+                modified,
+                messageCount,
+                firstMessage,
+                String.join(" ", allMessages)
+            );
+        } catch (IOException exception) {
+            return null;
+        }
+    }
+
+    private static String extractTextContent(JsonNode message) {
+        if (message == null || message.isMissingNode() || message.isNull()) {
+            return "";
+        }
+
+        var content = message.path("content");
+        if (content.isTextual()) {
+            return content.asText("").trim();
+        }
+        if (!content.isArray()) {
+            return "";
+        }
+
+        var text = new ArrayList<String>();
+        for (var item : content) {
+            if ("text".equals(item.path("type").asText(""))) {
+                var value = item.path("text").asText("");
+                if (!value.isBlank()) {
+                    text.add(value.trim());
+                }
+            }
+        }
+        return String.join(" ", text);
+    }
+
+    private static Instant lastModifiedInstant(List<SessionEntry> entries, Instant created, Path sessionFile) {
+        Instant latest = created;
+        for (var entry : entries) {
+            if (!(entry instanceof SessionEntry.MessageEntry messageEntry)) {
+                continue;
+            }
+
+            var role = messageEntry.message().path("role").asText("");
+            if (!"user".equals(role) && !"assistant".equals(role)) {
+                continue;
+            }
+
+            var candidate = parseMessageInstant(messageEntry.message(), parseInstant(entry.timestamp(), created));
+            if (candidate.isAfter(latest)) {
+                latest = candidate;
+            }
+        }
+
+        var fileModified = lastModifiedTime(sessionFile).toInstant();
+        return fileModified.isAfter(latest) ? fileModified : latest;
+    }
+
+    private static Instant parseMessageInstant(JsonNode message, Instant fallback) {
+        var timestampNode = message.path("timestamp");
+        if (timestampNode.canConvertToLong()) {
+            try {
+                return Instant.ofEpochMilli(timestampNode.asLong());
+            } catch (DateTimeException exception) {
+                return fallback;
+            }
+        }
+        return fallback;
+    }
+
+    private static Instant parseInstant(String value, Instant fallback) {
+        if (value == null || value.isBlank()) {
+            return fallback;
+        }
+        try {
+            return Instant.parse(value);
+        } catch (DateTimeException exception) {
+            return fallback;
+        }
     }
 
     private static Path nextSessionFile(Path sessionDirectory) {

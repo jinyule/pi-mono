@@ -18,6 +18,8 @@
   - `list-models` command
 - 已完成第九刀：
   - resume/new session resolution primitives
+- 已完成第十刀：
+  - `--resume` picker first cut
 
 ## 已落地内容
 
@@ -37,6 +39,7 @@
 - `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiCliApplication.java`
 - `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiListModelsCommand.java`
 - `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiCliSessionResolver.java`
+- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiSessionPicker.java`
 - `pi-java/modules/pi-sdk/src/main/java/dev/pi/sdk/CreateAgentSessionOptions.java`
 - `pi-java/modules/pi-sdk/src/main/java/dev/pi/sdk/PiSdk.java`
 - `pi-java/modules/pi-sdk/src/main/java/dev/pi/sdk/PiSdkSession.java`
@@ -49,6 +52,7 @@
 - `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiCliApplicationTest.java`
 - `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiListModelsCommandTest.java`
 - `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiCliSessionResolverTest.java`
+- `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiSessionPickerTest.java`
 - `pi-java/modules/pi-sdk/src/test/java/dev/pi/sdk/PiSdkTest.java`
 
 调整：
@@ -90,7 +94,8 @@
 - `pi-sdk` facade 当前与 `pi-cli` 的 session shell 逻辑仍有重复，后续可考虑收敛到共享核心。
 - `PiCliApplication` 当前只负责 `parse -> create session -> dispatch mode` 的启动编排，尚未接真实 `main()`、DI 装配、settings/model resolution 和 built-in tool/runtime bootstrap。
 - `list-models` 当前直接消费 `ModelRegistry` 并输出文本表格，尚未接 settings/auth 过滤，也还没挂到真实 CLI `main()`。
-- `PiCliSessionResolver` 当前已覆盖 `--session` / `--continue` / `--session-dir` / `--no-session`，但 picker-style `--resume` 仍未落地。
+- `PiCliSessionResolver` 当前已覆盖 `--session` / `--continue` / `--session-dir` / `--no-session`，并已接上当前目录范围的 `--resume` picker。
+- `PiSessionPicker` 当前只覆盖当前目录 sessions、prefix filter、up/down/enter/esc；all-scope toggle、fuzzy/regex search、rename/delete 仍未落地。
 
 ## 已确认语义
 
@@ -103,6 +108,8 @@
 - `list-models` query 当前采用大小写不敏感的 subsequence fuzzy match，覆盖 provider + model id。
 - `--session <path>` 现在对齐 TS 语义：文件存在则打开，不存在则用该路径创建新 persistent session。
 - `--continue` 现在会在 session 目录内选择最近的有效 JSONL session；若目录为空则创建新 session。
+- `SessionManager.list(dir)` 现在会提取 session 元数据（name / firstMessage / modified / messageCount / allMessagesText），供 picker 和后续 selector 复用。
+- `--resume` 当前只在 `sessionDirectory` 范围内做选择；未实现 TS 版的 current/all scope 切换。
 
 ## 测试
 
@@ -125,6 +132,7 @@
 - cli startup dispatcher 的 mode dispatch 与参数透传
 - list-models 的无 session 分流、表格输出、query filter
 - session resolver 的 explicit path open/create、continueRecent、default new-session path 分配
+- current-directory `--resume` picker，以及 `SessionInfo` 元数据列表
 
 ## 验证
 
@@ -139,6 +147,6 @@ npm.cmd run check
 
 按依赖顺序，下一刀建议进入 CLI 收口：
 
-1. `--resume` picker / session selector。
-2. `export` / `copy` / `tree` / `fork` / `compact` / `reload`。
-3. 真实 `main()` / module wiring，把 `PiCliApplication`、`list-models`、session resolver 接到启动入口。
+1. `export` / `copy` / `tree` / `fork` / `compact` / `reload`。
+2. `--resume` all-sessions scope / richer search / session mutations。
+3. 真实 `main()` / module wiring，把 `PiCliApplication`、`list-models`、session resolver / picker 接到启动入口。

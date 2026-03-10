@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -253,6 +254,30 @@ class SessionManagerTest {
         assertThat(manager.persistent()).isTrue();
         assertThat(manager.sessionFile().getParent()).isEqualTo(tempDir);
         assertThat(Files.exists(manager.sessionFile())).isFalse();
+    }
+
+    @Test
+    void listsSessionsWithMetadataSortedByModified(@TempDir Path tempDir) throws Exception {
+        var named = SessionManager.create(tempDir.resolve("named.jsonl"), "/workspace");
+        named.appendMessage(userMessage("first question", 1L));
+        named.appendMessage(assistantMessage("answer one"));
+        named.appendSessionInfo("Named Session");
+
+        var second = SessionManager.create(tempDir.resolve("second.jsonl"), "/workspace");
+        second.appendMessage(userMessage("second question", 2L));
+        second.appendMessage(assistantMessage("answer two"));
+
+        Files.setLastModifiedTime(named.sessionFile(), java.nio.file.attribute.FileTime.from(Instant.parse("2026-03-10T10:00:00Z")));
+        Files.setLastModifiedTime(second.sessionFile(), java.nio.file.attribute.FileTime.from(Instant.parse("2026-03-10T11:00:00Z")));
+
+        var sessions = SessionManager.list(tempDir);
+
+        assertThat(sessions).hasSize(2);
+        assertThat(sessions.getFirst().path()).isEqualTo(second.sessionFile().toAbsolutePath().normalize());
+        assertThat(sessions.getFirst().firstMessage()).isEqualTo("second question");
+        assertThat(sessions.getFirst().allMessagesText()).contains("second question").contains("answer two");
+        assertThat(sessions.get(1).name()).isEqualTo("Named Session");
+        assertThat(sessions.get(1).messageCount()).isEqualTo(2);
     }
 
     private Message.UserMessage userMessage(String text, long timestamp) {
