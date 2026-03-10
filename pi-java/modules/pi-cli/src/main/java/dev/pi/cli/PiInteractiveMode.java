@@ -14,6 +14,7 @@ public final class PiInteractiveMode implements AutoCloseable {
     private final PiInteractiveSession session;
     private final Terminal terminal;
     private final Tui tui;
+    private final PiCopyCommand copyCommand;
     private final Text header = new Text("", 1, 1, null);
     private final Text transcript = new Text("", 1, 0, null);
     private final Text status = new Text("", 1, 0, null);
@@ -21,14 +22,30 @@ public final class PiInteractiveMode implements AutoCloseable {
 
     private Subscription stateSubscription;
     private boolean started;
+    private String manualStatus;
 
     public PiInteractiveMode(PiInteractiveSession session) {
         this(session, new ProcessTerminal());
     }
 
     public PiInteractiveMode(PiInteractiveSession session, Terminal terminal) {
+        this(
+            session,
+            terminal,
+            new PiCopyCommand(
+                session,
+                PiClipboard.combined(
+                    PiClipboard.osc52(terminal),
+                    PiClipboard.system()
+                )
+            )
+        );
+    }
+
+    PiInteractiveMode(PiInteractiveSession session, Terminal terminal, PiCopyCommand copyCommand) {
         this.session = Objects.requireNonNull(session, "session");
         this.terminal = Objects.requireNonNull(terminal, "terminal");
+        this.copyCommand = Objects.requireNonNull(copyCommand, "copyCommand");
         this.tui = new Tui(terminal, true);
         this.tui.addChild(header);
         this.tui.addChild(transcript);
@@ -70,6 +87,12 @@ public final class PiInteractiveMode implements AutoCloseable {
         if (value == null || value.isBlank()) {
             return;
         }
+        if ("/copy".equals(value.trim())) {
+            input.setValue("");
+            handleCopyCommand();
+            return;
+        }
+        manualStatus = null;
         input.setValue("");
         tui.requestRender();
         try {
@@ -110,6 +133,9 @@ public final class PiInteractiveMode implements AutoCloseable {
     }
 
     private String renderStatus(AgentState state) {
+        if (manualStatus != null && !manualStatus.isBlank()) {
+            return manualStatus;
+        }
         if (state.error() != null && !state.error().isBlank()) {
             return "Error: " + state.error();
         }
@@ -120,5 +146,23 @@ public final class PiInteractiveMode implements AutoCloseable {
             return "Streaming response...";
         }
         return "Ready";
+    }
+
+    private void handleCopyCommand() {
+        try {
+            copyCommand.copyLastAssistantMessage();
+            manualStatus = "Copied last agent message to clipboard";
+        } catch (RuntimeException exception) {
+            manualStatus = "Error: " + rootMessage(exception);
+        }
+        renderState(session.state());
+    }
+
+    private static String rootMessage(Throwable throwable) {
+        var current = throwable;
+        while (current.getCause() != null && current.getCause() != current) {
+            current = current.getCause();
+        }
+        return current.getMessage() == null ? current.getClass().getSimpleName() : current.getMessage();
     }
 }

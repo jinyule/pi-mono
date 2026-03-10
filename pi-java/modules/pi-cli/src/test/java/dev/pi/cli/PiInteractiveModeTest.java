@@ -46,6 +46,26 @@ class PiInteractiveModeTest {
         mode.stop();
     }
 
+    @Test
+    void handlesCopySlashCommand() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(60, 12);
+        var copied = new StringBuilder();
+        var mode = new PiInteractiveMode(session, terminal, new PiCopyCommand(session, copied::append));
+
+        mode.start();
+        terminal.sendInput("Hello");
+        terminal.sendInput("\r");
+        terminal.sendInput("/copy");
+        terminal.sendInput("\r");
+
+        assertThat(session.prompts).containsExactly("Hello");
+        assertThat(copied.toString()).isEqualTo("Ack: Hello");
+        assertThat(String.join("\n", terminal.getViewport())).contains("Copied last agent message to clipboard");
+
+        mode.stop();
+    }
+
     private static final class FakeSession implements PiInteractiveSession {
         private final List<String> prompts = new ArrayList<>();
         private final CopyOnWriteArrayList<Consumer<AgentState>> stateListeners = new CopyOnWriteArrayList<>();

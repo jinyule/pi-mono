@@ -45,7 +45,7 @@
 - 阶段 6：已完成 `Image` 第一批：terminal image capability detect、Kitty/iTerm2 sequence encode、base64 dimension detect、fallback placeholder、基础 image tests。
 - 阶段 6：已完成 `VirtualTerminal` 第一批：lightweight ANSI emulator、viewport/scroll buffer/input/resize hooks、viewport-level render/key golden tests。
 - 阶段 6：已收尾。
-- 阶段 7：已开始，已完成 `pi-cli` CLI 参数解析（运行模式、通用启动选项、初始 file/message 输入拆分、未知 flag 保留）、`PiAgentSession` skeleton、最小 `interactive` mode shell（state render、prompt submit、session persistence bridge）、`print` mode（stdout/stderr output、final assistant selection）、`json` mode（JSONL event/state envelope）、`rpc` mode（command/response + notification JSONL）、`pi-sdk` facade（`PiSdk` / `PiSdkSession` / `createAgentSession()` / session helpers）、CLI startup dispatcher（`PiCliApplication`）、`list-models` command、resume/new session resolution primitives（`SessionManager.create/continueRecent`、`PiCliSessionResolver`）、`--resume` picker 首版（当前目录 session list + search + select/cancel）、`--export` HTML transcript 首版。
+- 阶段 7：已开始，已完成 `pi-cli` CLI 参数解析（运行模式、通用启动选项、初始 file/message 输入拆分、未知 flag 保留）、`PiAgentSession` skeleton、最小 `interactive` mode shell（state render、prompt submit、session persistence bridge）、`print` mode（stdout/stderr output、final assistant selection）、`json` mode（JSONL event/state envelope）、`rpc` mode（command/response + notification JSONL）、`pi-sdk` facade（`PiSdk` / `PiSdkSession` / `createAgentSession()` / session helpers）、CLI startup dispatcher（`PiCliApplication`）、`list-models` command、resume/new session resolution primitives（`SessionManager.create/continueRecent`、`PiCliSessionResolver`）、`--resume` picker 首版（当前目录 session list + search + select/cancel）、`--export` HTML transcript 首版、`/copy` 首版（最近 assistant 文本复制到 OSC52 / system clipboard）。
 - 阶段 8 到阶段 9：未开始。
 
 ## 阶段 0：项目骨架
@@ -130,7 +130,8 @@
 9. 实现 resume/new session resolution。（已完成首版：`--session` / `--continue` / `--session-dir`）
 10. 实现 `--resume` picker。（已完成首版：当前目录 selector）
 11. 实现 `export`。（已完成首版：basic HTML transcript export）
-12. 实现 `copy`、`tree`、`fork`、`compact`、`reload`。
+12. 实现 `copy`。（已完成首版：最近 assistant 文本复制）
+13. 实现 `tree`、`fork`、`compact`、`reload`。
 
 ## 阶段 8：行为追平
 
