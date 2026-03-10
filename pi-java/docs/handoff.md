@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-`pi-java` 已从“纯设计文档目录”推进到“可运行的阶段 0 工程骨架 + 已收尾的阶段 1 `pi-ai` + 已收尾的阶段 2 `pi-agent-runtime` + 已收尾的阶段 3 `pi-session` + 已收尾的阶段 4 `pi-tools` + 已启动的阶段 5 `pi-extension-spi`”。
+`pi-java` 已从“纯设计文档目录”推进到“可运行的阶段 0 工程骨架 + 已收尾的阶段 1 `pi-ai` + 已收尾的阶段 2 `pi-agent-runtime` + 已收尾的阶段 3 `pi-session` + 已收尾的阶段 4 `pi-tools` + 已收尾的阶段 5 `pi-extension-spi` + 已启动的阶段 6 `pi-tui`”。
 
 本次工作只改动了 `pi-java/`，没有改动现有 TypeScript 包的实现逻辑。
 
@@ -1339,6 +1339,61 @@
 - 还没有实现 raw mode、resize、title、cursor、bracketed paste、kitty keyboard protocol。
 - 还没有开始 diff renderer、overlay stack、IME cursor marker 或任何具体组件。
 
+### 42. 阶段 6：`pi-tui` terminal base support
+
+已继续在 `modules/pi-tui/src/main/java/dev/pi/tui/` 与 `modules/pi-tui/src/test/java/dev/pi/tui/` 下补上第一版真实 terminal 实现与输入缓冲。
+
+本次新增的入口：
+
+- `ProcessTerminal`
+- `TerminalInputBuffer`
+- `ProcessTerminalTest`
+- `TerminalInputBufferTest`
+
+本次收敛的实现点：
+
+- `Terminal` 新增 `kittyProtocolActive()`，为后续 key parser / interactive mode 暴露终端协议信号。
+- `ProcessTerminal` 采用 `JLine 3` system terminal：
+  - `start()` 进入 raw mode
+  - 接 `WINCH` resize handler
+  - 启动 virtual-thread input loop
+  - 打开 bracketed paste
+  - 发送 kitty keyboard protocol query
+- `ProcessTerminal` 已补齐基础控制输出：
+  - `write()`
+  - `moveBy()`
+  - `hideCursor()` / `showCursor()`
+  - `clearLine()` / `clearFromCursor()` / `clearScreen()`
+  - `setTitle()`
+- `TerminalInputBuffer` 直接按现有 TS `stdin-buffer` 语义做第一版移植：
+  - 普通字符逐事件拆分
+  - CSI / OSC / DCS / APC / SS3 escape sequence 增量拼装
+  - bracketed paste 跨 chunk 聚合为单事件
+  - incomplete sequence timeout flush 由外层 read loop 驱动
+- kitty query response 会被 `ProcessTerminal` 截获，不向上层分发；命中后会发出 `CSI > 7 u` 开启基础 kitty keyboard protocol flags。
+- `stop()` 现在会：
+  - 停止 input loop
+  - 关闭 kitty keyboard protocol（若已开启）
+  - 关闭 bracketed paste
+  - 恢复原始 terminal attributes
+  - 回收 backend
+
+这批 tests 已覆盖：
+
+- `TerminalInputBuffer` 的普通字符拆分
+- partial CSI sequence 的缓冲与完成后合并
+- bracketed paste 跨 chunk 聚合
+- incomplete sequence flush
+- `ProcessTerminal.start()` 的 raw mode / resize / bracketed paste / kitty query 接线
+- kitty protocol response 截获与 enable / disable 序列
+- title / cursor / clear / move 控制序列输出
+
+这一刀的边界：
+
+- 还没有实现 diff renderer 与 synchronized output。
+- 还没有开始 overlay stack、IME cursor marker 或 hardware cursor positioning。
+- 还没有做 `VirtualTerminal` 测试夹具。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -1349,6 +1404,7 @@
 .\gradlew.bat :pi-session:test --no-daemon
 .\gradlew.bat :pi-tools:test --no-daemon
 .\gradlew.bat :pi-extension-spi:test --no-daemon
+.\gradlew.bat :pi-tui:test --no-daemon
 npm.cmd run check
 ```
 
@@ -1508,15 +1564,15 @@ npm.cmd run check
 
 建议严格按 `docs/tasks.md` 的顺序继续：
 
-1. 进入阶段 5 `pi-extension-spi`。
-2. 继续阶段 6 `pi-tui`。
-3. 先补 terminal raw mode / resize / title / cursor / bracketed paste。
+1. 继续阶段 6 `pi-tui`。
+2. 先补 diff renderer 与 synchronized output。
+3. 再补 overlay stack、IME cursor marker、hardware cursor positioning。
 
 更具体的下一步切片建议：
 
-1. `pi-tui`：terminal raw mode / resize / title / cursor / bracketed paste / kitty keyboard protocol。
-2. `pi-tui`：diff renderer 与 synchronized output 骨架。
-3. `pi-tui`：overlay stack、IME cursor marker、hardware cursor positioning。
+1. `pi-tui`：diff renderer 与 synchronized output 骨架。
+2. `pi-tui`：overlay stack、IME cursor marker、hardware cursor positioning。
+3. `pi-tui`：`VirtualTerminal` 与渲染 / 键位 golden tests。
 
 并行拆分文档入口：
 

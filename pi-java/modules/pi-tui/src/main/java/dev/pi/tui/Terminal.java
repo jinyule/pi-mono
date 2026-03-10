@@ -11,6 +11,10 @@ public interface Terminal {
 
     int rows();
 
+    default boolean kittyProtocolActive() {
+        return false;
+    }
+
     default void moveBy(int lines) {
     }
 
