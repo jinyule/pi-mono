@@ -442,6 +442,54 @@
 - 还没有实现 `SettingsManager`。
 - 还没有实现 settings deep merge / lock / migration 语义。
 
+### 24. 阶段 3：`Settings` / `SettingsManager` + deep merge / lock / migration tests
+
+已继续在 `modules/pi-session/src/main/java/dev/pi/session/` 与 `modules/pi-session/src/test/java/dev/pi/session/SettingsManagerTest.java` 下补上第一版 settings layering 基础设施。
+
+本次新增的入口：
+
+- `Settings`
+- `SettingsMigrations`
+- `SettingsManager`
+- `SettingsManagerTest`
+
+当前这批 `pi-session` settings 代码的实现特点：
+
+- `Settings` 目前以 `ObjectNode` 为底层承载，保留 `settings.json` 的开放 JSON 形状，而不是过早把整份配置锁成 Java field 列表。
+- `Settings.merge()` 实现了递归 object deep merge；array 和 primitive 仍按 override 直接覆盖，语义与现有 TS 侧对齐。
+- `SettingsManager` 已支持：
+  - 全局：`~/.pi/agent/settings.json`
+  - 项目：`.pi/settings.json`
+  - `effective()` / `global()` / `project()`
+  - `reload()`
+  - `applyOverrides()`
+  - `updateGlobal()` / `updateProject()`
+  - `drainErrors()`
+- file storage 现在通过两层锁保证稳定：
+  - 进程内 `ConcurrentHashMap<Path, Object>` mutex，规避 Java `OverlappingFileLockException`
+  - 进程间 `FileChannel.lock()` 文件锁，保证 cross-process read-modify-write 原子性
+- `updateGlobal()` / `updateProject()` 都会在锁内重新读取磁盘上的最新 settings，再执行 update lambda 并写回，因此不会因为 manager 初始化较早而覆盖掉后续外部写入的无关字段。
+- `SettingsMigrations` 当前已覆盖 TS 侧三条 legacy 迁移：
+  - `queueMode -> steeringMode`
+  - `websockets:boolean -> transport:sse|websocket`
+  - 旧 `skills` object 形状 -> `skills[] + enableSkillCommands`
+- `reload()` 当前会保留 last-known-good snapshot；如果磁盘文件损坏，只记录 error，不会把内存里的可用 settings 覆盖掉。
+
+这批 contract tests 已覆盖：
+
+- global/project/effective 的 deep merge 语义
+- runtime-only overrides 语义
+- legacy settings migration 与 modern-shape 持久化
+- latest-on-disk merge 语义
+- project settings 覆盖 global 语义
+- 并发 scoped update 的 file lock 序列化
+- reload parse error -> 保留上次成功快照 + `drainErrors()`
+
+这一刀的边界：
+
+- 还没有补齐 TypeScript `SettingsManager` 的全部 typed getter/setter surface；当前先以通用 JSON foundation 为主，后续按 CLI/runtime 消费点逐步加 typed facade。
+- 还没有实现 `AGENTS.md` / `CLAUDE.md` / `SYSTEM.md` / `APPEND_SYSTEM.md` 资源装配。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -481,6 +529,7 @@ npm.cmd run check
 - `pi-session` 的 `v1 -> v2 -> v3` migration、`buildSessionContext()` 的 leaf replay / compaction / branch summary / custom message / bashExecution 语义
 - `pi-session` 的 `SessionManager` in-memory append/navigation/tree、persistent delayed flush、legacy open-and-migrate 语义
 - `pi-session` 的 branch summary、in-memory fork path 裁剪与 label 保留、persisted fork delayed/immediate flush、fork 后 JSONL header/id 稳定性
+- `pi-session` 的 settings deep merge、legacy settings migration、latest-on-disk merge、project override、file lock 序列化、reload parse-error 恢复语义
 
 对应测试文件：
 
@@ -508,17 +557,18 @@ npm.cmd run check
 - `modules/pi-session/src/test/java/dev/pi/session/SessionMigrationsTest.java`
 - `modules/pi-session/src/test/java/dev/pi/session/SessionContextReplayTest.java`
 - `modules/pi-session/src/test/java/dev/pi/session/SessionManagerTest.java`
+- `modules/pi-session/src/test/java/dev/pi/session/SettingsManagerTest.java`
 
 ## 未完成 / 已知缺口
 
 ### `pi-session`
 
-阶段 3 当前已完成 session model、JSONL parse/write skeleton、migration、replay contract tests、`SessionManager` skeleton、session tree / fork / persisted append contract tests、fork / branched session file 提取。
+阶段 3 当前已完成 session model、JSONL parse/write skeleton、migration、replay contract tests、`SessionManager` skeleton、session tree / fork / persisted append contract tests、fork / branched session file 提取、`Settings` / `SettingsManager`、settings deep merge / lock / migration tests。
 
 下一步按任务顺序应继续：
 
-- `SettingsManager`
-- settings deep merge / lock / migration tests
+- `AGENTS.md` / `CLAUDE.md` / `SYSTEM.md` / `APPEND_SYSTEM.md` 资源装配
+- resources merge / precedence tests
 
 ### 其他模块
 
@@ -556,14 +606,14 @@ npm.cmd run check
 
 建议严格按 `docs/tasks.md` 的顺序继续：
 
-1. 继续 `pi-session`，先补 `SettingsManager`。
-2. 再补 settings deep merge / lock / migration tests。
+1. 继续 `pi-session`，先补 `AGENTS.md` / `CLAUDE.md` / `SYSTEM.md` / `APPEND_SYSTEM.md` 资源装配。
+2. 再补 resources precedence / merge tests。
 3. 然后进入 `pi-tools`。
 
 更具体的下一步切片建议：
 
-1. `pi-session`：`SettingsManager`。
-2. `pi-session`：settings migration / merge / lock tests。
+1. `pi-session`：资源装配与 precedence。
+2. `pi-session`：resource merge / reload tests。
 3. `pi-tools`：read/write/edit/bash primitives。
 
 并行拆分文档入口：

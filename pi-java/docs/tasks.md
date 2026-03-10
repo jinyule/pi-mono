@@ -17,8 +17,8 @@
 - 阶段 1：已完成 `core model / event types`、`AssistantMessageEventStream / EventStream`、`ApiProviderRegistry / ModelRegistry / CredentialResolver / PiAiClient facade`、`AssistantMessage partial assembler`、`SSE parser / WebSocket adapter`、`openai-responses provider`、`openai-completions provider`、`anthropic-messages provider`、`google-generative-ai provider`、`bedrock-converse-stream provider`、`message transform / validation / compat` 抽象层、provider 交叉行为测试矩阵（`abort` / `handoff` / `image input` / `cross-provider coverage`）。
 - 阶段 1：已收尾。
 - 阶段 2：已完成 `AgentMessage / AgentTool / AgentToolResult / AgentState / AgentEvent / AgentLoopConfig` 核心类型、`AgentEventStream`、`convertToLlm / transformContext` 两阶段上下文管线、`AssistantMessageEvent -> AgentEvent` 生命周期桥接、顺序工具执行、基础 JSON Schema 参数校验、steering / follow-up 队列、`Agent` facade 与事件/状态订阅、interrupt / lifecycle tests。
-- 阶段 3：已完成 `SessionHeader / SessionEntry / SessionTreeNode / SessionContext / SessionDocument`、`Session JSONL parse/write skeleton`、`v1 -> v2 -> v3 migration`、`buildSessionContext()` replay contract tests、`SessionManager` skeleton、session tree / fork / persisted append contract tests、fork / branched session file 提取。
-- 阶段 3：下一步实现 `SettingsManager`，补 global/project deep merge、lock 与 settings migration tests。
+- 阶段 3：已完成 `SessionHeader / SessionEntry / SessionTreeNode / SessionContext / SessionDocument`、`Session JSONL parse/write skeleton`、`v1 -> v2 -> v3 migration`、`buildSessionContext()` replay contract tests、`SessionManager` skeleton、session tree / fork / persisted append contract tests、fork / branched session file 提取、`Settings`/`SettingsManager`、global/project deep merge、file lock、settings migration tests。
+- 阶段 3：下一步实现 `AGENTS.md` / `CLAUDE.md` / `SYSTEM.md` / `APPEND_SYSTEM.md` 资源装配。
 - 阶段 4 到阶段 9：未开始。
 
 ## 阶段 0：项目骨架
@@ -57,9 +57,9 @@
 2. 实现 `Session JSONL` 解析与回写。（已完成 skeleton）
 3. 实现 `v1 -> v2 -> v3` migration。（已完成）
 4. 实现 `buildSessionContext()`，覆盖 compaction、branch summary、custom message 语义。（已完成）
-5. 实现 `SettingsManager`，支持 global/project deep merge 与 lock。
+5. 实现 `SettingsManager`，支持 global/project deep merge 与 lock。（已完成）
 6. 实现 `AGENTS.md` / `CLAUDE.md` / `SYSTEM.md` / `APPEND_SYSTEM.md` 资源装配。
-7. 增加 session tree replay、fork、compact、settings migration 测试。（已完成 tree replay / fork / persisted append；待补 settings migration）
+7. 增加 session tree replay、fork、compact、settings migration 测试。（已完成）
 
 ## 阶段 4：`pi-tools`
 
