@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-`pi-java` 已从“纯设计文档目录”推进到“可运行的阶段 0 工程骨架 + 已收尾的阶段 1 `pi-ai` + 已收尾的阶段 2 `pi-agent-runtime` + 已启动的阶段 3 `pi-session`”。
+`pi-java` 已从“纯设计文档目录”推进到“可运行的阶段 0 工程骨架 + 已收尾的阶段 1 `pi-ai` + 已收尾的阶段 2 `pi-agent-runtime` + 已收尾的阶段 3 `pi-session` + 已启动的阶段 4 `pi-tools`”。
 
 本次工作只改动了 `pi-java/`，没有改动现有 TypeScript 包的实现逻辑。
 
@@ -611,6 +611,62 @@
 - shell env 目前只做了基础 environment merge，还没有接 CLI 侧 bin-dir prepend 或 tool-specific command prefix。
 - diff 目前服务于 edit preview / exact replacement primitive，还没有连到具体 tool result 文案与 golden output。
 
+### 27. 阶段 4：`read` tool
+
+已继续在 `modules/pi-tools/src/main/java/dev/pi/tools/` 与 `modules/pi-tools/src/test/java/dev/pi/tools/ReadToolTest.java` 下补上第一版 `read` tool。
+
+本次新增的入口：
+
+- `ReadTool`
+- `ReadToolOptions`
+- `ReadOperations`
+- `ReadToolDetails`
+- `SupportedImageMimeTypes`
+- `ReadToolTest`
+
+当前这版 `read` 的实现特点：
+
+- 已接到 `AgentTool` contract：
+  - `parametersSchema()` 暴露 `path` / `offset` / `limit`
+  - `execute()` 返回 `AgentToolResult<ReadToolDetails>`
+- 文本读取语义已对齐当前 TS contract：
+  - 默认从头读取全文
+  - `offset` 按 1-based line index 处理
+  - `limit` 只裁用户请求窗口，不额外写 details
+  - line truncation 与 byte truncation 会追加可继续读取的 offset 提示
+  - 单行超出 `50KB` 时返回 bash 提示，不回传 partial line
+- 图片读取语义已对齐当前 TS contract：
+  - 按文件魔数识别 `png` / `jpeg` / `gif` / `webp`
+  - 不依赖文件扩展名
+  - 返回顺序固定为 `text` note + `image` block
+  - 默认接入 `ImageResizer`，可通过 `ReadToolOptions.autoResizeImages=false` 关闭
+- 路径解析已复用阶段 4 primitives：
+  - `resolveReadPath()` 支持 `@` / `~`
+  - 支持 macOS screenshot / NFD / curly quote fallback
+- details 当前只在真正发生 truncation 时返回：
+  - `ReadToolDetails.truncation`
+  - 可直接序列化到 runtime 的 `ToolResultMessage.details`
+
+这批 contract tests 已覆盖：
+
+- 文本文件正常读取
+- 缺失文件错误
+- line limit / byte limit 截断提示
+- `offset`
+- `limit`
+- `offset + limit`
+- offset 越界错误
+- oversized single line -> bash hint
+- image magic MIME detect
+- image extension 但非图片内容时按文本处理
+- auto-resize 开关
+
+这一刀的边界：
+
+- 还没有开始 `write` / `edit` / `bash` / `grep` / `find` / `ls` 的实际 tool 实现。
+- 还没有补 `read` tool 的 golden fixture / 真实 TS 输出对拍。
+- 还没有处理更复杂的二进制文本检测与编码推断；当前文本读取固定按 UTF-8。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -654,6 +710,7 @@ npm.cmd run check
 - `pi-session` 的 settings deep merge、legacy settings migration、latest-on-disk merge、project override、file lock 序列化、reload parse-error 恢复语义
 - `pi-session` 的 instruction resource assembly：global/ancestor context file 顺序、`AGENTS.md` 优先级、project/global system prompt 覆盖、append prompt 回退语义
 - `pi-tools` 的 truncation line/byte limit 语义、path fallback、edit diff primitive、shell timeout/spill/truncation、image resize/dimension note/fallback 语义
+- `pi-tools` 的 `read` tool：文本读取、图片魔数识别、`offset` / `limit` / truncation prompt、oversized line bash hint、auto-resize 开关
 
 对应测试文件：
 
@@ -688,6 +745,7 @@ npm.cmd run check
 - `modules/pi-tools/src/test/java/dev/pi/tools/EditDiffsTest.java`
 - `modules/pi-tools/src/test/java/dev/pi/tools/DefaultShellExecutorTest.java`
 - `modules/pi-tools/src/test/java/dev/pi/tools/ImageResizerTest.java`
+- `modules/pi-tools/src/test/java/dev/pi/tools/ReadToolTest.java`
 
 ## 未完成 / 已知缺口
 
@@ -697,13 +755,13 @@ npm.cmd run check
 
 ### `pi-tools`
 
-阶段 4 当前已完成 truncation / diff / shell / path policy / image resize primitives。
+阶段 4 当前已完成 truncation / diff / shell / path policy / image resize primitives，以及 `read` tool。
 
 下一步按任务顺序应继续：
 
 - `pi-tools`
-- `read` tool
-- 文本 / 图片 / `offset` / `limit` / 截断提示 contract tests + 实现
+- `write` tool
+- 自动建目录 contract tests + 实现
 
 ### 其他模块
 
@@ -739,14 +797,14 @@ npm.cmd run check
 
 建议严格按 `docs/tasks.md` 的顺序继续：
 
-1. 继续 `pi-tools`，先补 `read` 工具。
-2. 再补 `write` / `edit` / `bash`。
+1. 继续 `pi-tools`，先补 `write` 工具。
+2. 再补 `edit` / `bash`。
 3. 然后推进 `grep` / `find` / `ls` 与 golden tests。
 
 更具体的下一步切片建议：
 
-1. `pi-tools`：`read` tool contract tests + 实现。
-2. `pi-tools`：`write` / `edit` / `bash` tool primitives + 输出文案。
+1. `pi-tools`：`write` tool contract tests + 实现。
+2. `pi-tools`：`edit` / `bash` tool primitives + 输出文案。
 3. `pi-tools`：`grep` / `find` / `ls` + golden output 固化。
 
 并行拆分文档入口：

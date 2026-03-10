@@ -20,7 +20,8 @@
 - 阶段 3：已完成 `SessionHeader / SessionEntry / SessionTreeNode / SessionContext / SessionDocument`、`Session JSONL parse/write skeleton`、`v1 -> v2 -> v3 migration`、`buildSessionContext()` replay contract tests、`SessionManager` skeleton、session tree / fork / persisted append contract tests、fork / branched session file 提取、`Settings`/`SettingsManager`、global/project deep merge、file lock、settings migration tests、`AGENTS.md` / `CLAUDE.md` / `SYSTEM.md` / `APPEND_SYSTEM.md` 资源装配。
 - 阶段 3：已收尾。
 - 阶段 4：已完成 truncation / diff / shell / path policy / image resize primitives。
-- 阶段 4：下一步实现 `read` 工具，支持文本 / 图片 / `offset` / `limit` / 截断提示。
+- 阶段 4：已完成 `read` 工具、图片魔数识别、文本 / 图片输出、`offset` / `limit` / 截断提示 contract tests。
+- 阶段 4：下一步实现 `write` 工具，支持自动建目录。
 - 阶段 5 到阶段 9：未开始。
 
 ## 阶段 0：项目骨架
@@ -66,7 +67,7 @@
 ## 阶段 4：`pi-tools`
 
 1. 实现 truncation、diff、shell、path policy、image resize 支撑类。（已完成）
-2. 实现 `read` 工具，支持文本、图片、offset/limit、截断提示。
+2. 实现 `read` 工具，支持文本、图片、offset/limit、截断提示。（已完成）
 3. 实现 `write` 工具，支持自动建目录。
 4. 实现 `edit` 工具，支持 exact match + diff details。
 5. 实现 `bash` 工具，支持 streaming output、timeout、abort、tail truncation、full output temp file。
