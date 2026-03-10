@@ -7,6 +7,8 @@ import java.util.Objects;
 
 public final class EditorKeybindings {
     public static final Map<EditorAction, List<String>> DEFAULT_EDITOR_KEYBINDINGS = Map.ofEntries(
+        Map.entry(EditorAction.CURSOR_UP, List.of("up")),
+        Map.entry(EditorAction.CURSOR_DOWN, List.of("down")),
         Map.entry(EditorAction.CURSOR_LEFT, List.of("left", "ctrl+b")),
         Map.entry(EditorAction.CURSOR_RIGHT, List.of("right", "ctrl+f")),
         Map.entry(EditorAction.CURSOR_WORD_LEFT, List.of("alt+left", "ctrl+left", "alt+b")),
@@ -19,6 +21,7 @@ public final class EditorKeybindings {
         Map.entry(EditorAction.DELETE_WORD_FORWARD, List.of("alt+d", "alt+delete")),
         Map.entry(EditorAction.DELETE_TO_LINE_START, List.of("ctrl+u")),
         Map.entry(EditorAction.DELETE_TO_LINE_END, List.of("ctrl+k")),
+        Map.entry(EditorAction.NEW_LINE, List.of("alt+enter")),
         Map.entry(EditorAction.SUBMIT, List.of("enter")),
         Map.entry(EditorAction.SELECT_CANCEL, List.of("escape", "ctrl+c")),
         Map.entry(EditorAction.YANK, List.of("ctrl+y")),

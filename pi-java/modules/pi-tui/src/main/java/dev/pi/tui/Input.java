@@ -160,7 +160,7 @@ public final class Input implements Component, Focusable {
             return;
         }
 
-        if (containsControlCharacters(data)) {
+        if (InputSupport.containsControlCharacters(data)) {
             return;
         }
         insertText(data);
@@ -209,7 +209,7 @@ public final class Input implements Component, Focusable {
     }
 
     private void insertText(String text) {
-        if (isWhitespace(text) || !"type-word".equals(lastAction)) {
+        if (InputSupport.isWhitespace(text) || !"type-word".equals(lastAction)) {
             pushUndo();
         }
         lastAction = "type-word";
@@ -350,7 +350,7 @@ public final class Input implements Component, Focusable {
         while (cursor > 0) {
             var start = previousCodePointStart(value, cursor);
             var token = value.substring(start, cursor);
-            if (!isWhitespace(token)) {
+            if (!InputSupport.isWhitespace(token)) {
                 break;
             }
             cursor = start;
@@ -358,7 +358,7 @@ public final class Input implements Component, Focusable {
         while (cursor > 0) {
             var start = previousCodePointStart(value, cursor);
             var token = value.substring(start, cursor);
-            if (isPunctuation(token)) {
+            if (InputSupport.isPunctuation(token)) {
                 cursor = start;
                 continue;
             }
@@ -367,7 +367,7 @@ public final class Input implements Component, Focusable {
         while (cursor > 0) {
             var start = previousCodePointStart(value, cursor);
             var token = value.substring(start, cursor);
-            if (isWhitespace(token) || isPunctuation(token)) {
+            if (InputSupport.isWhitespace(token) || InputSupport.isPunctuation(token)) {
                 break;
             }
             cursor = start;
@@ -382,7 +382,7 @@ public final class Input implements Component, Focusable {
         while (cursor < value.length()) {
             var end = nextCodePointEnd(value, cursor);
             var token = value.substring(cursor, end);
-            if (!isWhitespace(token)) {
+            if (!InputSupport.isWhitespace(token)) {
                 break;
             }
             cursor = end;
@@ -390,7 +390,7 @@ public final class Input implements Component, Focusable {
         while (cursor < value.length()) {
             var end = nextCodePointEnd(value, cursor);
             var token = value.substring(cursor, end);
-            if (isPunctuation(token)) {
+            if (InputSupport.isPunctuation(token)) {
                 cursor = end;
                 continue;
             }
@@ -399,41 +399,11 @@ public final class Input implements Component, Focusable {
         while (cursor < value.length()) {
             var end = nextCodePointEnd(value, cursor);
             var token = value.substring(cursor, end);
-            if (isWhitespace(token) || isPunctuation(token)) {
+            if (InputSupport.isWhitespace(token) || InputSupport.isPunctuation(token)) {
                 break;
             }
             cursor = end;
         }
-    }
-
-    private static boolean containsControlCharacters(String text) {
-        for (var index = 0; index < text.length(); ) {
-            var codePoint = text.codePointAt(index);
-            if (codePoint < 32 || codePoint == 0x7f || (codePoint >= 0x80 && codePoint <= 0x9f)) {
-                return true;
-            }
-            index += Character.charCount(codePoint);
-        }
-        return false;
-    }
-
-    private static boolean isWhitespace(String text) {
-        var codePoint = text.codePointAt(0);
-        return Character.isWhitespace(codePoint);
-    }
-
-    private static boolean isPunctuation(String text) {
-        var type = Character.getType(text.codePointAt(0));
-        return switch (type) {
-            case Character.CONNECTOR_PUNCTUATION,
-                Character.DASH_PUNCTUATION,
-                Character.START_PUNCTUATION,
-                Character.END_PUNCTUATION,
-                Character.INITIAL_QUOTE_PUNCTUATION,
-                Character.FINAL_QUOTE_PUNCTUATION,
-                Character.OTHER_PUNCTUATION -> true;
-            default -> false;
-        };
     }
 
     private static int previousCodePointStart(String text, int cursor) {

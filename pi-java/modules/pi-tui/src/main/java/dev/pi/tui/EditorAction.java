@@ -1,6 +1,8 @@
 package dev.pi.tui;
 
 public enum EditorAction {
+    CURSOR_UP,
+    CURSOR_DOWN,
     CURSOR_LEFT,
     CURSOR_RIGHT,
     CURSOR_WORD_LEFT,
@@ -13,6 +15,7 @@ public enum EditorAction {
     DELETE_WORD_FORWARD,
     DELETE_TO_LINE_START,
     DELETE_TO_LINE_END,
+    NEW_LINE,
     SUBMIT,
     SELECT_CANCEL,
     YANK,

@@ -12,6 +12,7 @@
 4. overlay / IME / hardware cursor：`Tui`、`OverlayHandle`、`CursorPosition`
 5. 基础文本组件第一批：`Container`、`Text`、`TruncatedText`
 6. 输入组件第一批：`Input`、`EditorKeybindings`、`KeyMatcher`、`KillRing`、`UndoStack`
+7. 多行编辑组件第一批：`Editor`
 
 ## 当前关键入口
 
@@ -25,8 +26,10 @@
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/Text.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/TruncatedText.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/Input.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/InputSupport.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/EditorAction.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/EditorKeybindings.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/Editor.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/KeyMatcher.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/KillRing.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/UndoStack.java`
@@ -105,6 +108,20 @@
   - `KillRing`
   - `UndoStack`
 
+### 7. 多行编辑组件第一批
+
+- `Editor` 已支持：
+  - 多行文本模型
+  - `alt+enter` 换行、`enter` submit 分离
+  - 左右 / 上下 / 行首 / 行尾移动
+  - 跨行 backspace / delete merge
+  - 按词移动、按词删除、kill / yank / yank-pop、undo
+  - bracketed paste
+  - focused cursor marker
+  - 顶/底 border render 与 `paddingX`
+- `InputSupport` 已抽出共享字符分类，供 `Input` / `Editor` 复用
+- `EditorAction` / `EditorKeybindings` / `KeyMatcher` 已补 `CURSOR_UP`、`CURSOR_DOWN`、`NEW_LINE` 及默认键位
+
 ## 当前测试
 
 已覆盖的测试入口：
@@ -116,6 +133,7 @@
 - `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/TuiTest.java`
 - `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/BasicComponentsTest.java`
 - `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/InputTest.java`
+- `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/EditorTest.java`
 
 最近验证通过：
 
@@ -128,8 +146,6 @@ npm.cmd run check
 
 还没有完成：
 
-- `Input`
-- `Editor`
 - `Markdown`
 - `Loader`
 - `SelectList`
@@ -142,8 +158,8 @@ npm.cmd run check
 
 建议继续按这个顺序推进：
 
-1. `Editor`
-2. `Markdown` / `Loader`
+1. `Markdown`
+2. `Loader`
 3. `SelectList` / `SettingsList`
 4. `Image`
 5. `VirtualTerminal` 与 golden tests

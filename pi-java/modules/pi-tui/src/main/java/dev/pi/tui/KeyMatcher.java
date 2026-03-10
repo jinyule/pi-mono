@@ -9,10 +9,13 @@ public final class KeyMatcher {
         Map.entry("escape", "\u001b"),
         Map.entry("backspace", "\u007f"),
         Map.entry("delete", "\u001b[3~"),
+        Map.entry("up", "\u001b[A"),
+        Map.entry("down", "\u001b[B"),
         Map.entry("left", "\u001b[D"),
         Map.entry("right", "\u001b[C"),
         Map.entry("home", "\u001b[H"),
         Map.entry("end", "\u001b[F"),
+        Map.entry("alt+enter", "\u001b\r"),
         Map.entry("ctrl+a", "\u0001"),
         Map.entry("ctrl+b", "\u0002"),
         Map.entry("ctrl+c", "\u0003"),
@@ -47,12 +50,15 @@ public final class KeyMatcher {
             case "escape" -> "\u001b".equals(data);
             case "backspace" -> "\u007f".equals(data) || "\b".equals(data);
             case "delete" -> "\u001b[3~".equals(data);
+            case "up" -> "\u001b[A".equals(data);
+            case "down" -> "\u001b[B".equals(data);
             case "left" -> "\u001b[D".equals(data);
             case "right" -> "\u001b[C".equals(data);
             case "home" -> "\u001b[H".equals(data) || "\u001bOH".equals(data);
             case "end" -> "\u001b[F".equals(data) || "\u001bOF".equals(data);
             case "alt+left" -> "\u001b[1;3D".equals(data) || "\u001bB".equals(data);
             case "alt+right" -> "\u001b[1;3C".equals(data) || "\u001bF".equals(data);
+            case "alt+enter" -> "\u001b\r".equals(data);
             case "ctrl+left" -> "\u001b[1;5D".equals(data) || "\u001b[5D".equals(data);
             case "ctrl+right" -> "\u001b[1;5C".equals(data) || "\u001b[5C".equals(data);
             case "alt+backspace" -> "\u001b\u007f".equals(data);
