@@ -5,10 +5,12 @@
 ## 当前状态
 
 - 阶段 7 已开始。
-- 本轮已完成第一刀：`pi-cli` CLI 参数解析。
+- 已完成前两刀：
+  - `pi-cli` CLI 参数解析
+  - `PiAgentSession` skeleton + 最小 `interactive` mode
 - `pi-sdk` 仍未开始实现。
 
-## 本轮落地内容
+## 已落地内容
 
 新增：
 
@@ -16,7 +18,12 @@
 - `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiCliThinkingLevel.java`
 - `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiCliArgs.java`
 - `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiCliParser.java`
+- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiInteractiveSession.java`
+- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiAgentSession.java`
+- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiInteractiveMode.java`
 - `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiCliParserTest.java`
+- `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiAgentSessionTest.java`
+- `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiInteractiveModeTest.java`
 
 调整：
 
@@ -32,6 +39,25 @@
   - `@file` -> `fileArgs`
   - 其余 -> `messages`
 - 未知 flag 不再报错；当前会保留在 `unmatchedArguments`，以便后续接 extension flag registry。
+
+## 已具备的 interactive 能力
+
+- `PiAgentSession` 已把 `Agent`、`SessionManager`、`SettingsManager`、instruction resources 串成最小可用会话壳。
+- startup 时会 replay `SessionContext` 到 `Agent`，并把 context file / system prompt / append prompts 合成首版 system prompt。
+- 新消息通过 `AgentEvent.MessageEnd` 回写到 `SessionManager`，形成基础 session persistence bridge。
+- `PiInteractiveMode` 已接上 `Tui + Input + Text`，具备：
+  - header/status render
+  - transcript render
+  - prompt submit
+  - escape -> abort
+  - fake session / virtual terminal contract tests
+
+## 当前边界
+
+- 这还是首版 interactive shell，不包含完整 coding-agent UI。
+- 还没接 model discovery / settings-driven startup pipeline / extension runtime / built-in tools registry。
+- transcript renderer 目前是 plain-text flatten，不是 `Markdown` / rich message renderer。
+- 还没有把 `PiCliParser`、session/model resolution、`PiInteractiveMode` 串成真正的 CLI main entry。
 
 ## 已确认语义
 
@@ -51,6 +77,9 @@
 - `--mode text` 兼容
 - `--print` / `--mode` 冲突
 - 未知 extension flags 保留
+- session context replay -> agent state
+- prompt 后 session persistence bridge
+- virtual terminal 下的 interactive header / prompt submit render
 
 ## 验证
 
@@ -63,8 +92,8 @@ npm.cmd run check
 
 ## 下一步建议
 
-按依赖顺序，下一刀直接进入 `pi-cli` `interactive` mode：
+按依赖顺序，下一刀建议进入非交互模式：
 
-1. 定义 `PiAgentSession` skeleton，把 `Agent` / `SessionManager` / settings / resources 串起来。
-2. 建立 CLI startup pipeline：parse args -> load settings/resources -> create session -> choose mode。
-3. 先接最小 interactive shell，再把 `pi-tui` 容器接进去。
+1. `print` mode：共享 `PiAgentSession`，补非交互 prompt -> wait -> stdout 输出。
+2. `json` mode：事件流 / state 归一化输出。
+3. `rpc` mode：命令协议和 session lifecycle。
