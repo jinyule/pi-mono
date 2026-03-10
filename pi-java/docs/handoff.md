@@ -396,6 +396,27 @@
 - 还没有实现 tree navigation / fork / persisted append/flush 节奏。
 - 还没有实现 `SettingsManager`。
 
+### 22. 阶段 3：`pi-session` `SessionManager` skeleton 首版
+
+已继续在 `modules/pi-session/src/main/java/dev/pi/session/SessionManager.java` 下补上第一版 `SessionManager`。
+
+当前这批 `pi-session` 代码的实现特点：
+
+- 已支持 `inMemory()`、`create(Path, cwd)`、`open(Path)` 三条基础入口。
+- 已支持 `appendMessage`、`appendRawMessage`、`appendThinkingLevelChange`、`appendModelChange`、`appendCompaction`、`appendBranchSummary`、`appendCustomEntry`、`appendCustomMessage`、`appendLabelChange`、`appendSessionInfo`。
+- 已支持 `leafId` 跟踪、`navigate()`、`branch()`、`buildSessionContext()`、`tree()`、`entry()`、`label()` 等最小会话树操作。
+- persistent 模式已补了最关键的 flush 节奏：
+  - 仅有 user-side entries 时只保存在内存
+  - 第一个 assistant entry 到来后一次性回写完整 JSONL
+  - 后续 entry 走 append-only
+- `open(Path)` 现在会自动跑 migration；如果读到 legacy session，会在打开时直接重写成 current version。
+
+这一刀的边界：
+
+- 还没有实现 fork / branched session file 提取。
+- 还没有实现更完整的 persisted append/tree navigation contract tests。
+- 还没有实现 `SettingsManager`。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -433,6 +454,7 @@ npm.cmd run check
 - `pi-agent-runtime` 的 abort -> inner assistant stream close -> aborted assistant lifecycle 语义
 - `pi-session` 的 TS seed fixture 解析、malformed/unknown line 跳过、现代 session document parse/write round-trip 稳定性
 - `pi-session` 的 `v1 -> v2 -> v3` migration、`buildSessionContext()` 的 leaf replay / compaction / branch summary / custom message / bashExecution 语义
+- `pi-session` 的 `SessionManager` in-memory append/navigation/tree、persistent delayed flush、legacy open-and-migrate 语义
 
 对应测试文件：
 
@@ -459,17 +481,18 @@ npm.cmd run check
 - `modules/pi-session/src/test/java/dev/pi/session/SessionJsonlCodecTest.java`
 - `modules/pi-session/src/test/java/dev/pi/session/SessionMigrationsTest.java`
 - `modules/pi-session/src/test/java/dev/pi/session/SessionContextReplayTest.java`
+- `modules/pi-session/src/test/java/dev/pi/session/SessionManagerTest.java`
 
 ## 未完成 / 已知缺口
 
 ### `pi-session`
 
-阶段 3 当前已完成 session model、JSONL parse/write skeleton、migration、replay contract tests。
+阶段 3 当前已完成 session model、JSONL parse/write skeleton、migration、replay contract tests、`SessionManager` skeleton。
 
 下一步按任务顺序应继续：
 
-- `SessionManager`
 - session tree / fork / persisted append contract tests
+- fork / branched session file 提取
 
 ### 其他模块
 
@@ -507,14 +530,14 @@ npm.cmd run check
 
 建议严格按 `docs/tasks.md` 的顺序继续：
 
-1. 继续 `pi-session`，先补 `SessionManager` skeleton。
-2. 再补 session tree / fork / persisted append contract tests。
+1. 继续 `pi-session`，先补 session tree / fork / persisted append contract tests。
+2. 再补 fork / branched session file 提取。
 3. 然后进入 `pi-tools`。
 
 更具体的下一步切片建议：
 
-1. `pi-session`：`SessionManager` skeleton。
-2. `pi-session`：tree / fork / persisted append tests。
+1. `pi-session`：tree / fork / persisted append tests。
+2. `pi-session`：fork / branched session file 提取。
 3. `pi-tools`：read/write/edit/bash primitives。
 
 并行拆分文档入口：
