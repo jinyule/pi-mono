@@ -15,6 +15,9 @@ public record LoadedExtension(
     Map<Class<? extends ExtensionEvent>, java.util.List<ExtensionHandler<?, ?>>> eventHandlers,
     Map<String, ToolDefinition<?>> toolDefinitions,
     Map<String, CommandDefinition> commandDefinitions,
+    Map<String, ShortcutDefinition> shortcutDefinitions,
+    Map<String, FlagDefinition> flagDefinitions,
+    Map<String, Object> flagDefaults,
     Map<String, MessageRenderer<?, ?>> messageRenderers
 ) implements AutoCloseable {
     public LoadedExtension {
@@ -28,6 +31,9 @@ public record LoadedExtension(
         eventHandlers = copyEventHandlers(Objects.requireNonNull(eventHandlers, "eventHandlers"));
         toolDefinitions = Map.copyOf(Objects.requireNonNull(toolDefinitions, "toolDefinitions"));
         commandDefinitions = Map.copyOf(Objects.requireNonNull(commandDefinitions, "commandDefinitions"));
+        shortcutDefinitions = Map.copyOf(Objects.requireNonNull(shortcutDefinitions, "shortcutDefinitions"));
+        flagDefinitions = Map.copyOf(Objects.requireNonNull(flagDefinitions, "flagDefinitions"));
+        flagDefaults = Map.copyOf(Objects.requireNonNull(flagDefaults, "flagDefaults"));
         messageRenderers = Map.copyOf(Objects.requireNonNull(messageRenderers, "messageRenderers"));
     }
 

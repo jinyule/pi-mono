@@ -29,8 +29,8 @@
 - 阶段 4：已完成 `ls` 工具、dotfiles、directory suffix、entry-limit notices contract tests。
 - 阶段 4：已完成内置工具 golden tests、details JSON 兼容（省略 `null` 字段、`truncatedBy` 小写）。
 - 阶段 4：已收尾。
-- 阶段 5：已完成 `ExtensionApi / ExtensionContext / ExtensionUiContext / ToolDefinition / CommandDefinition / MessageRenderer` 核心类型、`ServiceLoader + isolated ClassLoader` discovery skeleton、最小扩展加载 contract tests、扩展事件总线、typed event contract、handler capture / dispatch failure contract tests。
-- 阶段 5：下一步实现 tool / command / shortcut / flag / renderer 注册面收敛。
+- 阶段 5：已完成 `ExtensionApi / ExtensionContext / ExtensionUiContext / ToolDefinition / CommandDefinition / MessageRenderer` 核心类型、`ServiceLoader + isolated ClassLoader` discovery skeleton、最小扩展加载 contract tests、扩展事件总线、typed event contract、handler capture / dispatch failure contract tests、tool / command / shortcut / flag / renderer 注册面收敛。
+- 阶段 5：下一步实现资源发现扩展点与 `/reload` 生命周期接线。
 - 阶段 5 到阶段 9：未开始。
 
 ## 阶段 0：项目骨架
@@ -88,7 +88,7 @@
 1. 定义 `ExtensionApi`、`ExtensionContext`、`ExtensionUiContext`、`ToolDefinition`、`CommandDefinition`、`MessageRenderer`。（已完成）
 2. 定义插件发现协议：`ServiceLoader + isolated ClassLoader`。（已完成 skeleton）
 3. 实现扩展事件总线。（已完成）
-4. 实现 tool / command / shortcut / flag / renderer 注册。
+4. 实现 tool / command / shortcut / flag / renderer 注册。（已完成）
 5. 实现资源发现扩展点：extensions 可返回附加资源路径。
 6. 实现 `/reload` 时 runtime 重建与 classloader 回收。
 7. 编写一个最小示例插件验证注册与热重载。

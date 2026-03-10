@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 
@@ -62,6 +63,9 @@ public final class ExtensionLoader {
                     api.eventHandlers(),
                     api.toolDefinitions(),
                     api.commandDefinitions(),
+                    api.shortcutDefinitions(),
+                    api.flagDefinitions(),
+                    api.flagDefaults(),
                     api.messageRenderers()
                 ));
             }
@@ -85,6 +89,9 @@ public final class ExtensionLoader {
         private final Map<Class<? extends ExtensionEvent>, List<ExtensionHandler<?, ?>>> eventHandlers = new LinkedHashMap<>();
         private final Map<String, ToolDefinition<?>> toolDefinitions = new LinkedHashMap<>();
         private final Map<String, CommandDefinition> commandDefinitions = new LinkedHashMap<>();
+        private final Map<String, ShortcutDefinition> shortcutDefinitions = new LinkedHashMap<>();
+        private final Map<String, FlagDefinition> flagDefinitions = new LinkedHashMap<>();
+        private final Map<String, Object> flagDefaults = new LinkedHashMap<>();
         private final Map<String, MessageRenderer<?, ?>> messageRenderers = new LinkedHashMap<>();
 
         @Override
@@ -107,6 +114,29 @@ public final class ExtensionLoader {
         }
 
         @Override
+        public void registerShortcut(ShortcutDefinition shortcutDefinition) {
+            Objects.requireNonNull(shortcutDefinition, "shortcutDefinition");
+            putUnique(shortcutDefinitions, shortcutDefinition.keyId(), shortcutDefinition, "shortcut");
+        }
+
+        @Override
+        public void registerFlag(FlagDefinition flagDefinition) {
+            Objects.requireNonNull(flagDefinition, "flagDefinition");
+            putUnique(flagDefinitions, flagDefinition.name(), flagDefinition, "flag");
+            if (flagDefinition.defaultValue() != null && !flagDefaults.containsKey(flagDefinition.name())) {
+                flagDefaults.put(flagDefinition.name(), flagDefinition.defaultValue());
+            }
+        }
+
+        @Override
+        public Optional<Object> getFlag(String name) {
+            if (name == null || !flagDefinitions.containsKey(name)) {
+                return Optional.empty();
+            }
+            return Optional.ofNullable(flagDefaults.get(name));
+        }
+
+        @Override
         public <TMessage, TView> void registerMessageRenderer(String customType, MessageRenderer<TMessage, TView> renderer) {
             if (customType == null || customType.isBlank()) {
                 throw new IllegalArgumentException("customType must be a non-empty string");
@@ -125,6 +155,18 @@ public final class ExtensionLoader {
 
         Map<String, CommandDefinition> commandDefinitions() {
             return commandDefinitions;
+        }
+
+        Map<String, ShortcutDefinition> shortcutDefinitions() {
+            return shortcutDefinitions;
+        }
+
+        Map<String, FlagDefinition> flagDefinitions() {
+            return flagDefinitions;
+        }
+
+        Map<String, Object> flagDefaults() {
+            return flagDefaults;
         }
 
         Map<String, MessageRenderer<?, ?>> messageRenderers() {

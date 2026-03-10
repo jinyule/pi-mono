@@ -1102,6 +1102,57 @@
 - 还没有把 event bus 真正接到 runtime `/reload`、session start/shutdown 生命周期里。
 - 还没有落仓库内置的示例插件源码；当前仍以测试内动态编译扩展 jar 为主。
 
+### 37. 阶段 5：注册面收敛
+
+已继续在 `modules/pi-extension-spi/src/main/java/dev/pi/extension/spi/` 与 `modules/pi-extension-spi/src/test/java/dev/pi/extension/spi/` 下补上第一版 shortcut / flag 注册面与 loader capture。
+
+本次新增的入口：
+
+- `ShortcutHandler`
+- `ShortcutDefinition`
+- `FlagDefinition`
+- `ExtensionRegistrationSurfaceTest`
+
+本次收敛的实现点：
+
+- `ExtensionApi` 现在已补齐注册面上的缺口：
+  - `registerShortcut(ShortcutDefinition)`
+  - `registerFlag(FlagDefinition)`
+  - `getFlag(String)`
+- `ShortcutDefinition` 先用最稳定的 Java contract 表达快捷键注册：
+  - `keyId`
+  - `description`
+  - `ShortcutHandler`
+- `FlagDefinition` 先落最小 CLI flag 语义：
+  - `name`
+  - `description`
+  - `type`（`BOOLEAN` / `STRING`）
+  - `defaultValue`
+  - 构造时会校验 default value 与 flag type 一致
+- `ExtensionLoader` 的捕获 API 现在会一起记录：
+  - `shortcutDefinitions`
+  - `flagDefinitions`
+  - `flagDefaults`
+- `getFlag()` 当前会在扩展注册阶段返回该扩展已注册 flag 的默认值，便于扩展在 `register()` 期间做最小自举判断；后续 runtime 接线时可以在此基础上叠加 CLI / settings 实际值。
+- `LoadedExtension` 现在已把 shortcut / flag 注册结果和默认值一起固化成只读快照，后续可直接喂给 CLI flag parser、keybinding merge 和 `/reload` rebuild。
+- 同一扩展内 duplicate shortcut / flag 仍延续当前 loader 的防御策略：直接报错并收敛为 `ExtensionLoadFailure`，避免不稳定覆盖顺序进入 runtime。
+
+这批 contract tests 已覆盖：
+
+- 运行时动态编译一个最小扩展 jar，并验证：
+  - `ShortcutDefinition` 会被 loader 捕获
+  - `FlagDefinition` 会被 loader 捕获
+  - flag 默认值会进入 `LoadedExtension.flagDefaults()`
+  - 扩展可在 `register()` 阶段通过 `getFlag()` 读到默认值并据此派生注册项
+- 运行时动态编译一个重复注册同一 shortcut 的扩展 jar，并验证 loader 会返回 `ExtensionLoadFailure`
+
+这一刀的边界：
+
+- 还没有补 command argument completions / richer autocomplete item contract。
+- 还没有把 shortcut 真正接到 keybinding config merge / conflict diagnostics。
+- 还没有把 flag 真正接到 CLI args / settings overlay。
+- 还没有把 resource discovery 与 `/reload` runtime rebuild 接起来。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -1156,6 +1207,7 @@ npm.cmd run check
 - `pi-tools` 的内置工具 golden fixtures：tool text output、limit notice、diff/details JSON shape、`TruncationLimit` 小写序列化
 - `pi-extension-spi` 的 core types / loader skeleton：`ServiceLoader` 扩展发现、tool/command/renderer 注册捕获、classloader close、no-service failure 收敛
 - `pi-extension-spi` 的 event bus：typed event handler 捕获、顺序派发、async handler 归一化、dispatch failure 收敛
+- `pi-extension-spi` 的 registration surface：shortcut/flag 捕获、flag default lookup、duplicate shortcut failure 收敛
 - `pi-agent-runtime` 的 tool cancellation：close event stream -> tool cancel supplier
 
 对应测试文件：
@@ -1202,6 +1254,7 @@ npm.cmd run check
 - `modules/pi-tools/src/test/java/dev/pi/tools/BuiltinToolsGoldenTest.java`
 - `modules/pi-extension-spi/src/test/java/dev/pi/extension/spi/ExtensionLoaderContractTest.java`
 - `modules/pi-extension-spi/src/test/java/dev/pi/extension/spi/ExtensionEventBusTest.java`
+- `modules/pi-extension-spi/src/test/java/dev/pi/extension/spi/ExtensionRegistrationSurfaceTest.java`
 
 ## 未完成 / 已知缺口
 
@@ -1220,13 +1273,13 @@ npm.cmd run check
 
 ### `pi-extension-spi`
 
-阶段 5 当前已完成 core types、`ServiceLoader + isolated ClassLoader` discovery skeleton、最小扩展加载 contract tests、扩展事件总线与 typed event contract。
+阶段 5 当前已完成 core types、`ServiceLoader + isolated ClassLoader` discovery skeleton、最小扩展加载 contract tests、扩展事件总线与 typed event contract、tool / command / shortcut / flag / renderer 注册面收敛。
 
 下一步按任务顺序应继续：
 
-- tool / command / shortcut / flag / renderer 注册面收敛
 - 资源发现扩展点接线
 - `/reload` 生命周期接线
+- 最小示例插件
 
 ### 其他模块
 
@@ -1262,14 +1315,14 @@ npm.cmd run check
 建议严格按 `docs/tasks.md` 的顺序继续：
 
 1. 进入阶段 5 `pi-extension-spi`。
-2. 先补 tool / command / shortcut / flag / renderer 注册面。
-3. 再补资源发现扩展点与 `/reload` 生命周期接线。
+2. 先补资源发现扩展点。
+3. 再补 `/reload` 生命周期接线与最小示例插件。
 
 更具体的下一步切片建议：
 
-1. `pi-extension-spi`：tool / command / shortcut / flag / renderer 注册面收敛。
-2. `pi-extension-spi`：resource discovery 扩展点接线。
-3. `pi-extension-spi`：runtime `/reload` 接线与 classloader 回收 contract test。
+1. `pi-extension-spi`：resource discovery 扩展点接线。
+2. `pi-extension-spi`：runtime `/reload` 接线与 classloader 回收 contract test。
+3. `pi-extension-spi`：仓库内最小示例插件与热重载验证。
 
 并行拆分文档入口：
 
