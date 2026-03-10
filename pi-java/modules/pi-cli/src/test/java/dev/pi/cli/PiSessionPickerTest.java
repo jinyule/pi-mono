@@ -59,11 +59,38 @@ class PiSessionPickerTest {
         terminal.sendInput("\u001b");
     }
 
+    @Test
+    void filtersSessionsByCwdTokens() {
+        var terminal = new VirtualTerminal(100, 12);
+        var picker = new PiSessionPicker(terminal);
+
+        Thread.ofVirtual().start(() -> picker.pick(List.of(
+            session("alpha.jsonl", "Alpha task", 2, Instant.now().minusSeconds(60), "/workspace/api"),
+            session("beta.jsonl", "Beta task", 4, Instant.now().minusSeconds(10), "/workspace/web")
+        )));
+
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Alpha task")));
+
+        terminal.sendInput("workspace web");
+        waitFor(() -> terminal.getViewport().stream().noneMatch(line -> line.contains("Alpha task")));
+
+        assertThat(String.join("\n", terminal.getViewport()))
+            .contains("Beta task")
+            .contains("/workspace/web")
+            .doesNotContain("Alpha task");
+
+        terminal.sendInput("\u001b");
+    }
+
     private static SessionInfo session(String fileName, String firstMessage, int messageCount, Instant modified) {
+        return session(fileName, firstMessage, messageCount, modified, "/workspace");
+    }
+
+    private static SessionInfo session(String fileName, String firstMessage, int messageCount, Instant modified, String cwd) {
         return new SessionInfo(
             Path.of(fileName),
             fileName.replace(".jsonl", ""),
-            "/workspace",
+            cwd,
             null,
             null,
             modified.minusSeconds(60),

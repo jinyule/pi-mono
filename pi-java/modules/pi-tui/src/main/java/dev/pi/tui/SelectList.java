@@ -38,9 +38,10 @@ public final class SelectList implements Component {
     }
 
     public void setFilter(String filter) {
-        var prefix = filter == null ? "" : filter.toLowerCase(Locale.ROOT);
+        var normalized = filter == null ? "" : filter.toLowerCase(Locale.ROOT).trim();
+        var tokens = normalized.isEmpty() ? List.<String>of() : List.of(normalized.split("\\s+"));
         filteredItems = items.stream()
-            .filter(item -> item.value().toLowerCase(Locale.ROOT).startsWith(prefix))
+            .filter(item -> matchesFilter(item.value(), tokens))
             .toList();
         selectedIndex = 0;
     }
@@ -163,5 +164,18 @@ public final class SelectList implements Component {
             return null;
         }
         return text.replaceAll("[\\r\\n]+", " ").trim();
+    }
+
+    private static boolean matchesFilter(String value, List<String> tokens) {
+        if (tokens.isEmpty()) {
+            return true;
+        }
+        var normalizedValue = value.toLowerCase(Locale.ROOT);
+        for (var token : tokens) {
+            if (!normalizedValue.contains(token)) {
+                return false;
+            }
+        }
+        return true;
     }
 }

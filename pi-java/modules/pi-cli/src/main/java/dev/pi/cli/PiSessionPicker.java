@@ -160,7 +160,7 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
                 formatAge(session.modified()),
                 session.cwd() == null || session.cwd().isBlank() ? "" : " · " + session.cwd()
             );
-            return new SelectItem(encodeValue(label, session.path()), label, description);
+            return new SelectItem(encodeValue(session, label), label, description);
         }
 
         private static String formatAge(Instant modified) {
@@ -177,8 +177,11 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             return elapsed.toDays() + "d";
         }
 
-        private static String encodeValue(String label, Path path) {
-            return label + " " + path + VALUE_DELIMITER + path;
+        private static String encodeValue(SessionInfo session, String label) {
+            var path = session.path();
+            var fileName = path.getFileName() == null ? path.toString() : path.getFileName().toString();
+            var cwd = session.cwd() == null ? "" : session.cwd();
+            return (label + " " + fileName + " " + cwd + " " + path + VALUE_DELIMITER + path).trim();
         }
 
         private static String decodePath(String value) {

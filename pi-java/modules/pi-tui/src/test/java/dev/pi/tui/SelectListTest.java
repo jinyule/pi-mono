@@ -97,4 +97,22 @@ class SelectListTest {
 
         assertThat(lines).anyMatch(line -> line.contains("(2/3)"));
     }
+
+    @Test
+    void filtersByTokenContainsInsteadOfPrefixOnly() {
+        var list = new SelectList(
+            List.of(
+                new SelectItem("alpha workspace first", "Alpha", null),
+                new SelectItem("beta workspace second", "Beta", null)
+            ),
+            5,
+            THEME
+        );
+
+        list.setFilter("workspace second");
+
+        assertThat(list.getSelectedItem()).isEqualTo(new SelectItem("beta workspace second", "Beta", null));
+        assertThat(list.render(40)).anyMatch(line -> line.contains("Beta"));
+        assertThat(list.render(40)).noneMatch(line -> line.contains("Alpha"));
+    }
 }
