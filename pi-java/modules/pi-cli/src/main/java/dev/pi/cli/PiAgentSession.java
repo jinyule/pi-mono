@@ -152,11 +152,50 @@ public final class PiAgentSession implements PiInteractiveSession {
             }
         };
 
-        var restoredMessages = sessionManager.buildSessionContext().messages().stream()
-            .map(AgentMessages::fromLlmMessage)
-            .toList();
-        agent.replaceMessages(restoredMessages);
+        restoreAgentMessages();
         return new TreeNavigationResult(sessionManager.leafId(), editorText);
+    }
+
+    @Override
+    public List<ForkMessage> forkMessages() {
+        var messages = new ArrayList<ForkMessage>();
+        for (var entry : sessionManager.entries()) {
+            if (!(entry instanceof SessionEntry.MessageEntry messageEntry)) {
+                continue;
+            }
+            if (!"user".equals(messageEntry.message().path("role").asText())) {
+                continue;
+            }
+            var text = extractUserEditorText(messageEntry);
+            if (!text.isBlank()) {
+                messages.add(new ForkMessage(messageEntry.id(), text));
+            }
+        }
+        return List.copyOf(messages);
+    }
+
+    @Override
+    public ForkResult fork(String entryId) {
+        Objects.requireNonNull(entryId, "entryId");
+        if (agent.state().isStreaming()) {
+            throw new IllegalStateException("Cannot fork while agent is processing");
+        }
+
+        var entry = sessionManager.entry(entryId);
+        if (!(entry instanceof SessionEntry.MessageEntry messageEntry) || !"user".equals(messageEntry.message().path("role").asText())) {
+            throw new IllegalArgumentException("Invalid entry ID for forking");
+        }
+
+        var selectedText = extractUserEditorText(messageEntry);
+        try {
+            sessionManager.createBranchedSession(messageEntry.parentId());
+        } catch (IOException exception) {
+            throw new IllegalStateException("Failed to fork session", exception);
+        }
+        agent.setSessionId(sessionManager.sessionId());
+        seedSessionMetadataIfNeeded(agent.state().thinkingLevel());
+        restoreAgentMessages();
+        return new ForkResult(selectedText, sessionManager.sessionId());
     }
 
     public List<SessionPersistenceError> drainPersistenceErrors() {
@@ -185,6 +224,13 @@ public final class PiAgentSession implements PiInteractiveSession {
             }
         }
         return String.join("\n", lines);
+    }
+
+    private void restoreAgentMessages() {
+        var restoredMessages = sessionManager.buildSessionContext().messages().stream()
+            .map(AgentMessages::fromLlmMessage)
+            .toList();
+        agent.replaceMessages(restoredMessages);
     }
 
     private void persistEvent(AgentEvent event) {

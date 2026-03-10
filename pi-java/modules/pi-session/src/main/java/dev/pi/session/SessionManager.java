@@ -262,7 +262,7 @@ public final class SessionManager {
     }
 
     public Path createBranchedSession(String targetLeafId) throws IOException {
-        if (!byId.containsKey(targetLeafId)) {
+        if (targetLeafId != null && !byId.containsKey(targetLeafId)) {
             throw new IllegalArgumentException("Unknown session entry: " + targetLeafId);
         }
 

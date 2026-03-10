@@ -41,7 +41,7 @@ public final class Agent {
     private final String apiKey;
     private final Transport transport;
     private final CacheRetention cacheRetention;
-    private final String sessionId;
+    private volatile String sessionId;
     private final Map<String, String> headers;
     private final Long maxRetryDelayMs;
     private final ThinkingBudgets thinkingBudgets;
@@ -112,6 +112,10 @@ public final class Agent {
 
     public void setThinkingLevel(ThinkingLevel thinkingLevel) {
         emitState(updateState(current -> current.withThinkingLevel(thinkingLevel)));
+    }
+
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
     }
 
     public void setTools(List<AgentTool<?>> tools) {

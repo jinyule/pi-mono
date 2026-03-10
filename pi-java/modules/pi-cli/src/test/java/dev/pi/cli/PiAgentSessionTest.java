@@ -116,6 +116,44 @@ class PiAgentSessionTest {
         assertThat(session.state().messages()).isEmpty();
     }
 
+    @Test
+    void forksToNewSessionAndUsesNewSessionIdForLaterPrompts() {
+        var model = testModel();
+        var sessionManager = SessionManager.inMemory("/workspace");
+        String secondUserId;
+        try {
+            sessionManager.appendMessage(new Message.UserMessage(List.of(new TextContent("first", null)), 100L));
+            sessionManager.appendMessage(assistantMessage(model, "ack:first", 200L));
+            secondUserId = sessionManager.appendMessage(new Message.UserMessage(List.of(new TextContent("second", null)), 300L));
+            sessionManager.appendMessage(assistantMessage(model, "ack:second", 400L));
+        } catch (Exception exception) {
+            throw new AssertionError(exception);
+        }
+
+        var observedSessionIds = new java.util.concurrent.CopyOnWriteArrayList<String>();
+        var session = PiAgentSession.builder(
+            model,
+            sessionManager,
+            SettingsManager.inMemory(),
+            new InstructionResources(List.of(), "", List.of())
+        )
+            .streamFunction(capturingAssistant("Ack after fork", observedSessionIds))
+            .build();
+
+        var originalSessionId = session.sessionId();
+        var forkResult = session.fork(secondUserId);
+        session.prompt(forkResult.selectedText()).toCompletableFuture().join();
+        session.waitForIdle().toCompletableFuture().join();
+
+        assertThat(forkResult.selectedText()).isEqualTo("second");
+        assertThat(forkResult.sessionId()).isNotEqualTo(originalSessionId);
+        assertThat(session.sessionId()).isEqualTo(forkResult.sessionId());
+        assertThat(observedSessionIds).containsExactly(forkResult.sessionId());
+        assertThat(session.state().messages())
+            .extracting(message -> message.role())
+            .containsExactly("user", "assistant", "user", "assistant");
+    }
+
     private static Model testModel() {
         return new Model(
             "test-model",
@@ -150,6 +188,16 @@ class PiAgentSessionTest {
                 )
             )));
             return stream;
+        };
+    }
+
+    private static AgentLoopConfig.AssistantStreamFunction capturingAssistant(
+        String text,
+        java.util.List<String> observedSessionIds
+    ) {
+        return (model, context, options) -> {
+            observedSessionIds.add(options.sessionId());
+            return fakeAssistant(text).stream(model, context, options);
         };
     }
 

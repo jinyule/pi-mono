@@ -101,6 +101,11 @@ public final class PiInteractiveMode implements AutoCloseable {
             handleTreeCommand();
             return;
         }
+        if ("/fork".equals(value.trim())) {
+            input.setValue("");
+            handleForkCommand();
+            return;
+        }
         manualStatus = null;
         input.setValue("");
         tui.requestRender();
@@ -206,11 +211,63 @@ public final class PiInteractiveMode implements AutoCloseable {
         ));
     }
 
+    private void handleForkCommand() {
+        var forkMessages = session.forkMessages();
+        if (forkMessages.isEmpty()) {
+            manualStatus = "No messages to fork from";
+            renderState(session.state());
+            return;
+        }
+
+        var overlayRef = new AtomicReference<dev.pi.tui.OverlayHandle>();
+        var selector = new PiForkSelector(
+            forkMessages,
+            entryId -> selectForkEntry(entryId, overlayRef.get()),
+            () -> {
+                var overlay = overlayRef.get();
+                if (overlay != null) {
+                    overlay.hide();
+                }
+            },
+            tui::requestRender
+        );
+        var width = Math.max(40, Math.min(100, terminal.columns() - 2));
+        var maxHeight = Math.max(8, Math.floorDiv(terminal.rows(), 2));
+        overlayRef.set(tui.showOverlay(
+            selector,
+            new OverlayOptions(
+                width,
+                40,
+                maxHeight,
+                OverlayAnchor.CENTER,
+                0,
+                0,
+                null,
+                null,
+                OverlayMargin.uniform(1)
+            )
+        ));
+    }
+
     private void selectTreeEntry(String targetId, dev.pi.tui.OverlayHandle overlay) {
         try {
             var result = session.navigateTree(targetId);
             input.setValue(result.editorText() == null ? "" : result.editorText());
             manualStatus = "Moved to selected tree entry";
+        } catch (RuntimeException exception) {
+            manualStatus = "Error: " + rootMessage(exception);
+        }
+        if (overlay != null) {
+            overlay.hide();
+        }
+        renderState(session.state());
+    }
+
+    private void selectForkEntry(String entryId, dev.pi.tui.OverlayHandle overlay) {
+        try {
+            var result = session.fork(entryId);
+            input.setValue(result.selectedText() == null ? "" : result.selectedText());
+            manualStatus = "Forked to new session";
         } catch (RuntimeException exception) {
             manualStatus = "Error: " + rootMessage(exception);
         }

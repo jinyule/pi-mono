@@ -26,6 +26,8 @@
   - `/copy` first cut
 - 已完成第十三刀：
   - `/tree` first cut
+- 已完成第十四刀：
+  - `/fork` first cut
 
 ## 已落地内容
 
@@ -50,6 +52,7 @@
 - `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiClipboard.java`
 - `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiCopyCommand.java`
 - `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiTreeSelector.java`
+- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiForkSelector.java`
 - `pi-java/modules/pi-sdk/src/main/java/dev/pi/sdk/CreateAgentSessionOptions.java`
 - `pi-java/modules/pi-sdk/src/main/java/dev/pi/sdk/PiSdk.java`
 - `pi-java/modules/pi-sdk/src/main/java/dev/pi/sdk/PiSdkSession.java`
@@ -69,8 +72,11 @@
 
 调整：
 
+- `pi-java/modules/pi-agent-runtime/src/main/java/dev/pi/agent/runtime/Agent.java`
 - `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiCliModule.java`
 - `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiCliModuleTest.java`
+- `pi-java/modules/pi-session/src/main/java/dev/pi/session/SessionManager.java`
+- `pi-java/modules/pi-session/src/test/java/dev/pi/session/SessionManagerTest.java`
 
 ## 已具备的参数能力
 
@@ -94,11 +100,17 @@
   - escape -> abort
   - `/copy` -> 最近 assistant 文本复制到剪贴板
   - `/tree` -> session tree overlay、entry select、in-place leaf navigation
+  - `/fork` -> user-message selector、新 session fork、editor prefill
   - fake session / virtual terminal contract tests
 - `PiAgentSession` 现在已具备最小 tree navigation 语义：
   - 暴露当前 `leafId()` 与 `tree()`
   - 选择 assistant / compaction / branch summary 等节点时直接切 leaf 并 replay context
   - 选择 user message 时切到其 parent，并把 user 文本预填回 editor，形成原位分支
+- `PiAgentSession` 现在也已具备最小 fork 语义：
+  - 暴露 `forkMessages()` 用户消息列表
+  - 选择 user message 后，基于其 parent path 提取新 session document
+  - root user fork 会落到空会话，再由 metadata seed 保持 model/thinking 轨迹
+  - fork 后立即更新 `Agent.sessionId`，避免后续 provider request 继续带旧 session id
 
 ## 当前边界
 
@@ -117,6 +129,7 @@
 - `PiExportCommand` 当前输出的是 basic standalone HTML transcript；还未追平 TS 版的 tree sidebar、theme colors、tool rich render、JSONL download、branch highlighting。
 - `/copy` 当前只复制最近一条 assistant 的 plain-text flatten 文本；未覆盖图片块、富文本选择、历史消息 picker，也还未抽出统一 slash-command registry。
 - `/tree` 当前是首版 selector：只覆盖 prefix search、up/down/enter/esc、基础树前缀渲染和当前 leaf 高亮；尚未接 TS 版的 summarize prompt、custom prompt、label edit、user-only/all-entry filter toggle、bookmark 语义。
+- `/fork` 当前也是首版 selector：只覆盖 prefix search、up/down/enter/esc 与 flat user-message list；尚未接 extension `session_before_fork` / `session_fork` 生命周期、double-escape action、RPC `fork/get_fork_messages`、cross-project `forkFrom`。
 
 ## 已确认语义
 
@@ -135,6 +148,7 @@
 - `/copy` 优先同时写入 OSC52 与 system clipboard；只要任一后端成功即视为成功。
 - `/tree` 首版默认隐藏 `label` / `session_info` / `model_change` / `thinking_level_change` / `custom` 等非导航主节点，只显示 message / compaction / branch summary / custom_message。
 - `/tree` 目前不做 branch summarization；切 leaf 仅更新内存中的 session leaf，并立即用 `SessionManager.buildSessionContext()` replay 到 `Agent`。
+- `/fork` 只允许从 user message 发起；新 session 以该消息的 parent 为 branched path，因此 editor 预填的是被选中的 user 文本，conversation state 恢复的是它之前的上下文。
 
 ## 测试
 
@@ -161,13 +175,14 @@
 - basic HTML export command
 - copy command 的最近 assistant 选择、空文本/无 assistant 校验、interactive slash-command dispatch
 - tree navigation 的 assistant/user 分流语义、interactive overlay 选择、user message prefill 后继续提交流程
+- fork root-branch rewrite、new session id propagation、interactive fork selector 与 fork 后继续提交流程
 
 ## 验证
 
 最近通过：
 
 ```bash
-.\gradlew.bat :pi-cli:test --no-daemon
+.\gradlew.bat :pi-session:test :pi-cli:test --no-daemon
 npm.cmd run check
 ```
 
@@ -175,6 +190,6 @@ npm.cmd run check
 
 按依赖顺序，下一刀建议进入 CLI 收口：
 
-1. `fork` / `compact` / `reload`。
+1. `compact` / `reload`。
 2. `--resume` all-sessions scope / richer search / session mutations，以及 richer HTML export。
 3. 真实 `main()` / module wiring，把 `PiCliApplication`、`list-models`、session resolver / picker / export 接到启动入口。

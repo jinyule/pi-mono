@@ -215,6 +215,25 @@ class SessionManagerTest {
     }
 
     @Test
+    void supportsForkingFromRootUserIntoEmptySession(@TempDir Path tempDir) throws IOException {
+        var originalFile = tempDir.resolve("session.jsonl");
+        var manager = SessionManager.create(originalFile, tempDir.toString());
+
+        manager.appendMessage(userMessage("first question", 1L));
+        manager.appendMessage(assistantMessage("first answer"));
+
+        var branchedFile = manager.createBranchedSession(null);
+
+        assertThat(branchedFile).isNotNull();
+        assertThat(branchedFile).isNotEqualTo(originalFile);
+        assertThat(manager.sessionFile()).isEqualTo(branchedFile);
+        assertThat(manager.header().parentSession()).isEqualTo(originalFile.toString());
+        assertThat(manager.entries()).isEmpty();
+        assertThat(manager.buildSessionContext().messages()).isEmpty();
+        assertThat(Files.exists(branchedFile)).isFalse();
+    }
+
+    @Test
     void createWithDirectoryAllocatesPersistentSessionPath(@TempDir Path tempDir) {
         var manager = SessionManager.create("/workspace", tempDir);
 

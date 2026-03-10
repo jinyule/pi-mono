@@ -37,9 +37,29 @@ public interface PiInteractiveSession {
         throw new UnsupportedOperationException("Tree navigation is not available");
     }
 
+    default List<ForkMessage> forkMessages() {
+        return List.of();
+    }
+
+    default ForkResult fork(String entryId) {
+        throw new UnsupportedOperationException("Fork is not available");
+    }
+
     record TreeNavigationResult(
         String leafId,
         String editorText
+    ) {
+    }
+
+    record ForkMessage(
+        String entryId,
+        String text
+    ) {
+    }
+
+    record ForkResult(
+        String selectedText,
+        String sessionId
     ) {
     }
 }

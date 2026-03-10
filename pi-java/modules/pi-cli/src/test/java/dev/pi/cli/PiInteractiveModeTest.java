@@ -106,6 +106,41 @@ class PiInteractiveModeTest {
         mode.stop();
     }
 
+    @Test
+    void handlesForkSlashCommand() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(80, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("Hello");
+        terminal.sendInput("\r");
+        var originalSessionId = session.sessionId();
+        terminal.sendInput("/fork");
+        terminal.sendInput("\r");
+
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Fork from previous message")));
+
+        assertThat(String.join("\n", terminal.getViewport()))
+            .contains("Fork from previous message")
+            .contains("Hello");
+
+        terminal.sendInput("\r");
+
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Forked to new session")));
+        terminal.sendInput("!");
+        terminal.sendInput("\r");
+
+        assertThat(session.prompts).containsExactly("Hello", "!Hello");
+        assertThat(session.sessionId()).isNotEqualTo(originalSessionId);
+        assertThat(String.join("\n", terminal.getViewport()))
+            .contains("Forked to new session")
+            .contains("Assistant: Ack: !Hello")
+            .doesNotContain("You: Hello\n\nAssistant: Ack: Hello");
+
+        mode.stop();
+    }
+
     private static final class FakeSession implements PiInteractiveSession {
         private final List<String> prompts = new ArrayList<>();
         private final CopyOnWriteArrayList<Consumer<AgentState>> stateListeners = new CopyOnWriteArrayList<>();
@@ -137,7 +172,7 @@ class PiInteractiveModeTest {
 
         @Override
         public String sessionId() {
-            return "session-1";
+            return sessionManager.sessionId();
         }
 
         @Override
@@ -222,6 +257,39 @@ class PiInteractiveModeTest {
             };
             syncState();
             return new TreeNavigationResult(sessionManager.leafId(), editorText);
+        }
+
+        @Override
+        public List<ForkMessage> forkMessages() {
+            var messages = new ArrayList<ForkMessage>();
+            for (var entry : sessionManager.entries()) {
+                if (!(entry instanceof SessionEntry.MessageEntry messageEntry)) {
+                    continue;
+                }
+                if (!"user".equals(messageEntry.message().path("role").asText())) {
+                    continue;
+                }
+                var text = extractUserText(messageEntry);
+                if (!text.isBlank()) {
+                    messages.add(new ForkMessage(entry.id(), text));
+                }
+            }
+            return List.copyOf(messages);
+        }
+
+        @Override
+        public ForkResult fork(String entryId) {
+            var entry = sessionManager.entry(entryId);
+            if (!(entry instanceof SessionEntry.MessageEntry messageEntry) || !"user".equals(messageEntry.message().path("role").asText())) {
+                throw new IllegalArgumentException("Invalid entry ID for forking");
+            }
+            try {
+                sessionManager.createBranchedSession(messageEntry.parentId());
+            } catch (Exception exception) {
+                throw new AssertionError(exception);
+            }
+            syncState();
+            return new ForkResult(extractUserText(messageEntry), sessionManager.sessionId());
         }
 
         private void emitState() {
