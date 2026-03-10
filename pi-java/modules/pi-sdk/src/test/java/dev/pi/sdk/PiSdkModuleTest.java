@@ -11,6 +11,6 @@ class PiSdkModuleTest {
 
         assertThat(module.id()).isEqualTo("pi-sdk");
         assertThat(module.description()).contains("Embeddable facade");
+        assertThat(module.sdk()).isNotNull();
     }
 }
-

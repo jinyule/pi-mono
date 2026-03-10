@@ -5,13 +5,13 @@
 ## 当前状态
 
 - 阶段 7 已开始。
-- 已完成前五刀：
+- 已完成前六刀：
   - `pi-cli` CLI 参数解析
   - `PiAgentSession` skeleton + 最小 `interactive` mode
   - `print` mode
   - `json` mode
   - `rpc` mode
-- `pi-sdk` 仍未开始实现。
+  - `pi-sdk` facade
 
 ## 已落地内容
 
@@ -28,12 +28,16 @@
 - `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiPrintMode.java`
 - `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiJsonMode.java`
 - `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiRpcMode.java`
+- `pi-java/modules/pi-sdk/src/main/java/dev/pi/sdk/CreateAgentSessionOptions.java`
+- `pi-java/modules/pi-sdk/src/main/java/dev/pi/sdk/PiSdk.java`
+- `pi-java/modules/pi-sdk/src/main/java/dev/pi/sdk/PiSdkSession.java`
 - `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiCliParserTest.java`
 - `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiAgentSessionTest.java`
 - `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiInteractiveModeTest.java`
 - `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiPrintModeTest.java`
 - `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiJsonModeTest.java`
 - `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiRpcModeTest.java`
+- `pi-java/modules/pi-sdk/src/test/java/dev/pi/sdk/PiSdkTest.java`
 
 调整：
 
@@ -71,6 +75,7 @@
 - `print` mode 目前输出 final assistant text，不做 token-by-token streaming。
 - `json` mode 当前输出的是最小归一化 JSONL，不是最终 RPC schema，也不包含完整 tool/state payload。
 - `rpc` mode 当前只覆盖最小命令集：`prompt` / `state` / `resume` / `abort`。
+- `pi-sdk` facade 当前与 `pi-cli` 的 session shell 逻辑仍有重复，后续可考虑收敛到共享核心。
 
 ## 已确认语义
 
@@ -96,6 +101,7 @@
 - print mode 的 stdout/stderr 选择与 blank prompt 校验
 - json mode 的 event/state envelope 与 blank prompt 校验
 - rpc mode 的 command/response、状态读取、错误响应
+- sdk facade 的 session helpers 与 `createAgentSession()` 集成
 
 ## 验证
 
@@ -108,8 +114,8 @@ npm.cmd run check
 
 ## 下一步建议
 
-按依赖顺序，下一刀建议进入非交互模式：
+按依赖顺序，下一刀建议进入 CLI 收口：
 
-1. `pi-sdk` facade。
-2. CLI main entry / startup pipeline。
-3. `list-models` / `resume` / `new` 等 CLI command。
+1. CLI main entry / startup pipeline。
+2. `list-models` / `resume` / `new` 等 CLI command。
+3. `export` / `copy` / `tree` / `fork` / `compact` / `reload`。
