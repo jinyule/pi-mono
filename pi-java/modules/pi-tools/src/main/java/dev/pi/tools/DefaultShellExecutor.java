@@ -21,6 +21,9 @@ public final class DefaultShellExecutor implements ShellExecutor {
         Objects.requireNonNull(shellConfig, "shellConfig");
         var appliedOptions = options == null ? ShellExecutionOptions.defaults() : options;
         var maxBytes = appliedOptions.maxBytes() == null ? TextTruncator.DEFAULT_MAX_BYTES : appliedOptions.maxBytes();
+        if (appliedOptions.cwd() != null && !Files.exists(appliedOptions.cwd())) {
+            throw new IOException("Working directory does not exist: " + appliedOptions.cwd() + "\nCannot execute bash commands.");
+        }
 
         var processBuilder = new ProcessBuilder(buildCommand(shellConfig, command));
         processBuilder.redirectErrorStream(true);
@@ -73,7 +76,8 @@ public final class DefaultShellExecutor implements ShellExecutor {
             cancelled,
             timedOut,
             truncation.truncated(),
-            collector.fullOutputPath()
+            collector.fullOutputPath(),
+            truncation
         );
     }
 

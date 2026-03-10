@@ -8,6 +8,7 @@ public record ShellExecutionResult(
     boolean cancelled,
     boolean timedOut,
     boolean truncated,
-    Path fullOutputPath
+    Path fullOutputPath,
+    TruncationResult truncation
 ) {
 }

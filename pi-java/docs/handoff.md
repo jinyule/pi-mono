@@ -751,6 +751,66 @@
 - 还没有补 `edit` tool 的 golden fixture / TS 输出对拍。
 - 当前 `edit` 仍是单次整文件读写；后续若要追平更复杂的 remote filesystem 场景，再在 `EditOperations` 上扩展即可。
 
+### 30. 阶段 4：`bash` tool
+
+已继续在 `modules/pi-tools/src/main/java/dev/pi/tools/`、`modules/pi-tools/src/test/java/dev/pi/tools/BashToolTest.java` 与 `modules/pi-agent-runtime/src/test/java/dev/pi/agent/runtime/AgentLoopCancellationTest.java` 下补上第一版 `bash` tool，并把 tool cancel 信号从 runtime 接到了 tool 执行层。
+
+本次新增的入口：
+
+- `BashTool`
+- `BashToolOptions`
+- `BashToolDetails`
+- `BashSpawnContext`
+- `BashSpawnHook`
+- `BashToolTest`
+- `AgentLoopCancellationTest`
+
+本次补的 runtime / primitive 收敛点：
+
+- `AgentTool` 新增 cancellation-aware overload，旧工具实现保持兼容
+- `AgentLoop` 现在会把 `AgentEventStream.close()` 变成 tool-side cancel supplier
+- `DefaultShellExecutor` 现在会：
+  - 缺失 cwd 时给出稳定错误文案
+  - 把最终 `TruncationResult` 一并回传给上层 tool
+
+当前这版 `bash` 的实现特点：
+
+- 已接到 `AgentTool` contract：
+  - `parametersSchema()` 暴露 `command` / `timeout`
+  - `execute()` 返回 `AgentToolResult<BashToolDetails>`
+  - 执行改成 virtual thread 异步，避免直接阻塞调用线程
+- shell 执行语义已对齐当前 TS contract：
+  - cwd 固定为 tool 初始化时的 cwd
+  - 支持 `commandPrefix`
+  - 支持 `spawnHook` 改写 command/cwd/env
+  - stdout/stderr 合流
+  - `(no output)`、`Command exited with code ...`、`Command timed out after ... seconds`、`Command aborted` 文案已对齐最小 contract
+- streaming / truncation 语义已接上现有 shell primitive：
+  - chunk 到达时会持续推 `tool_execution_update`
+  - partial update 用 rolling tail buffer 做即时 tail truncation
+  - 最终结果会带 `BashToolDetails.truncation`
+  - 输出 spill 到 temp file 时会在最终文案里追加 `Full output: ...`
+- abort 语义已真正打通：
+  - `Agent.abort()` -> `AgentEventStream.close()` -> `AgentLoop` cancel flag -> `BashTool` cancelled supplier -> `DefaultShellExecutor` 杀进程树
+
+这批 contract tests 已覆盖：
+
+- 正常执行命令
+- non-zero exit code 错误文案
+- timeout 错误文案
+- cwd 不存在错误文案
+- `commandPrefix`
+- partial streaming update
+- truncation details + full output path
+- cancelled supplier -> `Command aborted`
+- runtime close stream -> tool cancel supplier
+
+这一刀的边界：
+
+- 还没有开始 `grep` / `find` / `ls` 的实际 tool 实现。
+- 还没有补 `bash` tool 的 golden fixture / TS 输出对拍。
+- 当前 `bash` tool 的 env surface 只到 `spawnHook`；CLI/bin-dir prepend 之类更高层策略留到后续 CLI/runtime 集成时接。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -797,6 +857,8 @@ npm.cmd run check
 - `pi-tools` 的 `read` tool：文本读取、图片魔数识别、`offset` / `limit` / truncation prompt、oversized line bash hint、auto-resize 开关
 - `pi-tools` 的 `write` tool：文件覆盖写入、父目录自动创建、相对路径 cwd resolve、成功文案
 - `pi-tools` 的 `edit` tool：exact/fuzzy match、duplicate/not-found 拒绝、CRLF/BOM 保留、diff details
+- `pi-tools` 的 `bash` tool：streaming update、timeout/abort、tail truncation、full output path
+- `pi-agent-runtime` 的 tool cancellation：close event stream -> tool cancel supplier
 
 对应测试文件：
 
@@ -820,6 +882,7 @@ npm.cmd run check
 - `modules/pi-agent-runtime/src/test/java/dev/pi/agent/runtime/AgentLoopContractTest.java`
 - `modules/pi-agent-runtime/src/test/java/dev/pi/agent/runtime/AgentLoopToolExecutionTest.java`
 - `modules/pi-agent-runtime/src/test/java/dev/pi/agent/runtime/AgentTest.java`
+- `modules/pi-agent-runtime/src/test/java/dev/pi/agent/runtime/AgentLoopCancellationTest.java`
 - `modules/pi-session/src/test/java/dev/pi/session/SessionJsonlCodecTest.java`
 - `modules/pi-session/src/test/java/dev/pi/session/SessionMigrationsTest.java`
 - `modules/pi-session/src/test/java/dev/pi/session/SessionContextReplayTest.java`
@@ -834,6 +897,7 @@ npm.cmd run check
 - `modules/pi-tools/src/test/java/dev/pi/tools/ReadToolTest.java`
 - `modules/pi-tools/src/test/java/dev/pi/tools/WriteToolTest.java`
 - `modules/pi-tools/src/test/java/dev/pi/tools/EditToolTest.java`
+- `modules/pi-tools/src/test/java/dev/pi/tools/BashToolTest.java`
 
 ## 未完成 / 已知缺口
 
@@ -843,13 +907,13 @@ npm.cmd run check
 
 ### `pi-tools`
 
-阶段 4 当前已完成 truncation / diff / shell / path policy / image resize primitives，以及 `read` / `write` / `edit` tool。
+阶段 4 当前已完成 truncation / diff / shell / path policy / image resize primitives，以及 `read` / `write` / `edit` / `bash` tool。
 
 下一步按任务顺序应继续：
 
 - `pi-tools`
-- `bash` tool
-- streaming output / timeout / abort / tail truncation / full output temp file
+- `grep` / `find` / `ls`
+- golden output / fixture 对拍
 
 ### 其他模块
 
@@ -885,14 +949,14 @@ npm.cmd run check
 
 建议严格按 `docs/tasks.md` 的顺序继续：
 
-1. 继续 `pi-tools`，先补 `edit` 工具。
-2. 再补 `bash`。
-3. 然后推进 `grep` / `find` / `ls` 与 golden tests。
+1. 继续 `pi-tools`，先补 `grep` / `find` / `ls`。
+2. 然后推进工具层 golden tests。
+3. 再进入阶段 5 `pi-extension-spi`。
 
 更具体的下一步切片建议：
 
-1. `pi-tools`：`bash` tool contract tests + 实现。
-2. `pi-tools`：`grep` / `find` / `ls` + golden output 固化。
+1. `pi-tools`：`grep` tool contract tests + 实现。
+2. `pi-tools`：`find` / `ls` + golden output 固化。
 3. `pi-tools`：补工具层 golden fixture，对拍 TS 输出。
 
 并行拆分文档入口：
