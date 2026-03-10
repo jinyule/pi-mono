@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-`pi-java` 已从“纯设计文档目录”推进到“可运行的阶段 0 工程骨架 + 已收尾的阶段 1 `pi-ai` + 已启动的阶段 2 `pi-agent-runtime`”。
+`pi-java` 已从“纯设计文档目录”推进到“可运行的阶段 0 工程骨架 + 已收尾的阶段 1 `pi-ai` + 已收尾的阶段 2 `pi-agent-runtime` + 已启动的阶段 3 `pi-session`”。
 
 本次工作只改动了 `pi-java/`，没有改动现有 TypeScript 包的实现逻辑。
 
@@ -331,6 +331,38 @@
 - `waitForIdle()` 现在在 abort 场景下会稳定收敛，不会留下运行中的 facade future。
 - 当前 abort 语义已经能覆盖 assistant streaming 阶段，但还不能主动取消已经开始执行的 Java tool；根因是当前 `AgentTool` API 还没有取消信号参数。这一限制已明确保留。
 
+### 20. 阶段 3：`pi-session` model + JSONL parse/write skeleton 首版
+
+已在 `modules/pi-session/src/main/java/dev/pi/session/` 下补上第一版 session 数据模型与 JSONL 编解码骨架：
+
+- `SessionFileEntry`
+- `SessionHeader`
+- `SessionEntry`
+- `SessionTreeNode`
+- `SessionContext`
+- `SessionDocument`
+- `SessionJsonlCodec`
+
+当前这批 `pi-session` 代码的实现特点：
+
+- `SessionHeader` 已兼容当前 v3 头部字段，也兼容种子 fixture 里的 legacy header 字段：`provider`、`modelId`、`thinkingLevel`。
+- `SessionEntry` 已覆盖 `message / thinking_level_change / model_change / compaction / branch_summary / custom / custom_message / label / session_info` 九类 body line。
+- `message`、`custom`、`custom_message` 相关 payload 当前统一保留为 `JsonNode`，避免在 session 持久化层过早丢失 `custom` / `bashExecution` / legacy `hookMessage` 等非 LLM message 形状。
+- `SessionContext` 当前先定义为“可送入 LLM 的稳定上下文”：`List<Message> + thinkingLevel + model`；后续 `buildSessionContext()` 会把 `compaction` / `branch_summary` / `custom_message` 语义折叠成最终消息列表。
+- `SessionJsonlCodec` 已支持：
+  - 逐行 JSONL 解析
+  - 跳过 malformed / unknown line
+  - header 校验后的 `SessionDocument` 装配
+  - 稳定的 `writeLine()` / `writeLines()` / `writeDocument()`
+  - 从文件读取和回写
+- 当前 `writeDocument()` 固定输出 `\n` 结尾，和现有 JSONL 习惯保持一致。
+
+这一刀的边界：
+
+- 还没有实现 `v1 -> v2 -> v3` migration。
+- 还没有实现 `buildSessionContext()` replay 逻辑。
+- 还没有实现 `SessionManager` 与 `SettingsManager`。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -338,6 +370,7 @@
 ```bash
 .\gradlew.bat :pi-ai:test --no-daemon
 .\gradlew.bat :pi-agent-runtime:test --no-daemon
+.\gradlew.bat :pi-session:test --no-daemon
 npm.cmd run check
 ```
 
@@ -365,6 +398,7 @@ npm.cmd run check
 - `pi-agent-runtime` 的 steering after tool -> skip remaining tool calls 语义、follow-up message -> reopen turn 语义
 - `pi-agent-runtime` 的 `Agent` facade 事件订阅、状态订阅、`prompt()` / `resume()` 与 follow-up 集成语义
 - `pi-agent-runtime` 的 abort -> inner assistant stream close -> aborted assistant lifecycle 语义
+- `pi-session` 的 TS seed fixture 解析、malformed/unknown line 跳过、现代 session document parse/write round-trip 稳定性
 
 对应测试文件：
 
@@ -388,17 +422,19 @@ npm.cmd run check
 - `modules/pi-agent-runtime/src/test/java/dev/pi/agent/runtime/AgentLoopContractTest.java`
 - `modules/pi-agent-runtime/src/test/java/dev/pi/agent/runtime/AgentLoopToolExecutionTest.java`
 - `modules/pi-agent-runtime/src/test/java/dev/pi/agent/runtime/AgentTest.java`
+- `modules/pi-session/src/test/java/dev/pi/session/SessionJsonlCodecTest.java`
 
 ## 未完成 / 已知缺口
 
-### `pi-agent-runtime`
+### `pi-session`
 
-阶段 2 当前已完成 core types、上下文管线、单轮/多轮 tool loop skeleton、顺序工具执行、基础参数校验、steering / follow-up 队列、`Agent` facade 与订阅接口、interrupt / lifecycle tests。
+阶段 3 当前已完成 session model 与 JSONL parse/write skeleton。
 
 下一步按任务顺序应继续：
 
-- 进入 `pi-session`
-- session JSONL parse/write 与 replay contract tests
+- `v1 -> v2 -> v3` migration
+- `buildSessionContext()` replay / compaction / branch summary / custom message contract tests
+- `SessionManager`
 
 ### 其他模块
 
@@ -442,8 +478,8 @@ npm.cmd run check
 
 更具体的下一步切片建议：
 
-1. `pi-session`：session model + JSONL parse/write skeleton。
-2. `pi-session`：replay / migration tests。
+1. `pi-session`：replay / migration tests。
+2. `pi-session`：`SessionManager` skeleton。
 3. `pi-tools`：read/write/edit/bash primitives。
 
 并行拆分文档入口：
