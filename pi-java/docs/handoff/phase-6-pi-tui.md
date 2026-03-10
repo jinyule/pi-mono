@@ -14,6 +14,7 @@
 6. 输入组件第一批：`Input`、`EditorKeybindings`、`KeyMatcher`、`KillRing`、`UndoStack`
 7. 多行编辑组件第一批：`Editor`
 8. `Markdown` 第一批
+9. `Loader` 第一批
 
 ## 当前关键入口
 
@@ -34,6 +35,7 @@
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/Editor.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/MarkdownTheme.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/Markdown.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/Loader.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/KeyMatcher.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/KillRing.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/UndoStack.java`
@@ -143,6 +145,17 @@
 - `TerminalText.dropVisibleColumns()` 已补 ANSI style carry，用于长 token/table cell 的换行保样式
 - 当前 nested list contract 先固定到 `commonmark-java` 可稳定解析的四空格嵌套
 
+### 9. `Loader` 第一批
+
+- `Loader` 已支持：
+  - braille spinner frames
+  - `Tui.requestRender()` 驱动逐帧刷新
+  - `start()` / `stop()` / `close()`
+  - message 动态更新
+  - 顶部 blank spacer line
+- 当前实现采用 `Text` 组合而不是继承，避免放宽 `Text` 的 `final` 边界
+- 测试通过 package-private `advanceFrame()` 做可控 tick，避免时间抖动
+
 ## 当前测试
 
 已覆盖的测试入口：
@@ -156,6 +169,7 @@
 - `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/InputTest.java`
 - `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/EditorTest.java`
 - `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/MarkdownTest.java`
+- `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/LoaderTest.java`
 
 最近验证通过：
 
@@ -168,7 +182,6 @@ npm.cmd run check
 
 还没有完成：
 
-- `Loader`
 - `SelectList`
 - `SettingsList`
 - `Image`
@@ -179,7 +192,7 @@ npm.cmd run check
 
 建议继续按这个顺序推进：
 
-1. `Loader`
-2. `SelectList` / `SettingsList`
+1. `SelectList`
+2. `SettingsList`
 3. `Image`
 4. `VirtualTerminal` 与 golden tests
