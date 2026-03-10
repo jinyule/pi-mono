@@ -3,10 +3,12 @@ package dev.pi.agent.runtime;
 import dev.pi.ai.model.CacheRetention;
 import dev.pi.ai.model.Message;
 import dev.pi.ai.model.Model;
+import dev.pi.ai.model.StopReason;
 import dev.pi.ai.model.TextContent;
 import dev.pi.ai.model.ThinkingBudgets;
 import dev.pi.ai.model.ThinkingLevel;
 import dev.pi.ai.model.Transport;
+import dev.pi.ai.model.Usage;
 import dev.pi.ai.stream.Subscription;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -50,6 +52,7 @@ public final class Agent {
     private volatile CompletableFuture<Void> runningPrompt;
     private volatile AgentEventStream activeStream;
     private volatile Subscription activeSubscription;
+    private volatile boolean abortRequested;
 
     private Agent(Builder builder) {
         this.state = new AgentState(
@@ -220,13 +223,11 @@ public final class Agent {
     }
 
     public void abort() {
+        abortRequested = true;
         var stream = activeStream;
         if (stream != null) {
             stream.close();
         }
-        emitState(updateState(current -> current.finishStreaming(current.messages())
-            .clearPendingToolCalls()
-            .withError("Request was aborted")));
     }
 
     public CompletionStage<Void> waitForIdle() {
@@ -325,6 +326,9 @@ public final class Agent {
             stream.result().join();
             future.complete(null);
         } catch (CancellationException cancellationException) {
+            if (abortRequested) {
+                emitAbortedLifecycle(stateSnapshot.model());
+            }
             future.complete(null);
         } catch (Exception exception) {
             var message = rootMessage(exception);
@@ -336,6 +340,7 @@ public final class Agent {
             subscription.unsubscribe();
             activeSubscription = null;
             activeStream = null;
+            abortRequested = false;
             runningPrompt = null;
         }
     }
@@ -396,6 +401,27 @@ public final class Agent {
             current = current.getCause();
         }
         return current.getMessage() == null ? current.getClass().getSimpleName() : current.getMessage();
+    }
+
+    private void emitAbortedLifecycle(Model model) {
+        var abortedMessage = new AgentMessage.AssistantMessage(
+            List.of(),
+            model.api(),
+            model.provider(),
+            model.id(),
+            zeroUsage(),
+            StopReason.ABORTED,
+            "Request was aborted",
+            System.currentTimeMillis()
+        );
+        handleEvent(new AgentEvent.MessageStart(abortedMessage));
+        handleEvent(new AgentEvent.MessageEnd(abortedMessage));
+        handleEvent(new AgentEvent.TurnEnd(abortedMessage, List.of()));
+        handleEvent(new AgentEvent.AgentEnd(List.of(abortedMessage)));
+    }
+
+    private static Usage zeroUsage() {
+        return new Usage(0, 0, 0, 0, 0, new Usage.Cost(0.0, 0.0, 0.0, 0.0, 0.0));
     }
 
     private List<AgentMessage> dequeueSteeringMessages() {

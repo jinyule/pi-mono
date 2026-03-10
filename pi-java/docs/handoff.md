@@ -313,7 +313,23 @@
 - facade 会把 `AgentLoop` 发出的 runtime events 重新折叠进本地 `AgentState`：`message_start/update/end` 驱动 `streamMessage/messages`，`tool_execution_*` 驱动 `pendingToolCalls`，`agent_end` 驱动 `isStreaming=false`。
 - 当前已补事件订阅与状态订阅两层接口：事件订阅只接收后续 runtime event；状态订阅会先收到当前快照，再接收后续 state 变化。
 - `AgentState` 当前允许 `thinkingLevel=null` 表示不下发 reasoning，这样 Java facade 的默认行为才和 TS 侧的 `off` 对齐。
-- 当前 `abort()` 还是最小实现：它会关闭本地 `AgentEventStream` 并收敛 facade state，但还没有把取消信号一直传到 provider/transport；完整 interrupt 语义留到下一刀测试驱动时再补。
+- 当时这版 facade 先只接好了本地状态与队列管理；后续阶段 19 已把 abort 的 assistant-stream 关闭链路补齐。
+
+### 19. 阶段 2：interrupt / lifecycle tests 与 abort 收尾
+
+已继续在以下文件补上 runtime 中断链路：
+
+- `modules/pi-ai/src/main/java/dev/pi/ai/stream/EventStream.java`
+- `modules/pi-agent-runtime/src/main/java/dev/pi/agent/runtime/AgentLoop.java`
+- `modules/pi-agent-runtime/src/main/java/dev/pi/agent/runtime/Agent.java`
+
+当前这批收尾代码的实现特点：
+
+- `EventStream` 现在支持 `onClose(Runnable)`，允许外层 runtime 在流关闭时触发资源清理。
+- `AgentLoop` 现在会把外层 `AgentEventStream.close()` 级联到当前内层 `AssistantMessageEventStream.close()`，避免 abort 后 loop 线程继续卡在 `assistantStream.result().join()`。
+- `Agent.abort()` 现在不再只改本地 state；它会关闭运行中的 outer stream，随后由 facade 的取消路径合成一个 `stopReason=aborted` 的 assistant message，并补发 `message_start -> message_end -> turn_end -> agent_end` 生命周期。
+- `waitForIdle()` 现在在 abort 场景下会稳定收敛，不会留下运行中的 facade future。
+- 当前 abort 语义已经能覆盖 assistant streaming 阶段，但还不能主动取消已经开始执行的 Java tool；根因是当前 `AgentTool` API 还没有取消信号参数。这一限制已明确保留。
 
 ## 已完成的验证
 
@@ -348,6 +364,7 @@ npm.cmd run check
 - `pi-agent-runtime` 的顺序 tool execution、多轮 tool-result 续跑、tool execution update/end lifecycle、参数校验失败 -> error tool result 语义
 - `pi-agent-runtime` 的 steering after tool -> skip remaining tool calls 语义、follow-up message -> reopen turn 语义
 - `pi-agent-runtime` 的 `Agent` facade 事件订阅、状态订阅、`prompt()` / `resume()` 与 follow-up 集成语义
+- `pi-agent-runtime` 的 abort -> inner assistant stream close -> aborted assistant lifecycle 语义
 
 对应测试文件：
 
@@ -376,12 +393,12 @@ npm.cmd run check
 
 ### `pi-agent-runtime`
 
-阶段 2 当前已完成 core types、上下文管线、单轮/多轮 tool loop skeleton、顺序工具执行、基础参数校验、steering / follow-up 队列、`Agent` facade 与订阅接口。
+阶段 2 当前已完成 core types、上下文管线、单轮/多轮 tool loop skeleton、顺序工具执行、基础参数校验、steering / follow-up 队列、`Agent` facade 与订阅接口、interrupt / lifecycle tests。
 
 下一步按任务顺序应继续：
 
-- agent loop 生命周期与工具中断测试补全
-- `abort` 传递到 provider/transport 的完整 interrupt 语义
+- 进入 `pi-session`
+- session JSONL parse/write 与 replay contract tests
 
 ### 其他模块
 
@@ -419,14 +436,14 @@ npm.cmd run check
 
 建议严格按 `docs/tasks.md` 的顺序继续：
 
-1. 在 `pi-agent-runtime` 内补完整的 interrupt / lifecycle tests，并把 `abort` 传到 provider/transport。
-2. 收尾 runtime 后进入 `pi-session`。
-3. 再往 `pi-tools` 推。
+1. 进入 `pi-session`，先补 session model 与 JSONL parse/write skeleton。
+2. 再补 replay / migration contract tests。
+3. 然后进入 `pi-tools`。
 
 更具体的下一步切片建议：
 
-1. `pi-agent-runtime`：interrupt / lifecycle tests。
-2. `pi-session`：session model + JSONL parse/write skeleton。
+1. `pi-session`：session model + JSONL parse/write skeleton。
+2. `pi-session`：replay / migration tests。
 3. `pi-tools`：read/write/edit/bash primitives。
 
 并行拆分文档入口：

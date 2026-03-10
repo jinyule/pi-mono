@@ -14,6 +14,7 @@ public class EventStream<TEvent, TResult> implements AutoCloseable {
     private final Function<TEvent, TResult> terminalResult;
     private final CopyOnWriteArrayList<Consumer<TEvent>> subscribers = new CopyOnWriteArrayList<>();
     private final ArrayList<TEvent> history = new ArrayList<>();
+    private final ArrayList<Runnable> closeCallbacks = new ArrayList<>();
     private final CompletableFuture<TResult> result = new CompletableFuture<>();
     private final AtomicBoolean closed = new AtomicBoolean(false);
     private final Object monitor = new Object();
@@ -42,6 +43,7 @@ public class EventStream<TEvent, TResult> implements AutoCloseable {
 
     public void push(TEvent event) {
         Objects.requireNonNull(event, "event");
+        var callbacksToRun = new ArrayList<Runnable>();
         synchronized (monitor) {
             if (closed.get()) {
                 return;
@@ -55,35 +57,50 @@ public class EventStream<TEvent, TResult> implements AutoCloseable {
             if (terminalEvent.test(event) && closed.compareAndSet(false, true)) {
                 subscribers.clear();
                 result.complete(terminalResult.apply(event));
+                callbacksToRun.addAll(closeCallbacks);
+                closeCallbacks.clear();
             }
         }
+        callbacksToRun.forEach(Runnable::run);
     }
 
     public void end(TResult finalResult) {
+        var callbacksToRun = new ArrayList<Runnable>();
         if (closed.compareAndSet(false, true)) {
             synchronized (monitor) {
                 subscribers.clear();
+                callbacksToRun.addAll(closeCallbacks);
+                closeCallbacks.clear();
             }
             result.complete(finalResult);
         }
+        callbacksToRun.forEach(Runnable::run);
     }
 
     public void fail(Throwable throwable) {
+        var callbacksToRun = new ArrayList<Runnable>();
         if (closed.compareAndSet(false, true)) {
             synchronized (monitor) {
                 subscribers.clear();
+                callbacksToRun.addAll(closeCallbacks);
+                closeCallbacks.clear();
             }
             result.completeExceptionally(throwable);
         }
+        callbacksToRun.forEach(Runnable::run);
     }
 
     public void cancel() {
+        var callbacksToRun = new ArrayList<Runnable>();
         if (closed.compareAndSet(false, true)) {
             synchronized (monitor) {
                 subscribers.clear();
+                callbacksToRun.addAll(closeCallbacks);
+                closeCallbacks.clear();
             }
             result.cancel(true);
         }
+        callbacksToRun.forEach(Runnable::run);
     }
 
     public boolean isClosed() {
@@ -92,6 +109,21 @@ public class EventStream<TEvent, TResult> implements AutoCloseable {
 
     public CompletableFuture<TResult> result() {
         return result;
+    }
+
+    public void onClose(Runnable callback) {
+        Objects.requireNonNull(callback, "callback");
+        var runImmediately = false;
+        synchronized (monitor) {
+            if (closed.get()) {
+                runImmediately = true;
+            } else {
+                closeCallbacks.add(callback);
+            }
+        }
+        if (runImmediately) {
+            callback.run();
+        }
     }
 
     @Override

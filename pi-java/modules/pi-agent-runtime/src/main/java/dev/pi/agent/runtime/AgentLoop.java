@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.atomic.AtomicReference;
 
 public final class AgentLoop {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -30,7 +31,9 @@ public final class AgentLoop {
         Objects.requireNonNull(config, "config");
 
         var stream = new AgentEventStream();
-        Thread.ofVirtual().name("agent-loop").start(() -> runStart(prompts, context, config, stream));
+        var activeAssistantStream = new AtomicReference<dev.pi.ai.stream.AssistantMessageEventStream>();
+        stream.onClose(() -> closeAssistantStream(activeAssistantStream));
+        Thread.ofVirtual().name("agent-loop").start(() -> runStart(prompts, context, config, stream, activeAssistantStream));
         return stream;
     }
 
@@ -49,7 +52,9 @@ public final class AgentLoop {
         }
 
         var stream = new AgentEventStream();
-        Thread.ofVirtual().name("agent-loop").start(() -> runContinue(context, config, stream));
+        var activeAssistantStream = new AtomicReference<dev.pi.ai.stream.AssistantMessageEventStream>();
+        stream.onClose(() -> closeAssistantStream(activeAssistantStream));
+        Thread.ofVirtual().name("agent-loop").start(() -> runContinue(context, config, stream, activeAssistantStream));
         return stream;
     }
 
@@ -57,13 +62,14 @@ public final class AgentLoop {
         List<AgentMessage> prompts,
         AgentContext context,
         AgentLoopConfig config,
-        AgentEventStream stream
+        AgentEventStream stream,
+        AtomicReference<dev.pi.ai.stream.AssistantMessageEventStream> activeAssistantStream
     ) {
         var newMessages = new ArrayList<AgentMessage>();
 
         try {
             stream.push(new AgentEvent.AgentStart());
-            runLoop(context, List.copyOf(prompts), newMessages, config, stream);
+            runLoop(context, List.copyOf(prompts), newMessages, config, stream, activeAssistantStream);
         } catch (Exception exception) {
             emitLoopFailure(config, newMessages, exception, stream);
         }
@@ -72,13 +78,14 @@ public final class AgentLoop {
     private static void runContinue(
         AgentContext context,
         AgentLoopConfig config,
-        AgentEventStream stream
+        AgentEventStream stream,
+        AtomicReference<dev.pi.ai.stream.AssistantMessageEventStream> activeAssistantStream
     ) {
         var newMessages = new ArrayList<AgentMessage>();
 
         try {
             stream.push(new AgentEvent.AgentStart());
-            runLoop(context, List.of(), newMessages, config, stream);
+            runLoop(context, List.of(), newMessages, config, stream, activeAssistantStream);
         } catch (Exception exception) {
             emitLoopFailure(config, newMessages, exception, stream);
         }
@@ -89,7 +96,8 @@ public final class AgentLoop {
         List<AgentMessage> pendingMessages,
         List<AgentMessage> newMessages,
         AgentLoopConfig config,
-        AgentEventStream stream
+        AgentEventStream stream,
+        AtomicReference<dev.pi.ai.stream.AssistantMessageEventStream> activeAssistantStream
     ) {
         var currentContext = context;
         var currentPendingMessages = combinePendingMessages(pendingMessages, pollMessages(config.steeringMessages()));
@@ -117,7 +125,7 @@ public final class AgentLoop {
                     currentPendingMessages = List.of();
                 }
 
-                var assistantMessage = streamAssistantResponse(currentContext, config, stream);
+                var assistantMessage = streamAssistantResponse(currentContext, config, stream, activeAssistantStream);
                 newMessages.add(assistantMessage);
                 currentContext = currentContext.appendMessage(assistantMessage);
 
@@ -166,7 +174,8 @@ public final class AgentLoop {
     private static AgentMessage.AssistantMessage streamAssistantResponse(
         AgentContext context,
         AgentLoopConfig config,
-        AgentEventStream stream
+        AgentEventStream stream,
+        AtomicReference<dev.pi.ai.stream.AssistantMessageEventStream> activeAssistantStream
     ) {
         var transformedMessages = await(config.transformContext() == null
             ? AgentLoopConfig.completedFuture(context.messages())
@@ -182,9 +191,12 @@ public final class AgentLoop {
             llmContext,
             config.toRequestOptions(resolveApiKey(config))
         );
+        activeAssistantStream.set(assistantStream);
 
         try (var ignored = assistantStream.subscribe(event -> handleAssistantEvent(event, stream))) {
             return asAssistant(assistantStream.result().join());
+        } finally {
+            activeAssistantStream.compareAndSet(assistantStream, null);
         }
     }
 
@@ -413,6 +425,15 @@ public final class AgentLoop {
 
     private static <T> T await(CompletionStage<T> stage) {
         return stage.toCompletableFuture().join();
+    }
+
+    private static void closeAssistantStream(
+        AtomicReference<dev.pi.ai.stream.AssistantMessageEventStream> activeAssistantStream
+    ) {
+        var assistantStream = activeAssistantStream.getAndSet(null);
+        if (assistantStream != null) {
+            assistantStream.close();
+        }
     }
 
     private record ToolExecutionResult(

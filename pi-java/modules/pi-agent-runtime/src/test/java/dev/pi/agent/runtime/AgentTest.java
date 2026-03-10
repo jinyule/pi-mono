@@ -12,6 +12,8 @@ import dev.pi.ai.model.TextContent;
 import dev.pi.ai.model.Usage;
 import dev.pi.ai.stream.AssistantMessageEventStream;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
@@ -83,6 +85,61 @@ class AgentTest {
         assertThat(capturedContexts.get(1)).extracting(Message::role)
             .containsExactly("user", "assistant", "user");
         assertThat(agent.state().isStreaming()).isFalse();
+    }
+
+    @Test
+    void abortClosesInnerAssistantStreamAndPublishesAbortedAssistant() throws Exception {
+        var started = new CountDownLatch(1);
+        var closed = new CountDownLatch(1);
+        var events = new CopyOnWriteArrayList<AgentEvent>();
+        var agent = Agent.builder(model())
+            .systemPrompt("System")
+            .streamFunction((model, context, options) -> {
+                var stream = new AssistantMessageEventStream();
+                stream.onClose(closed::countDown);
+                Thread.ofVirtual().start(() -> {
+                    started.countDown();
+                    stream.push(new AssistantMessageEvent.Start(
+                        assistant(model, List.of(), StopReason.STOP, null, 10L)
+                    ));
+                    while (!stream.isClosed()) {
+                        try {
+                            Thread.sleep(5);
+                        } catch (InterruptedException interruptedException) {
+                            Thread.currentThread().interrupt();
+                            return;
+                        }
+                    }
+                });
+                return stream;
+            })
+            .build();
+
+        try (var ignored = agent.subscribe(events::add)) {
+            var prompt = agent.prompt("Hello");
+
+            assertThat(started.await(1, TimeUnit.SECONDS)).isTrue();
+            agent.abort();
+            prompt.toCompletableFuture().join();
+            agent.waitForIdle().toCompletableFuture().join();
+
+            assertThat(closed.await(1, TimeUnit.SECONDS)).isTrue();
+            assertThat(agent.state().isStreaming()).isFalse();
+            assertThat(agent.state().pendingToolCalls()).isEmpty();
+            assertThat(agent.state().error()).isEqualTo("Request was aborted");
+            assertThat(agent.state().messages()).extracting(AgentMessage::role)
+                .containsExactly("user", "assistant");
+
+            var abortedMessage = (AgentMessage.AssistantMessage) agent.state().messages().get(1);
+            assertThat(abortedMessage.stopReason()).isEqualTo(StopReason.ABORTED);
+            assertThat(abortedMessage.errorMessage()).isEqualTo("Request was aborted");
+            assertThat(events).extracting(AgentEvent::type).containsSubsequence(
+                "message_start",
+                "message_end",
+                "turn_end",
+                "agent_end"
+            );
+        }
     }
 
     private static AgentLoopConfig.AssistantStreamFunction successStream(String text) {
