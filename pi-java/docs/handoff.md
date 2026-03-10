@@ -667,6 +667,43 @@
 - 还没有补 `read` tool 的 golden fixture / 真实 TS 输出对拍。
 - 还没有处理更复杂的二进制文本检测与编码推断；当前文本读取固定按 UTF-8。
 
+### 28. 阶段 4：`write` tool
+
+已继续在 `modules/pi-tools/src/main/java/dev/pi/tools/` 与 `modules/pi-tools/src/test/java/dev/pi/tools/WriteToolTest.java` 下补上第一版 `write` tool。
+
+本次新增的入口：
+
+- `WriteTool`
+- `WriteToolOptions`
+- `WriteOperations`
+- `WriteToolTest`
+
+当前这版 `write` 的实现特点：
+
+- 已接到 `AgentTool` contract：
+  - `parametersSchema()` 暴露 `path` / `content`
+  - `execute()` 返回 `AgentToolResult<Void>`
+- 写入语义已对齐当前 TS contract：
+  - 相对路径按 cwd 解析
+  - 写入前自动创建父目录
+  - 已存在文件直接覆盖
+  - 成功消息使用 `Successfully wrote {content.length} bytes to {path}` 文案
+- 当前实现保留了后续扩展点：
+  - `WriteOperations` 可替换为远端文件系统
+  - `WriteToolOptions` 已包住可注入操作集
+
+这批 contract tests 已覆盖：
+
+- 正常写文件
+- 自动创建父目录
+- 相对路径按 cwd 写入
+
+这一刀的边界：
+
+- 还没有开始 `edit` / `bash` / `grep` / `find` / `ls` 的实际 tool 实现。
+- 还没有补 `write` tool 的 golden fixture / TS 输出对拍。
+- 当前成功文案只覆盖最小 TS contract，还没有扩展 write-side metadata/details。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -711,6 +748,7 @@ npm.cmd run check
 - `pi-session` 的 instruction resource assembly：global/ancestor context file 顺序、`AGENTS.md` 优先级、project/global system prompt 覆盖、append prompt 回退语义
 - `pi-tools` 的 truncation line/byte limit 语义、path fallback、edit diff primitive、shell timeout/spill/truncation、image resize/dimension note/fallback 语义
 - `pi-tools` 的 `read` tool：文本读取、图片魔数识别、`offset` / `limit` / truncation prompt、oversized line bash hint、auto-resize 开关
+- `pi-tools` 的 `write` tool：文件覆盖写入、父目录自动创建、相对路径 cwd resolve、成功文案
 
 对应测试文件：
 
@@ -746,6 +784,7 @@ npm.cmd run check
 - `modules/pi-tools/src/test/java/dev/pi/tools/DefaultShellExecutorTest.java`
 - `modules/pi-tools/src/test/java/dev/pi/tools/ImageResizerTest.java`
 - `modules/pi-tools/src/test/java/dev/pi/tools/ReadToolTest.java`
+- `modules/pi-tools/src/test/java/dev/pi/tools/WriteToolTest.java`
 
 ## 未完成 / 已知缺口
 
@@ -755,13 +794,13 @@ npm.cmd run check
 
 ### `pi-tools`
 
-阶段 4 当前已完成 truncation / diff / shell / path policy / image resize primitives，以及 `read` tool。
+阶段 4 当前已完成 truncation / diff / shell / path policy / image resize primitives，以及 `read` / `write` tool。
 
 下一步按任务顺序应继续：
 
 - `pi-tools`
-- `write` tool
-- 自动建目录 contract tests + 实现
+- `edit` tool
+- exact match + diff details contract tests + 实现
 
 ### 其他模块
 
@@ -797,14 +836,14 @@ npm.cmd run check
 
 建议严格按 `docs/tasks.md` 的顺序继续：
 
-1. 继续 `pi-tools`，先补 `write` 工具。
-2. 再补 `edit` / `bash`。
+1. 继续 `pi-tools`，先补 `edit` 工具。
+2. 再补 `bash`。
 3. 然后推进 `grep` / `find` / `ls` 与 golden tests。
 
 更具体的下一步切片建议：
 
-1. `pi-tools`：`write` tool contract tests + 实现。
-2. `pi-tools`：`edit` / `bash` tool primitives + 输出文案。
+1. `pi-tools`：`edit` tool contract tests + 实现。
+2. `pi-tools`：`bash` tool primitives + 输出文案。
 3. `pi-tools`：`grep` / `find` / `ls` + golden output 固化。
 
 并行拆分文档入口：
