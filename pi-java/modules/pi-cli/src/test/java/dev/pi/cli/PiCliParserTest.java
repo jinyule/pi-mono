@@ -77,6 +77,15 @@ class PiCliParserTest {
     }
 
     @Test
+    void parsesExportInputPath() {
+        var args = parser.parse("--export", "session.jsonl", "output.html");
+
+        assertThat(args.exportRequested()).isTrue();
+        assertThat(args.exportInputPath()).isEqualTo(Path.of("session.jsonl"));
+        assertThat(args.messages()).containsExactly("output.html");
+    }
+
+    @Test
     void acceptsLegacyTextAliasForPrintMode() {
         var args = parser.parse("--mode", "text", "Explain this");
 

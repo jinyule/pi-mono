@@ -7,6 +7,7 @@ import java.util.concurrent.CompletionStage;
 public final class PiCliApplication {
     private final PiCliParser parser;
     private final ListModelsHandler listModelsHandler;
+    private final ExportHandler exportHandler;
     private final SessionFactory sessionFactory;
     private final ModeHandler interactiveHandler;
     private final ModeHandler printHandler;
@@ -16,6 +17,7 @@ public final class PiCliApplication {
     private PiCliApplication(Builder builder) {
         this.parser = builder.parser;
         this.listModelsHandler = builder.listModelsHandler;
+        this.exportHandler = builder.exportHandler;
         this.sessionFactory = builder.sessionFactory;
         this.interactiveHandler = builder.interactiveHandler;
         this.printHandler = builder.printHandler;
@@ -31,6 +33,9 @@ public final class PiCliApplication {
         var args = parser.parse(argv);
         if (args.listModelsRequested()) {
             return listModelsHandler.run(args);
+        }
+        if (args.exportRequested()) {
+            return exportHandler.run(args);
         }
         final PiInteractiveSession session;
         try {
@@ -57,6 +62,11 @@ public final class PiCliApplication {
     }
 
     @FunctionalInterface
+    public interface ExportHandler {
+        CompletionStage<Void> run(PiCliArgs args);
+    }
+
+    @FunctionalInterface
     public interface ModeHandler {
         CompletionStage<Void> run(PiCliArgs args, PiInteractiveSession session);
     }
@@ -64,7 +74,8 @@ public final class PiCliApplication {
     public static final class Builder {
         private final SessionFactory sessionFactory;
         private PiCliParser parser = new PiCliParser();
-        private ListModelsHandler listModelsHandler = noOpCommand();
+        private ListModelsHandler listModelsHandler = noOpListModelsCommand();
+        private ExportHandler exportHandler = noOpExportCommand();
         private ModeHandler interactiveHandler = noOp();
         private ModeHandler printHandler = noOp();
         private ModeHandler jsonHandler = noOp();
@@ -81,6 +92,11 @@ public final class PiCliApplication {
 
         public Builder listModelsHandler(ListModelsHandler listModelsHandler) {
             this.listModelsHandler = Objects.requireNonNull(listModelsHandler, "listModelsHandler");
+            return this;
+        }
+
+        public Builder exportHandler(ExportHandler exportHandler) {
+            this.exportHandler = Objects.requireNonNull(exportHandler, "exportHandler");
             return this;
         }
 
@@ -112,7 +128,11 @@ public final class PiCliApplication {
             return (args, session) -> CompletableFuture.completedFuture(null);
         }
 
-        private static ListModelsHandler noOpCommand() {
+        private static ListModelsHandler noOpListModelsCommand() {
+            return args -> CompletableFuture.completedFuture(null);
+        }
+
+        private static ExportHandler noOpExportCommand() {
             return args -> CompletableFuture.completedFuture(null);
         }
     }

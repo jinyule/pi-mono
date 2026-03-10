@@ -31,6 +31,7 @@ public final class PiCliParser {
     );
     private static final Set<String> VALUE_OPTIONS = Set.of(
         "--mode",
+        "--export",
         "--provider",
         "--model",
         "--api-key",
@@ -76,6 +77,7 @@ public final class PiCliParser {
         var listModelsQuery = listModelsRequested && !LIST_MODELS_PRESENT.equals(command.listModels)
             ? command.listModels
             : null;
+        var exportRequested = command.exportPath != null;
 
         return new PiCliArgs(
             mode,
@@ -90,9 +92,11 @@ public final class PiCliParser {
             command.noPromptTemplates,
             command.noThemes,
             listModelsRequested,
+            exportRequested,
             command.offline,
             command.verbose,
             listModelsQuery,
+            command.exportPath,
             command.provider,
             command.model,
             command.apiKey,
@@ -246,6 +250,9 @@ public final class PiCliParser {
 
         @Option(names = "--list-models", arity = "0..1", fallbackValue = LIST_MODELS_PRESENT)
         String listModels;
+
+        @Option(names = "--export")
+        Path exportPath;
 
         @Option(names = "--offline")
         boolean offline;

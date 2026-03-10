@@ -82,6 +82,26 @@ class PiCliApplicationTest {
     }
 
     @Test
+    void dispatchesExportWithoutCreatingSession() {
+        var sessionCreated = new AtomicBoolean(false);
+        var exportPath = new AtomicReference<String>();
+        var app = PiCliApplication.builder(args -> {
+            sessionCreated.set(true);
+            return new StubSession();
+        })
+            .exportHandler(args -> {
+                exportPath.set(args.exportInputPath().toString());
+                return CompletableFuture.completedFuture(null);
+            })
+            .build();
+
+        app.run("--export", "session.jsonl").toCompletableFuture().join();
+
+        assertThat(sessionCreated).isFalse();
+        assertThat(exportPath.get()).isEqualTo("session.jsonl");
+    }
+
+    @Test
     void surfacesSessionFactoryFailures() {
         var app = PiCliApplication.builder(args -> {
             throw new IOException("session init failed");
