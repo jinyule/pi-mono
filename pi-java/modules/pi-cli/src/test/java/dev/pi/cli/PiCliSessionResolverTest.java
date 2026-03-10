@@ -87,8 +87,8 @@ class PiCliSessionResolverTest {
     }
 
     @Test
-    void rejectsResumePickerFlagForNow(@TempDir Path tempDir) {
-        var resolver = new PiCliSessionResolver(tempDir, sessions -> null);
+    void reportsNoSessionsAvailableToResume(@TempDir Path tempDir) {
+        var resolver = new PiCliSessionResolver(tempDir, sessions -> null, tempDir.resolve("all-sessions"));
 
         assertThatThrownBy(() -> resolver.resolve(new PiCliParser().parse("--resume")))
             .isInstanceOf(IllegalStateException.class)
@@ -112,6 +112,39 @@ class PiCliSessionResolverTest {
 
         assertThat(session.sessionFile()).isEqualTo(sessionFile);
         assertThat(session.buildSessionContext().messages()).hasSize(2);
+    }
+
+    @Test
+    void resumesSelectedSessionFromAllSessionsScope(@TempDir Path tempDir) throws Exception {
+        var allSessionsRoot = tempDir.resolve("all-sessions");
+        var firstProjectDir = allSessionsRoot.resolve("--project-a--");
+        var secondProjectDir = allSessionsRoot.resolve("--project-b--");
+
+        var older = SessionManager.create(firstProjectDir.resolve("older.jsonl"), tempDir.resolve("project-a").toString());
+        older.appendMessage(userMessage("older", 1L));
+        older.appendMessage(assistantMessage("done"));
+
+        Thread.sleep(10);
+
+        var newer = SessionManager.create(secondProjectDir.resolve("newer.jsonl"), tempDir.resolve("project-b").toString());
+        newer.appendMessage(userMessage("newer", 2L));
+        newer.appendMessage(assistantMessage("done"));
+
+        var resolver = new PiCliSessionResolver(tempDir, sessions -> {
+            assertThat(sessions).extracting(SessionInfo::path)
+                .containsExactly(
+                    newer.sessionFile().toAbsolutePath().normalize(),
+                    older.sessionFile().toAbsolutePath().normalize()
+                );
+            return newer.sessionFile();
+        }, allSessionsRoot);
+
+        var session = resolver.resolve(new PiCliParser().parse("--resume"));
+
+        assertThat(session.sessionFile()).isEqualTo(newer.sessionFile());
+        assertThat(session.buildSessionContext().messages())
+            .extracting(Message::role)
+            .containsExactly("user", "assistant");
     }
 
     @Test

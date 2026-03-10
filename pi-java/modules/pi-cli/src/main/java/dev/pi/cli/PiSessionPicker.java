@@ -154,10 +154,11 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
 
         private static SelectItem toSelectItem(SessionInfo session) {
             var label = session.name() == null || session.name().isBlank() ? session.firstMessage() : session.name();
-            var description = "%s · %d msg · %s".formatted(
+            var description = "%s · %d msg · %s%s".formatted(
                 session.path().getFileName(),
                 session.messageCount(),
-                formatAge(session.modified())
+                formatAge(session.modified()),
+                session.cwd() == null || session.cwd().isBlank() ? "" : " · " + session.cwd()
             );
             return new SelectItem(encodeValue(label, session.path()), label, description);
         }

@@ -26,7 +26,8 @@ class PiSessionPickerTest {
         assertThat(String.join("\n", terminal.getViewport()))
             .contains("Resume session")
             .contains("First task")
-            .contains("Second task");
+            .contains("Second task")
+            .contains("/workspace");
 
         terminal.sendInput("\u001b[B");
         terminal.sendInput("\r");

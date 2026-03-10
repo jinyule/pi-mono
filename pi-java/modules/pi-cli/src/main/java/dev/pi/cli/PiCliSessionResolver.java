@@ -3,8 +3,11 @@ package dev.pi.cli;
 import dev.pi.session.SessionManager;
 import dev.pi.session.SessionInfo;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CancellationException;
@@ -12,14 +15,20 @@ import java.util.concurrent.CancellationException;
 public final class PiCliSessionResolver {
     private final Path cwd;
     private final SessionPicker sessionPicker;
+    private final Path allSessionsRoot;
 
     public PiCliSessionResolver(Path cwd) {
         this(cwd, new PiSessionPicker());
     }
 
     public PiCliSessionResolver(Path cwd, SessionPicker sessionPicker) {
+        this(cwd, sessionPicker, Path.of(System.getProperty("user.home"), ".pi", "agent", "sessions"));
+    }
+
+    PiCliSessionResolver(Path cwd, SessionPicker sessionPicker, Path allSessionsRoot) {
         this.cwd = Objects.requireNonNull(cwd, "cwd").toAbsolutePath().normalize();
         this.sessionPicker = Objects.requireNonNull(sessionPicker, "sessionPicker");
+        this.allSessionsRoot = Objects.requireNonNull(allSessionsRoot, "allSessionsRoot").toAbsolutePath().normalize();
     }
 
     public SessionManager resolve(PiCliArgs args) throws IOException {
@@ -57,8 +66,9 @@ public final class PiCliSessionResolver {
     }
 
     private SessionManager resolvePickedSession(PiCliArgs args) throws IOException {
-        var sessionDirectory = resolveSessionDirectory(args.sessionDirectory());
-        var sessions = SessionManager.list(sessionDirectory);
+        var sessions = args.sessionDirectory() == null
+            ? listAllSessions()
+            : SessionManager.list(resolveSessionDirectory(args.sessionDirectory()));
         if (sessions.isEmpty()) {
             throw new IllegalStateException("No sessions available to resume");
         }
@@ -68,6 +78,27 @@ public final class PiCliSessionResolver {
             throw new CancellationException("Session selection cancelled");
         }
         return SessionManager.open(selectedPath);
+    }
+
+    private List<SessionInfo> listAllSessions() throws IOException {
+        if (!Files.exists(allSessionsRoot)) {
+            return List.of();
+        }
+
+        var sessions = new ArrayList<SessionInfo>();
+        try (DirectoryStream<Path> directories = Files.newDirectoryStream(allSessionsRoot)) {
+            for (var directory : directories) {
+                if (!Files.isDirectory(directory)) {
+                    continue;
+                }
+                try {
+                    sessions.addAll(SessionManager.list(directory));
+                } catch (IOException ignored) {
+                }
+            }
+        }
+        sessions.sort(Comparator.comparing(SessionInfo::modified).reversed());
+        return List.copyOf(sessions);
     }
 
     private Path resolveSessionDirectory(Path sessionDirectory) {

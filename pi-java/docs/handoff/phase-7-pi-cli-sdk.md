@@ -32,6 +32,8 @@
   - `/compact` first cut
 - 已完成第十六刀：
   - `/reload` first cut
+- 已完成第十七刀：
+  - `--resume` all-sessions scope first cut
 
 ## 已落地内容
 
@@ -140,8 +142,12 @@
 - `pi-sdk` facade 当前与 `pi-cli` 的 session shell 逻辑仍有重复，后续可考虑收敛到共享核心。
 - `PiCliApplication` 当前只负责 `parse -> create session -> dispatch mode` 的启动编排，尚未接真实 `main()`、DI 装配、settings/model resolution 和 built-in tool/runtime bootstrap。
 - `list-models` 当前直接消费 `ModelRegistry` 并输出文本表格，尚未接 settings/auth 过滤，也还没挂到真实 CLI `main()`。
-- `PiCliSessionResolver` 当前已覆盖 `--session` / `--continue` / `--session-dir` / `--no-session`，并已接上当前目录范围的 `--resume` picker。
-- `PiSessionPicker` 当前只覆盖当前目录 sessions、prefix filter、up/down/enter/esc；all-scope toggle、fuzzy/regex search、rename/delete 仍未落地。
+- `PiCliSessionResolver` 当前已覆盖 `--session` / `--continue` / `--session-dir` / `--no-session`，并已接上 `--resume` picker。
+- `PiCliSessionResolver` 现在已支持 `--resume` 的 all-sessions scope 首版：
+  - 显式 `--session-dir` 时，仍限定在指定目录内选择
+  - 未显式传 `--session-dir` 时，改为跨默认 `~/.pi/agent/sessions/*` 子目录聚合 session 列表
+  - picker 描述行会附带 `cwd`，降低跨 project 同名 session 的歧义
+- `PiSessionPicker` 当前只覆盖 prefix filter、up/down/enter/esc；all-scope toggle、fuzzy/regex search、rename/delete 仍未落地。
 - `PiExportCommand` 当前输出的是 basic standalone HTML transcript；还未追平 TS 版的 tree sidebar、theme colors、tool rich render、JSONL download、branch highlighting。
 - `/copy` 当前只复制最近一条 assistant 的 plain-text flatten 文本；未覆盖图片块、富文本选择、历史消息 picker，也还未抽出统一 slash-command registry。
 - `/tree` 当前是首版 selector：只覆盖 prefix search、up/down/enter/esc、基础树前缀渲染和当前 leaf 高亮；尚未接 TS 版的 summarize prompt、custom prompt、label edit、user-only/all-entry filter toggle、bookmark 语义。
@@ -161,7 +167,7 @@
 - `--session <path>` 现在对齐 TS 语义：文件存在则打开，不存在则用该路径创建新 persistent session。
 - `--continue` 现在会在 session 目录内选择最近的有效 JSONL session；若目录为空则创建新 session。
 - `SessionManager.list(dir)` 现在会提取 session 元数据（name / firstMessage / modified / messageCount / allMessagesText），供 picker 和后续 selector 复用。
-- `--resume` 当前只在 `sessionDirectory` 范围内做选择；未实现 TS 版的 current/all scope 切换。
+- `--resume` 当前默认已切到 all-sessions 聚合；但尚未实现 TS 版在 picker 内 current/all scope 切换。
 - `--export <session.jsonl> [output.html]` 现在会在 session/runtime 之外短路执行，默认输出 `pi-java-session-<basename>.html`。
 - `/copy` 优先同时写入 OSC52 与 system clipboard；只要任一后端成功即视为成功。
 - `/tree` 首版默认隐藏 `label` / `session_info` / `model_change` / `thinking_level_change` / `custom` 等非导航主节点，只显示 message / compaction / branch summary / custom_message。
@@ -198,6 +204,7 @@
 - fork root-branch rewrite、new session id propagation、interactive fork selector 与 fork 后继续提交流程
 - compact entry append、summary replay、manual `/compact <instructions>` slash-command 行为
 - reload 后 settings snapshot / instruction resources / system prompt 更新，以及 interactive `/reload` slash-command 行为
+- `--resume` 在未传 `--session-dir` 时跨 project 聚合 session 列表，以及 picker 描述里附带 `cwd`
 
 ## 验证
 
@@ -212,6 +219,6 @@ npm.cmd run check
 
 按依赖顺序，下一刀建议进入 CLI 收口：
 
-1. `--resume` all-sessions scope / richer search / session mutations，以及 richer HTML export。
+1. `--resume` richer search / session mutations，以及 richer HTML export。
 2. 真实 `main()` / module wiring，把 `PiCliApplication`、`list-models`、session resolver / picker / export 接到启动入口。
 3. 把 `reload` 从 settings/resources 首版继续接到 extension runtime / startup pipeline。
