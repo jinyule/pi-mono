@@ -910,6 +910,53 @@
 - 还没有补 `find` tool 的 golden fixture / TS 输出对拍。
 - 当前 `.gitignore` 支持是 root-level 最小实现，还没有追平嵌套 `.gitignore` / negation rule 的完整 Git 语义。
 
+### 33. 阶段 4：`ls` tool
+
+已继续在 `modules/pi-tools/src/main/java/dev/pi/tools/` 与 `modules/pi-tools/src/test/java/dev/pi/tools/LsToolTest.java` 下补上第一版 `ls` tool。
+
+本次新增的入口：
+
+- `LsTool`
+- `LsToolOptions`
+- `LsOperations`
+- `LsToolDetails`
+- `LsToolTest`
+
+当前这版 `ls` 的实现特点：
+
+- 已接到 `AgentTool` contract：
+  - `parametersSchema()` 暴露 `path` / `limit`
+  - `execute()` 返回 `AgentToolResult<LsToolDetails>`
+  - 执行改成 virtual thread 异步，避免直接阻塞调用线程
+- 列目录语义当前覆盖了 TS 测试面的关键 contract：
+  - 默认列 cwd
+  - hidden files 会参与结果集
+  - 目录项追加 `/`
+  - 结果按大小写不敏感字母序排序
+  - 空目录返回 `(empty directory)`
+  - 路径不存在时返回 `Path not found: ...`
+  - 路径不是目录时返回 `Not a directory: ...`
+- 输出收敛语义已对齐当前最小 TS contract：
+  - entry limit notice：`[N entries limit reached. Use limit=... for more]`
+  - byte truncation notice：`[50.0KB limit reached]`
+  - details 已保留 `truncation` / `entryLimitReached`
+- 当前实现拆成两层：
+  - `LsTool` 负责参数解析、排序、notice 拼装
+  - `LsOperations` 负责 `exists` / `isDirectory` / `readdir`
+
+这批 contract tests 已覆盖：
+
+- hidden file / hidden dir 输出
+- 路径不存在错误
+- 非目录路径错误
+- entry limit notice
+- empty directory 输出
+
+这一刀的边界：
+
+- 还没有补 `ls` tool 的 golden fixture / TS 输出对拍。
+- 当前 `ls` 仍是本地文件系统实现；后续若要接远端文件系统，可继续沿 `LsOperations` 注入扩展。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -959,6 +1006,7 @@ npm.cmd run check
 - `pi-tools` 的 `bash` tool：streaming update、timeout/abort、tail truncation、full output path
 - `pi-tools` 的 `grep` tool：rg JSON search、context lines、match limit notice、line truncation notice
 - `pi-tools` 的 `find` tool：pure-Java tree walk、hidden files、root `.gitignore`、result limit notice
+- `pi-tools` 的 `ls` tool：dotfiles、directory suffix、entry limit notice、empty directory
 - `pi-agent-runtime` 的 tool cancellation：close event stream -> tool cancel supplier
 
 对应测试文件：
@@ -1001,6 +1049,7 @@ npm.cmd run check
 - `modules/pi-tools/src/test/java/dev/pi/tools/BashToolTest.java`
 - `modules/pi-tools/src/test/java/dev/pi/tools/GrepToolTest.java`
 - `modules/pi-tools/src/test/java/dev/pi/tools/FindToolTest.java`
+- `modules/pi-tools/src/test/java/dev/pi/tools/LsToolTest.java`
 
 ## 未完成 / 已知缺口
 
@@ -1010,12 +1059,11 @@ npm.cmd run check
 
 ### `pi-tools`
 
-阶段 4 当前已完成 truncation / diff / shell / path policy / image resize primitives，以及 `read` / `write` / `edit` / `bash` / `grep` / `find` tool。
+阶段 4 当前已完成 truncation / diff / shell / path policy / image resize primitives，以及 `read` / `write` / `edit` / `bash` / `grep` / `find` / `ls` tool。
 
 下一步按任务顺序应继续：
 
 - `pi-tools`
-- `ls`
 - golden output / fixture 对拍
 
 ### 其他模块
@@ -1058,9 +1106,9 @@ npm.cmd run check
 
 更具体的下一步切片建议：
 
-1. `pi-tools`：`ls` tool contract tests + 实现。
-2. `pi-tools`：工具层 golden output 固化。
-3. `pi-tools`：补工具层 golden fixture，对拍 TS 输出。
+1. `pi-tools`：工具层 golden output 固化。
+2. `pi-tools`：补工具层 golden fixture，对拍 TS 输出。
+3. `pi-extension-spi`：core types + extension discovery skeleton。
 
 并行拆分文档入口：
 
