@@ -12,11 +12,16 @@ import dev.pi.ai.model.StopReason;
 import dev.pi.ai.model.TextContent;
 import dev.pi.ai.model.Usage;
 import dev.pi.ai.stream.AssistantMessageEventStream;
+import dev.pi.session.InstructionResourceLoader;
 import dev.pi.session.InstructionResources;
 import dev.pi.session.SessionManager;
 import dev.pi.session.SettingsManager;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 class PiAgentSessionTest {
     @Test
@@ -190,6 +195,50 @@ class PiAgentSessionTest {
         assertThat(((TextContent) summaryMessage.content().getFirst()).text())
             .contains("compacted into the following summary")
             .contains("first");
+    }
+
+    @Test
+    void reloadRefreshesSettingsAndInstructionResources(@TempDir Path tempDir) throws Exception {
+        var projectDir = tempDir.resolve("project");
+        var agentDir = tempDir.resolve("agent");
+        Files.createDirectories(projectDir.resolve(".pi"));
+        Files.createDirectories(agentDir);
+        Files.writeString(projectDir.resolve(".pi").resolve("SYSTEM.md"), "Project system v1", StandardCharsets.UTF_8);
+        Files.writeString(projectDir.resolve("AGENTS.md"), "Project agents v1", StandardCharsets.UTF_8);
+        Files.writeString(projectDir.resolve(".pi").resolve("settings.json"), "{\"theme\":\"dark\"}", StandardCharsets.UTF_8);
+
+        var loader = new InstructionResourceLoader(projectDir, agentDir);
+        loader.reload();
+        var settingsManager = SettingsManager.create(projectDir, agentDir);
+        var session = PiAgentSession.builder(
+            testModel(),
+            SessionManager.inMemory(projectDir.toString()),
+            settingsManager,
+            loader.resources()
+        )
+            .instructionResourceLoader(loader)
+            .streamFunction(fakeAssistant("Ack"))
+            .build();
+
+        assertThat(session.state().systemPrompt())
+            .contains("Project system v1")
+            .contains("Project agents v1");
+        assertThat(settingsManager.effective().getString("/theme")).isEqualTo("dark");
+
+        Files.writeString(projectDir.resolve(".pi").resolve("SYSTEM.md"), "Project system v2", StandardCharsets.UTF_8);
+        Files.writeString(projectDir.resolve("AGENTS.md"), "Project agents v2", StandardCharsets.UTF_8);
+        Files.writeString(projectDir.resolve(".pi").resolve("settings.json"), "{\"theme\":\"light\"}", StandardCharsets.UTF_8);
+
+        var result = session.reload();
+
+        assertThat(result.settingsErrors()).isEmpty();
+        assertThat(result.resourceErrors()).isEmpty();
+        assertThat(session.state().systemPrompt())
+            .contains("Project system v2")
+            .contains("Project agents v2")
+            .doesNotContain("Project system v1")
+            .doesNotContain("Project agents v1");
+        assertThat(settingsManager.effective().getString("/theme")).isEqualTo("light");
     }
 
     private static Model testModel() {

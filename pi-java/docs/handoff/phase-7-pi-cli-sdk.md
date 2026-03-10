@@ -30,6 +30,8 @@
   - `/fork` first cut
 - 已完成第十五刀：
   - `/compact` first cut
+- 已完成第十六刀：
+  - `/reload` first cut
 
 ## 已落地内容
 
@@ -105,6 +107,7 @@
   - `/tree` -> session tree overlay、entry select、in-place leaf navigation
   - `/fork` -> user-message selector、新 session fork、editor prefill
   - `/compact` -> 手动 compaction、summary replay、状态提示
+  - `/reload` -> settings reload、instruction resources reload、system prompt 重建
   - fake session / virtual terminal contract tests
 - `PiAgentSession` 现在已具备最小 tree navigation 语义：
   - 暴露当前 `leafId()` 与 `tree()`
@@ -119,6 +122,11 @@
   - `/compact` 当前走本地 deterministic summary，不依赖额外 LLM 调用
   - 默认保留最近一个 user turn，从最新 compaction 边界之后向前折叠
   - 追加 `CompactionEntry` 后，立即用 `SessionManager.buildSessionContext()` replay 到 `Agent`
+- `PiAgentSession` 现在也已具备最小 manual reload 语义：
+  - `settingsManager.reload()` 会刷新 global/project settings snapshot
+  - 若配置了 `InstructionResourceLoader`，`reload()` 会重新读取 `AGENTS.md` / `CLAUDE.md` / `SYSTEM.md` / `APPEND_SYSTEM.md`
+  - reload 后会用新的 instruction resources 重新拼接 system prompt，并热更新到 `Agent`
+  - 当前返回 settings/resource warning 列表，供上层 UI 做状态提示
 
 ## 当前边界
 
@@ -139,6 +147,7 @@
 - `/tree` 当前是首版 selector：只覆盖 prefix search、up/down/enter/esc、基础树前缀渲染和当前 leaf 高亮；尚未接 TS 版的 summarize prompt、custom prompt、label edit、user-only/all-entry filter toggle、bookmark 语义。
 - `/fork` 当前也是首版 selector：只覆盖 prefix search、up/down/enter/esc 与 flat user-message list；尚未接 extension `session_before_fork` / `session_fork` 生命周期、double-escape action、RPC `fork/get_fork_messages`、cross-project `forkFrom`。
 - `/compact` 当前只覆盖手动 compaction；尚未接 TS 版的 LLM summary、`session_before_compact` / `session_compact` 生命周期、auto-compaction threshold、cancel/abort、file-op details、split-turn handling。
+- `/reload` 当前只覆盖 settings / instruction resources 首版重载；尚未接 TS 版的 extension runtime rebuild、theme/skills/prompts registry rebuild、loaded-resource diagnostics 面板与完整 startup pipeline。
 
 ## 已确认语义
 
@@ -159,6 +168,7 @@
 - `/tree` 目前不做 branch summarization；切 leaf 仅更新内存中的 session leaf，并立即用 `SessionManager.buildSessionContext()` replay 到 `Agent`。
 - `/fork` 只允许从 user message 发起；新 session 以该消息的 parent 为 branched path，因此 editor 预填的是被选中的 user 文本，conversation state 恢复的是它之前的上下文。
 - `/compact` 当前 summary 文本结构为固定章节模板（Goal / Custom Focus / Previous Summary / Summarized Messages），`tokensBefore` 采用基于序列化文本长度的轻量估算。
+- `/reload` 当前在非 streaming 状态下可执行；会刷新 `SettingsManager`、可选 `InstructionResourceLoader`，并把最新 system prompt 热更新到当前 `Agent`，但不会重建扩展 runtime。
 
 ## 测试
 
@@ -187,6 +197,7 @@
 - tree navigation 的 assistant/user 分流语义、interactive overlay 选择、user message prefill 后继续提交流程
 - fork root-branch rewrite、new session id propagation、interactive fork selector 与 fork 后继续提交流程
 - compact entry append、summary replay、manual `/compact <instructions>` slash-command 行为
+- reload 后 settings snapshot / instruction resources / system prompt 更新，以及 interactive `/reload` slash-command 行为
 
 ## 验证
 
@@ -201,6 +212,6 @@ npm.cmd run check
 
 按依赖顺序，下一刀建议进入 CLI 收口：
 
-1. `reload`。
-2. `--resume` all-sessions scope / richer search / session mutations，以及 richer HTML export。
-3. 真实 `main()` / module wiring，把 `PiCliApplication`、`list-models`、session resolver / picker / export 接到启动入口。
+1. `--resume` all-sessions scope / richer search / session mutations，以及 richer HTML export。
+2. 真实 `main()` / module wiring，把 `PiCliApplication`、`list-models`、session resolver / picker / export 接到启动入口。
+3. 把 `reload` 从 settings/resources 首版继续接到 extension runtime / startup pipeline。

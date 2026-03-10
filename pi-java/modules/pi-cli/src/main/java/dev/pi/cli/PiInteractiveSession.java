@@ -2,6 +2,8 @@ package dev.pi.cli;
 
 import dev.pi.agent.runtime.AgentEvent;
 import dev.pi.agent.runtime.AgentState;
+import dev.pi.session.InstructionResourceLoader;
+import dev.pi.session.SettingsManager;
 import dev.pi.ai.stream.Subscription;
 import dev.pi.session.SessionTreeNode;
 import java.util.List;
@@ -52,6 +54,10 @@ public interface PiInteractiveSession {
     default void abortCompaction() {
     }
 
+    default ReloadResult reload() {
+        throw new UnsupportedOperationException("Reload is not available");
+    }
+
     record TreeNavigationResult(
         String leafId,
         String editorText
@@ -75,5 +81,15 @@ public interface PiInteractiveSession {
         String firstKeptEntryId,
         int tokensBefore
     ) {
+    }
+
+    record ReloadResult(
+        List<SettingsManager.SettingsError> settingsErrors,
+        List<InstructionResourceLoader.ResourceLoadError> resourceErrors
+    ) {
+        public ReloadResult {
+            settingsErrors = List.copyOf(settingsErrors);
+            resourceErrors = List.copyOf(resourceErrors);
+        }
     }
 }

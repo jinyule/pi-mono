@@ -45,7 +45,7 @@
 - 阶段 6：已完成 `Image` 第一批：terminal image capability detect、Kitty/iTerm2 sequence encode、base64 dimension detect、fallback placeholder、基础 image tests。
 - 阶段 6：已完成 `VirtualTerminal` 第一批：lightweight ANSI emulator、viewport/scroll buffer/input/resize hooks、viewport-level render/key golden tests。
 - 阶段 6：已收尾。
-- 阶段 7：已开始，已完成 `pi-cli` CLI 参数解析（运行模式、通用启动选项、初始 file/message 输入拆分、未知 flag 保留）、`PiAgentSession` skeleton、最小 `interactive` mode shell（state render、prompt submit、session persistence bridge）、`print` mode（stdout/stderr output、final assistant selection）、`json` mode（JSONL event/state envelope）、`rpc` mode（command/response + notification JSONL）、`pi-sdk` facade（`PiSdk` / `PiSdkSession` / `createAgentSession()` / session helpers）、CLI startup dispatcher（`PiCliApplication`）、`list-models` command、resume/new session resolution primitives（`SessionManager.create/continueRecent`、`PiCliSessionResolver`）、`--resume` picker 首版（当前目录 session list + search + select/cancel）、`--export` HTML transcript 首版、`/copy` 首版（最近 assistant 文本复制到 OSC52 / system clipboard）、`/tree` 首版（session tree overlay + in-place leaf navigation + user message prefill）、`/fork` 首版（user-message selector + 新 session branch extraction + editor prefill）、`/compact` 首版（deterministic local summary + compaction entry append + context replay）。
+- 阶段 7：已开始，已完成 `pi-cli` CLI 参数解析（运行模式、通用启动选项、初始 file/message 输入拆分、未知 flag 保留）、`PiAgentSession` skeleton、最小 `interactive` mode shell（state render、prompt submit、session persistence bridge）、`print` mode（stdout/stderr output、final assistant selection）、`json` mode（JSONL event/state envelope）、`rpc` mode（command/response + notification JSONL）、`pi-sdk` facade（`PiSdk` / `PiSdkSession` / `createAgentSession()` / session helpers）、CLI startup dispatcher（`PiCliApplication`）、`list-models` command、resume/new session resolution primitives（`SessionManager.create/continueRecent`、`PiCliSessionResolver`）、`--resume` picker 首版（当前目录 session list + search + select/cancel）、`--export` HTML transcript 首版、`/copy` 首版（最近 assistant 文本复制到 OSC52 / system clipboard）、`/tree` 首版（session tree overlay + in-place leaf navigation + user message prefill）、`/fork` 首版（user-message selector + 新 session branch extraction + editor prefill）、`/compact` 首版（deterministic local summary + compaction entry append + context replay）、`/reload` 首版（settings reload + instruction resources reload + system prompt rebuild）。
 - 阶段 8 到阶段 9：未开始。
 
 ## 阶段 0：项目骨架
@@ -134,7 +134,7 @@
 13. 实现 `tree`。（已完成首版：overlay selector + in-place navigation）
 14. 实现 `fork`。（已完成首版：user-message selector + branched session）
 15. 实现 `compact`。（已完成首版：deterministic local summary）
-16. 实现 `reload`。
+16. 实现 `reload`。（已完成首版：settings / instruction resources reload）
 
 ## 阶段 8：行为追平
 

@@ -169,10 +169,31 @@ class PiInteractiveModeTest {
         mode.stop();
     }
 
+    @Test
+    void handlesReloadSlashCommand() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(80, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("/reload");
+        terminal.sendInput("\r");
+
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Reloaded settings and instruction resources")));
+
+        assertThat(session.reloadCount).isEqualTo(1);
+        assertThat(session.state().systemPrompt()).isEqualTo("Reloaded system prompt");
+        assertThat(String.join("\n", terminal.getViewport()))
+            .contains("Reloaded settings and instruction resources");
+
+        mode.stop();
+    }
+
     private static final class FakeSession implements PiInteractiveSession {
         private final List<String> prompts = new ArrayList<>();
         private final CopyOnWriteArrayList<Consumer<AgentState>> stateListeners = new CopyOnWriteArrayList<>();
         private final SessionManager sessionManager = SessionManager.inMemory("/workspace");
+        private int reloadCount;
         private AgentState state = new AgentState(
             "",
             new Model(
@@ -329,6 +350,14 @@ class PiInteractiveModeTest {
             } catch (Exception exception) {
                 throw new AssertionError(exception);
             }
+        }
+
+        @Override
+        public ReloadResult reload() {
+            reloadCount++;
+            state = state.withSystemPrompt("Reloaded system prompt");
+            emitState();
+            return new ReloadResult(List.of(), List.of());
         }
 
         private void emitState() {

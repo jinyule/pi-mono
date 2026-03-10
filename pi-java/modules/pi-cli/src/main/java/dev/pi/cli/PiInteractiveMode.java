@@ -113,6 +113,11 @@ public final class PiInteractiveMode implements AutoCloseable {
             handleCompactCommand(customInstructions == null || customInstructions.isBlank() ? null : customInstructions);
             return;
         }
+        if ("/reload".equals(trimmed)) {
+            input.setValue("");
+            handleReloadCommand();
+            return;
+        }
         manualStatus = null;
         input.setValue("");
         tui.requestRender();
@@ -288,6 +293,19 @@ public final class PiInteractiveMode implements AutoCloseable {
         try {
             session.compact(customInstructions);
             manualStatus = "Compacted context";
+        } catch (RuntimeException exception) {
+            manualStatus = "Error: " + rootMessage(exception);
+        }
+        renderState(session.state());
+    }
+
+    private void handleReloadCommand() {
+        try {
+            var result = session.reload();
+            var warningCount = result.settingsErrors().size() + result.resourceErrors().size();
+            manualStatus = warningCount == 0
+                ? "Reloaded settings and instruction resources"
+                : "Reloaded with %d warning%s".formatted(warningCount, warningCount == 1 ? "" : "s");
         } catch (RuntimeException exception) {
             manualStatus = "Error: " + rootMessage(exception);
         }

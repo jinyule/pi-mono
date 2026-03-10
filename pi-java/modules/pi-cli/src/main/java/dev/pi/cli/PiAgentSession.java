@@ -14,6 +14,7 @@ import dev.pi.ai.model.ThinkingLevel;
 import dev.pi.ai.model.Transport;
 import dev.pi.ai.stream.Subscription;
 import dev.pi.session.InstructionFile;
+import dev.pi.session.InstructionResourceLoader;
 import dev.pi.session.InstructionResources;
 import dev.pi.session.SessionEntry;
 import dev.pi.session.SessionManager;
@@ -33,7 +34,10 @@ public final class PiAgentSession implements PiInteractiveSession {
     private final Agent agent;
     private final SessionManager sessionManager;
     private final SettingsManager settingsManager;
-    private final InstructionResources instructionResources;
+    private final InstructionResourceLoader instructionResourceLoader;
+    private volatile InstructionResources instructionResources;
+    private final String systemPrompt;
+    private final String appendSystemPrompt;
     private final CopyOnWriteArrayList<SessionPersistenceError> persistenceErrors = new CopyOnWriteArrayList<>();
     private final Subscription persistenceSubscription;
 
@@ -41,12 +45,18 @@ public final class PiAgentSession implements PiInteractiveSession {
         Agent agent,
         SessionManager sessionManager,
         SettingsManager settingsManager,
-        InstructionResources instructionResources
+        InstructionResourceLoader instructionResourceLoader,
+        InstructionResources instructionResources,
+        String systemPrompt,
+        String appendSystemPrompt
     ) {
         this.agent = Objects.requireNonNull(agent, "agent");
         this.sessionManager = Objects.requireNonNull(sessionManager, "sessionManager");
         this.settingsManager = Objects.requireNonNull(settingsManager, "settingsManager");
+        this.instructionResourceLoader = instructionResourceLoader;
         this.instructionResources = Objects.requireNonNull(instructionResources, "instructionResources");
+        this.systemPrompt = systemPrompt;
+        this.appendSystemPrompt = appendSystemPrompt;
         this.persistenceSubscription = agent.subscribe(this::persistEvent);
     }
 
@@ -212,6 +222,28 @@ public final class PiAgentSession implements PiInteractiveSession {
         }
     }
 
+    @Override
+    public ReloadResult reload() {
+        if (agent.state().isStreaming()) {
+            throw new IllegalStateException("Wait for the current response to finish before reloading");
+        }
+
+        settingsManager.drainErrors();
+        settingsManager.reload();
+        var settingsErrors = settingsManager.drainErrors();
+
+        var resourceErrors = List.<InstructionResourceLoader.ResourceLoadError>of();
+        if (instructionResourceLoader != null) {
+            instructionResourceLoader.drainErrors();
+            instructionResourceLoader.reload();
+            instructionResources = instructionResourceLoader.resources();
+            resourceErrors = instructionResourceLoader.drainErrors();
+        }
+
+        agent.setSystemPrompt(composeSystemPrompt(systemPrompt, appendSystemPrompt, instructionResources));
+        return new ReloadResult(settingsErrors, resourceErrors);
+    }
+
     public List<SessionPersistenceError> drainPersistenceErrors() {
         var drained = List.copyOf(persistenceErrors);
         persistenceErrors.clear();
@@ -290,6 +322,7 @@ public final class PiAgentSession implements PiInteractiveSession {
         private final SessionManager sessionManager;
         private final SettingsManager settingsManager;
         private final InstructionResources instructionResources;
+        private InstructionResourceLoader instructionResourceLoader;
         private AgentLoopConfig.AssistantStreamFunction streamFunction;
         private String systemPrompt;
         private String appendSystemPrompt;
@@ -320,6 +353,11 @@ public final class PiAgentSession implements PiInteractiveSession {
 
         public Builder streamFunction(AgentLoopConfig.AssistantStreamFunction streamFunction) {
             this.streamFunction = streamFunction;
+            return this;
+        }
+
+        public Builder instructionResourceLoader(InstructionResourceLoader instructionResourceLoader) {
+            this.instructionResourceLoader = instructionResourceLoader;
             return this;
         }
 
@@ -406,13 +444,16 @@ public final class PiAgentSession implements PiInteractiveSession {
                 throw new IllegalStateException("PiAgentSession streamFunction must be configured");
             }
 
+            var effectiveInstructionResources = instructionResourceLoader == null
+                ? instructionResources
+                : instructionResourceLoader.resources();
             var sessionContext = sessionManager.buildSessionContext();
             var restoredMessages = sessionContext.messages().stream()
                 .map(AgentMessages::fromLlmMessage)
                 .toList();
             var resolvedThinkingLevel = thinkingLevel != null ? thinkingLevel : toThinkingLevel(sessionContext.thinkingLevel());
             var agent = Agent.builder(model)
-                .systemPrompt(composeSystemPrompt(systemPrompt, appendSystemPrompt, instructionResources))
+                .systemPrompt(composeSystemPrompt(systemPrompt, appendSystemPrompt, effectiveInstructionResources))
                 .thinkingLevel(resolvedThinkingLevel)
                 .tools(tools)
                 .messages(restoredMessages)
@@ -423,7 +464,7 @@ public final class PiAgentSession implements PiInteractiveSession {
 
             if (convertToLlm != null) {
                 agent = Agent.builder(model)
-                    .systemPrompt(composeSystemPrompt(systemPrompt, appendSystemPrompt, instructionResources))
+                    .systemPrompt(composeSystemPrompt(systemPrompt, appendSystemPrompt, effectiveInstructionResources))
                     .thinkingLevel(resolvedThinkingLevel)
                     .tools(tools)
                     .messages(restoredMessages)
@@ -449,7 +490,7 @@ public final class PiAgentSession implements PiInteractiveSession {
                 thinkingBudgets != null
             ) {
                 agent = Agent.builder(model)
-                    .systemPrompt(composeSystemPrompt(systemPrompt, appendSystemPrompt, instructionResources))
+                    .systemPrompt(composeSystemPrompt(systemPrompt, appendSystemPrompt, effectiveInstructionResources))
                     .thinkingLevel(resolvedThinkingLevel)
                     .tools(tools)
                     .messages(restoredMessages)
@@ -466,7 +507,15 @@ public final class PiAgentSession implements PiInteractiveSession {
                     .build();
             }
 
-            var session = new PiAgentSession(agent, sessionManager, settingsManager, instructionResources);
+            var session = new PiAgentSession(
+                agent,
+                sessionManager,
+                settingsManager,
+                instructionResourceLoader,
+                effectiveInstructionResources,
+                systemPrompt,
+                appendSystemPrompt
+            );
             session.seedSessionMetadataIfNeeded(resolvedThinkingLevel);
             return session;
         }
@@ -478,37 +527,38 @@ public final class PiAgentSession implements PiInteractiveSession {
             return ThinkingLevel.fromValue(value);
         }
 
-        private static String composeSystemPrompt(
-            String explicitSystemPrompt,
-            String appendSystemPrompt,
-            InstructionResources instructionResources
-        ) {
-            var sections = new ArrayList<String>();
-            var baseSystemPrompt = explicitSystemPrompt != null && !explicitSystemPrompt.isBlank()
-                ? explicitSystemPrompt
-                : instructionResources.systemPrompt();
-            if (baseSystemPrompt != null && !baseSystemPrompt.isBlank()) {
-                sections.add(baseSystemPrompt.trim());
-            }
-            for (var contextFile : instructionResources.contextFiles()) {
-                sections.add(formatContextFile(contextFile));
-            }
-            for (var prompt : instructionResources.appendSystemPrompts()) {
-                if (prompt != null && !prompt.isBlank()) {
-                    sections.add(prompt.trim());
-                }
-            }
-            if (appendSystemPrompt != null && !appendSystemPrompt.isBlank()) {
-                sections.add(appendSystemPrompt.trim());
-            }
-            return String.join("\n\n", sections);
-        }
+    }
 
-        private static String formatContextFile(InstructionFile instructionFile) {
-            return "Context from %s:\n%s".formatted(
-                instructionFile.path().getFileName(),
-                instructionFile.content().trim()
-            );
+    private static String composeSystemPrompt(
+        String explicitSystemPrompt,
+        String appendSystemPrompt,
+        InstructionResources instructionResources
+    ) {
+        var sections = new ArrayList<String>();
+        var baseSystemPrompt = explicitSystemPrompt != null && !explicitSystemPrompt.isBlank()
+            ? explicitSystemPrompt
+            : instructionResources.systemPrompt();
+        if (baseSystemPrompt != null && !baseSystemPrompt.isBlank()) {
+            sections.add(baseSystemPrompt.trim());
         }
+        for (var contextFile : instructionResources.contextFiles()) {
+            sections.add(formatContextFile(contextFile));
+        }
+        for (var prompt : instructionResources.appendSystemPrompts()) {
+            if (prompt != null && !prompt.isBlank()) {
+                sections.add(prompt.trim());
+            }
+        }
+        if (appendSystemPrompt != null && !appendSystemPrompt.isBlank()) {
+            sections.add(appendSystemPrompt.trim());
+        }
+        return String.join("\n\n", sections);
+    }
+
+    private static String formatContextFile(InstructionFile instructionFile) {
+        return "Context from %s:\n%s".formatted(
+            instructionFile.path().getFileName(),
+            instructionFile.content().trim()
+        );
     }
 }
