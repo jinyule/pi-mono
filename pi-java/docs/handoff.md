@@ -217,6 +217,19 @@
 - 当前 contract test 使用 fixture + fake transport 驱动，不依赖真实网络请求。
 - 受当前锁定的 AWS SDK 版本 `2.30.38` 限制，真实 transport 暂未把 `cachePoint` 与 cache read/write usage 字段下沉到 SDK 请求/响应；provider payload 与测试已保留这层语义，后续若需要完整运行时对齐，建议先升级 AWS SDK。
 
+### 13. 阶段 1：`message transform / validation / compat` 抽象层首版
+
+已在 `modules/pi-ai/src/main/java/dev/pi/ai/provider/MessageHistoryCompat.java` 下补上第一版公共 replay/compat 层。
+
+当前这批抽象层代码的实现特点：
+
+- `MessageHistoryCompat.transformMessages()` 统一承接历史消息回放前的两段式处理：assistant/tool-result 兼容变换、缺失 tool result 的 synthetic 填充。
+- 公共层已统一处理 `error` / `aborted` assistant turn 跳过、pending tool call 追踪、tool result id remap、缺失 tool result 自动补齐。
+- `CompatContext` 提供 `sameProviderAndModel()`、`normalizeToolCallId()`、`remapToolCallId()`，把 provider 的兼容策略和 replay 管线解耦。
+- `MessageHistoryCompat.rebuildAssistantMessage()` 统一重建 assistant message，减少各 provider 内重复 record 拷贝逻辑。
+- 目前 `AnthropicMessagesProvider`、`GoogleGenerativeAiProvider`、`BedrockConverseStreamProvider` 已切到这层公共 compat/replay 逻辑。
+- 当前还没有把 OpenAI 两条 provider 线也并入这层；它们的 compat 规则更细，适合在下一轮统一抽象。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -243,6 +256,7 @@ npm.cmd run check
 - `anthropic-messages` provider 的 payload 构造、SSE event 映射、adaptive/budget thinking、tool call / reasoning / usage 归一化、error 终结语义
 - `google-generative-ai` provider 的 payload 构造、SSE event 映射、Gemini 3 thinking level / Gemini 2.5 budget thinking、tool call / reasoning / usage 归一化、error 终结语义
 - `bedrock-converse-stream` provider 的 payload 构造、ConverseStream event 映射、Claude adaptive/budget thinking、tool call / reasoning / usage 归一化、error 终结语义
+- `message transform / validation / compat` 公共 replay 层、tool result synthetic 填充、tool call id remap、assistant turn 跳过规则
 
 对应测试文件：
 
@@ -261,6 +275,7 @@ npm.cmd run check
 - `modules/pi-ai/src/test/java/dev/pi/ai/provider/anthropic/AnthropicMessagesProviderTest.java`
 - `modules/pi-ai/src/test/java/dev/pi/ai/provider/google/GoogleGenerativeAiProviderTest.java`
 - `modules/pi-ai/src/test/java/dev/pi/ai/provider/bedrock/BedrockConverseStreamProviderTest.java`
+- `modules/pi-ai/src/test/java/dev/pi/ai/provider/MessageHistoryCompatTest.java`
 
 ## 未完成 / 已知缺口
 
@@ -268,7 +283,7 @@ npm.cmd run check
 
 以下内容还没开始或只完成了骨架：
 
-- message transform / validation / compat 层
+- provider 交叉行为测试矩阵（`abort` / `handoff` / `image input` / cross-provider parity）
 
 ### 其他模块
 
@@ -307,14 +322,14 @@ npm.cmd run check
 
 建议严格按 `docs/tasks.md` 的顺序继续：
 
-1. 先把 `message transform / validation / compat` 抽成独立边界，减少 provider 内重复逻辑。
-2. 然后回补 `pi-ai` 的 `abort` / `handoff` / `image input` / cross-provider 测试矩阵。
+1. 先回补 `pi-ai` 的 `abort` / `handoff` / `image input` / cross-provider 测试矩阵。
+2. 然后评估是否把 OpenAI 两条 provider 线也并入公共 compat/replay 抽象。
 3. 再进入 `pi-agent-runtime`，先补 core types 与 loop skeleton。
 
 更具体的下一步切片建议：
 
-1. `pi-ai`：message transform / validation / compat。
-2. `pi-ai`：provider 交叉行为测试矩阵。
+1. `pi-ai`：provider 交叉行为测试矩阵。
+2. `pi-ai`：OpenAI compat/replay 抽象收敛。
 3. `pi-agent-runtime`：core types + loop skeleton。
 
 并行拆分文档入口：

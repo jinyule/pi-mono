@@ -23,6 +23,7 @@ import dev.pi.ai.model.ToolCall;
 import dev.pi.ai.model.Usage;
 import dev.pi.ai.model.UserContent;
 import dev.pi.ai.provider.ApiProvider;
+import dev.pi.ai.provider.MessageHistoryCompat;
 import dev.pi.ai.stream.AssistantMessageAssembler;
 import dev.pi.ai.stream.AssistantMessageEventStream;
 import java.net.URI;
@@ -470,52 +471,15 @@ public final class GoogleGenerativeAiProvider implements ApiProvider {
     }
 
     private List<Message> transformMessages(List<Message> messages, Model model, long syntheticTimestamp) {
-        var result = new ArrayList<Message>(messages.size());
-        var pendingToolCalls = new ArrayList<ToolCall>();
-        var existingToolResultIds = new LinkedHashSet<String>();
-
-        for (Message message : messages) {
-            switch (message) {
-                case Message.UserMessage userMessage -> {
-                    if (!pendingToolCalls.isEmpty()) {
-                        appendSyntheticToolResults(result, pendingToolCalls, existingToolResultIds, userMessage.timestamp());
-                        pendingToolCalls.clear();
-                        existingToolResultIds.clear();
-                    }
-                    result.add(userMessage);
-                }
-                case Message.ToolResultMessage toolResultMessage -> {
-                    existingToolResultIds.add(toolResultMessage.toolCallId());
-                    result.add(toolResultMessage);
-                }
-                case Message.AssistantMessage assistantMessage -> {
-                    if (!pendingToolCalls.isEmpty()) {
-                        appendSyntheticToolResults(result, pendingToolCalls, existingToolResultIds, syntheticTimestamp);
-                        pendingToolCalls.clear();
-                        existingToolResultIds.clear();
-                    }
-                    if (assistantMessage.stopReason() == StopReason.ERROR || assistantMessage.stopReason() == StopReason.ABORTED) {
-                        continue;
-                    }
-
-                    result.add(transformAssistantMessage(assistantMessage, model));
-                    for (AssistantContent block : assistantMessage.content()) {
-                        if (block instanceof ToolCall toolCall) {
-                            pendingToolCalls.add(toolCall);
-                        }
-                    }
-                }
-            }
-        }
-
-        return List.copyOf(result);
+        return MessageHistoryCompat.transformMessages(messages, model, syntheticTimestamp, this::transformAssistantMessage);
     }
 
-    private Message.AssistantMessage transformAssistantMessage(Message.AssistantMessage assistantMessage, Model model) {
-        var sameProviderAndModel =
-            assistantMessage.provider().equals(model.provider()) &&
-            assistantMessage.api().equals(model.api()) &&
-            assistantMessage.model().equals(model.id());
+    private Message.AssistantMessage transformAssistantMessage(
+        Message.AssistantMessage assistantMessage,
+        Model model,
+        MessageHistoryCompat.CompatContext compatContext
+    ) {
+        var sameProviderAndModel = compatContext.sameProviderAndModel(assistantMessage, model);
 
         var transformedContent = new ArrayList<AssistantContent>(assistantMessage.content().size());
         for (AssistantContent block : assistantMessage.content()) {
@@ -543,35 +507,7 @@ public final class GoogleGenerativeAiProvider implements ApiProvider {
             }
         }
 
-        return new Message.AssistantMessage(
-            transformedContent,
-            assistantMessage.api(),
-            assistantMessage.provider(),
-            assistantMessage.model(),
-            assistantMessage.usage(),
-            assistantMessage.stopReason(),
-            assistantMessage.errorMessage(),
-            assistantMessage.timestamp()
-        );
-    }
-    private void appendSyntheticToolResults(
-        List<Message> target,
-        List<ToolCall> pendingToolCalls,
-        Set<String> existingToolResultIds,
-        long timestamp
-    ) {
-        for (ToolCall toolCall : pendingToolCalls) {
-            if (!existingToolResultIds.contains(toolCall.id())) {
-                target.add(new Message.ToolResultMessage(
-                    toolCall.id(),
-                    toolCall.name(),
-                    List.of(new TextContent("No result provided", null)),
-                    JsonNodeFactory.instance.nullNode(),
-                    true,
-                    timestamp
-                ));
-            }
-        }
+        return MessageHistoryCompat.rebuildAssistantMessage(assistantMessage, transformedContent);
     }
 
     private void openBlock(
