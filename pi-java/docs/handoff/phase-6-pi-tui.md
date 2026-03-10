@@ -18,6 +18,7 @@
 10. `SelectList` 第一批
 11. `SettingsList` 第一批
 12. `Image` 第一批
+13. `VirtualTerminal` 与 viewport-level golden tests
 
 ## 当前关键入口
 
@@ -56,6 +57,7 @@
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/ImageTheme.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/TerminalImages.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/Image.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/VirtualTerminal.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/KeyMatcher.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/KillRing.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/UndoStack.java`
@@ -217,6 +219,19 @@
   - `imageId` 透传
 - 当前能力以静态图片为主，动画/替换/清理生命周期还没接进 `Tui`
 
+### 13. `VirtualTerminal` 与 viewport-level golden tests
+
+- `VirtualTerminal` 已支持：
+  - `Terminal` 接口最小仿真
+  - ANSI CSI / OSC / Kitty string terminator 的轻量消费
+  - viewport / scroll buffer 观察
+  - send input / resize hooks
+  - cursor position 观察
+- 当前实现是为 `pi-java` 现有写序列服务的轻量 emulator，不是 xterm 等价实现
+- 已补 viewport-level golden tests：
+  - 静态 render golden
+  - key input 后的 selection render golden
+
 ## 当前测试
 
 已覆盖的测试入口：
@@ -234,6 +249,8 @@
 - `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/SelectListTest.java`
 - `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/SettingsListTest.java`
 - `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/ImageTest.java`
+- `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/VirtualTerminalTest.java`
+- `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/TuiGoldenTest.java`
 
 最近验证通过：
 
@@ -244,15 +261,16 @@ npm.cmd run check
 
 ## 当前边界
 
-还没有完成：
+阶段 6 剩余待追平项：
 
-- `VirtualTerminal`
-- render / key golden tests
+- 更严格的 fixture-based golden files
+- style-aware cell inspection（当前 `VirtualTerminal` 还不是 xterm 级）
+- 交互细节追平放到阶段 8
 
 ## 下一步建议
 
 建议继续按这个顺序推进：
 
-1. `VirtualTerminal`
-2. render / key golden tests
-3. `pi-cli` interactive 前置接线
+1. `pi-cli`：`interactive` / `print` / `json`
+2. `pi-sdk` facade
+3. 阶段 8：TUI 行为追平
