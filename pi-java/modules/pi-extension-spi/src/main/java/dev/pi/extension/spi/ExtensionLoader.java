@@ -59,6 +59,7 @@ public final class ExtensionLoader {
                     source,
                     extension,
                     classLoader,
+                    api.eventHandlers(),
                     api.toolDefinitions(),
                     api.commandDefinitions(),
                     api.messageRenderers()
@@ -81,9 +82,17 @@ public final class ExtensionLoader {
     }
 
     private static final class CapturingExtensionApi implements ExtensionApi {
+        private final Map<Class<? extends ExtensionEvent>, List<ExtensionHandler<?, ?>>> eventHandlers = new LinkedHashMap<>();
         private final Map<String, ToolDefinition<?>> toolDefinitions = new LinkedHashMap<>();
         private final Map<String, CommandDefinition> commandDefinitions = new LinkedHashMap<>();
         private final Map<String, MessageRenderer<?, ?>> messageRenderers = new LinkedHashMap<>();
+
+        @Override
+        public <E extends ExtensionEvent, R> void on(Class<E> eventType, ExtensionHandler<E, R> handler) {
+            Objects.requireNonNull(eventType, "eventType");
+            Objects.requireNonNull(handler, "handler");
+            eventHandlers.computeIfAbsent(eventType, ignored -> new ArrayList<>()).add(handler);
+        }
 
         @Override
         public void registerTool(ToolDefinition<?> toolDefinition) {
@@ -108,6 +117,10 @@ public final class ExtensionLoader {
 
         Map<String, ToolDefinition<?>> toolDefinitions() {
             return toolDefinitions;
+        }
+
+        Map<Class<? extends ExtensionEvent>, List<ExtensionHandler<?, ?>>> eventHandlers() {
+            return eventHandlers;
         }
 
         Map<String, CommandDefinition> commandDefinitions() {

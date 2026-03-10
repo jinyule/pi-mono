@@ -1051,6 +1051,57 @@
 - 还没有把 loader 真正接到 runtime `/reload` 生命周期里。
 - 还没有落仓库内置的示例插件源码；当前只有测试内动态编译的最小扩展示例。
 
+### 36. 阶段 5：扩展事件总线
+
+已继续在 `modules/pi-extension-spi/src/main/java/dev/pi/extension/spi/` 与 `modules/pi-extension-spi/src/test/java/dev/pi/extension/spi/` 下补上第一版扩展事件总线与 typed event contract。
+
+本次新增的入口：
+
+- `ExtensionEvent`
+- `ExtensionHandler`
+- `ResourcesDiscoverEvent`
+- `ResourcesDiscoverResult`
+- `SessionStartEvent`
+- `SessionShutdownEvent`
+- `ExtensionEventFailure`
+- `ExtensionEventDispatchResult`
+- `ExtensionEventBus`
+- `ExtensionEventBusTest`
+- `ExtensionTestJars`
+
+本次收敛的实现点：
+
+- `ExtensionApi` 现在已支持事件注册：
+  - `on(Class<E>, ExtensionHandler<E, R>)`
+- `LoadedExtension` 现在会保留扩展注册下来的 typed event handlers，并和 tool / command / renderer 一起固化成只读快照。
+- `ExtensionLoader` 的捕获 API 现在会一起记录 event handlers；扩展 jar 经过 `ServiceLoader` 加载后，handler 注册信息会随 `LoadedExtension` 一起返回。
+- `ExtensionEventBus` 已提供最小可用的顺序派发语义：
+  - `hasHandlers()` 用于探测某类 event 是否有监听者
+  - `emit(event, context)` 按扩展加载顺序依次调用 handler
+  - handler 可返回同步值或 `CompletionStage`
+  - 单个 handler 抛错不会中断后续 handler，失败会收敛到 `ExtensionEventFailure`
+- 当前先补了三类最稳定的 typed events：
+  - `ResourcesDiscoverEvent`
+  - `SessionStartEvent`
+  - `SessionShutdownEvent`
+- `ExtensionEventDispatchResult` 会聚合成功结果与失败列表，便于后续 runtime 在 `/reload`、resource discovery、session lifecycle 接线时统一消费。
+
+这批 contract tests 已覆盖：
+
+- 运行时动态编译一个最小扩展 jar，并验证 `ExtensionLoader` 能捕获 `SessionStartEvent` handler 注册。
+- 运行时动态编译一个含多个 `ResourcesDiscoverEvent` handlers 的扩展 jar，并验证：
+  - 成功结果会进入 dispatch result
+  - handler 抛错会收敛到 failure 列表
+  - 后续 handlers 不会因前一个失败而被中断
+- `ExtensionTestJars` 已把测试内动态编译 / 打包扩展 jar 的公共逻辑抽出来，便于后续继续补 reload / resource integration tests。
+
+这一刀的边界：
+
+- 还没有开始 shortcut / flag / provider / custom entry 等更完整注册面。
+- 还没有把 `ResourcesDiscoverEvent` 真正接到 session/resource loader。
+- 还没有把 event bus 真正接到 runtime `/reload`、session start/shutdown 生命周期里。
+- 还没有落仓库内置的示例插件源码；当前仍以测试内动态编译扩展 jar 为主。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -1104,6 +1155,7 @@ npm.cmd run check
 - `pi-tools` 的 `ls` tool：dotfiles、directory suffix、entry limit notice、empty directory
 - `pi-tools` 的内置工具 golden fixtures：tool text output、limit notice、diff/details JSON shape、`TruncationLimit` 小写序列化
 - `pi-extension-spi` 的 core types / loader skeleton：`ServiceLoader` 扩展发现、tool/command/renderer 注册捕获、classloader close、no-service failure 收敛
+- `pi-extension-spi` 的 event bus：typed event handler 捕获、顺序派发、async handler 归一化、dispatch failure 收敛
 - `pi-agent-runtime` 的 tool cancellation：close event stream -> tool cancel supplier
 
 对应测试文件：
@@ -1149,6 +1201,7 @@ npm.cmd run check
 - `modules/pi-tools/src/test/java/dev/pi/tools/LsToolTest.java`
 - `modules/pi-tools/src/test/java/dev/pi/tools/BuiltinToolsGoldenTest.java`
 - `modules/pi-extension-spi/src/test/java/dev/pi/extension/spi/ExtensionLoaderContractTest.java`
+- `modules/pi-extension-spi/src/test/java/dev/pi/extension/spi/ExtensionEventBusTest.java`
 
 ## 未完成 / 已知缺口
 
@@ -1167,12 +1220,12 @@ npm.cmd run check
 
 ### `pi-extension-spi`
 
-阶段 5 当前已完成 core types、`ServiceLoader + isolated ClassLoader` discovery skeleton、最小扩展加载 contract tests。
+阶段 5 当前已完成 core types、`ServiceLoader + isolated ClassLoader` discovery skeleton、最小扩展加载 contract tests、扩展事件总线与 typed event contract。
 
 下一步按任务顺序应继续：
 
-- 扩展事件总线
 - tool / command / shortcut / flag / renderer 注册面收敛
+- 资源发现扩展点接线
 - `/reload` 生命周期接线
 
 ### 其他模块
@@ -1209,13 +1262,13 @@ npm.cmd run check
 建议严格按 `docs/tasks.md` 的顺序继续：
 
 1. 进入阶段 5 `pi-extension-spi`。
-2. 先补扩展事件总线。
-3. 再补 tool / command / shortcut / flag 注册面。
+2. 先补 tool / command / shortcut / flag / renderer 注册面。
+3. 再补资源发现扩展点与 `/reload` 生命周期接线。
 
 更具体的下一步切片建议：
 
-1. `pi-extension-spi`：扩展事件总线 + typed event contract。
-2. `pi-extension-spi`：shortcut / flag / renderer 注册面收敛。
+1. `pi-extension-spi`：tool / command / shortcut / flag / renderer 注册面收敛。
+2. `pi-extension-spi`：resource discovery 扩展点接线。
 3. `pi-extension-spi`：runtime `/reload` 接线与 classloader 回收 contract test。
 
 并行拆分文档入口：

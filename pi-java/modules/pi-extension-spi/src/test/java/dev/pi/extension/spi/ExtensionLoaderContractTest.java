@@ -2,14 +2,10 @@ package dev.pi.extension.spi;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
 import java.net.URLClassLoader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
-import javax.tools.ToolProvider;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -19,7 +15,7 @@ class ExtensionLoaderContractTest {
 
     @Test
     void loadsServiceExtensionFromJarAndCapturesRegistrations() throws Exception {
-        var jarPath = compileExtensionJar("fixture.extension.TestPlugin", """
+        var jarPath = ExtensionTestJars.compileJar(tempDir, "fixture.extension.TestPlugin", """
             package fixture.extension;
 
             import com.fasterxml.jackson.databind.JsonNode;
@@ -29,6 +25,7 @@ class ExtensionLoaderContractTest {
             import dev.pi.ai.model.TextContent;
             import dev.pi.extension.spi.CommandDefinition;
             import dev.pi.extension.spi.ExtensionApi;
+            import dev.pi.extension.spi.SessionStartEvent;
             import dev.pi.extension.spi.MessageRenderContext;
             import dev.pi.extension.spi.MessageRenderer;
             import dev.pi.extension.spi.PiExtension;
@@ -51,6 +48,7 @@ class ExtensionLoaderContractTest {
 
                 @Override
                 public void register(ExtensionApi api) {
+                    api.on(SessionStartEvent.class, (event, context) -> CompletableFuture.completedFuture(null));
                     api.registerTool(new ToolDefinition<>(new EchoTool()));
                     api.registerCommand(new CommandDefinition("sample", "Sample command", (arguments, context) -> CompletableFuture.completedFuture(null)));
                     api.registerMessageRenderer("test.custom", new PlainRenderer());
@@ -103,6 +101,7 @@ class ExtensionLoaderContractTest {
             assertThat(loaded.classLoader()).isInstanceOf(URLClassLoader.class);
             assertThat(loaded.classLoader()).isNotSameAs(TestPluginMarker.class.getClassLoader());
             assertThat(loaded.classLoader().isClosed()).isFalse();
+            assertThat(loaded.eventHandlers()).containsKey(SessionStartEvent.class);
             assertThat(loaded.toolDefinitions()).containsOnlyKeys("echo");
             assertThat(loaded.toolDefinitions().get("echo").label()).isEqualTo("Echo");
             assertThat(loaded.commandDefinitions()).containsOnlyKeys("sample");
@@ -129,52 +128,6 @@ class ExtensionLoaderContractTest {
                 assertThat(failure.message()).contains("No PiExtension services found");
             });
         }
-    }
-
-    private Path compileExtensionJar(String className, String source) throws Exception {
-        var compiler = ToolProvider.getSystemJavaCompiler();
-        assertThat(compiler).as("JDK compiler").isNotNull();
-
-        var sourceRoot = tempDir.resolve("src");
-        var classesRoot = tempDir.resolve("classes");
-        Files.createDirectories(sourceRoot);
-        Files.createDirectories(classesRoot);
-
-        var relativeSourcePath = className.replace('.', '/') + ".java";
-        var sourcePath = sourceRoot.resolve(relativeSourcePath);
-        Files.createDirectories(sourcePath.getParent());
-        Files.writeString(sourcePath, source, StandardCharsets.UTF_8);
-
-        var exitCode = compiler.run(
-            null,
-            null,
-            null,
-            "-classpath",
-            System.getProperty("java.class.path"),
-            "-d",
-            classesRoot.toString(),
-            sourcePath.toString()
-        );
-        assertThat(exitCode).isZero();
-
-        var jarPath = tempDir.resolve("test-extension.jar");
-        try (var output = new JarOutputStream(Files.newOutputStream(jarPath))) {
-            try (var paths = Files.walk(classesRoot)) {
-                for (var classFile : paths.filter(Files::isRegularFile).toList()) {
-                    var entryName = classesRoot.relativize(classFile).toString().replace('\\', '/');
-                    output.putNextEntry(new JarEntry(entryName));
-                    output.write(Files.readAllBytes(classFile));
-                    output.closeEntry();
-                }
-            }
-
-            var serviceEntry = "META-INF/services/" + PiExtension.class.getName();
-            output.putNextEntry(new JarEntry(serviceEntry));
-            output.write((className + "\n").getBytes(StandardCharsets.UTF_8));
-            output.closeEntry();
-        }
-
-        return jarPath;
     }
 
     private static final class TestPluginMarker {
