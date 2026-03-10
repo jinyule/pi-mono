@@ -811,6 +811,58 @@
 - 还没有补 `bash` tool 的 golden fixture / TS 输出对拍。
 - 当前 `bash` tool 的 env surface 只到 `spawnHook`；CLI/bin-dir prepend 之类更高层策略留到后续 CLI/runtime 集成时接。
 
+### 31. 阶段 4：`grep` tool
+
+已继续在 `modules/pi-tools/src/main/java/dev/pi/tools/` 与 `modules/pi-tools/src/test/java/dev/pi/tools/GrepToolTest.java` 下补上第一版 `grep` tool。
+
+本次新增的入口：
+
+- `GrepTool`
+- `GrepToolOptions`
+- `GrepOperations`
+- `GrepToolDetails`
+- `RipgrepRunner`
+- `GrepToolTest`
+
+当前这版 `grep` 的实现特点：
+
+- 已接到 `AgentTool` contract：
+  - `parametersSchema()` 暴露 `pattern` / `path` / `glob` / `ignoreCase` / `literal` / `context` / `limit`
+  - `execute()` 返回 `AgentToolResult<GrepToolDetails>`
+  - 执行改成 virtual thread 异步，避免直接阻塞调用线程
+- 搜索语义当前沿用 TS 合同：
+  - 默认搜索 cwd
+  - 单文件结果输出 `basename:line: text`
+  - 目录搜索结果输出相对路径
+  - `context` 会追加 `path-line- text` 风格上下文行
+  - `limit` 是全局 match limit，不是按文件 limit
+  - 无结果时返回 `No matches found`
+- 底层实现当前拆成两层：
+  - `RipgrepRunner` 负责跑 `rg --json --line-number --hidden`
+  - `GrepOperations` 负责 `isDirectory` / `readFile`
+  - 两层都可注入，方便后续 remote FS / remote grep
+- 输出收敛语义已对齐当前 TS contract：
+  - match limit notice：`[N matches limit reached. Use limit=... for more, or refine pattern]`
+  - byte truncation notice：`[50.0KB limit reached]`
+  - 长行截断 notice：`[Some lines truncated to 500 chars. Use read tool to see full lines]`
+  - details 已保留 `truncation` / `matchLimitReached` / `linesTruncated`
+- 当前实现已支持 tool cancel supplier：
+  - `RipgrepRunner.local()` 轮询 cancelled flag
+  - cancel 时会主动终止 rg 进程并返回 `Operation aborted`
+
+这批 contract tests 已覆盖：
+
+- 单文件输出包含文件名
+- global limit + context lines
+- no matches
+- long line truncation notice
+
+这一刀的边界：
+
+- 还没有开始 `find` / `ls` 的实际 tool 实现。
+- 还没有补 `grep` tool 的 golden fixture / TS 输出对拍。
+- 默认运行时依赖本地 `rg`；如果环境缺失，会报 `ripgrep (rg) is not available`。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -858,6 +910,7 @@ npm.cmd run check
 - `pi-tools` 的 `write` tool：文件覆盖写入、父目录自动创建、相对路径 cwd resolve、成功文案
 - `pi-tools` 的 `edit` tool：exact/fuzzy match、duplicate/not-found 拒绝、CRLF/BOM 保留、diff details
 - `pi-tools` 的 `bash` tool：streaming update、timeout/abort、tail truncation、full output path
+- `pi-tools` 的 `grep` tool：rg JSON search、context lines、match limit notice、line truncation notice
 - `pi-agent-runtime` 的 tool cancellation：close event stream -> tool cancel supplier
 
 对应测试文件：
@@ -898,6 +951,7 @@ npm.cmd run check
 - `modules/pi-tools/src/test/java/dev/pi/tools/WriteToolTest.java`
 - `modules/pi-tools/src/test/java/dev/pi/tools/EditToolTest.java`
 - `modules/pi-tools/src/test/java/dev/pi/tools/BashToolTest.java`
+- `modules/pi-tools/src/test/java/dev/pi/tools/GrepToolTest.java`
 
 ## 未完成 / 已知缺口
 
@@ -907,12 +961,12 @@ npm.cmd run check
 
 ### `pi-tools`
 
-阶段 4 当前已完成 truncation / diff / shell / path policy / image resize primitives，以及 `read` / `write` / `edit` / `bash` tool。
+阶段 4 当前已完成 truncation / diff / shell / path policy / image resize primitives，以及 `read` / `write` / `edit` / `bash` / `grep` tool。
 
 下一步按任务顺序应继续：
 
 - `pi-tools`
-- `grep` / `find` / `ls`
+- `find` / `ls`
 - golden output / fixture 对拍
 
 ### 其他模块
@@ -949,14 +1003,14 @@ npm.cmd run check
 
 建议严格按 `docs/tasks.md` 的顺序继续：
 
-1. 继续 `pi-tools`，先补 `grep` / `find` / `ls`。
+1. 继续 `pi-tools`，先补 `find` / `ls`。
 2. 然后推进工具层 golden tests。
 3. 再进入阶段 5 `pi-extension-spi`。
 
 更具体的下一步切片建议：
 
-1. `pi-tools`：`grep` tool contract tests + 实现。
-2. `pi-tools`：`find` / `ls` + golden output 固化。
+1. `pi-tools`：`find` tool contract tests + 实现。
+2. `pi-tools`：`ls` + golden output 固化。
 3. `pi-tools`：补工具层 golden fixture，对拍 TS 输出。
 
 并行拆分文档入口：
