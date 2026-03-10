@@ -40,7 +40,8 @@
 - 阶段 6：已完成 `Editor` 第一批：multiline editing、arrow navigation、newline / submit split、line merge、word delete / yank / undo、border rendering、focused cursor marker、基础 editor tests。
 - 阶段 6：已完成 `Markdown` 第一批：`commonmark-java` + GFM tables/autolink/strikethrough、heading / list / blockquote / code block / table / link render、default text style / background、cache、基础 markdown tests。
 - 阶段 6：已完成 `Loader` 第一批：spinner frames、`Tui.requestRender()` 驱动刷新、message update、blank spacer line、基础 loader tests。
-- 阶段 6：下一步实现：`SelectList`、`SettingsList`、`Image`。
+- 阶段 6：已完成 `SelectList` 第一批：items/filter/selection model、wrap-around up/down、select/cancel callbacks、description single-line normalize、scroll indicator、基础 select-list tests。
+- 阶段 6：下一步实现：`SettingsList`、`Image`。
 - 阶段 7 到阶段 9：未开始。
 
 ## 阶段 0：项目骨架
@@ -109,7 +110,7 @@
 2. 实现 terminal raw mode、resize、title、cursor、bracketed paste、kitty keyboard protocol 基础支持。（已完成）
 3. 实现 diff renderer 与 synchronized output。（已完成）
 4. 实现 overlay stack、IME cursor marker、hardware cursor positioning。（已完成）
-5. 实现基础组件：`Container`、`Text`、`TruncatedText`、`Input`、`Editor`、`Markdown`、`Loader`、`SelectList`、`SettingsList`、`Image`。（进行中：已完成 `Container`、`Text`、`TruncatedText`、`Input`、`Editor`、`Markdown`、`Loader`）
+5. 实现基础组件：`Container`、`Text`、`TruncatedText`、`Input`、`Editor`、`Markdown`、`Loader`、`SelectList`、`SettingsList`、`Image`。（进行中：已完成 `Container`、`Text`、`TruncatedText`、`Input`、`Editor`、`Markdown`、`Loader`、`SelectList`）
 6. 构建 `VirtualTerminal` 测试工具，做渲染与键位 golden tests。
 
 ## 阶段 7：`pi-cli` 与 `pi-sdk`

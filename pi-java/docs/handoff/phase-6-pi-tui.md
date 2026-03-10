@@ -15,6 +15,7 @@
 7. 多行编辑组件第一批：`Editor`
 8. `Markdown` 第一批
 9. `Loader` 第一批
+10. `SelectList` 第一批
 
 ## 当前关键入口
 
@@ -36,6 +37,9 @@
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/MarkdownTheme.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/Markdown.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/Loader.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/SelectItem.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/SelectListTheme.java`
+- `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/SelectList.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/KeyMatcher.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/KillRing.java`
 - `pi-java/modules/pi-tui/src/main/java/dev/pi/tui/UndoStack.java`
@@ -156,6 +160,18 @@
 - 当前实现采用 `Text` 组合而不是继承，避免放宽 `Text` 的 `final` 边界
 - 测试通过 package-private `advanceFrame()` 做可控 tick，避免时间抖动
 
+### 10. `SelectList` 第一批
+
+- `SelectList` 已支持：
+  - `items` / `filteredItems` / `selectedIndex`
+  - prefix filter（`value` startsWith）
+  - wrap-around up/down navigation
+  - select / cancel / selection-change callbacks
+  - multiline description normalize 为单行
+  - selected / unselected 行渲染
+  - scroll indicator
+- 当前实现直接复用 `EditorKeybindings.global()` 的 `CURSOR_UP` / `CURSOR_DOWN` / `SUBMIT` / `SELECT_CANCEL`
+
 ## 当前测试
 
 已覆盖的测试入口：
@@ -170,6 +186,7 @@
 - `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/EditorTest.java`
 - `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/MarkdownTest.java`
 - `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/LoaderTest.java`
+- `pi-java/modules/pi-tui/src/test/java/dev/pi/tui/SelectListTest.java`
 
 最近验证通过：
 
@@ -182,7 +199,6 @@ npm.cmd run check
 
 还没有完成：
 
-- `SelectList`
 - `SettingsList`
 - `Image`
 - `VirtualTerminal`
@@ -192,7 +208,6 @@ npm.cmd run check
 
 建议继续按这个顺序推进：
 
-1. `SelectList`
-2. `SettingsList`
-3. `Image`
-4. `VirtualTerminal` 与 golden tests
+1. `SettingsList`
+2. `Image`
+3. `VirtualTerminal` 与 golden tests
