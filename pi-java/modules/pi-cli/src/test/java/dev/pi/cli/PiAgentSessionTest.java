@@ -2,6 +2,7 @@ package dev.pi.cli;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import dev.pi.agent.runtime.AgentMessage;
 import dev.pi.agent.runtime.AgentLoopConfig;
 import dev.pi.ai.model.AssistantMessageEvent;
 import dev.pi.ai.model.Context;
@@ -152,6 +153,43 @@ class PiAgentSessionTest {
         assertThat(session.state().messages())
             .extracting(message -> message.role())
             .containsExactly("user", "assistant", "user", "assistant");
+    }
+
+    @Test
+    void compactsOlderTurnsAndReplaysSummaryMessage() {
+        var model = testModel();
+        var sessionManager = SessionManager.inMemory("/workspace");
+        String secondUserId;
+        try {
+            sessionManager.appendMessage(new Message.UserMessage(List.of(new TextContent("first", null)), 100L));
+            sessionManager.appendMessage(assistantMessage(model, "ack:first", 200L));
+            secondUserId = sessionManager.appendMessage(new Message.UserMessage(List.of(new TextContent("second", null)), 300L));
+            sessionManager.appendMessage(assistantMessage(model, "ack:second", 400L));
+        } catch (Exception exception) {
+            throw new AssertionError(exception);
+        }
+
+        var session = PiAgentSession.builder(
+            model,
+            sessionManager,
+            SettingsManager.inMemory(),
+            new InstructionResources(List.of(), "", List.of())
+        )
+            .streamFunction(fakeAssistant("Ack"))
+            .build();
+
+        var result = session.compact("Focus on latest implementation details");
+
+        assertThat(result.firstKeptEntryId()).isEqualTo(secondUserId);
+        assertThat(result.tokensBefore()).isGreaterThan(0);
+        assertThat(result.summary()).contains("Focus on latest implementation details").contains("first");
+        assertThat(session.state().messages())
+            .extracting(message -> message.role())
+            .containsExactly("user", "user", "assistant");
+        var summaryMessage = (AgentMessage.UserMessage) session.state().messages().getFirst();
+        assertThat(((TextContent) summaryMessage.content().getFirst()).text())
+            .contains("compacted into the following summary")
+            .contains("first");
     }
 
     private static Model testModel() {

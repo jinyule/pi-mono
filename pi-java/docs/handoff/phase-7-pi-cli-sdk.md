@@ -28,6 +28,8 @@
   - `/tree` first cut
 - 已完成第十四刀：
   - `/fork` first cut
+- 已完成第十五刀：
+  - `/compact` first cut
 
 ## 已落地内容
 
@@ -53,6 +55,7 @@
 - `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiCopyCommand.java`
 - `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiTreeSelector.java`
 - `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiForkSelector.java`
+- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiCompactor.java`
 - `pi-java/modules/pi-sdk/src/main/java/dev/pi/sdk/CreateAgentSessionOptions.java`
 - `pi-java/modules/pi-sdk/src/main/java/dev/pi/sdk/PiSdk.java`
 - `pi-java/modules/pi-sdk/src/main/java/dev/pi/sdk/PiSdkSession.java`
@@ -101,6 +104,7 @@
   - `/copy` -> 最近 assistant 文本复制到剪贴板
   - `/tree` -> session tree overlay、entry select、in-place leaf navigation
   - `/fork` -> user-message selector、新 session fork、editor prefill
+  - `/compact` -> 手动 compaction、summary replay、状态提示
   - fake session / virtual terminal contract tests
 - `PiAgentSession` 现在已具备最小 tree navigation 语义：
   - 暴露当前 `leafId()` 与 `tree()`
@@ -111,6 +115,10 @@
   - 选择 user message 后，基于其 parent path 提取新 session document
   - root user fork 会落到空会话，再由 metadata seed 保持 model/thinking 轨迹
   - fork 后立即更新 `Agent.sessionId`，避免后续 provider request 继续带旧 session id
+- `PiAgentSession` 现在已具备最小 manual compaction 语义：
+  - `/compact` 当前走本地 deterministic summary，不依赖额外 LLM 调用
+  - 默认保留最近一个 user turn，从最新 compaction 边界之后向前折叠
+  - 追加 `CompactionEntry` 后，立即用 `SessionManager.buildSessionContext()` replay 到 `Agent`
 
 ## 当前边界
 
@@ -130,6 +138,7 @@
 - `/copy` 当前只复制最近一条 assistant 的 plain-text flatten 文本；未覆盖图片块、富文本选择、历史消息 picker，也还未抽出统一 slash-command registry。
 - `/tree` 当前是首版 selector：只覆盖 prefix search、up/down/enter/esc、基础树前缀渲染和当前 leaf 高亮；尚未接 TS 版的 summarize prompt、custom prompt、label edit、user-only/all-entry filter toggle、bookmark 语义。
 - `/fork` 当前也是首版 selector：只覆盖 prefix search、up/down/enter/esc 与 flat user-message list；尚未接 extension `session_before_fork` / `session_fork` 生命周期、double-escape action、RPC `fork/get_fork_messages`、cross-project `forkFrom`。
+- `/compact` 当前只覆盖手动 compaction；尚未接 TS 版的 LLM summary、`session_before_compact` / `session_compact` 生命周期、auto-compaction threshold、cancel/abort、file-op details、split-turn handling。
 
 ## 已确认语义
 
@@ -149,6 +158,7 @@
 - `/tree` 首版默认隐藏 `label` / `session_info` / `model_change` / `thinking_level_change` / `custom` 等非导航主节点，只显示 message / compaction / branch summary / custom_message。
 - `/tree` 目前不做 branch summarization；切 leaf 仅更新内存中的 session leaf，并立即用 `SessionManager.buildSessionContext()` replay 到 `Agent`。
 - `/fork` 只允许从 user message 发起；新 session 以该消息的 parent 为 branched path，因此 editor 预填的是被选中的 user 文本，conversation state 恢复的是它之前的上下文。
+- `/compact` 当前 summary 文本结构为固定章节模板（Goal / Custom Focus / Previous Summary / Summarized Messages），`tokensBefore` 采用基于序列化文本长度的轻量估算。
 
 ## 测试
 
@@ -176,13 +186,14 @@
 - copy command 的最近 assistant 选择、空文本/无 assistant 校验、interactive slash-command dispatch
 - tree navigation 的 assistant/user 分流语义、interactive overlay 选择、user message prefill 后继续提交流程
 - fork root-branch rewrite、new session id propagation、interactive fork selector 与 fork 后继续提交流程
+- compact entry append、summary replay、manual `/compact <instructions>` slash-command 行为
 
 ## 验证
 
 最近通过：
 
 ```bash
-.\gradlew.bat :pi-session:test :pi-cli:test --no-daemon
+.\gradlew.bat :pi-cli:test --no-daemon
 npm.cmd run check
 ```
 
@@ -190,6 +201,6 @@ npm.cmd run check
 
 按依赖顺序，下一刀建议进入 CLI 收口：
 
-1. `compact` / `reload`。
+1. `reload`。
 2. `--resume` all-sessions scope / richer search / session mutations，以及 richer HTML export。
 3. 真实 `main()` / module wiring，把 `PiCliApplication`、`list-models`、session resolver / picker / export 接到启动入口。

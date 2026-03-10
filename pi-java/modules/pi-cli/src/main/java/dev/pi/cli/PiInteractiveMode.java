@@ -91,19 +91,26 @@ public final class PiInteractiveMode implements AutoCloseable {
         if (value == null || value.isBlank()) {
             return;
         }
-        if ("/copy".equals(value.trim())) {
+        var trimmed = value.trim();
+        if ("/copy".equals(trimmed)) {
             input.setValue("");
             handleCopyCommand();
             return;
         }
-        if ("/tree".equals(value.trim())) {
+        if ("/tree".equals(trimmed)) {
             input.setValue("");
             handleTreeCommand();
             return;
         }
-        if ("/fork".equals(value.trim())) {
+        if ("/fork".equals(trimmed)) {
             input.setValue("");
             handleForkCommand();
+            return;
+        }
+        if ("/compact".equals(trimmed) || trimmed.startsWith("/compact ")) {
+            input.setValue("");
+            var customInstructions = trimmed.length() == 8 ? null : trimmed.substring(9).trim();
+            handleCompactCommand(customInstructions == null || customInstructions.isBlank() ? null : customInstructions);
             return;
         }
         manualStatus = null;
@@ -273,6 +280,16 @@ public final class PiInteractiveMode implements AutoCloseable {
         }
         if (overlay != null) {
             overlay.hide();
+        }
+        renderState(session.state());
+    }
+
+    private void handleCompactCommand(String customInstructions) {
+        try {
+            session.compact(customInstructions);
+            manualStatus = "Compacted context";
+        } catch (RuntimeException exception) {
+            manualStatus = "Error: " + rootMessage(exception);
         }
         renderState(session.state());
     }

@@ -45,6 +45,13 @@ public interface PiInteractiveSession {
         throw new UnsupportedOperationException("Fork is not available");
     }
 
+    default CompactionResult compact(String customInstructions) {
+        throw new UnsupportedOperationException("Compaction is not available");
+    }
+
+    default void abortCompaction() {
+    }
+
     record TreeNavigationResult(
         String leafId,
         String editorText
@@ -60,6 +67,13 @@ public interface PiInteractiveSession {
     record ForkResult(
         String selectedText,
         String sessionId
+    ) {
+    }
+
+    record CompactionResult(
+        String summary,
+        String firstKeptEntryId,
+        int tokensBefore
     ) {
     }
 }

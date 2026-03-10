@@ -198,6 +198,20 @@ public final class PiAgentSession implements PiInteractiveSession {
         return new ForkResult(selectedText, sessionManager.sessionId());
     }
 
+    @Override
+    public CompactionResult compact(String customInstructions) {
+        if (agent.state().isStreaming()) {
+            throw new IllegalStateException("Wait for the current response to finish before compacting");
+        }
+        try {
+            var result = PiCompactor.compact(sessionManager, customInstructions);
+            restoreAgentMessages();
+            return result;
+        } catch (IOException exception) {
+            throw new IllegalStateException("Failed to compact session", exception);
+        }
+    }
+
     public List<SessionPersistenceError> drainPersistenceErrors() {
         var drained = List.copyOf(persistenceErrors);
         persistenceErrors.clear();

@@ -141,6 +141,34 @@ class PiInteractiveModeTest {
         mode.stop();
     }
 
+    @Test
+    void handlesCompactSlashCommand() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(100, 20);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("Hello");
+        terminal.sendInput("\r");
+        terminal.sendInput("Second");
+        terminal.sendInput("\r");
+        terminal.sendInput("/compact Focus on latest work");
+        terminal.sendInput("\r");
+
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Compacted context")));
+
+        assertThat(session.prompts).containsExactly("Hello", "Second");
+        var compactedSummary = (AgentMessage.UserMessage) session.state().messages().getFirst();
+        assertThat(((TextContent) compactedSummary.content().getFirst()).text())
+            .contains("Focus on latest work")
+            .contains("[User]: Hello")
+            .contains("[Assistant]: Ack: Hello");
+        assertThat(String.join("\n", terminal.getViewport()))
+            .contains("Compacted context");
+
+        mode.stop();
+    }
+
     private static final class FakeSession implements PiInteractiveSession {
         private final List<String> prompts = new ArrayList<>();
         private final CopyOnWriteArrayList<Consumer<AgentState>> stateListeners = new CopyOnWriteArrayList<>();
@@ -290,6 +318,17 @@ class PiInteractiveModeTest {
             }
             syncState();
             return new ForkResult(extractUserText(messageEntry), sessionManager.sessionId());
+        }
+
+        @Override
+        public CompactionResult compact(String customInstructions) {
+            try {
+                var result = PiCompactor.compact(sessionManager, customInstructions);
+                syncState();
+                return result;
+            } catch (Exception exception) {
+                throw new AssertionError(exception);
+            }
         }
 
         private void emitState() {
