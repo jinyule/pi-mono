@@ -363,6 +363,39 @@
 - 还没有实现 `buildSessionContext()` replay 逻辑。
 - 还没有实现 `SessionManager` 与 `SettingsManager`。
 
+### 21. 阶段 3：`pi-session` migration + replay 首版
+
+已继续在 `modules/pi-session/src/main/java/dev/pi/session/` 下补上第一版 migration 与 replay 逻辑：
+
+- `SessionMigrations`
+- `SessionContexts`
+
+当前这批 `pi-session` 代码的实现特点：
+
+- `SessionMigrations` 已支持 `CURRENT_SESSION_VERSION=3`，并提供 `migrateToCurrentVersion()` 主入口。
+- `v1 -> v2` 已覆盖：
+  - 为 legacy entries 补 `id / parentId`
+  - 将 `compaction.firstKeptEntryIndex` 迁移为 `firstKeptEntryId`
+  - 把 header version 升到 `2`
+- `v2 -> v3` 已覆盖：
+  - 把 legacy `hookMessage` role 迁移为 `custom`
+  - 把 header version 升到 `3`
+- `SessionContexts.buildSessionContext()` 已支持：
+  - 默认按当前 leaf 回放
+  - 指定 `leafId` 时只走 root -> leaf 路径
+  - `null leafId` 显式表示“before first entry”
+  - `thinkingLevel` / `model` 按路径上最近一次变更收敛
+  - compaction summary -> kept messages -> post-compaction messages 的 replay 顺序
+  - `branch_summary` / `custom_message` 转成最终 LLM user message
+  - legacy `bashExecution` / `custom` / `compactionSummary` / `branchSummary` message role 向 LLM message 语义收敛
+- 当前 `SessionContext` 仍保持 `List<Message>` 目标形态，也就是已经是“可送给 LLM”的稳定上下文，而不是原始 app message 列表。
+
+这一刀的边界：
+
+- 还没有实现 `SessionManager`。
+- 还没有实现 tree navigation / fork / persisted append/flush 节奏。
+- 还没有实现 `SettingsManager`。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -399,6 +432,7 @@ npm.cmd run check
 - `pi-agent-runtime` 的 `Agent` facade 事件订阅、状态订阅、`prompt()` / `resume()` 与 follow-up 集成语义
 - `pi-agent-runtime` 的 abort -> inner assistant stream close -> aborted assistant lifecycle 语义
 - `pi-session` 的 TS seed fixture 解析、malformed/unknown line 跳过、现代 session document parse/write round-trip 稳定性
+- `pi-session` 的 `v1 -> v2 -> v3` migration、`buildSessionContext()` 的 leaf replay / compaction / branch summary / custom message / bashExecution 语义
 
 对应测试文件：
 
@@ -423,18 +457,19 @@ npm.cmd run check
 - `modules/pi-agent-runtime/src/test/java/dev/pi/agent/runtime/AgentLoopToolExecutionTest.java`
 - `modules/pi-agent-runtime/src/test/java/dev/pi/agent/runtime/AgentTest.java`
 - `modules/pi-session/src/test/java/dev/pi/session/SessionJsonlCodecTest.java`
+- `modules/pi-session/src/test/java/dev/pi/session/SessionMigrationsTest.java`
+- `modules/pi-session/src/test/java/dev/pi/session/SessionContextReplayTest.java`
 
 ## 未完成 / 已知缺口
 
 ### `pi-session`
 
-阶段 3 当前已完成 session model 与 JSONL parse/write skeleton。
+阶段 3 当前已完成 session model、JSONL parse/write skeleton、migration、replay contract tests。
 
 下一步按任务顺序应继续：
 
-- `v1 -> v2 -> v3` migration
-- `buildSessionContext()` replay / compaction / branch summary / custom message contract tests
 - `SessionManager`
+- session tree / fork / persisted append contract tests
 
 ### 其他模块
 
@@ -472,14 +507,14 @@ npm.cmd run check
 
 建议严格按 `docs/tasks.md` 的顺序继续：
 
-1. 进入 `pi-session`，先补 session model 与 JSONL parse/write skeleton。
-2. 再补 replay / migration contract tests。
+1. 继续 `pi-session`，先补 `SessionManager` skeleton。
+2. 再补 session tree / fork / persisted append contract tests。
 3. 然后进入 `pi-tools`。
 
 更具体的下一步切片建议：
 
-1. `pi-session`：replay / migration tests。
-2. `pi-session`：`SessionManager` skeleton。
+1. `pi-session`：`SessionManager` skeleton。
+2. `pi-session`：tree / fork / persisted append tests。
 3. `pi-tools`：read/write/edit/bash primitives。
 
 并行拆分文档入口：

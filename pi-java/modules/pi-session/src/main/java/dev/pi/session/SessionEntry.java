@@ -114,6 +114,7 @@ public sealed interface SessionEntry extends SessionFileEntry permits
         String timestamp,
         String summary,
         String firstKeptEntryId,
+        Integer firstKeptEntryIndex,
         Integer tokensBefore,
         JsonNode details,
         Boolean fromHook
@@ -128,7 +129,7 @@ public sealed interface SessionEntry extends SessionFileEntry permits
             JsonNode details,
             Boolean fromHook
         ) {
-            this("compaction", id, parentId, timestamp, summary, firstKeptEntryId, tokensBefore, details, fromHook);
+            this("compaction", id, parentId, timestamp, summary, firstKeptEntryId, null, tokensBefore, details, fromHook);
         }
 
         public CompactionEntry {
