@@ -32,7 +32,12 @@ public final class PiCliApplication {
         if (args.listModelsRequested()) {
             return listModelsHandler.run(args);
         }
-        var session = sessionFactory.create(args);
+        final PiInteractiveSession session;
+        try {
+            session = sessionFactory.create(args);
+        } catch (Exception exception) {
+            return CompletableFuture.failedFuture(exception);
+        }
         return switch (args.mode()) {
             case INTERACTIVE -> interactiveHandler.run(args, session);
             case PRINT -> printHandler.run(args, session);
@@ -43,7 +48,7 @@ public final class PiCliApplication {
 
     @FunctionalInterface
     public interface SessionFactory {
-        PiInteractiveSession create(PiCliArgs args);
+        PiInteractiveSession create(PiCliArgs args) throws Exception;
     }
 
     @FunctionalInterface

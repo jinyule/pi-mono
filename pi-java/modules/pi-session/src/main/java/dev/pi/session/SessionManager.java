@@ -6,8 +6,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,11 +45,35 @@ public final class SessionManager {
         return new SessionManager(new SessionJsonlCodec(), new SessionDocument(header, List.of()), null, false, false);
     }
 
+    public static SessionManager create(String cwd) {
+        return create(cwd, defaultSessionDirectory(cwd));
+    }
+
+    public static SessionManager create(String cwd, Path sessionDirectory) {
+        Objects.requireNonNull(cwd, "cwd");
+        Objects.requireNonNull(sessionDirectory, "sessionDirectory");
+        return create(nextSessionFile(sessionDirectory), cwd);
+    }
+
     public static SessionManager create(Path sessionFile, String cwd) {
         Objects.requireNonNull(sessionFile, "sessionFile");
         var timestamp = nowIso();
         var header = new SessionHeader(SessionMigrations.CURRENT_SESSION_VERSION, UUID.randomUUID().toString(), timestamp, cwd, null);
         return new SessionManager(new SessionJsonlCodec(), new SessionDocument(header, List.of()), sessionFile, true, false);
+    }
+
+    public static SessionManager continueRecent(String cwd) throws IOException {
+        return continueRecent(cwd, defaultSessionDirectory(cwd));
+    }
+
+    public static SessionManager continueRecent(String cwd, Path sessionDirectory) throws IOException {
+        Objects.requireNonNull(cwd, "cwd");
+        Objects.requireNonNull(sessionDirectory, "sessionDirectory");
+        var recentSession = findMostRecentSession(sessionDirectory);
+        if (recentSession != null) {
+            return open(recentSession);
+        }
+        return create(cwd, sessionDirectory);
     }
 
     public static SessionManager open(Path sessionFile) throws IOException {
@@ -68,6 +94,27 @@ public final class SessionManager {
             manager.flushed = Files.exists(sessionFile) && hasAssistantMessage(migratedDocument.entries());
         }
         return manager;
+    }
+
+    public static Path defaultSessionDirectory(String cwd) {
+        Objects.requireNonNull(cwd, "cwd");
+        var normalized = cwd.replaceFirst("^[\\\\/]+", "").replaceAll("[\\\\/:]", "-");
+        var safePath = "--" + normalized + "--";
+        return Path.of(System.getProperty("user.home"), ".pi", "agent", "sessions", safePath);
+    }
+
+    public static Path findMostRecentSession(Path sessionDirectory) throws IOException {
+        Objects.requireNonNull(sessionDirectory, "sessionDirectory");
+        if (!Files.isDirectory(sessionDirectory)) {
+            return null;
+        }
+        try (var stream = Files.list(sessionDirectory)) {
+            return stream
+                .filter(path -> path.getFileName().toString().endsWith(".jsonl"))
+                .filter(SessionManager::isValidSessionFile)
+                .max(Comparator.comparing(SessionManager::lastModifiedTime))
+                .orElse(null);
+        }
     }
 
     public String sessionId() {
@@ -413,6 +460,28 @@ public final class SessionManager {
             }
         }
         return false;
+    }
+
+    private static Path nextSessionFile(Path sessionDirectory) {
+        var timestamp = nowIso().replace(":", "-").replace(".", "-");
+        var sessionId = UUID.randomUUID().toString();
+        return sessionDirectory.resolve(timestamp + "_" + sessionId + ".jsonl");
+    }
+
+    private static boolean isValidSessionFile(Path path) {
+        try {
+            return new SessionJsonlCodec().readDocument(path).isPresent();
+        } catch (IOException exception) {
+            return false;
+        }
+    }
+
+    private static FileTime lastModifiedTime(Path path) {
+        try {
+            return Files.getLastModifiedTime(path);
+        } catch (IOException exception) {
+            return FileTime.fromMillis(Long.MIN_VALUE);
+        }
     }
 
     private static SessionTreeNode freezeTreeNode(MutableTreeNode node) {

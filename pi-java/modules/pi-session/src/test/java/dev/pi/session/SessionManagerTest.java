@@ -213,6 +213,48 @@ class SessionManagerTest {
         assertThat(lines).hasSize(3);
     }
 
+    @Test
+    void createWithDirectoryAllocatesPersistentSessionPath(@TempDir Path tempDir) {
+        var manager = SessionManager.create("/workspace", tempDir);
+
+        assertThat(manager.persistent()).isTrue();
+        assertThat(manager.sessionFile()).isNotNull();
+        assertThat(manager.sessionFile().getParent()).isEqualTo(tempDir);
+        assertThat(manager.sessionFile().getFileName().toString()).endsWith(".jsonl");
+    }
+
+    @Test
+    void continueRecentReusesMostRecentlyModifiedSession(@TempDir Path tempDir) throws Exception {
+        var older = tempDir.resolve("older.jsonl");
+        var newer = tempDir.resolve("newer.jsonl");
+        var olderManager = SessionManager.create(older, "/workspace");
+        olderManager.appendMessage(userMessage("hello", 1L));
+        olderManager.appendMessage(assistantMessage("old"));
+
+        var newerManager = SessionManager.create(newer, "/workspace");
+        newerManager.appendMessage(userMessage("hello", 2L));
+        newerManager.appendMessage(assistantMessage("new"));
+
+        Files.setLastModifiedTime(older, java.nio.file.attribute.FileTime.fromMillis(1_000));
+        Files.setLastModifiedTime(newer, java.nio.file.attribute.FileTime.fromMillis(2_000));
+
+        var resumed = SessionManager.continueRecent("/workspace", tempDir);
+
+        assertThat(resumed.sessionFile()).isEqualTo(newer);
+        assertThat(resumed.buildSessionContext().messages())
+            .extracting(Message::role)
+            .containsExactly("user", "assistant");
+    }
+
+    @Test
+    void continueRecentCreatesNewSessionWhenDirectoryIsEmpty(@TempDir Path tempDir) throws Exception {
+        var manager = SessionManager.continueRecent("/workspace", tempDir);
+
+        assertThat(manager.persistent()).isTrue();
+        assertThat(manager.sessionFile().getParent()).isEqualTo(tempDir);
+        assertThat(Files.exists(manager.sessionFile())).isFalse();
+    }
+
     private Message.UserMessage userMessage(String text, long timestamp) {
         return new Message.UserMessage(List.of(new TextContent(text, null)), timestamp);
     }

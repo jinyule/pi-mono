@@ -1,12 +1,14 @@
 package dev.pi.cli;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import dev.pi.agent.runtime.AgentEvent;
 import dev.pi.agent.runtime.AgentState;
 import dev.pi.ai.model.Model;
 import dev.pi.ai.model.Usage;
 import dev.pi.ai.stream.Subscription;
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -77,6 +79,16 @@ class PiCliApplicationTest {
 
         assertThat(sessionCreated).isFalse();
         assertThat(listModelsQuery.get()).isEqualTo("sonnet");
+    }
+
+    @Test
+    void surfacesSessionFactoryFailures() {
+        var app = PiCliApplication.builder(args -> {
+            throw new IOException("session init failed");
+        }).build();
+
+        assertThatThrownBy(() -> app.run("hello").toCompletableFuture().join())
+            .hasRootCauseMessage("session init failed");
     }
 
     private static final class StubSession implements PiInteractiveSession {
