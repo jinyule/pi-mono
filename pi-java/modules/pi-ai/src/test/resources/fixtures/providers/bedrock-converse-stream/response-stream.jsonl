@@ -1,0 +1,12 @@
+{"type":"messageStart","role":"assistant"}
+{"type":"contentBlockDelta","contentBlockIndex":0,"delta":{"reasoningContent":{"text":"Need to inspect README.md"}}}
+{"type":"contentBlockDelta","contentBlockIndex":0,"delta":{"reasoningContent":{"signature":"c2lnbmF0dXJlMQ=="}}}
+{"type":"contentBlockStop","contentBlockIndex":0}
+{"type":"contentBlockDelta","contentBlockIndex":1,"delta":{"text":"I'll read README.md next."}}
+{"type":"contentBlockStop","contentBlockIndex":1}
+{"type":"contentBlockStart","contentBlockIndex":2,"start":{"toolUse":{"toolUseId":"toolu_1","name":"read"}}}
+{"type":"contentBlockDelta","contentBlockIndex":2,"delta":{"toolUse":{"input":"{\"path\":\""}}}
+{"type":"contentBlockDelta","contentBlockIndex":2,"delta":{"toolUse":{"input":"README.md\"}"}}}
+{"type":"contentBlockStop","contentBlockIndex":2}
+{"type":"messageStop","stopReason":"TOOL_USE"}
+{"type":"metadata","usage":{"inputTokens":120,"outputTokens":64,"cacheReadInputTokens":20,"cacheWriteInputTokens":10,"totalTokens":214}}

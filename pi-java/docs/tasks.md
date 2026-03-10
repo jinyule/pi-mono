@@ -11,11 +11,11 @@
 
 ## 当前任务状态
 
-更新时间：2026-03-09
+更新时间：2026-03-10
 
 - 阶段 0：已完成。
-- 阶段 1：已完成 `core model / event types`、`AssistantMessageEventStream / EventStream`、`ApiProviderRegistry / ModelRegistry / CredentialResolver / PiAiClient facade`、`AssistantMessage partial assembler`、`SSE parser / WebSocket adapter`、`openai-responses provider`、`openai-completions provider`、`anthropic-messages provider`、`google-generative-ai provider`。
-- 阶段 1：下一步进入第五个 provider：`bedrock-converse-stream`。
+- 阶段 1：已完成 `core model / event types`、`AssistantMessageEventStream / EventStream`、`ApiProviderRegistry / ModelRegistry / CredentialResolver / PiAiClient facade`、`AssistantMessage partial assembler`、`SSE parser / WebSocket adapter`、`openai-responses provider`、`openai-completions provider`、`anthropic-messages provider`、`google-generative-ai provider`、`bedrock-converse-stream provider`。
+- 阶段 1：下一步进入 `message transform / validation / compat` 抽象层，收敛各 provider 的重复逻辑。
 - 阶段 2 到阶段 9：未开始。
 
 ## 阶段 0：项目骨架

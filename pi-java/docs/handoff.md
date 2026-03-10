@@ -1,10 +1,10 @@
 # pi-java 交接文档
 
-更新时间：2026-03-09
+更新时间：2026-03-10
 
 ## 当前状态
 
-`pi-java` 已从“纯设计文档目录”推进到“可运行的阶段 0 工程骨架 + 阶段 1 的前四种 `pi-ai` provider”。
+`pi-java` 已从“纯设计文档目录”推进到“可运行的阶段 0 工程骨架 + 阶段 1 的前五种 `pi-ai` provider”。
 
 本次工作只改动了 `pi-java/`，没有改动现有 TypeScript 包的实现逻辑。
 
@@ -199,6 +199,24 @@
 - 响应流已支持 `thinking`、`text`、`functionCall` 的标准化事件映射，并复用 `AssistantMessageAssembler` 组装 partial/final assistant message。
 - 当前 contract test 使用 fixture + fake transport 驱动，不依赖真实网络请求。
 
+### 12. 阶段 1：`bedrock-converse-stream` provider 首版
+
+已在 `modules/pi-ai/src/main/java/dev/pi/ai/provider/bedrock/` 下补上第一版 `bedrock-converse-stream` provider：
+
+- `BedrockConverseStreamProvider`
+- `BedrockConverseStreamTransport`
+- `AwsBedrockConverseStreamTransport`
+
+当前这批 provider 代码的实现特点：
+
+- `BedrockConverseStreamProvider` 已实现 `stream()` / `streamSimple()`，并通过 AWS SDK Java v2 的 `BedrockRuntimeAsyncClient` 读取 ConverseStream。
+- 请求体已支持 `systemPrompt`、`user text/image`、`assistant text/thinking/toolCall`、`toolResult`、`tools`、`inferenceConfig`、`additionalModelRequestFields` 等基础字段映射。
+- `streamSimple()` 已支持 Bedrock 上 Anthropic Claude 模型的两种 reasoning 路径：自适应 thinking（4.6 模型）和 budget-based thinking（旧 Claude 模型）。
+- 消息回放前已补了最小 compat 变换：跨模型 thinking 降级、tool call id 归一化、跳过 error/aborted assistant turn、缺失 tool result 的 synthetic 填充。
+- 响应流已支持 `messageStart`、`contentBlockStart`、`contentBlockDelta`、`contentBlockStop`、`messageStop`、`metadata` 的标准化事件映射，并复用 `AssistantMessageAssembler` 组装 partial/final assistant message。
+- 当前 contract test 使用 fixture + fake transport 驱动，不依赖真实网络请求。
+- 受当前锁定的 AWS SDK 版本 `2.30.38` 限制，真实 transport 暂未把 `cachePoint` 与 cache read/write usage 字段下沉到 SDK 请求/响应；provider payload 与测试已保留这层语义，后续若需要完整运行时对齐，建议先升级 AWS SDK。
+
 ## 已完成的验证
 
 已通过的命令：
@@ -224,6 +242,7 @@ npm.cmd run check
 - `openai-completions` provider 的 payload 构造、SSE chunk 映射、tool call / reasoning / usage 归一化、error 终结语义
 - `anthropic-messages` provider 的 payload 构造、SSE event 映射、adaptive/budget thinking、tool call / reasoning / usage 归一化、error 终结语义
 - `google-generative-ai` provider 的 payload 构造、SSE event 映射、Gemini 3 thinking level / Gemini 2.5 budget thinking、tool call / reasoning / usage 归一化、error 终结语义
+- `bedrock-converse-stream` provider 的 payload 构造、ConverseStream event 映射、Claude adaptive/budget thinking、tool call / reasoning / usage 归一化、error 终结语义
 
 对应测试文件：
 
@@ -241,6 +260,7 @@ npm.cmd run check
 - `modules/pi-ai/src/test/java/dev/pi/ai/provider/openai/OpenAiCompletionsProviderTest.java`
 - `modules/pi-ai/src/test/java/dev/pi/ai/provider/anthropic/AnthropicMessagesProviderTest.java`
 - `modules/pi-ai/src/test/java/dev/pi/ai/provider/google/GoogleGenerativeAiProviderTest.java`
+- `modules/pi-ai/src/test/java/dev/pi/ai/provider/bedrock/BedrockConverseStreamProviderTest.java`
 
 ## 未完成 / 已知缺口
 
@@ -248,7 +268,6 @@ npm.cmd run check
 
 以下内容还没开始或只完成了骨架：
 
-- `bedrock-converse-stream`
 - message transform / validation / compat 层
 
 ### 其他模块
@@ -288,14 +307,14 @@ npm.cmd run check
 
 建议严格按 `docs/tasks.md` 的顺序继续：
 
-1. 继续按 provider 顺序补 `bedrock-converse-stream`，复用当前 transport / assembler / contract test 模式。
-2. 然后把 `message transform / validation / compat` 抽成独立边界，减少 provider 内重复逻辑。
+1. 先把 `message transform / validation / compat` 抽成独立边界，减少 provider 内重复逻辑。
+2. 然后回补 `pi-ai` 的 `abort` / `handoff` / `image input` / cross-provider 测试矩阵。
 3. 再进入 `pi-agent-runtime`，先补 core types 与 loop skeleton。
 
 更具体的下一步切片建议：
 
-1. `pi-ai`：`bedrock-converse-stream` provider。
-2. `pi-ai`：message transform / validation / compat。
+1. `pi-ai`：message transform / validation / compat。
+2. `pi-ai`：provider 交叉行为测试矩阵。
 3. `pi-agent-runtime`：core types + loop skeleton。
 
 并行拆分文档入口：
