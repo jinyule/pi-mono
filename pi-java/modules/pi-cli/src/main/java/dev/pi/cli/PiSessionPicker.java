@@ -13,8 +13,10 @@ import dev.pi.tui.SelectListTheme;
 import dev.pi.tui.Terminal;
 import dev.pi.tui.Tui;
 import java.nio.file.Path;
+import java.nio.file.Files;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -89,11 +91,13 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
 
     private static final class PickerComponent implements Component, Focusable {
         private final Input search = new Input();
-        private final SelectList sessions;
+        private final List<SessionInfo> sessionInfos;
         private final java.util.function.Consumer<Path> onSelect;
         private final Runnable onCancel;
         private final Runnable requestRender;
+        private SelectList sessions;
         private boolean focused;
+        private String pendingDeletePath;
 
         private PickerComponent(
             List<SessionInfo> sessionInfos,
@@ -101,21 +105,21 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             Runnable onCancel,
             Runnable requestRender
         ) {
-            this.sessions = new SelectList(sessionInfos.stream().map(PickerComponent::toSelectItem).toList(), 10, THEME);
+            this.sessionInfos = new ArrayList<>(sessionInfos);
             this.onSelect = onSelect;
             this.onCancel = onCancel;
             this.requestRender = requestRender;
             this.search.setFocused(true);
-            this.sessions.setOnSelectionChange(ignored -> requestRender.run());
-            this.sessions.setOnSelect(item -> onSelect.accept(Path.of(decodePath(item.value()))));
-            this.sessions.setOnCancel(onCancel);
+            rebuildSessionList();
         }
 
         @Override
         public List<String> render(int width) {
             var lines = new java.util.ArrayList<String>();
             lines.add("Resume session");
-            lines.add("Type to filter. Enter selects. Esc cancels.");
+            lines.add(pendingDeletePath == null
+                ? "Type to filter. Enter selects. Ctrl+D deletes. Esc cancels."
+                : "Delete selected session? Enter confirms. Esc cancels.");
             lines.add("");
             lines.addAll(search.render(width));
             lines.add("");
@@ -126,6 +130,17 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
         @Override
         public void handleInput(String data) {
             var keybindings = EditorKeybindings.global();
+            if (pendingDeletePath != null) {
+                if (keybindings.matches(data, EditorAction.SUBMIT)) {
+                    deletePendingSession();
+                    return;
+                }
+                if (keybindings.matches(data, EditorAction.SELECT_CANCEL)) {
+                    pendingDeletePath = null;
+                    requestRender.run();
+                }
+                return;
+            }
             if (
                 keybindings.matches(data, EditorAction.CURSOR_UP) ||
                 keybindings.matches(data, EditorAction.CURSOR_DOWN) ||
@@ -133,6 +148,14 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
                 keybindings.matches(data, EditorAction.SELECT_CANCEL)
             ) {
                 sessions.handleInput(data);
+                return;
+            }
+            if (keybindings.matches(data, EditorAction.SESSION_DELETE)) {
+                var selected = sessions.getSelectedItem();
+                if (selected != null) {
+                    pendingDeletePath = decodePath(selected.value());
+                    requestRender.run();
+                }
                 return;
             }
 
@@ -150,6 +173,32 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
         public void setFocused(boolean focused) {
             this.focused = focused;
             search.setFocused(focused);
+        }
+
+        private void rebuildSessionList() {
+            this.sessions = new SelectList(sessionInfos.stream().map(PickerComponent::toSelectItem).toList(), 10, THEME);
+            this.sessions.setOnSelectionChange(ignored -> requestRender.run());
+            this.sessions.setOnSelect(item -> onSelect.accept(Path.of(decodePath(item.value()))));
+            this.sessions.setOnCancel(onCancel);
+            this.sessions.setFilter(search.getValue());
+        }
+
+        private void deletePendingSession() {
+            var targetPath = Path.of(pendingDeletePath);
+            pendingDeletePath = null;
+            try {
+                Files.deleteIfExists(targetPath);
+            } catch (java.io.IOException exception) {
+                throw new IllegalStateException("Failed to delete session: " + targetPath.getFileName(), exception);
+            }
+
+            sessionInfos.removeIf(session -> session.path().toAbsolutePath().normalize().equals(targetPath.toAbsolutePath().normalize()));
+            if (sessionInfos.isEmpty()) {
+                onCancel.run();
+                return;
+            }
+            rebuildSessionList();
+            requestRender.run();
         }
 
         private static SelectItem toSelectItem(SessionInfo session) {

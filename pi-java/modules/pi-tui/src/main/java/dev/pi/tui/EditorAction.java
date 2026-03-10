@@ -18,6 +18,7 @@ public enum EditorAction {
     NEW_LINE,
     SUBMIT,
     SELECT_CANCEL,
+    SESSION_DELETE,
     YANK,
     YANK_POP,
     UNDO
