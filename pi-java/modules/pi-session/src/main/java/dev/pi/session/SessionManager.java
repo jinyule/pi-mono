@@ -16,7 +16,7 @@ import java.util.UUID;
 
 public final class SessionManager {
     private final SessionJsonlCodec codec;
-    private final Path sessionFile;
+    private Path sessionFile;
     private final boolean persistent;
     private SessionDocument document;
     private final Map<String, SessionEntry> byId = new LinkedHashMap<>();
@@ -177,6 +177,80 @@ public final class SessionManager {
         leafId = newLeafId;
     }
 
+    public String branchWithSummary(String branchFromId, String summary, JsonNode details, Boolean fromHook) throws IOException {
+        navigate(branchFromId);
+        var entry = new SessionEntry.BranchSummaryEntry(
+            nextEntryId(),
+            branchFromId,
+            nowIso(),
+            branchFromId == null ? "root" : branchFromId,
+            summary,
+            details,
+            fromHook
+        );
+        appendEntry(entry);
+        return entry.id();
+    }
+
+    public Path createBranchedSession(String targetLeafId) throws IOException {
+        if (!byId.containsKey(targetLeafId)) {
+            throw new IllegalArgumentException("Unknown session entry: " + targetLeafId);
+        }
+
+        var path = branch(targetLeafId);
+        var pathEntryIds = path.stream()
+            .map(SessionEntry::id)
+            .filter(Objects::nonNull)
+            .collect(java.util.stream.Collectors.toCollection(java.util.LinkedHashSet::new));
+        var pathWithoutLabels = path.stream()
+            .filter(entry -> !(entry instanceof SessionEntry.LabelEntry))
+            .toList();
+
+        var newSessionId = UUID.randomUUID().toString();
+        var timestamp = nowIso();
+        Path newSessionFile = null;
+        if (persistent && sessionFile != null) {
+            var fileName = timestamp.replace(":", "-").replace(".", "-") + "_" + newSessionId + ".jsonl";
+            newSessionFile = sessionFile.getParent() == null ? Path.of(fileName) : sessionFile.getParent().resolve(fileName);
+        }
+
+        var newHeader = new SessionHeader(
+            "session",
+            SessionMigrations.CURRENT_SESSION_VERSION,
+            newSessionId,
+            timestamp,
+            document.header().cwd(),
+            sessionFile == null ? null : sessionFile.toString(),
+            document.header().provider(),
+            document.header().modelId(),
+            document.header().thinkingLevel()
+        );
+
+        var rewrittenEntries = new ArrayList<SessionEntry>(pathWithoutLabels);
+        String parentId = pathWithoutLabels.isEmpty() ? null : pathWithoutLabels.getLast().id();
+        for (var labelEntry : preservedLabelEntries(pathEntryIds, parentId)) {
+            rewrittenEntries.add(labelEntry);
+            parentId = labelEntry.id();
+        }
+
+        document = new SessionDocument(newHeader, rewrittenEntries);
+        sessionFile = newSessionFile;
+        rebuildIndexes();
+
+        if (persistent && sessionFile != null) {
+            if (hasAssistantMessage(document.entries())) {
+                codec.writeDocument(sessionFile, document);
+                flushed = true;
+            } else {
+                flushed = false;
+            }
+        } else {
+            flushed = false;
+        }
+
+        return sessionFile;
+    }
+
     public String appendMessage(Message message) throws IOException {
         Objects.requireNonNull(message, "message");
         return appendRawMessage(codec.valueToTree(message));
@@ -311,6 +385,21 @@ public final class SessionManager {
 
     private static String nowIso() {
         return Instant.now().toString();
+    }
+
+    private List<SessionEntry.LabelEntry> preservedLabelEntries(java.util.Set<String> pathEntryIds, String initialParentId) {
+        var labelEntries = new ArrayList<SessionEntry.LabelEntry>();
+        var parentId = initialParentId;
+        for (var entryId : pathEntryIds) {
+            var label = labelsByTargetId.get(entryId);
+            if (label == null || label.isBlank()) {
+                continue;
+            }
+            var labelEntry = new SessionEntry.LabelEntry(nextEntryId(), parentId, nowIso(), entryId, label);
+            labelEntries.add(labelEntry);
+            parentId = labelEntry.id();
+        }
+        return labelEntries;
     }
 
     private static boolean needsRewrite(SessionDocument document) {
