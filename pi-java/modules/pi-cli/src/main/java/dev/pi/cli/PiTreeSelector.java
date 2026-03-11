@@ -9,7 +9,6 @@ import dev.pi.tui.Focusable;
 import dev.pi.tui.Input;
 import dev.pi.tui.SelectItem;
 import dev.pi.tui.SelectList;
-import dev.pi.tui.SelectListTheme;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -17,32 +16,6 @@ import java.util.function.Consumer;
 
 public final class PiTreeSelector implements Component, Focusable {
     private static final String VALUE_DELIMITER = "\u0000";
-    private static final SelectListTheme THEME = new SelectListTheme() {
-        @Override
-        public String selectedPrefix(String text) {
-            return text;
-        }
-
-        @Override
-        public String selectedText(String text) {
-            return text;
-        }
-
-        @Override
-        public String description(String text) {
-            return text;
-        }
-
-        @Override
-        public String scrollInfo(String text) {
-            return text;
-        }
-
-        @Override
-        public String noMatch(String text) {
-            return text;
-        }
-    };
 
     private final Input search = new Input();
     private final SelectList entries;
@@ -65,7 +38,7 @@ public final class PiTreeSelector implements Component, Focusable {
         this.entries = new SelectList(
             flattened.stream().map(FlatNode::item).toList(),
             Math.max(6, Math.min(12, Math.max(1, flattened.size()))),
-            THEME
+            PiSessionPicker.sessionTheme()
         );
         this.search.setFocused(true);
         this.entries.setOnSelectionChange(ignored -> requestRender.run());
@@ -77,8 +50,8 @@ public final class PiTreeSelector implements Component, Focusable {
     @Override
     public List<String> render(int width) {
         var lines = new ArrayList<String>();
-        lines.add("Navigate session tree");
-        lines.add("Type to filter. Enter selects. Esc cancels.");
+        lines.add(PiCliAnsi.bold("Navigate session tree"));
+        lines.add(PiCliAnsi.muted("Type to filter. Enter selects. Esc cancels."));
         lines.add("");
         lines.addAll(search.render(width));
         lines.add("");
