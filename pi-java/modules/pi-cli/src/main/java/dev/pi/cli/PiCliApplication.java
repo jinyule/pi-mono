@@ -6,6 +6,8 @@ import java.util.concurrent.CompletionStage;
 
 public final class PiCliApplication {
     private final PiCliParser parser;
+    private final HelpHandler helpHandler;
+    private final VersionHandler versionHandler;
     private final ListModelsHandler listModelsHandler;
     private final ExportHandler exportHandler;
     private final SessionFactory sessionFactory;
@@ -16,6 +18,8 @@ public final class PiCliApplication {
 
     private PiCliApplication(Builder builder) {
         this.parser = builder.parser;
+        this.helpHandler = builder.helpHandler;
+        this.versionHandler = builder.versionHandler;
         this.listModelsHandler = builder.listModelsHandler;
         this.exportHandler = builder.exportHandler;
         this.sessionFactory = builder.sessionFactory;
@@ -31,6 +35,12 @@ public final class PiCliApplication {
 
     public CompletionStage<Void> run(String... argv) {
         var args = parser.parse(argv);
+        if (args.helpRequested()) {
+            return helpHandler.run(args);
+        }
+        if (args.versionRequested()) {
+            return versionHandler.run(args);
+        }
         if (args.listModelsRequested()) {
             return listModelsHandler.run(args);
         }
@@ -62,6 +72,16 @@ public final class PiCliApplication {
     }
 
     @FunctionalInterface
+    public interface HelpHandler {
+        CompletionStage<Void> run(PiCliArgs args);
+    }
+
+    @FunctionalInterface
+    public interface VersionHandler {
+        CompletionStage<Void> run(PiCliArgs args);
+    }
+
+    @FunctionalInterface
     public interface ExportHandler {
         CompletionStage<Void> run(PiCliArgs args);
     }
@@ -74,6 +94,8 @@ public final class PiCliApplication {
     public static final class Builder {
         private final SessionFactory sessionFactory;
         private PiCliParser parser = new PiCliParser();
+        private HelpHandler helpHandler = noOpHelp();
+        private VersionHandler versionHandler = noOpVersion();
         private ListModelsHandler listModelsHandler = noOpListModelsCommand();
         private ExportHandler exportHandler = noOpExportCommand();
         private ModeHandler interactiveHandler = noOp();
@@ -87,6 +109,16 @@ public final class PiCliApplication {
 
         public Builder parser(PiCliParser parser) {
             this.parser = Objects.requireNonNull(parser, "parser");
+            return this;
+        }
+
+        public Builder helpHandler(HelpHandler helpHandler) {
+            this.helpHandler = Objects.requireNonNull(helpHandler, "helpHandler");
+            return this;
+        }
+
+        public Builder versionHandler(VersionHandler versionHandler) {
+            this.versionHandler = Objects.requireNonNull(versionHandler, "versionHandler");
             return this;
         }
 
@@ -129,6 +161,14 @@ public final class PiCliApplication {
         }
 
         private static ListModelsHandler noOpListModelsCommand() {
+            return args -> CompletableFuture.completedFuture(null);
+        }
+
+        private static HelpHandler noOpHelp() {
+            return args -> CompletableFuture.completedFuture(null);
+        }
+
+        private static VersionHandler noOpVersion() {
             return args -> CompletableFuture.completedFuture(null);
         }
 

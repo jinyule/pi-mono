@@ -82,6 +82,31 @@ class PiCliApplicationTest {
     }
 
     @Test
+    void dispatchesHelpAndVersionWithoutCreatingSession() {
+        var sessionCreated = new AtomicBoolean(false);
+        var invoked = new java.util.ArrayList<String>();
+        var app = PiCliApplication.builder(args -> {
+            sessionCreated.set(true);
+            return new StubSession();
+        })
+            .helpHandler(args -> {
+                invoked.add("help");
+                return CompletableFuture.completedFuture(null);
+            })
+            .versionHandler(args -> {
+                invoked.add("version");
+                return CompletableFuture.completedFuture(null);
+            })
+            .build();
+
+        app.run("--help").toCompletableFuture().join();
+        app.run("--version").toCompletableFuture().join();
+
+        assertThat(sessionCreated).isFalse();
+        assertThat(invoked).containsExactly("help", "version");
+    }
+
+    @Test
     void dispatchesExportWithoutCreatingSession() {
         var sessionCreated = new AtomicBoolean(false);
         var exportPath = new AtomicReference<String>();

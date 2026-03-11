@@ -47,6 +47,44 @@ public final class PiCliParser {
         "--prompt-template",
         "--theme"
     );
+    private static final String HELP_TEXT = """
+        pi-java - AI coding assistant
+
+        Usage:
+          pi [options] [@files...] [messages...]
+
+        Options:
+          --provider <name>              Provider name
+          --model <id>                   Model id or pattern
+          --api-key <key>                API key override
+          --system-prompt <text>         Explicit system prompt
+          --append-system-prompt <text>  Extra system prompt text
+          --thinking <level>             Thinking level: off|minimal|low|medium|high|xhigh
+          --print, -p                    Run once and print final assistant output
+          --mode <mode>                  interactive|print|json|rpc
+          --continue, -c                 Continue the most recent session
+          --resume, -r                   Open the session picker
+          --session <path>               Use a specific session file
+          --session-dir <dir>            Session directory override
+          --no-session                   Disable session persistence
+          --models <patterns>            Model cycling filter list
+          --tools <tools>                Comma-separated tool allowlist
+          --no-tools                     Disable built-in tools
+          --extension, -e <path>         Load an extension file
+          --no-extensions                Disable extension discovery
+          --skill <path>                 Load a skill file or directory
+          --no-skills                    Disable skill discovery
+          --prompt-template <path>       Load a prompt template file or directory
+          --no-prompt-templates          Disable prompt template discovery
+          --theme <path>                 Load a theme file or directory
+          --no-themes                    Disable theme discovery
+          --list-models [search]         List available models
+          --export <session.jsonl>       Export a session to HTML
+          --offline                      Disable startup network operations
+          --verbose                      Force verbose startup
+          --help, -h                     Show this help
+          --version, -v                  Show version
+        """;
 
     public PiCliArgs parse(String... arguments) {
         Objects.requireNonNull(arguments, "arguments");
@@ -115,6 +153,10 @@ public final class PiCliParser {
             messages,
             tokenization.unmatchedArguments()
         );
+    }
+
+    public String helpText() {
+        return HELP_TEXT;
     }
 
     private static PiCliMode resolveMode(CommandSpec command, CommandLine commandLine) {

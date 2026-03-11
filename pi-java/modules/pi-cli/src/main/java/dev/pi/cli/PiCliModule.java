@@ -23,6 +23,8 @@ import java.util.concurrent.CompletionStage;
 import java.util.function.Supplier;
 
 public final class PiCliModule {
+    private static final String FALLBACK_VERSION = "0.1.0-SNAPSHOT";
+
     private final Path cwd;
     private final Reader input;
     private final Appendable stdout;
@@ -66,6 +68,8 @@ public final class PiCliModule {
         this.sessionFactory = sessionFactory == null ? this::createDefaultSession : sessionFactory;
         this.application = PiCliApplication.builder(this.sessionFactory)
             .parser(this.parser)
+            .helpHandler(this::runHelp)
+            .versionHandler(this::runVersion)
             .listModelsHandler(this::runListModels)
             .exportHandler(this::runExport)
             .interactiveHandler(this::runInteractive)
@@ -98,6 +102,14 @@ public final class PiCliModule {
     private CompletionStage<Void> runListModels(PiCliArgs args) {
         new PiListModelsCommand(aiClient.modelRegistry(), stdout).run(args.listModelsQuery());
         return CompletableFuture.completedFuture(null);
+    }
+
+    private CompletionStage<Void> runHelp(PiCliArgs args) {
+        return appendLine(stdout, parser.helpText());
+    }
+
+    private CompletionStage<Void> runVersion(PiCliArgs args) {
+        return appendLine(stdout, "pi-java " + resolveVersion());
     }
 
     private CompletionStage<Void> runExport(PiCliArgs args) {
@@ -244,5 +256,20 @@ public final class PiCliModule {
 
     private static String formatExtensionFailure(dev.pi.extension.spi.ExtensionLoadFailure failure) {
         return "%s: %s".formatted(failure.source().getFileName(), failure.message());
+    }
+
+    private static CompletionStage<Void> appendLine(Appendable output, String text) {
+        try {
+            output.append(text);
+            output.append(System.lineSeparator());
+            return CompletableFuture.completedFuture(null);
+        } catch (IOException exception) {
+            return CompletableFuture.failedFuture(exception);
+        }
+    }
+
+    private static String resolveVersion() {
+        var implementationVersion = PiCliModule.class.getPackage().getImplementationVersion();
+        return implementationVersion == null || implementationVersion.isBlank() ? FALLBACK_VERSION : implementationVersion;
     }
 }

@@ -106,6 +106,29 @@ class PiCliModuleTest {
     }
 
     @Test
+    void wiresRealHelpAndVersionHandlers() {
+        var stdout = new StringBuilder();
+        var module = new PiCliModule(
+            Path.of("."),
+            new StringReader(""),
+            stdout,
+            new StringBuilder(),
+            new PiCliParser(),
+            aiClientWithModels(model("claude-3-7-sonnet", "anthropic")),
+            args -> new FakePrintSession(),
+            NoOpTerminal::new
+        );
+
+        module.run("--help").toCompletableFuture().join();
+        module.run("--version").toCompletableFuture().join();
+
+        assertThat(stdout.toString())
+            .contains("Usage:")
+            .contains("--provider <name>")
+            .contains("pi-java 0.1.0-SNAPSHOT");
+    }
+
+    @Test
     void wiresFileArgsIntoPrintPrompt(@TempDir Path tempDir) throws Exception {
         var file = tempDir.resolve("prompt.md");
         Files.writeString(file, "Context line", StandardCharsets.UTF_8);
