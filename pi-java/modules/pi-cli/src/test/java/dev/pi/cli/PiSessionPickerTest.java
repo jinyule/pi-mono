@@ -132,7 +132,8 @@ class PiSessionPickerTest {
 
         assertThat(terminal.output())
             .contains("\u001b[1mResume session (Current folder)")
-            .contains("\u001b[90m◉ Current Folder | ○ All")
+            .contains("\u001b[36m◉ Current Folder")
+            .contains("\u001b[90m | ○ All")
             .contains("\u001b[90mtab scope");
 
         terminal.sendInput("\u001b");
@@ -170,6 +171,42 @@ class PiSessionPickerTest {
 
         assertThat(errorTerminal.output()).contains("\u001b[31mFailed to load sessions: boom\u001b[0m");
         errorTerminal.sendInput("\u001b");
+    }
+
+    @Test
+    void stylesAllScopeLoadingProgressWithAnsiHierarchy() {
+        var terminal = new RecordingTerminal(120, 12);
+        var picker = new PiSessionPicker(terminal);
+        var allowAllLoad = new CountDownLatch(1);
+
+        Thread.ofVirtual().start(() -> picker.pick(
+            progress -> List.of(session("current.jsonl", "Current task", 1, Instant.now().minusSeconds(5))),
+            progress -> {
+                progress.onProgress(1, 2);
+                try {
+                    if (!allowAllLoad.await(2, TimeUnit.SECONDS)) {
+                        throw new IllegalStateException("timed out waiting for all-scope load");
+                    }
+                } catch (InterruptedException exception) {
+                    Thread.currentThread().interrupt();
+                    throw new IllegalStateException(exception);
+                }
+                return List.of(
+                    session("current.jsonl", "Current task", 1, Instant.now().minusSeconds(5)),
+                    session("global.jsonl", "Global task", 2, Instant.now().minusSeconds(2), "/workspace/global")
+                );
+            }
+        ));
+
+        waitFor(() -> terminal.output().contains("Resume session"));
+        terminal.sendInput("\t");
+        waitFor(() -> terminal.output().contains("Loading 1/2"));
+
+        assertThat(terminal.output())
+            .contains("\u001b[90m○ Current Folder | \u001b[0m\u001b[36mLoading 1/2");
+
+        allowAllLoad.countDown();
+        terminal.sendInput("\u001b");
     }
 
     @Test

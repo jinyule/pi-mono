@@ -47,6 +47,8 @@
   - session selector ANSI 样式层级 first cut
 - 已完成第二十一刀：
   - session selector 顶部 status/error/info ANSI first cut
+- 已完成第二十二刀：
+  - session selector summary 分段着色 first cut
 
 ## 本轮落地
 
@@ -173,6 +175,11 @@
   - delete confirm 用 warning
   - load error 用 error
   - rename title 也改成 bold，rename 提示改成 muted
+- `PiSessionPicker` 现在把 header summary 再细分成分段着色：
+  - active scope 标记（`◉ Current Folder` / `◉ All`）用 accent
+  - all-scope loading 的 `Loading x/y` 也用 accent
+  - inactive scope 与分隔符保持 muted
+  - current 初次 loading 也用 accent，而不是整段 muted
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -219,6 +226,7 @@
 - `PiSessionPickerTest`：selected row / metadata 的 ANSI 序列层级
 - `PiSessionPickerTest`：header/hint 的 ANSI 序列层级
 - `PiSessionPickerTest`：delete confirm / load error 的 ANSI 序列层级
+- `PiSessionPickerTest`：all-scope loading summary 的分段 ANSI 序列
 
 最近通过：
 
@@ -228,6 +236,6 @@
 
 ## 下一步建议
 
-1. session selector：继续评估 active scope / loading progress 是否要做更细粒度分色
+1. session selector：继续评估 rename/delete/search input 周边是否要补更多状态样式
 2. session selector：继续评估 tree/model/settings selector 是否复用同一套层级
 3. keybindings：继续评估 app 层是否要补 model/thinking 相关动作

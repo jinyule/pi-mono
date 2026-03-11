@@ -946,23 +946,23 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
 
         private String composeHeaderLine(int width) {
             var title = scope == Scope.CURRENT ? "Resume session (Current folder)" : "Resume session (All)";
-            var summary = scopeSummary();
+            var summary = styledScopeSummary();
             if (width <= 0) {
                 return "";
             }
             var titleWidth = TerminalText.visibleWidth(title);
             var summaryWidth = TerminalText.visibleWidth(summary);
             if (titleWidth + 1 + summaryWidth <= width) {
-                return PiCliAnsi.bold(title) + " ".repeat(width - titleWidth - summaryWidth) + PiCliAnsi.muted(summary);
+                return PiCliAnsi.bold(title) + " ".repeat(width - titleWidth - summaryWidth) + summary;
             }
             if (summaryWidth >= width) {
-                return PiCliAnsi.muted(TerminalText.truncateToWidth(summary, width));
+                return TerminalText.truncateToWidth(summary, width);
             }
             var availableTitleWidth = width - summaryWidth - 1;
             if (availableTitleWidth <= 0) {
-                return PiCliAnsi.muted(TerminalText.truncateToWidth(summary, width));
+                return TerminalText.truncateToWidth(summary, width);
             }
-            return PiCliAnsi.bold(TerminalText.truncateToWidth(title, availableTitleWidth)) + " " + PiCliAnsi.muted(summary);
+            return PiCliAnsi.bold(TerminalText.truncateToWidth(title, availableTitleWidth)) + " " + summary;
         }
 
         private static String progressText(ProgressSnapshot progress) {
@@ -970,6 +970,19 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
                 return "...";
             }
             return progress.loaded() + "/" + progress.total();
+        }
+
+        private String styledScopeSummary() {
+            if (scope == Scope.CURRENT) {
+                if (currentLoading) {
+                    return PiCliAnsi.accent("Loading current " + progressText(currentProgress));
+                }
+                return PiCliAnsi.accent("◉ Current Folder") + PiCliAnsi.muted(" | ○ All");
+            }
+            if (allLoading) {
+                return PiCliAnsi.muted("○ Current Folder | ") + PiCliAnsi.accent("Loading " + progressText(allProgress));
+            }
+            return PiCliAnsi.muted("○ Current Folder | ") + PiCliAnsi.accent("◉ All");
         }
 
         private static List<String> wrapInfoLine(String text, int width) {
