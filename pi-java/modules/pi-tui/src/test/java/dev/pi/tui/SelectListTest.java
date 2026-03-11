@@ -115,4 +115,20 @@ class SelectListTest {
         assertThat(list.render(40)).anyMatch(line -> line.contains("Beta"));
         assertThat(list.render(40)).noneMatch(line -> line.contains("Alpha"));
     }
+
+    @Test
+    void keepsDescriptionsVisibleAtMediumWidths() {
+        var list = new SelectList(
+            List.of(new SelectItem("alpha", "Alpha task", "2 msg · 1m")),
+            5,
+            THEME
+        );
+
+        var line = list.render(36).getFirst();
+
+        assertThat(TerminalText.visibleWidth(line)).isLessThanOrEqualTo(36);
+        assertThat(line)
+            .contains("Alpha task")
+            .contains("2 msg");
+    }
 }

@@ -39,6 +39,8 @@
   - interactive app keybindings 补 resume
 - 已完成第十七刀：
   - session selector 单行顶栏宽度感知截断 first cut
+- 已完成第十八刀：
+  - session selector metadata 响应式列宽 first cut
 
 ## 本轮落地
 
@@ -143,6 +145,11 @@
   - 宽度不足时优先保留右侧 scope summary
   - title 不够放下时会用 `...` 安全截断，避免顶栏溢出 viewport
   - scope summary 自身过宽时也会被安全截断，而不是直接撑破一行
+- `SelectList` 现在把 label/description 的列宽分配改成响应式：
+  - 不再用固定 `32` 列起始位决定 description 是否出现
+  - 中等宽度下会优先为 description 保留最小可读空间
+  - label 列会按可用宽度动态收缩，description 列在够用时继续显示
+  - 这让 session selector 在 `36~40` 列附近仍能保留 `msg/age` 等 metadata
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -183,6 +190,8 @@
 - `PiInteractiveModeTest`：app keybindings 驱动 tree / fork / interrupt
 - `PiInteractiveModeTest`：app keybindings 驱动 resume
 - `PiSessionPickerTest`：窄终端下单行顶栏不会超宽，并保留 scope summary
+- `SelectListTest`：中等宽度下仍保留 description 列
+- `PiSessionPickerTest`：中等宽度下 session metadata 不会过早消失
 
 最近通过：
 
@@ -193,5 +202,5 @@
 ## 下一步建议
 
 1. session selector：继续补 status/error/info 的更细粒度样式层级
-2. session selector：继续评估 metadata 在窄宽度下的列宽分配与截断对齐
+2. session selector：继续评估更窄宽度下 top info lines 的折叠/换行策略
 3. keybindings：继续评估 app 层是否要补 model/thinking 相关动作

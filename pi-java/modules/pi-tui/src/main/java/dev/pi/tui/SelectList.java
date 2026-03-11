@@ -119,38 +119,51 @@ public final class SelectList implements Component {
         var display = item.displayValue();
         var selectedPrefix = theme.selectedPrefix("→ ");
         var plainPrefix = "  ";
+        var prefix = selected ? selectedPrefix : plainPrefix;
+        var availableWidth = Math.max(1, width - TerminalText.visibleWidth(prefix));
+        var itemLayout = layoutItem(display, description, availableWidth);
 
         if (selected) {
-            var prefixWidth = TerminalText.visibleWidth(selectedPrefix);
-            if (description != null && width > 40) {
-                var maxValueWidth = Math.min(30, Math.max(1, width - prefixWidth - 4));
-                var truncatedValue = TerminalText.truncateToWidth(display, maxValueWidth, "");
-                var spacing = " ".repeat(Math.max(1, 32 - TerminalText.visibleWidth(truncatedValue)));
-                var descriptionStart = prefixWidth + TerminalText.visibleWidth(truncatedValue) + spacing.length();
-                var remainingWidth = width - descriptionStart - 2;
-                if (remainingWidth > 10) {
-                    var truncatedDescription = TerminalText.truncateToWidth(description, remainingWidth, "");
-                    return selectedPrefix + theme.selectedText(truncatedValue + spacing + truncatedDescription);
-                }
+            if (itemLayout != null) {
+                return selectedPrefix + theme.selectedText(itemLayout.display() + itemLayout.spacing() + itemLayout.description());
             }
-            var maxWidth = Math.max(1, width - prefixWidth - 2);
-            return selectedPrefix + theme.selectedText(TerminalText.truncateToWidth(display, maxWidth, ""));
+            return selectedPrefix + theme.selectedText(TerminalText.truncateToWidth(display, availableWidth, ""));
         }
 
-        if (description != null && width > 40) {
-            var maxValueWidth = Math.min(30, Math.max(1, width - plainPrefix.length() - 4));
-            var truncatedValue = TerminalText.truncateToWidth(display, maxValueWidth, "");
-            var spacing = " ".repeat(Math.max(1, 32 - TerminalText.visibleWidth(truncatedValue)));
-            var descriptionStart = plainPrefix.length() + TerminalText.visibleWidth(truncatedValue) + spacing.length();
-            var remainingWidth = width - descriptionStart - 2;
-            if (remainingWidth > 10) {
-                var truncatedDescription = TerminalText.truncateToWidth(description, remainingWidth, "");
-                return plainPrefix + truncatedValue + theme.description(spacing + truncatedDescription);
-            }
+        if (itemLayout != null) {
+            return plainPrefix + itemLayout.display() + theme.description(itemLayout.spacing() + itemLayout.description());
         }
 
-        var maxWidth = Math.max(1, width - plainPrefix.length() - 2);
-        return plainPrefix + TerminalText.truncateToWidth(display, maxWidth, "");
+        return plainPrefix + TerminalText.truncateToWidth(display, availableWidth, "");
+    }
+
+    private static ItemLayout layoutItem(String display, String description, int availableWidth) {
+        if (description == null || availableWidth <= 0) {
+            return null;
+        }
+        var gapWidth = 2;
+        var minDisplayWidth = 8;
+        var minDescriptionWidth = 8;
+        if (availableWidth < minDisplayWidth + gapWidth + minDescriptionWidth) {
+            return null;
+        }
+
+        var labelColumnWidth = Math.min(32, Math.max(minDisplayWidth, Math.floorDiv(availableWidth, 2)));
+        labelColumnWidth = Math.min(labelColumnWidth, availableWidth - gapWidth - minDescriptionWidth);
+        if (labelColumnWidth < minDisplayWidth) {
+            return null;
+        }
+
+        var truncatedDisplay = TerminalText.truncateToWidth(display, labelColumnWidth, "");
+        var actualDisplayWidth = TerminalText.visibleWidth(truncatedDisplay);
+        var descriptionWidth = availableWidth - labelColumnWidth - gapWidth;
+        if (descriptionWidth < minDescriptionWidth) {
+            return null;
+        }
+
+        var spacing = " ".repeat(Math.max(gapWidth, labelColumnWidth - actualDisplayWidth + gapWidth));
+        var truncatedDescription = TerminalText.truncateToWidth(description, descriptionWidth, "");
+        return new ItemLayout(truncatedDisplay, spacing, truncatedDescription);
     }
 
     private void notifySelectionChange() {
@@ -177,5 +190,12 @@ public final class SelectList implements Component {
             }
         }
         return true;
+    }
+
+    private record ItemLayout(
+        String display,
+        String spacing,
+        String description
+    ) {
     }
 }

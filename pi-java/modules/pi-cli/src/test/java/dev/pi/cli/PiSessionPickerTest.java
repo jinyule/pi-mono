@@ -314,6 +314,23 @@ class PiSessionPickerTest {
     }
 
     @Test
+    void keepsSessionMetadataVisibleAtMediumWidths() {
+        var terminal = new VirtualTerminal(36, 12);
+        var picker = new PiSessionPicker(terminal);
+
+        Thread.ofVirtual().start(() -> picker.pick(
+            List.of(session("current.jsonl", "Current task", 2, Instant.now().minusSeconds(30), "")),
+            List.of(session("current.jsonl", "Current task", 2, Instant.now().minusSeconds(30), ""))
+        ));
+
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Current task")));
+
+        assertThat(String.join("\n", terminal.getViewport())).contains("2 msg");
+
+        terminal.sendInput("\u001b");
+    }
+
+    @Test
     void showsAllLoadingProgressAfterScopeToggle() {
         var terminal = new VirtualTerminal(140, 12);
         var picker = new PiSessionPicker(terminal);
