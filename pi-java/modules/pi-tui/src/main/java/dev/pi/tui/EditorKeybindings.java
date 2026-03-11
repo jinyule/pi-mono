@@ -23,6 +23,7 @@ public final class EditorKeybindings {
         Map.entry(EditorAction.DELETE_TO_LINE_END, List.of("ctrl+k")),
         Map.entry(EditorAction.NEW_LINE, List.of("alt+enter")),
         Map.entry(EditorAction.SUBMIT, List.of("enter")),
+        Map.entry(EditorAction.EXIT, List.of("ctrl+d")),
         Map.entry(EditorAction.SELECT_CANCEL, List.of("escape", "ctrl+c")),
         Map.entry(EditorAction.SESSION_DELETE, List.of("ctrl+d")),
         Map.entry(EditorAction.SESSION_RENAME, List.of("ctrl+r")),

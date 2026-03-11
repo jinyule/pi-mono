@@ -127,10 +127,20 @@ public final class PiCliModule {
         try {
             var initialPrompt = PiCliPromptFactory.createInitialPrompt(args, cwd);
             var mode = new PiInteractiveMode(session, terminalFactory.get());
-            mode.start();
             var done = new CompletableFuture<Void>();
-            Runtime.getRuntime().addShutdownHook(new Thread(mode::close));
+            var shutdownHook = new Thread(mode::close);
+            mode.setOnStop(() -> {
+                removeShutdownHook(shutdownHook);
+                done.complete(null);
+            });
+            mode.start();
+            Runtime.getRuntime().addShutdownHook(shutdownHook);
             var startup = initialPrompt == null ? CompletableFuture.<Void>completedFuture(null) : session.prompt(initialPrompt);
+            startup = startup.whenComplete((ignored, throwable) -> {
+                if (throwable != null) {
+                    mode.close();
+                }
+            });
             return startup.thenCompose(ignored -> done);
         } catch (IOException exception) {
             return CompletableFuture.failedFuture(exception);
@@ -271,5 +281,12 @@ public final class PiCliModule {
     private static String resolveVersion() {
         var implementationVersion = PiCliModule.class.getPackage().getImplementationVersion();
         return implementationVersion == null || implementationVersion.isBlank() ? FALLBACK_VERSION : implementationVersion;
+    }
+
+    private static void removeShutdownHook(Thread shutdownHook) {
+        try {
+            Runtime.getRuntime().removeShutdownHook(shutdownHook);
+        } catch (IllegalStateException | IllegalArgumentException ignored) {
+        }
     }
 }

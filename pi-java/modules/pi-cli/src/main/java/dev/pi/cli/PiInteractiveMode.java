@@ -27,6 +27,7 @@ public final class PiInteractiveMode implements AutoCloseable {
     private Subscription stateSubscription;
     private boolean started;
     private String manualStatus;
+    private Runnable onStop;
 
     public PiInteractiveMode(PiInteractiveSession session) {
         this(session, new ProcessTerminal());
@@ -57,7 +58,12 @@ public final class PiInteractiveMode implements AutoCloseable {
         this.tui.addChild(input);
         this.tui.setFocus(input);
         this.input.setOnSubmit(this::submit);
+        this.input.setOnExit(this::requestExit);
         this.input.setOnEscape(session::abort);
+    }
+
+    public void setOnStop(Runnable onStop) {
+        this.onStop = onStop;
     }
 
     public void start() {
@@ -80,6 +86,9 @@ public final class PiInteractiveMode implements AutoCloseable {
             stateSubscription = null;
         }
         tui.stop();
+        if (onStop != null) {
+            onStop.run();
+        }
     }
 
     @Override
@@ -116,6 +125,11 @@ public final class PiInteractiveMode implements AutoCloseable {
         if ("/reload".equals(trimmed)) {
             input.setValue("");
             handleReloadCommand();
+            return;
+        }
+        if ("/exit".equals(trimmed) || "/quit".equals(trimmed)) {
+            input.setValue("");
+            requestExit();
             return;
         }
         manualStatus = null;
@@ -310,6 +324,10 @@ public final class PiInteractiveMode implements AutoCloseable {
             manualStatus = "Error: " + rootMessage(exception);
         }
         renderState(session.state());
+    }
+
+    private void requestExit() {
+        close();
     }
 
     private static String rootMessage(Throwable throwable) {

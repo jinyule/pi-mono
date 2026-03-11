@@ -18,6 +18,7 @@ public final class Input implements Component, Focusable {
     private String lastAction;
 
     private ValueHandler onSubmit;
+    private Runnable onExit;
     private Runnable onEscape;
 
     public String getValue() {
@@ -31,6 +32,10 @@ public final class Input implements Component, Focusable {
 
     public void setOnSubmit(ValueHandler onSubmit) {
         this.onSubmit = onSubmit;
+    }
+
+    public void setOnExit(Runnable onExit) {
+        this.onExit = onExit;
     }
 
     public void setOnEscape(Runnable onEscape) {
@@ -82,6 +87,12 @@ public final class Input implements Component, Focusable {
         if (keybindings.matches(data, EditorAction.SELECT_CANCEL)) {
             if (onEscape != null) {
                 onEscape.run();
+            }
+            return;
+        }
+        if (keybindings.matches(data, EditorAction.EXIT) && value.isEmpty()) {
+            if (onExit != null) {
+                onExit.run();
             }
             return;
         }

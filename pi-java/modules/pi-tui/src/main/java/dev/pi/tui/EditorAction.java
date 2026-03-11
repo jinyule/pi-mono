@@ -17,6 +17,7 @@ public enum EditorAction {
     DELETE_TO_LINE_END,
     NEW_LINE,
     SUBMIT,
+    EXIT,
     SELECT_CANCEL,
     SESSION_DELETE,
     SESSION_RENAME,

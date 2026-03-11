@@ -197,6 +197,29 @@ class PiCliModuleTest {
             .hasRootCauseMessage("@file arguments are not supported in RPC mode");
     }
 
+    @Test
+    void interactiveRunCompletesWhenUserExits() {
+        var terminal = new ControllableTerminal();
+        var module = new PiCliModule(
+            Path.of("."),
+            new StringReader(""),
+            new StringBuilder(),
+            new StringBuilder(),
+            new PiCliParser(),
+            aiClientWithModels(model("claude-3-7-sonnet", "anthropic")),
+            args -> new CapturingPromptSession(),
+            () -> terminal
+        );
+
+        var run = module.run().toCompletableFuture();
+
+        assertThat(run).isNotDone();
+        terminal.sendInput("\u0004");
+        run.join();
+
+        assertThat(terminal.stopped).isTrue();
+    }
+
     private static PiAiClient aiClientWithModels(Model... models) {
         var registry = new ModelRegistry();
         registry.registerAll(List.of(models));
@@ -323,6 +346,39 @@ class PiCliModuleTest {
         @Override
         public int rows() {
             return 24;
+        }
+    }
+
+    private static final class ControllableTerminal implements Terminal {
+        private dev.pi.tui.InputHandler inputHandler;
+        private boolean stopped;
+
+        @Override
+        public void start(dev.pi.tui.InputHandler onInput, Runnable onResize) {
+            this.inputHandler = onInput;
+        }
+
+        @Override
+        public void stop() {
+            stopped = true;
+        }
+
+        @Override
+        public void write(String data) {
+        }
+
+        @Override
+        public int columns() {
+            return 80;
+        }
+
+        @Override
+        public int rows() {
+            return 24;
+        }
+
+        private void sendInput(String data) {
+            inputHandler.onInput(data);
         }
     }
 

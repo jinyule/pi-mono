@@ -64,4 +64,15 @@ class InputTest {
 
         assertThat(escapeCount.get()).isEqualTo(1);
     }
+
+    @Test
+    void ctrlDOnEmptyInputTriggersExitCallback() {
+        var input = new Input();
+        var exitCount = new AtomicInteger();
+        input.setOnExit(exitCount::incrementAndGet);
+
+        input.handleInput("\u0004");
+
+        assertThat(exitCount.get()).isEqualTo(1);
+    }
 }

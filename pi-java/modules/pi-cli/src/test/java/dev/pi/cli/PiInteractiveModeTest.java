@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 
@@ -205,6 +206,20 @@ class PiInteractiveModeTest {
         assertThat(String.join("\n", terminal.getViewport())).contains("Reloaded with 1 warning");
 
         mode.stop();
+    }
+
+    @Test
+    void ctrlDOnEmptyInputStopsMode() throws Exception {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(80, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+        var stopped = new CompletableFuture<Void>();
+        mode.setOnStop(() -> stopped.complete(null));
+
+        mode.start();
+        terminal.sendInput("\u0004");
+
+        stopped.get(2, TimeUnit.SECONDS);
     }
 
     private static final class FakeSession implements PiInteractiveSession {
