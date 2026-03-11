@@ -215,6 +215,44 @@ class PiSessionPickerTest {
         terminal.sendInput("\u001b");
     }
 
+    @Test
+    void togglesNamedFilterAndHidesUnnamedSessions() {
+        var terminal = new VirtualTerminal(100, 12);
+        var picker = new PiSessionPicker(terminal);
+
+        Thread.ofVirtual().start(() -> picker.pick(
+            List.of(
+                namedSession("named.jsonl", "Project Mercury", "Named fallback", 3, Instant.now().minusSeconds(30), "/workspace/named"),
+                session("unnamed.jsonl", "Unnamed task", 2, Instant.now().minusSeconds(20), "/workspace/unnamed"),
+                sessionWithRawName("blank.jsonl", "   ", "Whitespace task", 1, Instant.now().minusSeconds(10), "/workspace/blank")
+            ),
+            List.of()
+        ));
+
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Project Mercury")));
+
+        var allView = String.join("\n", terminal.getViewport());
+        assertThat(allView)
+            .contains("Project Mercury")
+            .contains("Unnamed task")
+            .contains("Whitespace task")
+            .contains("All");
+
+        terminal.sendInput("\u000e");
+        waitFor(() -> {
+            var view = String.join("\n", terminal.getViewport());
+            return view.contains("Named") && !view.contains("Unnamed task") && !view.contains("Whitespace task");
+        });
+
+        var namedView = String.join("\n", terminal.getViewport());
+        assertThat(namedView)
+            .contains("Project Mercury")
+            .doesNotContain("Unnamed task")
+            .doesNotContain("Whitespace task");
+
+        terminal.sendInput("\u001b");
+    }
+
     private static SessionInfo session(String fileName, String firstMessage, int messageCount, Instant modified) {
         return session(fileName, firstMessage, messageCount, modified, "/workspace");
     }
@@ -240,6 +278,50 @@ class PiSessionPickerTest {
             path.getFileName().toString().replace(".jsonl", ""),
             cwd,
             null,
+            null,
+            modified.minusSeconds(60),
+            modified,
+            messageCount,
+            firstMessage,
+            firstMessage
+        );
+    }
+
+    private static SessionInfo namedSession(
+        String fileName,
+        String name,
+        String firstMessage,
+        int messageCount,
+        Instant modified,
+        String cwd
+    ) {
+        return new SessionInfo(
+            Path.of(fileName),
+            fileName.replace(".jsonl", ""),
+            cwd,
+            name,
+            null,
+            modified.minusSeconds(60),
+            modified,
+            messageCount,
+            firstMessage,
+            firstMessage
+        );
+    }
+
+    private static SessionInfo sessionWithRawName(
+        String fileName,
+        String name,
+        String firstMessage,
+        int messageCount,
+        Instant modified,
+        String cwd
+    ) {
+        return new SessionInfo(
+            Path.of(fileName),
+            fileName.replace(".jsonl", ""),
+            cwd,
+            name,
             null,
             modified.minusSeconds(60),
             modified,

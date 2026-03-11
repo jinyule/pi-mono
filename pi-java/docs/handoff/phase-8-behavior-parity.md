@@ -9,6 +9,8 @@
   - session selector current/all scope toggle first cut
 - 已完成第二刀：
   - session selector sort toggle first cut
+- 已完成第三刀：
+  - session selector named-only filter first cut
 
 ## 本轮落地
 
@@ -27,15 +29,21 @@
   - relevance 只在有搜索 query 时生效
   - relevance 目前按 `label -> fileName -> cwd -> path` 的 token 命中位置打分
 - `pi-tui` 层新增 `SESSION_SORT_TOGGLE` action，默认键位是 `ctrl+s`
+- `PiSessionPicker` 现在支持 named-only filter：
+  - 默认 `all`
+  - `Ctrl+N` 切到 `named`
+  - blank / whitespace-only `name` 会被视为 unnamed
+- `pi-tui` 层新增 `SESSION_NAMED_FILTER_TOGGLE` action，默认键位是 `ctrl+n`
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
+- `KeyMatcher` 现在显式支持 `ctrl+n`
 
 ## 当前边界
 
 - 这还是首版 scope toggle：
   - 还没有 TS 版的 loading/progress header
   - sort toggle 还不是 TS 的完整三态（还没有 `threaded` / `fuzzy`）
-  - 还没有 named-only filter toggle
+  - named-only filter 还没有接到 app-level keybinding/config 层，当前先挂在 `EditorKeybindings`
   - 还没有 path show/hide toggle
 - resolver 现在只在 `--session-dir` 未显式指定时提供 current/all 双 scope；显式 `--session-dir` 仍退化成单 scope
 
@@ -46,6 +54,7 @@
 - `PiCliSessionResolverTest`：picker 现在接收 `current/all` 双列表
 - `PiSessionPickerTest`：`Tab` scope toggle、current/all 渲染与选择
 - `PiSessionPickerTest`：`Ctrl+S` sort toggle、recent/relevance 排序切换
+- `PiSessionPickerTest`：`Ctrl+N` named-only filter、blank name 排除
 
 最近通过：
 
@@ -55,6 +64,6 @@
 
 ## 下一步建议
 
-1. session selector：补 named-only filter
-2. session selector：补 path show/hide toggle
-3. session selector：补 threaded/fuzzy sort mode
+1. session selector：补 path show/hide toggle
+2. session selector：补 threaded/fuzzy sort mode
+3. session selector：评估 app-level keybinding/config 对齐

@@ -113,6 +113,7 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
         private String renamingCurrentName;
         private Scope scope = Scope.CURRENT;
         private SortMode sortMode = SortMode.RECENT;
+        private NameFilter nameFilter = NameFilter.ALL;
 
         private PickerComponent(
             List<SessionInfo> currentSessions,
@@ -147,8 +148,14 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             var lines = new java.util.ArrayList<String>();
             lines.add(scope == Scope.CURRENT ? "Resume session (Current folder)" : "Resume session (All)");
             lines.add(pendingDeletePath == null
-                ? "Type to filter. %s toggles scope. %s toggles sort (%s). Enter selects. Ctrl+D deletes. Ctrl+R renames. Esc cancels."
-                    .formatted(keyHint(EditorAction.SESSION_SCOPE_TOGGLE), keyHint(EditorAction.SESSION_SORT_TOGGLE), sortMode.label())
+                ? "Type to filter. %s scope. %s sort (%s). %s named (%s). Enter selects. Ctrl+D deletes. Ctrl+R renames. Esc cancels."
+                    .formatted(
+                        keyHint(EditorAction.SESSION_SCOPE_TOGGLE),
+                        keyHint(EditorAction.SESSION_SORT_TOGGLE),
+                        sortMode.label(),
+                        keyHint(EditorAction.SESSION_NAMED_FILTER_TOGGLE),
+                        nameFilter.label()
+                    )
                 : "Delete selected session? Enter confirms. Esc cancels.");
             lines.add("");
             lines.addAll(search.render(width));
@@ -195,6 +202,10 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             }
             if (keybindings.matches(data, EditorAction.SESSION_SORT_TOGGLE)) {
                 toggleSort();
+                return;
+            }
+            if (keybindings.matches(data, EditorAction.SESSION_NAMED_FILTER_TOGGLE)) {
+                toggleNameFilter();
                 return;
             }
             if (
@@ -339,12 +350,18 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             requestRender.run();
         }
 
+        private void toggleNameFilter() {
+            nameFilter = nameFilter == NameFilter.ALL ? NameFilter.NAMED : NameFilter.ALL;
+            rebuildSessionList();
+            requestRender.run();
+        }
+
         private List<SessionInfo> activeSessions() {
             return scope == Scope.ALL ? allSessions : currentSessions;
         }
 
         private List<SessionInfo> sortedSessions() {
-            var sessions = new ArrayList<>(activeSessions());
+            var sessions = new ArrayList<>(activeSessions().stream().filter(this::matchesNameFilter).toList());
             var filterTokens = filterTokens(search.getValue());
             if (sortMode == SortMode.RELEVANCE && !filterTokens.isEmpty()) {
                 sessions.sort(
@@ -361,6 +378,10 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
 
         private boolean sameScopeData() {
             return currentSessions.size() == allSessions.size() && currentSessions.containsAll(allSessions) && allSessions.containsAll(currentSessions);
+        }
+
+        private boolean matchesNameFilter(SessionInfo session) {
+            return nameFilter == NameFilter.ALL || hasName(session);
         }
 
         private static SelectItem toSelectItem(SessionInfo session, boolean showCwd) {
@@ -440,6 +461,10 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             return session.name() == null || session.name().isBlank() ? session.firstMessage() : session.name();
         }
 
+        private static boolean hasName(SessionInfo session) {
+            return session.name() != null && !session.name().isBlank();
+        }
+
         private enum Scope {
             CURRENT,
             ALL
@@ -452,6 +477,21 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             private final String label;
 
             SortMode(String label) {
+                this.label = label;
+            }
+
+            private String label() {
+                return label;
+            }
+        }
+
+        private enum NameFilter {
+            ALL("All"),
+            NAMED("Named");
+
+            private final String label;
+
+            NameFilter(String label) {
                 this.label = label;
             }
 

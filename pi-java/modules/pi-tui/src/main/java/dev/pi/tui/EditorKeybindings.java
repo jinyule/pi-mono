@@ -27,6 +27,7 @@ public final class EditorKeybindings {
         Map.entry(EditorAction.SELECT_CANCEL, List.of("escape", "ctrl+c")),
         Map.entry(EditorAction.SESSION_SCOPE_TOGGLE, List.of("tab")),
         Map.entry(EditorAction.SESSION_SORT_TOGGLE, List.of("ctrl+s")),
+        Map.entry(EditorAction.SESSION_NAMED_FILTER_TOGGLE, List.of("ctrl+n")),
         Map.entry(EditorAction.SESSION_DELETE, List.of("ctrl+d")),
         Map.entry(EditorAction.SESSION_RENAME, List.of("ctrl+r")),
         Map.entry(EditorAction.YANK, List.of("ctrl+y")),
