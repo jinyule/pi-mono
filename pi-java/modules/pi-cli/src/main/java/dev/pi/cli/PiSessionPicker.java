@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.regex.Pattern;
 
 public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker {
@@ -94,18 +95,29 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
     }
 
     @Override
+    public Path pick(SessionLoader currentLoader, SessionLoader allLoader) {
+        return pickInternal(currentLoader, allLoader, null, null);
+    }
+
     public Path pick(List<SessionInfo> currentSessions, List<SessionInfo> allSessions) {
         Objects.requireNonNull(currentSessions, "currentSessions");
         Objects.requireNonNull(allSessions, "allSessions");
-        if (currentSessions.isEmpty() && allSessions.isEmpty()) {
-            return null;
-        }
+        return pickInternal(progress -> currentSessions, progress -> allSessions, currentSessions, allSessions);
+    }
 
+    private Path pickInternal(
+        SessionLoader currentLoader,
+        SessionLoader allLoader,
+        List<SessionInfo> initialCurrentSessions,
+        List<SessionInfo> initialAllSessions
+    ) {
+        Objects.requireNonNull(currentLoader, "currentLoader");
+        Objects.requireNonNull(allLoader, "allLoader");
         var selection = new CompletableFuture<Path>();
         var tui = new Tui(terminal, true);
         var component = new PickerComponent(
-            currentSessions,
-            allSessions,
+            currentLoader,
+            allLoader,
             path -> {
                 if (selection.complete(path)) {
                     tui.stop();
@@ -116,12 +128,28 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
                     tui.stop();
                 }
             },
+            () -> {
+                if (selection.completeExceptionally(new IllegalStateException("No sessions available to resume"))) {
+                    tui.stop();
+                }
+            },
             tui::requestRender
         );
+        if (initialCurrentSessions != null || initialAllSessions != null) {
+            component.primeSessions(initialCurrentSessions, initialAllSessions);
+        }
         tui.addChild(component);
         tui.setFocus(component);
         tui.start();
-        return selection.join();
+        component.start();
+        try {
+            return selection.join();
+        } catch (CompletionException exception) {
+            if (exception.getCause() instanceof RuntimeException runtimeException) {
+                throw runtimeException;
+            }
+            throw exception;
+        }
     }
 
     public Path pick(List<SessionInfo> sessions) {
@@ -305,6 +333,16 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
         }
     }
 
+    @FunctionalInterface
+    public interface SessionLoader {
+        List<SessionInfo> load(SessionLoadProgress progress) throws Exception;
+    }
+
+    @FunctionalInterface
+    public interface SessionLoadProgress {
+        void onProgress(int loaded, int total);
+    }
+
     private enum SearchMode {
         TOKENS,
         REGEX
@@ -353,11 +391,14 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
     private static final class PickerComponent implements Component, Focusable {
         private final Input search = new Input();
         private final Input rename = new Input();
-        private final List<SessionInfo> currentSessions;
-        private final List<SessionInfo> allSessions;
+        private final SessionLoader currentLoader;
+        private final SessionLoader allLoader;
         private final java.util.function.Consumer<Path> onSelect;
         private final Runnable onCancel;
+        private final Runnable onNoSessions;
         private final Runnable requestRender;
+        private volatile List<SessionInfo> currentSessions;
+        private volatile List<SessionInfo> allSessions;
         private SelectList sessions;
         private boolean focused;
         private String pendingDeletePath;
@@ -367,18 +408,25 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
         private SortMode sortMode = SortMode.THREADED;
         private NameFilter nameFilter = NameFilter.ALL;
         private boolean showPath;
+        private volatile boolean currentLoading;
+        private volatile boolean allLoading;
+        private volatile ProgressSnapshot currentProgress;
+        private volatile ProgressSnapshot allProgress;
+        private volatile String loadingError;
 
         private PickerComponent(
-            List<SessionInfo> currentSessions,
-            List<SessionInfo> allSessions,
+            SessionLoader currentLoader,
+            SessionLoader allLoader,
             java.util.function.Consumer<Path> onSelect,
             Runnable onCancel,
+            Runnable onNoSessions,
             Runnable requestRender
         ) {
-            this.currentSessions = new ArrayList<>(currentSessions);
-            this.allSessions = new ArrayList<>(allSessions);
+            this.currentLoader = currentLoader;
+            this.allLoader = allLoader;
             this.onSelect = onSelect;
             this.onCancel = onCancel;
+            this.onNoSessions = onNoSessions;
             this.requestRender = requestRender;
             this.search.setFocused(true);
             rebuildSessionList();
@@ -400,10 +448,10 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             }
             var lines = new java.util.ArrayList<String>();
             lines.add(scope == Scope.CURRENT ? "Resume session (Current folder)" : "Resume session (All)");
+            lines.add(scopeSummary());
             lines.add(pendingDeletePath == null
-                ? "%s scope · %s sort(%s) · %s named(%s) · %s path(%s)"
+                ? "%s sort(%s) · %s named(%s) · %s path(%s)"
                     .formatted(
-                        keyHint(EditorAction.SESSION_SCOPE_TOGGLE),
                         keyHint(EditorAction.SESSION_SORT_TOGGLE),
                         sortMode.label(),
                         keyHint(EditorAction.SESSION_NAMED_FILTER_TOGGLE),
@@ -412,6 +460,9 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
                         showPath ? "on" : "off"
                     )
                 : "Delete selected session? Enter confirms. Esc cancels.");
+            if (loadingError != null) {
+                lines.add("Load error: " + loadingError);
+            }
             lines.add("");
             lines.addAll(search.render(width));
             lines.add("");
@@ -509,6 +560,30 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             rename.setFocused(focused && renamingPath != null);
         }
 
+        private void start() {
+            if (currentSessions != null) {
+                if ((currentSessions.isEmpty()) && (allSessions == null || allSessions.isEmpty())) {
+                    onNoSessions.run();
+                    return;
+                }
+                rebuildSessionList();
+                requestRender.run();
+                return;
+            }
+            loadCurrentSessions();
+        }
+
+        private void primeSessions(List<SessionInfo> initialCurrentSessions, List<SessionInfo> initialAllSessions) {
+            currentSessions = initialCurrentSessions == null ? null : new ArrayList<>(initialCurrentSessions);
+            allSessions = initialAllSessions == null ? null : new ArrayList<>(initialAllSessions);
+            currentLoading = false;
+            allLoading = false;
+            currentProgress = null;
+            allProgress = null;
+            loadingError = null;
+            rebuildSessionList();
+        }
+
         private void rebuildSessionList() {
             this.sessions = new SelectList(sessionItems(), 10, THEME);
             this.sessions.setOnSelectionChange(ignored -> requestRender.run());
@@ -526,9 +601,15 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
                 throw new IllegalStateException("Failed to delete session: " + targetPath.getFileName(), exception);
             }
 
-            currentSessions.removeIf(session -> session.path().toAbsolutePath().normalize().equals(targetPath.toAbsolutePath().normalize()));
-            allSessions.removeIf(session -> session.path().toAbsolutePath().normalize().equals(targetPath.toAbsolutePath().normalize()));
-            if (currentSessions.isEmpty() && allSessions.isEmpty()) {
+            if (currentSessions != null) {
+                currentSessions = new ArrayList<>(currentSessions);
+                currentSessions.removeIf(session -> session.path().toAbsolutePath().normalize().equals(targetPath.toAbsolutePath().normalize()));
+            }
+            if (allSessions != null) {
+                allSessions = new ArrayList<>(allSessions);
+                allSessions.removeIf(session -> session.path().toAbsolutePath().normalize().equals(targetPath.toAbsolutePath().normalize()));
+            }
+            if ((currentSessions == null || currentSessions.isEmpty()) && (allSessions == null || allSessions.isEmpty())) {
                 onCancel.run();
                 return;
             }
@@ -554,8 +635,12 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             try {
                 var manager = SessionManager.open(targetPath);
                 manager.appendSessionInfo(nextName);
-                refreshSessionInfo(currentSessions, targetPath);
-                refreshSessionInfo(allSessions, targetPath);
+                if (currentSessions != null) {
+                    refreshSessionInfo(currentSessions, targetPath);
+                }
+                if (allSessions != null) {
+                    refreshSessionInfo(allSessions, targetPath);
+                }
             } catch (java.io.IOException exception) {
                 throw new IllegalStateException("Failed to rename session: " + targetPath.getFileName(), exception);
             }
@@ -586,7 +671,8 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
 
         private String currentNameFor(Path targetPath) {
             var normalized = targetPath.toAbsolutePath().normalize();
-            for (var sessionInfo : allSessions) {
+            var loadedAllSessions = allSessions == null ? List.<SessionInfo>of() : allSessions;
+            for (var sessionInfo : loadedAllSessions) {
                 if (sessionInfo.path().equals(normalized)) {
                     return sessionInfo.name() == null ? "" : sessionInfo.name();
                 }
@@ -599,6 +685,10 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
                 return;
             }
             scope = scope == Scope.CURRENT ? Scope.ALL : Scope.CURRENT;
+            loadingError = null;
+            if (scope == Scope.ALL && allSessions == null && !allLoading) {
+                loadAllSessions();
+            }
             rebuildSessionList();
             requestRender.run();
         }
@@ -626,7 +716,8 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
         }
 
         private List<SessionInfo> activeSessions() {
-            return scope == Scope.ALL ? allSessions : currentSessions;
+            var sessions = scope == Scope.ALL ? allSessions : currentSessions;
+            return sessions == null ? List.of() : sessions;
         }
 
         private List<SessionInfo> sortedSessions() {
@@ -652,7 +743,91 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
         }
 
         private boolean sameScopeData() {
+            if (currentSessions == null || allSessions == null) {
+                return false;
+            }
             return currentSessions.size() == allSessions.size() && currentSessions.containsAll(allSessions) && allSessions.containsAll(currentSessions);
+        }
+
+        private void loadCurrentSessions() {
+            if (currentLoading || currentSessions != null) {
+                return;
+            }
+            currentLoading = true;
+            currentProgress = null;
+            loadingError = null;
+            requestRender.run();
+            Thread.ofVirtual().start(() -> runLoader(Scope.CURRENT, currentLoader));
+        }
+
+        private void loadAllSessions() {
+            if (allLoading || allSessions != null) {
+                return;
+            }
+            allLoading = true;
+            allProgress = null;
+            loadingError = null;
+            requestRender.run();
+            Thread.ofVirtual().start(() -> runLoader(Scope.ALL, allLoader));
+        }
+
+        private void runLoader(Scope targetScope, SessionLoader loader) {
+            try {
+                var loadedSessions = loader.load((loaded, total) -> {
+                    if (targetScope == Scope.CURRENT) {
+                        currentProgress = new ProgressSnapshot(loaded, total);
+                    } else {
+                        allProgress = new ProgressSnapshot(loaded, total);
+                    }
+                    requestRender.run();
+                });
+                if (targetScope == Scope.CURRENT) {
+                    currentSessions = new ArrayList<>(loadedSessions);
+                    currentLoading = false;
+                    currentProgress = new ProgressSnapshot(1, 1);
+                    if (currentSessions.isEmpty() && allSessions == null && !allLoading) {
+                        loadAllSessions();
+                    }
+                } else {
+                    allSessions = new ArrayList<>(loadedSessions);
+                    allLoading = false;
+                }
+                if (targetScope == Scope.ALL && (loadedSessions == null || loadedSessions.isEmpty()) && (currentSessions == null || currentSessions.isEmpty())) {
+                    onNoSessions.run();
+                    return;
+                }
+                rebuildSessionList();
+                requestRender.run();
+            } catch (Exception exception) {
+                if (targetScope == Scope.CURRENT) {
+                    currentLoading = false;
+                } else {
+                    allLoading = false;
+                }
+                loadingError = exception.getMessage() == null ? exception.getClass().getSimpleName() : exception.getMessage();
+                rebuildSessionList();
+                requestRender.run();
+            }
+        }
+
+        private String scopeSummary() {
+            if (scope == Scope.CURRENT) {
+                if (currentLoading) {
+                    return "Loading current " + progressText(currentProgress);
+                }
+                return "◉ Current Folder | ○ All";
+            }
+            if (allLoading) {
+                return "○ Current Folder | Loading " + progressText(allProgress);
+            }
+            return "○ Current Folder | ◉ All";
+        }
+
+        private static String progressText(ProgressSnapshot progress) {
+            if (progress == null || progress.total() <= 0) {
+                return "...";
+            }
+            return progress.loaded() + "/" + progress.total();
         }
 
         private static List<ThreadedSession> flattenThreadedSessions(List<SessionInfo> sessions, NameFilter nameFilter) {
@@ -780,6 +955,12 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
         private record ThreadedSession(
             SessionInfo session,
             String prefix
+        ) {
+        }
+
+        private record ProgressSnapshot(
+            int loaded,
+            int total
         ) {
         }
     }

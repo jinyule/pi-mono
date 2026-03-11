@@ -13,7 +13,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -176,6 +181,63 @@ class PiSessionPickerTest {
             .contains("Global task")
             .contains("/workspace/other");
 
+        terminal.sendInput("\u001b");
+    }
+
+    @Test
+    void showsCurrentLoadingHeaderBeforeInitialSessionsArrive() {
+        var terminal = new VirtualTerminal(120, 12);
+        var picker = new PiSessionPicker(terminal);
+        var currentSessions = new CompletableFuture<List<SessionInfo>>();
+
+        Thread.ofVirtual().start(() -> picker.pick(progress -> currentSessions.join(), progress -> List.of()));
+
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Loading current")));
+
+        currentSessions.complete(List.of(session("loaded.jsonl", "Loaded task", 1, Instant.now().minusSeconds(5))));
+
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Loaded task")));
+        terminal.sendInput("\u001b");
+    }
+
+    @Test
+    void showsAllLoadingProgressAfterScopeToggle() {
+        var terminal = new VirtualTerminal(140, 12);
+        var picker = new PiSessionPicker(terminal);
+        var progressUpdates = new CopyOnWriteArrayList<String>();
+        var allowAllLoad = new CountDownLatch(1);
+
+        Thread.ofVirtual().start(() -> picker.pick(
+            progress -> List.of(session("current.jsonl", "Current task", 1, Instant.now().minusSeconds(5))),
+            progress -> {
+                progress.onProgress(1, 2);
+                progressUpdates.add("1/2");
+                try {
+                    if (!allowAllLoad.await(2, TimeUnit.SECONDS)) {
+                        throw new IllegalStateException("timed out waiting for all-scope load");
+                    }
+                } catch (InterruptedException exception) {
+                    Thread.currentThread().interrupt();
+                    throw new IllegalStateException(exception);
+                }
+                progress.onProgress(2, 2);
+                progressUpdates.add("2/2");
+                return List.of(
+                    session("current.jsonl", "Current task", 1, Instant.now().minusSeconds(5)),
+                    session("global.jsonl", "Global task", 2, Instant.now().minusSeconds(2), "/workspace/global")
+                );
+            }
+        ));
+
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Current task")));
+
+        terminal.sendInput("\t");
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Loading 1/2")));
+        assertThat(progressUpdates).contains("1/2");
+
+        allowAllLoad.countDown();
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Global task")));
+        assertThat(progressUpdates).contains("2/2");
         terminal.sendInput("\u001b");
     }
 

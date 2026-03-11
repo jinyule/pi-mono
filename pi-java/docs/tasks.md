@@ -152,7 +152,7 @@
 ## 阶段 8：行为追平
 
 1. 追平 keybinding 语义与配置格式。
-2. 追平 session selector、tree selector、model selector、settings selector。（已开始：session selector current/all scope toggle、sort toggle 首版）
+2. 追平 session selector、tree selector、model selector、settings selector。（已开始：session selector current/all scope toggle、sort toggle、named/path toggle、threaded/fuzzy、keybindings loader、loading/progress header 首版）
 3. 追平 footer token/cost/model 信息。
 4. 追平 changelog、share、HTML export。
 5. 追平 auto-compaction、retry、branch summary。

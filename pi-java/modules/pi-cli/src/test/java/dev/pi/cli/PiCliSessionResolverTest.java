@@ -88,11 +88,15 @@ class PiCliSessionResolverTest {
 
     @Test
     void reportsNoSessionsAvailableToResume(@TempDir Path tempDir) {
-        var resolver = new PiCliSessionResolver(tempDir, (currentSessions, allSessions) -> null, tempDir.resolve("all-sessions"));
+        var resolver = new PiCliSessionResolver(tempDir, (currentLoader, allLoader) -> {
+            loadSessions(currentLoader);
+            loadSessions(allLoader);
+            return null;
+        }, tempDir.resolve("all-sessions"));
 
         assertThatThrownBy(() -> resolver.resolve(new PiCliParser().parse("--resume")))
-            .isInstanceOf(IllegalStateException.class)
-            .hasMessageContaining("No sessions available");
+            .isInstanceOf(CancellationException.class)
+            .hasMessageContaining("cancelled");
     }
 
     @Test
@@ -103,7 +107,9 @@ class PiCliSessionResolverTest {
         existing.appendMessage(userMessage("resume me", 1L));
         existing.appendMessage(assistantMessage("done"));
 
-        var resolver = new PiCliSessionResolver(tempDir, (currentSessions, allSessions) -> {
+        var resolver = new PiCliSessionResolver(tempDir, (currentLoader, allLoader) -> {
+            var currentSessions = loadSessions(currentLoader);
+            var allSessions = loadSessions(allLoader);
             assertThat(currentSessions).extracting(SessionInfo::path).containsExactly(sessionFile.toAbsolutePath().normalize());
             assertThat(allSessions).extracting(SessionInfo::path).containsExactly(sessionFile.toAbsolutePath().normalize());
             return sessionFile;
@@ -131,7 +137,9 @@ class PiCliSessionResolverTest {
         newer.appendMessage(userMessage("newer", 2L));
         newer.appendMessage(assistantMessage("done"));
 
-        var resolver = new PiCliSessionResolver(tempDir, (currentSessions, allSessions) -> {
+        var resolver = new PiCliSessionResolver(tempDir, (currentLoader, allLoader) -> {
+            var currentSessions = loadSessions(currentLoader);
+            var allSessions = loadSessions(allLoader);
             assertThat(currentSessions).isEmpty();
             assertThat(allSessions).extracting(SessionInfo::path)
                 .containsExactly(
@@ -157,7 +165,11 @@ class PiCliSessionResolverTest {
         existing.appendMessage(userMessage("resume me", 1L));
         existing.appendMessage(assistantMessage("done"));
 
-        var resolver = new PiCliSessionResolver(tempDir, (currentSessions, allSessions) -> null);
+        var resolver = new PiCliSessionResolver(tempDir, (currentLoader, allLoader) -> {
+            loadSessions(currentLoader);
+            loadSessions(allLoader);
+            return null;
+        });
 
         assertThatThrownBy(() -> resolver.resolve(new PiCliParser().parse("--resume", "--session-dir", sessionsDir.toString())))
             .isInstanceOf(CancellationException.class)
@@ -179,5 +191,14 @@ class PiCliSessionResolverTest {
             null,
             2L
         );
+    }
+
+    private static List<SessionInfo> loadSessions(PiSessionPicker.SessionLoader loader) {
+        try {
+            return loader.load((loaded, total) -> {
+            });
+        } catch (Exception exception) {
+            throw new RuntimeException(exception);
+        }
     }
 }

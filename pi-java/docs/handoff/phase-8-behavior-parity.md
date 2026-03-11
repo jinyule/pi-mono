@@ -19,6 +19,8 @@
   - session selector fuzzy parser/search first cut
 - 已完成第七刀：
   - keybindings.json loader first cut
+- 已完成第八刀：
+  - session selector loading/progress header first cut
 
 ## 本轮落地
 
@@ -63,6 +65,15 @@
   - 当前首版支持 session selector 相关 alias：`toggleSessionSort`、`toggleSessionNamedFilter`、`toggleSessionPath`、`renameSession`、`deleteSession`、`tab`
   - 也接受 `EditorAction` 枚举名直接覆盖
   - 加载失败会静默回退到默认键位
+- `PiCliSessionResolver` 现在把 `--resume` 的 current/all scope 改成 loader：
+  - current scope 启动时立即加载
+  - all scope 只在切 scope 时触发加载
+  - all scope 聚合时会按 project 目录回报 `loaded/total` 进度
+- `PiSessionPicker` 现在支持 TS 风格 loading/progress header 首版：
+  - 初次进入时，current scope 未返回前会显示 `Loading current ...`
+  - 切到 all scope 且仍在加载时，会显示 `Loading x/y`
+  - loader 异常会显示 `Load error: ...`
+  - direct `pick(List, List)` 调用会走预加载路径，保持原有同步渲染和选择语义，不把旧调用点意外变成异步
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -72,9 +83,8 @@
 ## 当前边界
 
 - 这还是首版 scope toggle：
-  - 还没有 TS 版的 loading/progress header
   - fuzzy 现在已经支持 quoted phrase / regex / subsequence，但 scoring 还不是 TS `@mariozechner/pi-tui` 的同款实现
-  - cycle/default 现在已基本对齐 TS，但 loading/progress header 仍缺失
+  - cycle/default 现在已基本对齐 TS，但 loading/progress header 还只是首版
   - keybindings 现在有文件加载首版，但还没有完整的 app/editor 分层 manager
   - path show/hide 目前只是 description 级别开关，还没有 TS 版右侧布局/缩略路径渲染
 - resolver 现在只在 `--session-dir` 未显式指定时提供 current/all 双 scope；显式 `--session-dir` 仍退化成单 scope
@@ -91,16 +101,18 @@
 - `PiSessionPickerTest`：`filterAndSortSessions()` 直接覆盖 recent/relevance 排序语义
 - `PiSessionPickerTest`：`Ctrl+S` 第三态进入 threaded tree 渲染
 - `PiSessionPickerTest`：quoted phrase / `re:` regex / subsequence fuzzy 搜索
+- `PiSessionPickerTest`：initial current loading header、all-scope progress header
+- `PiCliSessionResolverTest`：loader-style picker stub 覆盖 current/all lazy load
 - `PiCliModuleTest`：从临时 agent dir 加载 `keybindings.json` 覆盖
 
 最近通过：
 
 ```bash
-.\gradlew.bat :pi-tui:test :pi-cli:test --no-daemon
+.\gradlew.bat :pi-cli:test --no-daemon
 ```
 
 ## 下一步建议
 
-1. session selector：补 TS 风格 loading/progress header
-2. session selector：进一步对齐 fuzzy scoring
-3. session selector：继续细化 app/editor keybinding 分层
+1. session selector：进一步对齐 fuzzy scoring
+2. session selector：继续细化 app/editor keybinding 分层
+3. session selector：补更接近 TS 的 path/cwd 布局细节
