@@ -7,8 +7,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import dev.pi.agent.runtime.AgentEvent;
 import dev.pi.agent.runtime.AgentMessage;
 import dev.pi.agent.runtime.AgentState;
+import dev.pi.ai.model.TextContent;
 import dev.pi.ai.stream.Subscription;
 import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletionStage;
 
@@ -24,9 +26,11 @@ public final class PiJsonMode {
     }
 
     public CompletionStage<Void> run(String prompt) {
-        if (prompt == null || prompt.isBlank()) {
-            throw new IllegalArgumentException("JSON mode requires a non-blank prompt");
-        }
+        return run(textPrompt(prompt));
+    }
+
+    public CompletionStage<Void> run(AgentMessage.UserMessage prompt) {
+        requirePromptContent(prompt);
 
         var eventSubscription = session.subscribe(this::writeEventLine);
         var stateSubscription = session.subscribeState(this::writeStateLine);
@@ -37,6 +41,27 @@ public final class PiJsonMode {
                 stateSubscription.unsubscribe();
                 eventSubscription.unsubscribe();
             });
+    }
+
+    private static AgentMessage.UserMessage textPrompt(String prompt) {
+        if (prompt == null || prompt.isBlank()) {
+            throw new IllegalArgumentException("JSON mode requires a non-blank prompt");
+        }
+        return new AgentMessage.UserMessage(List.of(new TextContent(prompt, null)), System.currentTimeMillis());
+    }
+
+    private static void requirePromptContent(AgentMessage.UserMessage prompt) {
+        if (prompt == null) {
+            throw new IllegalArgumentException("JSON mode requires a non-blank prompt");
+        }
+        var hasText = prompt.content().stream()
+            .filter(TextContent.class::isInstance)
+            .map(TextContent.class::cast)
+            .anyMatch(content -> !content.text().isBlank());
+        var hasNonText = prompt.content().stream().anyMatch(block -> !(block instanceof TextContent));
+        if (!hasText && !hasNonText) {
+            throw new IllegalArgumentException("JSON mode requires a non-blank prompt");
+        }
     }
 
     private void writeEventLine(AgentEvent event) {

@@ -107,6 +107,11 @@ public final class PiAgentSession implements PiInteractiveSession {
         return sdkSession.prompt(text);
     }
 
+    @Override
+    public CompletionStage<Void> prompt(AgentMessage.UserMessage message) {
+        return sdkSession.prompt(message);
+    }
+
     public CompletionStage<Void> prompt(AgentMessage message) {
         return sdkSession.prompt(message);
     }

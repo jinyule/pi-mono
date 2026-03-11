@@ -50,6 +50,8 @@
   - `/reload` extension runtime / startup pipeline first cut
 - 已完成第二十五刀：
   - instruction-resource-aware system prompt composition downshift first cut
+- 已完成第二十六刀：
+  - real module wiring `@file` / initial prompt first cut
 
 ## 已落地内容
 
@@ -79,6 +81,8 @@
 - `pi-java/modules/pi-sdk/src/main/java/dev/pi/sdk/CreateAgentSessionOptions.java`
 - `pi-java/modules/pi-sdk/src/main/java/dev/pi/sdk/PiSdk.java`
 - `pi-java/modules/pi-sdk/src/main/java/dev/pi/sdk/PiSdkSession.java`
+- `pi-java/modules/pi-sdk/src/main/java/dev/pi/sdk/SessionPromptComposer.java`
+- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiCliPromptFactory.java`
 - `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiCliParserTest.java`
 - `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiAgentSessionTest.java`
 - `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiInteractiveModeTest.java`
@@ -86,6 +90,7 @@
 - `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiJsonModeTest.java`
 - `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiRpcModeTest.java`
 - `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiCliApplicationTest.java`
+- `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiCliPromptFactoryTest.java`
 - `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiListModelsCommandTest.java`
 - `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiCliSessionResolverTest.java`
 - `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiSessionPickerTest.java`
@@ -194,6 +199,7 @@
   - 新增 `PiCliMain.main(String[] args)` 作为最小 CLI 入口
   - `PiCliModuleTest` 已覆盖 real `list-models` wiring、real `export` wiring、real `print` wiring
   - 默认 sessionFactory 现在也会在显式 `--extension` 路径存在时创建 `ExtensionRuntime`，并把 `/reload` 接到 `ExtensionRuntime.reload()`
+  - `@file` 现在会通过 `PiCliPromptFactory` 转成 initial prompt：文本文件包成 `<file ...>` 块，图片文件附带 `ImageContent`
 - `/copy` 当前只复制最近一条 assistant 的 plain-text flatten 文本；未覆盖图片块、富文本选择、历史消息 picker，也还未抽出统一 slash-command registry。
 - `/tree` 当前是首版 selector：只覆盖 prefix search、up/down/enter/esc、基础树前缀渲染和当前 leaf 高亮；尚未接 TS 版的 summarize prompt、custom prompt、label edit、user-only/all-entry filter toggle、bookmark 语义。
 - `/fork` 当前也是首版 selector：只覆盖 prefix search、up/down/enter/esc 与 flat user-message list；尚未接 extension `session_before_fork` / `session_fork` 生命周期、double-escape action、RPC `fork/get_fork_messages`、cross-project `forkFrom`。
@@ -207,6 +213,13 @@
   - `PiSdkSession.create(...)` 现在会统一组合 explicit system prompt、resource system prompt、context files、resource append prompts、CLI append prompt
   - `PiSdkSession.updateSystemPrompt(...)` 复用同一套组合逻辑
   - `PiAgentSession` 不再自行维护 `composeSystemPrompt(...)`
+- real module wiring 的 `@file` / initial prompt 当前已补上第一层：
+  - `PiCliPromptFactory` 统一把 CLI `@file` 参数转成 `AgentMessage.UserMessage`
+  - 文本文件内容会以内联 `<file name="...">...</file>` 块注入 prompt
+  - 图片文件会生成占位文本 + `ImageContent` 附件，并默认走 resize
+  - `interactive` 模式启动后若存在 initial prompt，会自动提交首条消息
+  - `print` / `json` 模式现在直接消费 structured user prompt
+  - `rpc` 模式对齐 TS 侧语义，明确拒绝 `@file`
 - startup/session shell shared core 这刀之后，`pi-cli` 与 `pi-sdk` 的重复点主要还剩：
   - startup pipeline 的 module wiring / parser-to-runtime 装配
   - CLI 特有的 tree/fork/compact/reload 壳层
@@ -214,7 +227,6 @@
 - real main/module wiring 目前的边界：
   - 默认 `ModelRegistry` 仍为空；若未显式注入或预注册模型，session mode 会以 clear error 失败
   - `interactive` handler 当前通过启动 `PiInteractiveMode` 并阻塞进程生命周期维持运行，尚未有更细的退出信号
-  - `@file` 参数还未接到 real module wiring；当前会报 clear error
   - help/version 仍未接到真实输出路径
   - extension runtime 当前只消费显式 `--extension` 路径；还未接默认发现目录或 settings-driven extension source
 
@@ -284,6 +296,8 @@
 - real main/module wiring first cut：`PiCliModule.application()/run()` + `PiCliMain`
 - `/reload` extension runtime / startup pipeline first cut：`ReloadResult.extensionWarnings`、`PiAgentSession.reloadAction`、default `PiCliModule` extension runtime reload wiring
 - instruction-resource-aware system prompt composition downshift first cut：`CreateAgentSessionOptions.instructionResources`、`SessionPromptComposer`、`PiSdkSession.updateSystemPrompt(...)`
+- real module wiring `@file` / initial prompt first cut：`PiCliPromptFactory`、structured user prompt for `print/json/interactive`、RPC `@file` rejection
+- `@file` / initial prompt first cut：文本文件 prompt build、图片附件 prompt build、interactive auto-submit、RPC `@file` rejection
 
 ## 验证
 
@@ -298,6 +312,6 @@ npm.cmd run check
 
 按依赖顺序，下一刀建议进入 CLI 收口：
 
-1. 继续补 real module wiring 的 help/version、`@file`、interactive exit 语义。
+1. 继续补 real module wiring 的 help/version、interactive exit 语义。
 2. 继续下沉 startup pipeline 里剩余的 CLI 专属参数拼装，减少 `pi-cli` / `pi-sdk` 差异。
 3. 再往后接 theme/skills/prompts registry rebuild 与 loaded-resource diagnostics。

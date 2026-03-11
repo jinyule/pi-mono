@@ -2,7 +2,9 @@ package dev.pi.cli;
 
 import dev.pi.agent.runtime.AgentMessage;
 import dev.pi.ai.model.StopReason;
+import dev.pi.ai.model.TextContent;
 import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -23,12 +25,35 @@ public final class PiPrintMode {
     }
 
     public CompletionStage<RunResult> run(String prompt) {
-        if (prompt == null || prompt.isBlank()) {
-            throw new IllegalArgumentException("Print mode requires a non-blank prompt");
-        }
+        return run(textPrompt(prompt));
+    }
+
+    public CompletionStage<RunResult> run(AgentMessage.UserMessage prompt) {
+        requirePromptContent(prompt);
         return session.prompt(prompt)
             .thenCompose(ignored -> session.waitForIdle())
             .thenApply(ignored -> emitLastAssistantMessage());
+    }
+
+    private static AgentMessage.UserMessage textPrompt(String prompt) {
+        if (prompt == null || prompt.isBlank()) {
+            throw new IllegalArgumentException("Print mode requires a non-blank prompt");
+        }
+        return new AgentMessage.UserMessage(List.of(new TextContent(prompt, null)), System.currentTimeMillis());
+    }
+
+    private static void requirePromptContent(AgentMessage.UserMessage prompt) {
+        if (prompt == null) {
+            throw new IllegalArgumentException("Print mode requires a non-blank prompt");
+        }
+        var hasText = prompt.content().stream()
+            .filter(TextContent.class::isInstance)
+            .map(TextContent.class::cast)
+            .anyMatch(content -> !content.text().isBlank());
+        var hasNonText = prompt.content().stream().anyMatch(block -> !(block instanceof TextContent));
+        if (!hasText && !hasNonText) {
+            throw new IllegalArgumentException("Print mode requires a non-blank prompt");
+        }
     }
 
     private RunResult emitLastAssistantMessage() {

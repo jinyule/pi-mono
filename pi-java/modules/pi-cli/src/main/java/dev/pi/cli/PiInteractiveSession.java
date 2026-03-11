@@ -1,10 +1,11 @@
 package dev.pi.cli;
 
 import dev.pi.agent.runtime.AgentEvent;
+import dev.pi.agent.runtime.AgentMessage;
 import dev.pi.agent.runtime.AgentState;
-import dev.pi.session.InstructionResourceLoader;
 import dev.pi.session.SettingsManager;
 import dev.pi.ai.stream.Subscription;
+import dev.pi.session.InstructionResourceLoader;
 import dev.pi.session.SessionTreeNode;
 import java.util.List;
 import java.util.concurrent.CompletionStage;
@@ -20,6 +21,10 @@ public interface PiInteractiveSession {
     Subscription subscribeState(Consumer<AgentState> listener);
 
     CompletionStage<Void> prompt(String text);
+
+    default CompletionStage<Void> prompt(AgentMessage.UserMessage message) {
+        return prompt(PiMessageRenderer.renderUserContent(message.content()));
+    }
 
     CompletionStage<Void> resume();
 

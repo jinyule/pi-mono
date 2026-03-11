@@ -112,25 +112,42 @@ public final class PiCliModule {
     }
 
     private CompletionStage<Void> runInteractive(PiCliArgs args, PiInteractiveSession session) {
-        var mode = new PiInteractiveMode(session, terminalFactory.get());
-        mode.start();
-        var done = new CompletableFuture<Void>();
-        Runtime.getRuntime().addShutdownHook(new Thread(mode::close));
-        return done;
+        try {
+            var initialPrompt = PiCliPromptFactory.createInitialPrompt(args, cwd);
+            var mode = new PiInteractiveMode(session, terminalFactory.get());
+            mode.start();
+            var done = new CompletableFuture<Void>();
+            Runtime.getRuntime().addShutdownHook(new Thread(mode::close));
+            var startup = initialPrompt == null ? CompletableFuture.<Void>completedFuture(null) : session.prompt(initialPrompt);
+            return startup.thenCompose(ignored -> done);
+        } catch (IOException exception) {
+            return CompletableFuture.failedFuture(exception);
+        }
     }
 
     private CompletionStage<Void> runPrint(PiCliArgs args, PiInteractiveSession session) {
-        return new PiPrintMode(session, stdout, stderr)
-            .run(promptText(args))
-            .thenAccept(ignored -> {
-            });
+        try {
+            return new PiPrintMode(session, stdout, stderr)
+                .run(PiCliPromptFactory.createInitialPrompt(args, cwd))
+                .thenAccept(ignored -> {
+                });
+        } catch (IOException exception) {
+            return CompletableFuture.failedFuture(exception);
+        }
     }
 
     private CompletionStage<Void> runJson(PiCliArgs args, PiInteractiveSession session) {
-        return new PiJsonMode(session, stdout).run(promptText(args));
+        try {
+            return new PiJsonMode(session, stdout).run(PiCliPromptFactory.createInitialPrompt(args, cwd));
+        } catch (IOException exception) {
+            return CompletableFuture.failedFuture(exception);
+        }
     }
 
     private CompletionStage<Void> runRpc(PiCliArgs args, PiInteractiveSession session) {
+        if (!args.fileArgs().isEmpty()) {
+            return CompletableFuture.failedFuture(new IllegalArgumentException("@file arguments are not supported in RPC mode"));
+        }
         var rpcMode = new PiRpcMode(session, stdout);
         try {
             var reader = input instanceof BufferedReader bufferedReader ? bufferedReader : new BufferedReader(input);
@@ -223,16 +240,6 @@ public final class PiCliModule {
             models.addAll(registry.getModels(provider));
         }
         return List.copyOf(models);
-    }
-
-    private static String promptText(PiCliArgs args) {
-        if (!args.fileArgs().isEmpty()) {
-            throw new IllegalArgumentException("@file arguments are not wired into the real CLI entrypoint yet");
-        }
-        if (args.messages().isEmpty()) {
-            throw new IllegalArgumentException("CLI mode requires a prompt message");
-        }
-        return String.join(System.lineSeparator(), args.messages());
     }
 
     private static String formatExtensionFailure(dev.pi.extension.spi.ExtensionLoadFailure failure) {

@@ -1,6 +1,7 @@
 package dev.pi.cli;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import dev.pi.agent.runtime.AgentEvent;
 import dev.pi.agent.runtime.AgentMessage;
@@ -17,6 +18,7 @@ import dev.pi.ai.registry.ModelRegistry;
 import dev.pi.ai.stream.Subscription;
 import dev.pi.session.SessionManager;
 import dev.pi.tui.Terminal;
+import java.nio.charset.StandardCharsets;
 import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -101,6 +103,75 @@ class PiCliModuleTest {
         module.run("--print", "hello", "world").toCompletableFuture().join();
 
         assertThat(stdout.toString()).contains("Ack: hello").contains("world");
+    }
+
+    @Test
+    void wiresFileArgsIntoPrintPrompt(@TempDir Path tempDir) throws Exception {
+        var file = tempDir.resolve("prompt.md");
+        Files.writeString(file, "Context line", StandardCharsets.UTF_8);
+        var session = new CapturingPromptSession();
+        var stdout = new StringBuilder();
+        var module = new PiCliModule(
+            tempDir,
+            new StringReader(""),
+            stdout,
+            new StringBuilder(),
+            new PiCliParser(),
+            aiClientWithModels(model("claude-3-7-sonnet", "anthropic")),
+            args -> session,
+            NoOpTerminal::new
+        );
+
+        module.run("--print", "@" + file, "Summarize").toCompletableFuture().join();
+
+        assertThat(session.prompts).hasSize(1);
+        assertThat(PiMessageRenderer.renderUserContent(session.prompts.getFirst().content()))
+            .contains("<file name=\"" + file + "\">\nContext line\n</file>")
+            .contains("Summarize");
+        assertThat(stdout.toString()).contains("Ack:");
+    }
+
+    @Test
+    void wiresInitialInteractivePrompt(@TempDir Path tempDir) throws Exception {
+        var file = tempDir.resolve("prompt.md");
+        Files.writeString(file, "Context line", StandardCharsets.UTF_8);
+        var session = new CapturingPromptSession();
+        var module = new PiCliModule(
+            tempDir,
+            new StringReader(""),
+            new StringBuilder(),
+            new StringBuilder(),
+            new PiCliParser(),
+            aiClientWithModels(model("claude-3-7-sonnet", "anthropic")),
+            args -> session,
+            NoOpTerminal::new
+        );
+
+        module.run("@" + file, "Summarize");
+
+        waitFor(() -> !session.prompts.isEmpty());
+        assertThat(PiMessageRenderer.renderUserContent(session.prompts.getFirst().content()))
+            .contains("<file name=\"" + file + "\">\nContext line\n</file>")
+            .contains("Summarize");
+    }
+
+    @Test
+    void rejectsFileArgsInRpcMode(@TempDir Path tempDir) throws Exception {
+        var file = tempDir.resolve("prompt.md");
+        Files.writeString(file, "Context line", StandardCharsets.UTF_8);
+        var module = new PiCliModule(
+            tempDir,
+            new StringReader(""),
+            new StringBuilder(),
+            new StringBuilder(),
+            new PiCliParser(),
+            aiClientWithModels(model("claude-3-7-sonnet", "anthropic")),
+            args -> new CapturingPromptSession(),
+            NoOpTerminal::new
+        );
+
+        assertThatThrownBy(() -> module.run("--mode", "rpc", "@" + file).toCompletableFuture().join())
+            .hasRootCauseMessage("@file arguments are not supported in RPC mode");
     }
 
     private static PiAiClient aiClientWithModels(Model... models) {
@@ -230,5 +301,98 @@ class PiCliModuleTest {
         public int rows() {
             return 24;
         }
+    }
+
+    private static final class CapturingPromptSession implements PiInteractiveSession {
+        private final java.util.concurrent.CopyOnWriteArrayList<AgentMessage.UserMessage> prompts = new java.util.concurrent.CopyOnWriteArrayList<>();
+        private AgentState state = new AgentState(
+            "",
+            model("claude-3-7-sonnet", "anthropic"),
+            null,
+            List.of(),
+            List.of(),
+            false,
+            null,
+            Set.of(),
+            null
+        );
+
+        @Override
+        public String sessionId() {
+            return "session";
+        }
+
+        @Override
+        public AgentState state() {
+            return state;
+        }
+
+        @Override
+        public Subscription subscribe(java.util.function.Consumer<AgentEvent> listener) {
+            return () -> {
+            };
+        }
+
+        @Override
+        public Subscription subscribeState(java.util.function.Consumer<AgentState> listener) {
+            listener.accept(state);
+            return () -> {
+            };
+        }
+
+        @Override
+        public java.util.concurrent.CompletionStage<Void> prompt(String text) {
+            return prompt(new AgentMessage.UserMessage(List.of(new TextContent(text, null)), 1L));
+        }
+
+        @Override
+        public java.util.concurrent.CompletionStage<Void> prompt(AgentMessage.UserMessage message) {
+            prompts.add(message);
+            var rendered = PiMessageRenderer.renderUserContent(message.content());
+            state = state.withMessages(List.of(
+                message,
+                new AgentMessage.AssistantMessage(
+                    List.of(new TextContent("Ack: " + rendered, null)),
+                    "anthropic-messages",
+                    "anthropic",
+                    "claude-3-7-sonnet",
+                    new Usage(1, 1, 0, 0, 2, new Usage.Cost(0.0, 0.0, 0.0, 0.0, 0.0)),
+                    StopReason.STOP,
+                    null,
+                    2L
+                )
+            ));
+            return java.util.concurrent.CompletableFuture.completedFuture(null);
+        }
+
+        @Override
+        public java.util.concurrent.CompletionStage<Void> resume() {
+            return java.util.concurrent.CompletableFuture.completedFuture(null);
+        }
+
+        @Override
+        public java.util.concurrent.CompletionStage<Void> waitForIdle() {
+            return java.util.concurrent.CompletableFuture.completedFuture(null);
+        }
+
+        @Override
+        public void abort() {
+        }
+    }
+
+    private static void waitFor(java.util.function.BooleanSupplier condition) {
+        var deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(2);
+        while (System.nanoTime() < deadline) {
+            if (condition.getAsBoolean()) {
+                return;
+            }
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+                throw new AssertionError(exception);
+            }
+        }
+        throw new AssertionError("condition not met");
     }
 }
