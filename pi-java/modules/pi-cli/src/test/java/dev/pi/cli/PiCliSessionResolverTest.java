@@ -88,7 +88,7 @@ class PiCliSessionResolverTest {
 
     @Test
     void reportsNoSessionsAvailableToResume(@TempDir Path tempDir) {
-        var resolver = new PiCliSessionResolver(tempDir, sessions -> null, tempDir.resolve("all-sessions"));
+        var resolver = new PiCliSessionResolver(tempDir, (currentSessions, allSessions) -> null, tempDir.resolve("all-sessions"));
 
         assertThatThrownBy(() -> resolver.resolve(new PiCliParser().parse("--resume")))
             .isInstanceOf(IllegalStateException.class)
@@ -103,8 +103,9 @@ class PiCliSessionResolverTest {
         existing.appendMessage(userMessage("resume me", 1L));
         existing.appendMessage(assistantMessage("done"));
 
-        var resolver = new PiCliSessionResolver(tempDir, sessions -> {
-            assertThat(sessions).extracting(SessionInfo::path).containsExactly(sessionFile.toAbsolutePath().normalize());
+        var resolver = new PiCliSessionResolver(tempDir, (currentSessions, allSessions) -> {
+            assertThat(currentSessions).extracting(SessionInfo::path).containsExactly(sessionFile.toAbsolutePath().normalize());
+            assertThat(allSessions).extracting(SessionInfo::path).containsExactly(sessionFile.toAbsolutePath().normalize());
             return sessionFile;
         });
 
@@ -130,8 +131,9 @@ class PiCliSessionResolverTest {
         newer.appendMessage(userMessage("newer", 2L));
         newer.appendMessage(assistantMessage("done"));
 
-        var resolver = new PiCliSessionResolver(tempDir, sessions -> {
-            assertThat(sessions).extracting(SessionInfo::path)
+        var resolver = new PiCliSessionResolver(tempDir, (currentSessions, allSessions) -> {
+            assertThat(currentSessions).isEmpty();
+            assertThat(allSessions).extracting(SessionInfo::path)
                 .containsExactly(
                     newer.sessionFile().toAbsolutePath().normalize(),
                     older.sessionFile().toAbsolutePath().normalize()
@@ -155,7 +157,7 @@ class PiCliSessionResolverTest {
         existing.appendMessage(userMessage("resume me", 1L));
         existing.appendMessage(assistantMessage("done"));
 
-        var resolver = new PiCliSessionResolver(tempDir, sessions -> null);
+        var resolver = new PiCliSessionResolver(tempDir, (currentSessions, allSessions) -> null);
 
         assertThatThrownBy(() -> resolver.resolve(new PiCliParser().parse("--resume", "--session-dir", sessionsDir.toString())))
             .isInstanceOf(CancellationException.class)

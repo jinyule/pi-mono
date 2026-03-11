@@ -9,4 +9,9 @@ class KeyMatcherTest {
     void matchesConfiguredCtrlRSequence() {
         assertThat(KeyMatcher.matches("\u0012", "ctrl+r")).isTrue();
     }
+
+    @Test
+    void matchesTabSequence() {
+        assertThat(KeyMatcher.matches("\t", "tab")).isTrue();
+    }
 }

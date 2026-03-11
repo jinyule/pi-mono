@@ -6,6 +6,7 @@ import java.util.Objects;
 public final class KeyMatcher {
     private static final Map<String, String> NAMED_SEQUENCES = Map.ofEntries(
         Map.entry("enter", "\r"),
+        Map.entry("tab", "\t"),
         Map.entry("escape", "\u001b"),
         Map.entry("backspace", "\u007f"),
         Map.entry("delete", "\u001b[3~"),
@@ -48,6 +49,7 @@ public final class KeyMatcher {
         Objects.requireNonNull(keyId, "keyId");
         return switch (keyId) {
             case "enter" -> "\r".equals(data) || "\n".equals(data);
+            case "tab" -> "\t".equals(data);
             case "escape" -> "\u001b".equals(data);
             case "backspace" -> "\u007f".equals(data) || "\b".equals(data);
             case "delete" -> "\u001b[3~".equals(data);

@@ -62,16 +62,18 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
     }
 
     @Override
-    public Path pick(List<SessionInfo> sessions) {
-        Objects.requireNonNull(sessions, "sessions");
-        if (sessions.isEmpty()) {
+    public Path pick(List<SessionInfo> currentSessions, List<SessionInfo> allSessions) {
+        Objects.requireNonNull(currentSessions, "currentSessions");
+        Objects.requireNonNull(allSessions, "allSessions");
+        if (currentSessions.isEmpty() && allSessions.isEmpty()) {
             return null;
         }
 
         var selection = new CompletableFuture<Path>();
         var tui = new Tui(terminal, true);
         var component = new PickerComponent(
-            sessions,
+            currentSessions,
+            allSessions,
             path -> {
                 if (selection.complete(path)) {
                     tui.stop();
@@ -90,10 +92,15 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
         return selection.join();
     }
 
+    public Path pick(List<SessionInfo> sessions) {
+        return pick(sessions, sessions);
+    }
+
     private static final class PickerComponent implements Component, Focusable {
         private final Input search = new Input();
         private final Input rename = new Input();
-        private final List<SessionInfo> sessionInfos;
+        private final List<SessionInfo> currentSessions;
+        private final List<SessionInfo> allSessions;
         private final java.util.function.Consumer<Path> onSelect;
         private final Runnable onCancel;
         private final Runnable requestRender;
@@ -102,14 +109,17 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
         private String pendingDeletePath;
         private String renamingPath;
         private String renamingCurrentName;
+        private Scope scope = Scope.CURRENT;
 
         private PickerComponent(
-            List<SessionInfo> sessionInfos,
+            List<SessionInfo> currentSessions,
+            List<SessionInfo> allSessions,
             java.util.function.Consumer<Path> onSelect,
             Runnable onCancel,
             Runnable requestRender
         ) {
-            this.sessionInfos = new ArrayList<>(sessionInfos);
+            this.currentSessions = new ArrayList<>(currentSessions);
+            this.allSessions = new ArrayList<>(allSessions);
             this.onSelect = onSelect;
             this.onCancel = onCancel;
             this.requestRender = requestRender;
@@ -132,9 +142,10 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
                 return List.copyOf(lines);
             }
             var lines = new java.util.ArrayList<String>();
-            lines.add("Resume session");
+            lines.add(scope == Scope.CURRENT ? "Resume session (Current folder)" : "Resume session (All)");
             lines.add(pendingDeletePath == null
-                ? "Type to filter. Enter selects. Ctrl+D deletes. Ctrl+R renames. Esc cancels."
+                ? "Type to filter. %s toggles scope. Enter selects. Ctrl+D deletes. Ctrl+R renames. Esc cancels."
+                    .formatted(keyHint(EditorAction.SESSION_SCOPE_TOGGLE))
                 : "Delete selected session? Enter confirms. Esc cancels.");
             lines.add("");
             lines.addAll(search.render(width));
@@ -173,6 +184,10 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
                     pendingDeletePath = null;
                     requestRender.run();
                 }
+                return;
+            }
+            if (keybindings.matches(data, EditorAction.SESSION_SCOPE_TOGGLE)) {
+                toggleScope();
                 return;
             }
             if (
@@ -218,7 +233,7 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
         }
 
         private void rebuildSessionList() {
-            this.sessions = new SelectList(sessionInfos.stream().map(PickerComponent::toSelectItem).toList(), 10, THEME);
+            this.sessions = new SelectList(activeSessions().stream().map(session -> toSelectItem(session, showCwd())).toList(), 10, THEME);
             this.sessions.setOnSelectionChange(ignored -> requestRender.run());
             this.sessions.setOnSelect(item -> onSelect.accept(Path.of(decodePath(item.value()))));
             this.sessions.setOnCancel(onCancel);
@@ -234,8 +249,9 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
                 throw new IllegalStateException("Failed to delete session: " + targetPath.getFileName(), exception);
             }
 
-            sessionInfos.removeIf(session -> session.path().toAbsolutePath().normalize().equals(targetPath.toAbsolutePath().normalize()));
-            if (sessionInfos.isEmpty()) {
+            currentSessions.removeIf(session -> session.path().toAbsolutePath().normalize().equals(targetPath.toAbsolutePath().normalize()));
+            allSessions.removeIf(session -> session.path().toAbsolutePath().normalize().equals(targetPath.toAbsolutePath().normalize()));
+            if (currentSessions.isEmpty() && allSessions.isEmpty()) {
                 onCancel.run();
                 return;
             }
@@ -261,7 +277,8 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             try {
                 var manager = SessionManager.open(targetPath);
                 manager.appendSessionInfo(nextName);
-                refreshSessionInfo(targetPath);
+                refreshSessionInfo(currentSessions, targetPath);
+                refreshSessionInfo(allSessions, targetPath);
             } catch (java.io.IOException exception) {
                 throw new IllegalStateException("Failed to rename session: " + targetPath.getFileName(), exception);
             }
@@ -274,7 +291,7 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             requestRender.run();
         }
 
-        private void refreshSessionInfo(Path targetPath) throws java.io.IOException {
+        private void refreshSessionInfo(List<SessionInfo> sessionInfos, Path targetPath) throws java.io.IOException {
             var refreshed = SessionManager.list(targetPath.getParent()).stream()
                 .filter(session -> session.path().equals(targetPath.toAbsolutePath().normalize()))
                 .findFirst()
@@ -292,7 +309,7 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
 
         private String currentNameFor(Path targetPath) {
             var normalized = targetPath.toAbsolutePath().normalize();
-            for (var sessionInfo : sessionInfos) {
+            for (var sessionInfo : allSessions) {
                 if (sessionInfo.path().equals(normalized)) {
                     return sessionInfo.name() == null ? "" : sessionInfo.name();
                 }
@@ -300,15 +317,41 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             return "";
         }
 
-        private static SelectItem toSelectItem(SessionInfo session) {
+        private void toggleScope() {
+            if (sameScopeData()) {
+                return;
+            }
+            scope = scope == Scope.CURRENT ? Scope.ALL : Scope.CURRENT;
+            rebuildSessionList();
+            requestRender.run();
+        }
+
+        private List<SessionInfo> activeSessions() {
+            return scope == Scope.ALL ? allSessions : currentSessions;
+        }
+
+        private boolean showCwd() {
+            return scope == Scope.ALL || sameScopeData();
+        }
+
+        private boolean sameScopeData() {
+            return currentSessions.size() == allSessions.size() && currentSessions.containsAll(allSessions) && allSessions.containsAll(currentSessions);
+        }
+
+        private static SelectItem toSelectItem(SessionInfo session, boolean showCwd) {
             var label = session.name() == null || session.name().isBlank() ? session.firstMessage() : session.name();
             var description = "%s · %d msg · %s%s".formatted(
                 session.path().getFileName(),
                 session.messageCount(),
                 formatAge(session.modified()),
-                session.cwd() == null || session.cwd().isBlank() ? "" : " · " + session.cwd()
+                showCwd && session.cwd() != null && !session.cwd().isBlank() ? " · " + session.cwd() : ""
             );
             return new SelectItem(encodeValue(session, label), label, description);
+        }
+
+        private static String keyHint(EditorAction action) {
+            var keys = EditorKeybindings.global().getKeys(action);
+            return keys.isEmpty() ? action.name() : keys.getFirst();
         }
 
         private static String formatAge(Instant modified) {
@@ -335,6 +378,11 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
         private static String decodePath(String value) {
             var delimiter = value.lastIndexOf(VALUE_DELIMITER);
             return delimiter >= 0 ? value.substring(delimiter + VALUE_DELIMITER.length()) : value;
+        }
+
+        private enum Scope {
+            CURRENT,
+            ALL
         }
     }
 }

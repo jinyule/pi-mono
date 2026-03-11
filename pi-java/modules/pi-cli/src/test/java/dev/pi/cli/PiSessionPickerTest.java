@@ -24,10 +24,11 @@ class PiSessionPickerTest {
         var picker = new PiSessionPicker(terminal);
         Path[] selected = new Path[1];
 
-        Thread.ofVirtual().start(() -> selected[0] = picker.pick(List.of(
+        var sessions = List.of(
             session("first.jsonl", "First task", 3, Instant.now().minusSeconds(60)),
             session("second.jsonl", "Second task", 5, Instant.now().minusSeconds(10))
-        )));
+        );
+        Thread.ofVirtual().start(() -> selected[0] = picker.pick(sessions, sessions));
 
         waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Resume session")));
 
@@ -50,10 +51,11 @@ class PiSessionPickerTest {
         var terminal = new VirtualTerminal(80, 12);
         var picker = new PiSessionPicker(terminal);
 
-        Thread.ofVirtual().start(() -> picker.pick(List.of(
+        var sessions = List.of(
             session("alpha.jsonl", "Alpha task", 2, Instant.now().minusSeconds(60)),
             session("beta.jsonl", "Beta task", 4, Instant.now().minusSeconds(10))
-        )));
+        );
+        Thread.ofVirtual().start(() -> picker.pick(sessions, sessions));
 
         waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Alpha task")));
 
@@ -72,10 +74,11 @@ class PiSessionPickerTest {
         var terminal = new VirtualTerminal(100, 12);
         var picker = new PiSessionPicker(terminal);
 
-        Thread.ofVirtual().start(() -> picker.pick(List.of(
+        var sessions = List.of(
             session("alpha.jsonl", "Alpha task", 2, Instant.now().minusSeconds(60), "/workspace/api"),
             session("beta.jsonl", "Beta task", 4, Instant.now().minusSeconds(10), "/workspace/web")
-        )));
+        );
+        Thread.ofVirtual().start(() -> picker.pick(sessions, sessions));
 
         waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Alpha task")));
 
@@ -99,10 +102,11 @@ class PiSessionPickerTest {
         Files.writeString(first, "{}", StandardCharsets.UTF_8);
         Files.writeString(second, "{}", StandardCharsets.UTF_8);
 
-        Thread.ofVirtual().start(() -> picker.pick(List.of(
+        var sessions = List.of(
             session(first, "First task", 2, Instant.now().minusSeconds(60), "/workspace/api"),
             session(second, "Second task", 4, Instant.now().minusSeconds(10), "/workspace/web")
-        )));
+        );
+        Thread.ofVirtual().start(() -> picker.pick(sessions, sessions));
 
         waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("First task")));
 
@@ -129,7 +133,7 @@ class PiSessionPickerTest {
         sessionManager.appendSessionInfo("Old name");
         var sessions = SessionManager.list(tempDir);
 
-        Thread.ofVirtual().start(() -> picker.pick(sessions));
+        Thread.ofVirtual().start(() -> picker.pick(sessions, sessions));
 
         waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Resume session")));
 
@@ -144,6 +148,34 @@ class PiSessionPickerTest {
             .extracting(SessionInfo::name)
             .contains("New name");
         assertThat(String.join("\n", terminal.getViewport())).contains("New name");
+
+        terminal.sendInput("\u001b");
+    }
+
+    @Test
+    void togglesBetweenCurrentAndAllScopes() {
+        var terminal = new VirtualTerminal(100, 12);
+        var picker = new PiSessionPicker(terminal);
+
+        Thread.ofVirtual().start(() -> picker.pick(
+            List.of(session("current.jsonl", "Current task", 2, Instant.now().minusSeconds(30), "/workspace/current")),
+            List.of(
+                session("current.jsonl", "Current task", 2, Instant.now().minusSeconds(30), "/workspace/current"),
+                session("global.jsonl", "Global task", 5, Instant.now().minusSeconds(10), "/workspace/other")
+            )
+        ));
+
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Resume session (Current folder)")));
+        assertThat(String.join("\n", terminal.getViewport()))
+            .contains("Current task")
+            .doesNotContain("Global task");
+
+        terminal.sendInput("\t");
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Resume session (All)")));
+
+        assertThat(String.join("\n", terminal.getViewport()))
+            .contains("Global task")
+            .contains("/workspace/other");
 
         terminal.sendInput("\u001b");
     }

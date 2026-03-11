@@ -66,14 +66,17 @@ public final class PiCliSessionResolver {
     }
 
     private SessionManager resolvePickedSession(PiCliArgs args) throws IOException {
-        var sessions = args.sessionDirectory() == null
-            ? listAllSessions()
+        var currentSessions = args.sessionDirectory() == null
+            ? SessionManager.list(resolveSessionDirectory(null))
             : SessionManager.list(resolveSessionDirectory(args.sessionDirectory()));
-        if (sessions.isEmpty()) {
+        var allSessions = args.sessionDirectory() == null
+            ? listAllSessions()
+            : currentSessions;
+        if (currentSessions.isEmpty() && allSessions.isEmpty()) {
             throw new IllegalStateException("No sessions available to resume");
         }
 
-        var selectedPath = sessionPicker.pick(sessions);
+        var selectedPath = sessionPicker.pick(currentSessions, allSessions);
         if (selectedPath == null) {
             throw new CancellationException("Session selection cancelled");
         }
@@ -110,6 +113,6 @@ public final class PiCliSessionResolver {
 
     @FunctionalInterface
     public interface SessionPicker {
-        Path pick(List<SessionInfo> sessions);
+        Path pick(List<SessionInfo> currentSessions, List<SessionInfo> allSessions);
     }
 }
