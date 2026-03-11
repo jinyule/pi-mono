@@ -12,6 +12,7 @@ import dev.pi.tui.SelectItem;
 import dev.pi.tui.SelectList;
 import dev.pi.tui.SelectListTheme;
 import dev.pi.tui.Terminal;
+import dev.pi.tui.TerminalText;
 import dev.pi.tui.Tui;
 import java.nio.file.Path;
 import java.nio.file.Files;
@@ -934,13 +935,21 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             var title = scope == Scope.CURRENT ? "Resume session (Current folder)" : "Resume session (All)";
             var summary = scopeSummary();
             if (width <= 0) {
-                return title + " " + summary;
+                return "";
             }
-            var totalLength = title.length() + 1 + summary.length();
-            if (totalLength >= width) {
-                return title + " " + summary;
+            var titleWidth = TerminalText.visibleWidth(title);
+            var summaryWidth = TerminalText.visibleWidth(summary);
+            if (titleWidth + 1 + summaryWidth <= width) {
+                return title + " ".repeat(width - titleWidth - summaryWidth) + summary;
             }
-            return title + " ".repeat(width - totalLength) + summary;
+            if (summaryWidth >= width) {
+                return TerminalText.truncateToWidth(summary, width);
+            }
+            var availableTitleWidth = width - summaryWidth - 1;
+            if (availableTitleWidth <= 0) {
+                return TerminalText.truncateToWidth(summary, width);
+            }
+            return TerminalText.truncateToWidth(title, availableTitleWidth) + " " + summary;
         }
 
         private static String progressText(ProgressSnapshot progress) {

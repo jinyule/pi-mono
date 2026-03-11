@@ -10,6 +10,7 @@ import dev.pi.session.SessionManager;
 import dev.pi.session.SessionInfo;
 import dev.pi.tui.EditorAction;
 import dev.pi.tui.EditorKeybindings;
+import dev.pi.tui.TerminalText;
 import dev.pi.tui.VirtualTerminal;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -287,6 +288,27 @@ class PiSessionPickerTest {
 
         waitFor(() -> terminal.getViewport().stream().anyMatch(line ->
             line.contains("Resume session (Current folder)") && line.contains("◉ Current Folder | ○ All")));
+
+        terminal.sendInput("\u001b");
+    }
+
+    @Test
+    void truncatesSingleRowHeaderToTerminalWidth() {
+        var terminal = new VirtualTerminal(44, 12);
+        var picker = new PiSessionPicker(terminal);
+
+        Thread.ofVirtual().start(() -> picker.pick(
+            List.of(session("current.jsonl", "Current task", 2, Instant.now().minusSeconds(30), "/workspace/current")),
+            List.of(session("current.jsonl", "Current task", 2, Instant.now().minusSeconds(30), "/workspace/current"))
+        ));
+
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("◉ Current Folder | ○ All")));
+
+        var header = terminal.getViewport().getFirst();
+        assertThat(TerminalText.visibleWidth(header)).isLessThanOrEqualTo(44);
+        assertThat(header)
+            .contains("◉ Current Folder | ○ All")
+            .contains("...");
 
         terminal.sendInput("\u001b");
     }

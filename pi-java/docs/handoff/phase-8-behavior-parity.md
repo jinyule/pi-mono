@@ -37,6 +37,8 @@
   - interactive app keybindings 扩到 interrupt/tree/fork
 - 已完成第十六刀：
   - interactive app keybindings 补 resume
+- 已完成第十七刀：
+  - session selector 单行顶栏宽度感知截断 first cut
 
 ## 本轮落地
 
@@ -136,6 +138,11 @@
   - app `tree` 会打开 tree overlay
   - app `fork` 会打开 fork overlay
   - 其余输入再继续落到 `Input`
+- `PiSessionPicker` 现在会在窄终端下对单行顶栏做宽度感知截断：
+  - 宽度足够时仍保持左 title / 右 scope summary 的单行布局
+  - 宽度不足时优先保留右侧 scope summary
+  - title 不够放下时会用 `...` 安全截断，避免顶栏溢出 viewport
+  - scope summary 自身过宽时也会被安全截断，而不是直接撑破一行
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -175,6 +182,7 @@
 - `PiCliModuleTest`：从临时 agent dir 加载 `keybindings.json` 覆盖
 - `PiInteractiveModeTest`：app keybindings 驱动 tree / fork / interrupt
 - `PiInteractiveModeTest`：app keybindings 驱动 resume
+- `PiSessionPickerTest`：窄终端下单行顶栏不会超宽，并保留 scope summary
 
 最近通过：
 
@@ -184,6 +192,6 @@
 
 ## 下一步建议
 
-1. session selector：如果需要更像 TS，再做顶栏/metadata 的宽度感知截断与对齐
-2. session selector：如果继续追平，再补 status/error/info 的更细粒度样式层级
+1. session selector：继续补 status/error/info 的更细粒度样式层级
+2. session selector：继续评估 metadata 在窄宽度下的列宽分配与截断对齐
 3. keybindings：继续评估 app 层是否要补 model/thinking 相关动作
