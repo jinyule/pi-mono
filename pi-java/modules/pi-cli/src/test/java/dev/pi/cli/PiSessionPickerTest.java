@@ -115,7 +115,7 @@ class PiSessionPickerTest {
         waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("First task")));
 
         terminal.sendInput("\u0004");
-        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Delete selected session?")));
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Delete session?")));
         terminal.sendInput("\r");
 
         waitFor(() -> !Files.exists(second));
@@ -197,6 +197,28 @@ class PiSessionPickerTest {
         currentSessions.complete(List.of(session("loaded.jsonl", "Loaded task", 1, Instant.now().minusSeconds(5))));
 
         waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Loaded task")));
+        terminal.sendInput("\u001b");
+    }
+
+    @Test
+    void rendersSearchAndActionHintLines() {
+        var terminal = new VirtualTerminal(140, 12);
+        var picker = new PiSessionPicker(terminal);
+
+        Thread.ofVirtual().start(() -> picker.pick(
+            List.of(session("current.jsonl", "Current task", 2, Instant.now().minusSeconds(30), "/workspace/current")),
+            List.of(session("current.jsonl", "Current task", 2, Instant.now().minusSeconds(30), "/workspace/current"))
+        ));
+
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("re:<pattern> regex")));
+
+        assertThat(String.join("\n", terminal.getViewport()))
+            .contains("tab scope")
+            .contains("re:<pattern> regex")
+            .contains("\"phrase\" exact")
+            .contains("delete")
+            .contains("rename");
+
         terminal.sendInput("\u001b");
     }
 

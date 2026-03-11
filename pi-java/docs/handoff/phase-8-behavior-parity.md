@@ -25,6 +25,8 @@
   - session selector TS-style fuzzy scoring first cut
 - 已完成第十刀：
   - session selector search text scope parity first cut
+- 已完成第十一刀：
+  - session selector header/status/hint copy first cut
 
 ## 本轮落地
 
@@ -87,6 +89,11 @@
 - `PiSessionPicker` 现在把 session selector search text 范围收敛到和 TS 一致的字段：
   - 搜索只覆盖 `id/name/allMessagesText/cwd`
   - `path` 仍可显示在 UI description 里，但不再参与匹配/排序
+- `PiSessionPicker` 现在把 header/status/hint 文案继续往 TS 靠：
+  - delete confirm 文案改成 `Delete session? [Enter] confirm · [Esc] cancel`
+  - load error 文案改成 `Failed to load sessions: ...`
+  - 新增搜索提示行：`tab scope · re:<pattern> regex · "phrase" exact · ...`
+  - 保留现有 `sort(named/path)` 状态行，避免 Java 版当前 selector 布局回退
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -99,6 +106,7 @@
   - cycle/default 现在已基本对齐 TS，但 loading/progress header 还只是首版
   - keybindings 现在有文件加载首版，但还没有完整的 app/editor 分层 manager
   - path show/hide 目前只是 description 级别开关，还没有 TS 版右侧布局/缩略路径渲染
+  - header 布局还是 Java 当前的纵向 3-4 行，不是 TS 那种 title-left / status-right 的单行顶栏
 - resolver 现在只在 `--session-dir` 未显式指定时提供 current/all 双 scope；显式 `--session-dir` 仍退化成单 scope
 
 ## 测试
@@ -117,6 +125,7 @@
 - `PiCliSessionResolverTest`：loader-style picker stub 覆盖 current/all lazy load
 - `PiSessionPickerTest`：连续命中、word boundary、alpha-numeric swapped fuzzy scoring/匹配
 - `PiSessionPickerTest`：`path` 只显示不参与搜索
+- `PiSessionPickerTest`：TS 风格搜索/动作提示文案渲染
 - `PiCliModuleTest`：从临时 agent dir 加载 `keybindings.json` 覆盖
 
 最近通过：
@@ -129,4 +138,4 @@
 
 1. session selector：继续细化 app/editor keybinding 分层
 2. session selector：补更接近 TS 的 path/cwd 布局细节
-3. session selector：继续收敛 header/status/hint 文案到 TS
+3. session selector：如果要继续追平，再考虑 title-left / status-right 顶栏布局

@@ -544,19 +544,31 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             var lines = new java.util.ArrayList<String>();
             lines.add(scope == Scope.CURRENT ? "Resume session (Current folder)" : "Resume session (All)");
             lines.add(scopeSummary());
-            lines.add(pendingDeletePath == null
-                ? "%s sort(%s) · %s named(%s) · %s path(%s)"
-                    .formatted(
-                        keyHint(EditorAction.SESSION_SORT_TOGGLE),
-                        sortMode.label(),
-                        keyHint(EditorAction.SESSION_NAMED_FILTER_TOGGLE),
-                        nameFilter.label(),
-                        keyHint(EditorAction.SESSION_PATH_TOGGLE),
-                        showPath ? "on" : "off"
-                    )
-                : "Delete selected session? Enter confirms. Esc cancels.");
-            if (loadingError != null) {
-                lines.add("Load error: " + loadingError);
+            if (pendingDeletePath != null) {
+                lines.add("Delete session? [Enter] confirm · [Esc] cancel");
+                lines.add("");
+            } else {
+                lines.add(
+                    "%s sort(%s) · %s named(%s) · %s path(%s)"
+                        .formatted(
+                            keyHint(EditorAction.SESSION_SORT_TOGGLE),
+                            sortMode.label(),
+                            keyHint(EditorAction.SESSION_NAMED_FILTER_TOGGLE),
+                            nameFilter.label(),
+                            keyHint(EditorAction.SESSION_PATH_TOGGLE),
+                            showPath ? "on" : "off"
+                        )
+                );
+                lines.add(
+                    loadingError != null
+                        ? "Failed to load sessions: " + loadingError
+                        : "%s scope · re:<pattern> regex · \"phrase\" exact · %s delete · %s rename"
+                            .formatted(
+                                keyHint(EditorAction.SESSION_SCOPE_TOGGLE),
+                                keyHint(EditorAction.SESSION_DELETE),
+                                keyHint(EditorAction.SESSION_RENAME)
+                            )
+                );
             }
             lines.add("");
             lines.addAll(search.render(width));
