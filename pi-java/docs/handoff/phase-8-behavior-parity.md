@@ -27,6 +27,8 @@
   - session selector search text scope parity first cut
 - 已完成第十一刀：
   - session selector header/status/hint copy first cut
+- 已完成第十二刀：
+  - session selector app/editor keybinding layering first cut
 
 ## 本轮落地
 
@@ -94,6 +96,15 @@
   - load error 文案改成 `Failed to load sessions: ...`
   - 新增搜索提示行：`tab scope · re:<pattern> regex · "phrase" exact · ...`
   - 保留现有 `sort(named/path)` 状态行，避免 Java 版当前 selector 布局回退
+- `PiCliKeybindingsLoader` 现在把 keybindings 分成 editor/app 两层：
+  - editor 层继续写入 `EditorKeybindings.global()`
+  - app 层新增 `PiAppKeybindings.global()`
+  - `toggleSessionNamedFilter` 现在归到 app 层，而不是塞进 editor action map
+- `PiSessionPicker` 现在按 TS 的职责分层消费 keybindings：
+  - `scope/sort/path/delete/rename` 继续走 editor keybindings
+  - `named filter` 改走 app keybindings
+  - hint 文案里 `named(...)` 也改从 app keybindings 取按键
+- `KeyMatcher` 现在支持 generic `alt+<char>`，例如 `alt+n`
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -104,9 +115,9 @@
 
 - 这还是首版 scope toggle：
   - cycle/default 现在已基本对齐 TS，但 loading/progress header 还只是首版
-  - keybindings 现在有文件加载首版，但还没有完整的 app/editor 分层 manager
   - path show/hide 目前只是 description 级别开关，还没有 TS 版右侧布局/缩略路径渲染
   - header 布局还是 Java 当前的纵向 3-4 行，不是 TS 那种 title-left / status-right 的单行顶栏
+  - app 层 keybindings 目前还只落了 `toggleSessionNamedFilter`，还没有扩到更多 interactive-mode app actions
 - resolver 现在只在 `--session-dir` 未显式指定时提供 current/all 双 scope；显式 `--session-dir` 仍退化成单 scope
 
 ## 测试
@@ -126,6 +137,8 @@
 - `PiSessionPickerTest`：连续命中、word boundary、alpha-numeric swapped fuzzy scoring/匹配
 - `PiSessionPickerTest`：`path` 只显示不参与搜索
 - `PiSessionPickerTest`：TS 风格搜索/动作提示文案渲染
+- `PiSessionPickerTest`：named filter 改走 app keybindings
+- `KeyMatcherTest`：generic `alt+<char>` sequence
 - `PiCliModuleTest`：从临时 agent dir 加载 `keybindings.json` 覆盖
 
 最近通过：
@@ -136,6 +149,6 @@
 
 ## 下一步建议
 
-1. session selector：继续细化 app/editor keybinding 分层
-2. session selector：补更接近 TS 的 path/cwd 布局细节
-3. session selector：如果要继续追平，再考虑 title-left / status-right 顶栏布局
+1. session selector：补更接近 TS 的 path/cwd 布局细节
+2. session selector：如果要继续追平，再考虑 title-left / status-right 顶栏布局
+3. keybindings：把 app 层继续扩到更多 interactive-mode action

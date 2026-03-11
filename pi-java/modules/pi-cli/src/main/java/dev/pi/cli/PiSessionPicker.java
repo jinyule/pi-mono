@@ -553,7 +553,7 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
                         .formatted(
                             keyHint(EditorAction.SESSION_SORT_TOGGLE),
                             sortMode.label(),
-                            keyHint(EditorAction.SESSION_NAMED_FILTER_TOGGLE),
+                            appKeyHint(PiAppAction.TOGGLE_SESSION_NAMED_FILTER),
                             nameFilter.label(),
                             keyHint(EditorAction.SESSION_PATH_TOGGLE),
                             showPath ? "on" : "off"
@@ -580,6 +580,7 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
         @Override
         public void handleInput(String data) {
             var keybindings = EditorKeybindings.global();
+            var appKeybindings = PiAppKeybindings.global();
             if (renamingPath != null) {
                 if (keybindings.matches(data, EditorAction.SUBMIT)) {
                     renameSession();
@@ -617,7 +618,7 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
                 toggleSort();
                 return;
             }
-            if (keybindings.matches(data, EditorAction.SESSION_NAMED_FILTER_TOGGLE)) {
+            if (appKeybindings.matches(data, PiAppAction.TOGGLE_SESSION_NAMED_FILTER)) {
                 toggleNameFilter();
                 return;
             }
@@ -1016,6 +1017,11 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
 
         private static String keyHint(EditorAction action) {
             var keys = EditorKeybindings.global().getKeys(action);
+            return keys.isEmpty() ? action.name() : keys.getFirst();
+        }
+
+        private static String appKeyHint(PiAppAction action) {
+            var keys = PiAppKeybindings.global().getKeys(action);
             return keys.isEmpty() ? action.name() : keys.getFirst();
         }
 

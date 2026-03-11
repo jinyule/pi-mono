@@ -50,6 +50,10 @@ public final class KeyMatcher {
     public static boolean matches(String data, String keyId) {
         Objects.requireNonNull(data, "data");
         Objects.requireNonNull(keyId, "keyId");
+        var genericAltSequence = genericAltSequence(keyId);
+        if (genericAltSequence != null) {
+            return genericAltSequence.equals(data);
+        }
         return switch (keyId) {
             case "enter" -> "\r".equals(data) || "\n".equals(data);
             case "tab" -> "\t".equals(data);
@@ -71,5 +75,16 @@ public final class KeyMatcher {
             case "alt+delete" -> "\u001b[3;3~".equals(data);
             default -> data.equals(NAMED_SEQUENCES.get(keyId));
         };
+    }
+
+    private static String genericAltSequence(String keyId) {
+        if (!keyId.startsWith("alt+") || keyId.length() != 5) {
+            return null;
+        }
+        var ch = keyId.charAt(4);
+        if (!Character.isLetterOrDigit(ch)) {
+            return null;
+        }
+        return "\u001b" + Character.toLowerCase(ch);
     }
 }

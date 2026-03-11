@@ -15,7 +15,7 @@ import java.util.Objects;
 
 final class PiCliKeybindingsLoader {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final Map<String, EditorAction> ACTION_ALIASES = Map.ofEntries(
+    private static final Map<String, EditorAction> EDITOR_ACTION_ALIASES = Map.ofEntries(
         Map.entry("cursorUp", EditorAction.CURSOR_UP),
         Map.entry("cursorDown", EditorAction.CURSOR_DOWN),
         Map.entry("cursorLeft", EditorAction.CURSOR_LEFT),
@@ -38,10 +38,13 @@ final class PiCliKeybindingsLoader {
         Map.entry("undo", EditorAction.UNDO),
         Map.entry("tab", EditorAction.SESSION_SCOPE_TOGGLE),
         Map.entry("toggleSessionSort", EditorAction.SESSION_SORT_TOGGLE),
-        Map.entry("toggleSessionNamedFilter", EditorAction.SESSION_NAMED_FILTER_TOGGLE),
         Map.entry("toggleSessionPath", EditorAction.SESSION_PATH_TOGGLE),
         Map.entry("deleteSession", EditorAction.SESSION_DELETE),
         Map.entry("renameSession", EditorAction.SESSION_RENAME)
+    );
+    private static final Map<String, PiAppAction> APP_ACTION_ALIASES = Map.of(
+        "toggleSessionNamedFilter",
+        PiAppAction.TOGGLE_SESSION_NAMED_FILTER
     );
 
     private final Path agentDir;
@@ -54,44 +57,66 @@ final class PiCliKeybindingsLoader {
         return new PiCliKeybindingsLoader(Path.of(System.getProperty("user.home"), ".pi", "agent"));
     }
 
-    EditorKeybindings load() {
-        return new EditorKeybindings(loadOverrides());
+    LoadedKeybindings load() {
+        return loadOverrides();
     }
 
-    private Map<EditorAction, List<String>> loadOverrides() {
+    private LoadedKeybindings loadOverrides() {
         var keybindingsPath = agentDir.resolve("keybindings.json");
         if (!Files.exists(keybindingsPath)) {
-            return Map.of();
+            return new LoadedKeybindings(new EditorKeybindings(), new PiAppKeybindings());
         }
         try {
             var root = OBJECT_MAPPER.readTree(keybindingsPath.toFile());
             if (root == null || !root.isObject()) {
-                return Map.of();
+                return new LoadedKeybindings(new EditorKeybindings(), new PiAppKeybindings());
             }
-            var overrides = new EnumMap<EditorAction, List<String>>(EditorAction.class);
+            var editorOverrides = new EnumMap<EditorAction, List<String>>(EditorAction.class);
+            var appOverrides = new EnumMap<PiAppAction, List<String>>(PiAppAction.class);
             var fields = root.fields();
             while (fields.hasNext()) {
                 var field = fields.next();
-                var action = resolveAction(field.getKey());
                 var keys = parseKeys(field.getValue());
-                if (action == null || keys.isEmpty()) {
+                if (keys.isEmpty()) {
                     continue;
                 }
-                overrides.put(action, List.copyOf(keys));
+                var editorAction = resolveEditorAction(field.getKey());
+                if (editorAction != null) {
+                    editorOverrides.put(editorAction, List.copyOf(keys));
+                }
+                var appAction = resolveAppAction(field.getKey());
+                if (appAction != null) {
+                    appOverrides.put(appAction, List.copyOf(keys));
+                }
             }
-            return Map.copyOf(overrides);
+            return new LoadedKeybindings(
+                new EditorKeybindings(Map.copyOf(editorOverrides)),
+                new PiAppKeybindings(Map.copyOf(appOverrides))
+            );
         } catch (IOException ignored) {
-            return Map.of();
+            return new LoadedKeybindings(new EditorKeybindings(), new PiAppKeybindings());
         }
     }
 
-    private static EditorAction resolveAction(String name) {
-        var alias = ACTION_ALIASES.get(name);
+    private static EditorAction resolveEditorAction(String name) {
+        var alias = EDITOR_ACTION_ALIASES.get(name);
         if (alias != null) {
             return alias;
         }
         try {
             return EditorAction.valueOf(name);
+        } catch (IllegalArgumentException ignored) {
+            return null;
+        }
+    }
+
+    private static PiAppAction resolveAppAction(String name) {
+        var alias = APP_ACTION_ALIASES.get(name);
+        if (alias != null) {
+            return alias;
+        }
+        try {
+            return PiAppAction.valueOf(name);
         } catch (IllegalArgumentException ignored) {
             return null;
         }
@@ -119,5 +144,11 @@ final class PiCliKeybindingsLoader {
             }
         }
         return List.copyOf(values);
+    }
+
+    record LoadedKeybindings(
+        EditorKeybindings editorKeybindings,
+        PiAppKeybindings appKeybindings
+    ) {
     }
 }

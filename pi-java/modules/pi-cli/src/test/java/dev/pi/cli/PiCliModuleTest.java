@@ -239,8 +239,10 @@ class PiCliModuleTest {
         );
 
         var previous = EditorKeybindings.global();
+        var previousApp = PiAppKeybindings.global();
         try {
             EditorKeybindings.setGlobal(new EditorKeybindings());
+            PiAppKeybindings.setGlobal(new PiAppKeybindings());
             var module = new PiCliModule(
                 tempDir,
                 new StringReader(""),
@@ -256,10 +258,11 @@ class PiCliModuleTest {
             module.run("--help").toCompletableFuture().join();
 
             assertThat(EditorKeybindings.global().getKeys(EditorAction.SESSION_SORT_TOGGLE)).containsExactly("ctrl+g");
-            assertThat(EditorKeybindings.global().getKeys(EditorAction.SESSION_NAMED_FILTER_TOGGLE)).containsExactly("alt+n");
+            assertThat(PiAppKeybindings.global().getKeys(PiAppAction.TOGGLE_SESSION_NAMED_FILTER)).containsExactly("alt+n");
             assertThat(EditorKeybindings.global().getKeys(EditorAction.SESSION_SCOPE_TOGGLE)).containsExactly("shift+tab");
         } finally {
             EditorKeybindings.setGlobal(previous);
+            PiAppKeybindings.setGlobal(previousApp);
         }
     }
 

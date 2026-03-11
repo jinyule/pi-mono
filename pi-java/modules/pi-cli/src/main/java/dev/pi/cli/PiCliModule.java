@@ -114,7 +114,9 @@ public final class PiCliModule {
     }
 
     public CompletionStage<Void> run(String... argv) {
-        EditorKeybindings.setGlobal(keybindingsLoader.load());
+        var loadedKeybindings = keybindingsLoader.load();
+        EditorKeybindings.setGlobal(loadedKeybindings.editorKeybindings());
+        PiAppKeybindings.setGlobal(loadedKeybindings.appKeybindings());
         return application.run(argv);
     }
 

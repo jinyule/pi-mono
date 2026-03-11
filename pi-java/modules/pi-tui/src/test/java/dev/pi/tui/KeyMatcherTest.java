@@ -14,4 +14,9 @@ class KeyMatcherTest {
     void matchesTabSequence() {
         assertThat(KeyMatcher.matches("\t", "tab")).isTrue();
     }
+
+    @Test
+    void matchesGenericAltLetterSequence() {
+        assertThat(KeyMatcher.matches("\u001bn", "alt+n")).isTrue();
+    }
 }

@@ -8,6 +8,8 @@ import dev.pi.ai.model.TextContent;
 import dev.pi.ai.model.Usage;
 import dev.pi.session.SessionManager;
 import dev.pi.session.SessionInfo;
+import dev.pi.tui.EditorAction;
+import dev.pi.tui.EditorKeybindings;
 import dev.pi.tui.VirtualTerminal;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -15,6 +17,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -69,6 +72,38 @@ class PiSessionPickerTest {
         assertThat(String.join("\n", terminal.getViewport()))
             .contains("Beta task")
             .doesNotContain("Alpha task");
+
+        terminal.sendInput("\u001b");
+    }
+
+    @Test
+    void usesAppKeybindingsForNamedFilterToggle() {
+        var terminal = new VirtualTerminal(100, 12);
+        var picker = new PiSessionPicker(terminal);
+        var previousEditor = EditorKeybindings.global();
+        var previousApp = PiAppKeybindings.global();
+        try {
+            EditorKeybindings.setGlobal(new EditorKeybindings(Map.of(EditorAction.SESSION_NAMED_FILTER_TOGGLE, List.of("ctrl+n"))));
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(Map.of(PiAppAction.TOGGLE_SESSION_NAMED_FILTER, List.of("alt+n"))));
+
+            var sessions = List.of(
+                namedSession("named.jsonl", "Named session", "Named task", 2, Instant.now().minusSeconds(60), "/workspace"),
+                session("unnamed.jsonl", "Unnamed task", 4, Instant.now().minusSeconds(10))
+            );
+            Thread.ofVirtual().start(() -> picker.pick(sessions, sessions));
+
+            waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("named(All)")));
+
+            terminal.sendInput("\u001bn");
+            waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("named(Named)")));
+
+            assertThat(String.join("\n", terminal.getViewport()))
+                .contains("Named session")
+                .doesNotContain("Unnamed task");
+        } finally {
+            EditorKeybindings.setGlobal(previousEditor);
+            PiAppKeybindings.setGlobal(previousApp);
+        }
 
         terminal.sendInput("\u001b");
     }
