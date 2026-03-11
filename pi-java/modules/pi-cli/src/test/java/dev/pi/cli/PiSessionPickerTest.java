@@ -399,6 +399,48 @@ class PiSessionPickerTest {
     }
 
     @Test
+    void filterAndSortSessionsFavorsConsecutiveFuzzyMatches() {
+        var sessions = List.of(
+            sessionWithTranscript("exact.jsonl", "Exact", "foobar", Instant.parse("2026-03-11T07:00:00Z")),
+            sessionWithTranscript("scattered.jsonl", "Scattered", "f_o_o_bar", Instant.parse("2026-03-11T07:00:10Z"))
+        );
+
+        assertThat(PiSessionPicker.filterAndSortSessions(sessions, "foo", PiSessionPicker.SortMode.RELEVANCE, PiSessionPicker.NameFilter.ALL))
+            .extracting(SessionInfo::path)
+            .containsExactly(
+                sessions.getFirst().path(),
+                sessions.getLast().path()
+            );
+    }
+
+    @Test
+    void filterAndSortSessionsFavorsWordBoundaryFuzzyMatches() {
+        var sessions = List.of(
+            sessionWithTranscript("boundary.jsonl", "Boundary", "foo-bar", Instant.parse("2026-03-11T07:00:00Z")),
+            sessionWithTranscript("inline.jsonl", "Inline", "afbx", Instant.parse("2026-03-11T07:00:10Z"))
+        );
+
+        assertThat(PiSessionPicker.filterAndSortSessions(sessions, "fb", PiSessionPicker.SortMode.RELEVANCE, PiSessionPicker.NameFilter.ALL))
+            .extracting(SessionInfo::path)
+            .containsExactly(
+                sessions.getFirst().path(),
+                sessions.getLast().path()
+            );
+    }
+
+    @Test
+    void filterAndSortSessionsSupportsSwappedAlphaNumericFuzzyMatches() {
+        var sessions = List.of(
+            sessionWithTranscript("match.jsonl", "Match", "gpt-5.2-codex", Instant.parse("2026-03-11T07:00:00Z")),
+            sessionWithTranscript("miss.jsonl", "Miss", "claude sonnet", Instant.parse("2026-03-11T07:00:10Z"))
+        );
+
+        assertThat(PiSessionPicker.filterAndSortSessions(sessions, "codex52", PiSessionPicker.SortMode.RECENT, PiSessionPicker.NameFilter.ALL))
+            .extracting(SessionInfo::path)
+            .containsExactly(sessions.getFirst().path());
+    }
+
+    @Test
     void togglesSortModeIntoThreadedTreeOrder() {
         var terminal = new VirtualTerminal(140, 12);
         var picker = new PiSessionPicker(terminal);

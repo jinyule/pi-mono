@@ -277,15 +277,111 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
     private static FuzzyScore fuzzyMatch(String query, String text) {
         var normalizedQuery = query.toLowerCase(Locale.ROOT);
         var normalizedText = text.toLowerCase(Locale.ROOT);
+        var primaryMatch = fuzzyMatchNormalized(normalizedQuery, normalizedText);
+        if (primaryMatch.matches()) {
+            return primaryMatch;
+        }
+
+        var swappedQuery = swapAlphaNumericQuery(normalizedQuery);
+        if (swappedQuery.isEmpty()) {
+            return primaryMatch;
+        }
+
+        var swappedMatch = fuzzyMatchNormalized(swappedQuery, normalizedText);
+        if (!swappedMatch.matches()) {
+            return primaryMatch;
+        }
+
+        return new FuzzyScore(true, swappedMatch.score() + 5);
+    }
+
+    private static FuzzyScore fuzzyMatchNormalized(String normalizedQuery, String normalizedText) {
+        if (normalizedQuery.isEmpty()) {
+            return new FuzzyScore(true, 0);
+        }
+        if (normalizedQuery.length() > normalizedText.length()) {
+            return new FuzzyScore(false, 0);
+        }
+
         var queryIndex = 0;
         var score = 0.0;
+        var lastMatchIndex = -1;
+        var consecutiveMatches = 0;
+
         for (var index = 0; index < normalizedText.length() && queryIndex < normalizedQuery.length(); index += 1) {
-            if (normalizedText.charAt(index) == normalizedQuery.charAt(queryIndex)) {
-                score += index;
-                queryIndex += 1;
+            if (normalizedText.charAt(index) != normalizedQuery.charAt(queryIndex)) {
+                continue;
             }
+
+            var isWordBoundary = index == 0 || isWordBoundary(normalizedText.charAt(index - 1));
+            if (lastMatchIndex == index - 1) {
+                consecutiveMatches += 1;
+                score -= consecutiveMatches * 5.0;
+            } else {
+                consecutiveMatches = 0;
+                if (lastMatchIndex >= 0) {
+                    score += (index - lastMatchIndex - 1) * 2.0;
+                }
+            }
+
+            if (isWordBoundary) {
+                score -= 10.0;
+            }
+
+            score += index * 0.1;
+            lastMatchIndex = index;
+            queryIndex += 1;
         }
-        return new FuzzyScore(queryIndex == normalizedQuery.length(), score);
+
+        if (queryIndex < normalizedQuery.length()) {
+            return new FuzzyScore(false, 0);
+        }
+        return new FuzzyScore(true, score);
+    }
+
+    private static boolean isWordBoundary(char ch) {
+        return Character.isWhitespace(ch) || ch == '-' || ch == '_' || ch == '.' || ch == '/' || ch == ':';
+    }
+
+    private static String swapAlphaNumericQuery(String normalizedQuery) {
+        var splitIndex = splitAlphaNumericBoundary(normalizedQuery, true);
+        if (splitIndex >= 0) {
+            return normalizedQuery.substring(splitIndex) + normalizedQuery.substring(0, splitIndex);
+        }
+        splitIndex = splitAlphaNumericBoundary(normalizedQuery, false);
+        if (splitIndex >= 0) {
+            return normalizedQuery.substring(splitIndex) + normalizedQuery.substring(0, splitIndex);
+        }
+        return "";
+    }
+
+    private static int splitAlphaNumericBoundary(String value, boolean lettersFirst) {
+        if (value.isEmpty()) {
+            return -1;
+        }
+        var index = 0;
+        while (index < value.length() && matchesAlphaNumericSegment(value.charAt(index), lettersFirst)) {
+            index += 1;
+        }
+        if (index == 0 || index == value.length()) {
+            return -1;
+        }
+        while (index < value.length() && matchesAlphaNumericSegment(value.charAt(index), !lettersFirst)) {
+            index += 1;
+        }
+        return index == value.length() ? findTransitionIndex(value, lettersFirst) : -1;
+    }
+
+    private static int findTransitionIndex(String value, boolean lettersFirst) {
+        var index = 0;
+        while (index < value.length() && matchesAlphaNumericSegment(value.charAt(index), lettersFirst)) {
+            index += 1;
+        }
+        return index;
+    }
+
+    private static boolean matchesAlphaNumericSegment(char ch, boolean letters) {
+        return letters ? ch >= 'a' && ch <= 'z' : ch >= '0' && ch <= '9';
     }
 
     private static String normalizeWhitespaceLower(String value) {
