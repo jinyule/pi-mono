@@ -41,6 +41,8 @@
   - session selector 单行顶栏宽度感知截断 first cut
 - 已完成第十八刀：
   - session selector metadata 响应式列宽 first cut
+- 已完成第十九刀：
+  - session selector 顶部 info/hint 行显式换行 first cut
 
 ## 本轮落地
 
@@ -150,6 +152,11 @@
   - 中等宽度下会优先为 description 保留最小可读空间
   - label 列会按可用宽度动态收缩，description 列在够用时继续显示
   - 这让 session selector 在 `36~40` 列附近仍能保留 `msg/age` 等 metadata
+- `PiSessionPicker` 现在把顶部 info/hint 行改成显式按词换行：
+  - `sort/named/path` 状态行会按空白边界折行
+  - `scope/regex/phrase/delete/rename` 提示行也会按词折行
+  - rename / delete 等顶部说明行同样复用这套换行逻辑
+  - 这避免窄终端直接按列数硬截断，把 `sort(Threaded)` 之类 token 切碎
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -192,6 +199,7 @@
 - `PiSessionPickerTest`：窄终端下单行顶栏不会超宽，并保留 scope summary
 - `SelectListTest`：中等宽度下仍保留 description 列
 - `PiSessionPickerTest`：中等宽度下 session metadata 不会过早消失
+- `PiSessionPickerTest`：窄终端下 info/hint token 不会被硬换列切碎
 
 最近通过：
 
@@ -202,5 +210,5 @@
 ## 下一步建议
 
 1. session selector：继续补 status/error/info 的更细粒度样式层级
-2. session selector：继续评估更窄宽度下 top info lines 的折叠/换行策略
+2. session selector：继续评估 selected row / metadata 的 ANSI 样式层级
 3. keybindings：继续评估 app 层是否要补 model/thinking 相关动作

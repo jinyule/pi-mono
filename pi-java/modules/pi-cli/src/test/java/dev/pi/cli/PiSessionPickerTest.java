@@ -39,7 +39,7 @@ class PiSessionPickerTest {
         );
         Thread.ofVirtual().start(() -> selected[0] = picker.pick(sessions, sessions));
 
-        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Resume session")));
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> !line.isBlank()));
 
         assertThat(String.join("\n", terminal.getViewport()))
             .contains("Resume session")
@@ -272,6 +272,31 @@ class PiSessionPickerTest {
             .contains("\"phrase\" exact")
             .contains("delete")
             .contains("rename");
+
+        terminal.sendInput("\u001b");
+    }
+
+    @Test
+    void wrapsInfoLinesWithoutBreakingHintTokens() {
+        var terminal = new VirtualTerminal(20, 16);
+        var picker = new PiSessionPicker(terminal);
+
+        Thread.ofVirtual().start(() -> picker.pick(
+            List.of(session("current.jsonl", "Current task", 2, Instant.now().minusSeconds(30), "/workspace/current")),
+            List.of(session("current.jsonl", "Current task", 2, Instant.now().minusSeconds(30), "/workspace/current"))
+        ));
+
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new AssertionError(exception);
+        }
+
+        assertThat(terminal.getViewport())
+            .anyMatch(line -> line.contains("sort(Threaded)"))
+            .anyMatch(line -> line.contains("named(All)"))
+            .anyMatch(line -> line.contains("re:<pattern> regex"));
 
         terminal.sendInput("\u001b");
     }

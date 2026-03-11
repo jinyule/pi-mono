@@ -533,22 +533,25 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             if (renamingPath != null) {
                 var lines = new ArrayList<String>();
                 lines.add("Rename session");
-                lines.add(renamingCurrentName == null || renamingCurrentName.isBlank()
-                    ? "Enter new name. Enter saves. Esc cancels."
-                    : "Current name: " + renamingCurrentName);
+                lines.addAll(wrapInfoLine(
+                    renamingCurrentName == null || renamingCurrentName.isBlank()
+                        ? "Enter new name. Enter saves. Esc cancels."
+                        : "Current name: " + renamingCurrentName,
+                    width
+                ));
                 lines.add("");
                 lines.addAll(rename.render(width));
                 lines.add("");
-                lines.add("Enter saves. Esc cancels.");
+                lines.addAll(wrapInfoLine("Enter saves. Esc cancels.", width));
                 return List.copyOf(lines);
             }
             var lines = new java.util.ArrayList<String>();
             lines.add(composeHeaderLine(width));
             if (pendingDeletePath != null) {
-                lines.add("Delete session? [Enter] confirm · [Esc] cancel");
+                lines.addAll(wrapInfoLine("Delete session? [Enter] confirm · [Esc] cancel", width));
                 lines.add("");
             } else {
-                lines.add(
+                lines.addAll(wrapInfoLine(
                     "%s sort(%s) · %s named(%s) · %s path(%s)"
                         .formatted(
                             keyHint(EditorAction.SESSION_SORT_TOGGLE),
@@ -557,9 +560,10 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
                             nameFilter.label(),
                             keyHint(EditorAction.SESSION_PATH_TOGGLE),
                             showPath ? "on" : "off"
-                        )
-                );
-                lines.add(
+                        ),
+                    width
+                ));
+                lines.addAll(wrapInfoLine(
                     loadingError != null
                         ? "Failed to load sessions: " + loadingError
                         : "%s scope · re:<pattern> regex · \"phrase\" exact · %s delete · %s rename"
@@ -567,8 +571,9 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
                                 keyHint(EditorAction.SESSION_SCOPE_TOGGLE),
                                 keyHint(EditorAction.SESSION_DELETE),
                                 keyHint(EditorAction.SESSION_RENAME)
-                            )
-                );
+                            ),
+                    width
+                ));
             }
             lines.add("");
             lines.addAll(search.render(width));
@@ -957,6 +962,10 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
                 return "...";
             }
             return progress.loaded() + "/" + progress.total();
+        }
+
+        private static List<String> wrapInfoLine(String text, int width) {
+            return TerminalText.wrapText(text, Math.max(1, width));
         }
 
         private static List<ThreadedSession> flattenThreadedSessions(List<SessionInfo> sessions, NameFilter nameFilter) {
