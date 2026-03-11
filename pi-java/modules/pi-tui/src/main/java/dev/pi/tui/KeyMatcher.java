@@ -25,6 +25,7 @@ public final class KeyMatcher {
         Map.entry("ctrl+f", "\u0006"),
         Map.entry("ctrl+k", "\u000b"),
         Map.entry("ctrl+n", "\u000e"),
+        Map.entry("ctrl+p", "\u0010"),
         Map.entry("ctrl+r", "\u0012"),
         Map.entry("ctrl+s", "\u0013"),
         Map.entry("ctrl+u", "\u0015"),

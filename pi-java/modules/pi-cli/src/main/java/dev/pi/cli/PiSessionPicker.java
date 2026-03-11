@@ -63,6 +63,18 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
         this.terminal = Objects.requireNonNull(terminal, "terminal");
     }
 
+    static List<SessionInfo> filterAndSortSessions(List<SessionInfo> sessions, String filter, SortMode sortMode, NameFilter nameFilter) {
+        var visibleSessions = new ArrayList<>(sessions.stream().filter(session -> nameFilter == NameFilter.ALL || hasName(session)).toList());
+        var filterTokens = filterTokens(filter);
+        if (sortMode == SortMode.RELEVANCE && !filterTokens.isEmpty()) {
+            visibleSessions.sort(
+                Comparator.comparingInt((SessionInfo session) -> relevanceScore(session, filterTokens))
+                    .thenComparing(SessionInfo::modified, Comparator.reverseOrder())
+            );
+        }
+        return List.copyOf(visibleSessions);
+    }
+
     @Override
     public Path pick(List<SessionInfo> currentSessions, List<SessionInfo> allSessions) {
         Objects.requireNonNull(currentSessions, "currentSessions");
@@ -98,6 +110,75 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
         return pick(sessions, sessions);
     }
 
+    static String displayLabel(SessionInfo session) {
+        return session.name() == null || session.name().isBlank() ? session.firstMessage() : session.name();
+    }
+
+    static boolean hasName(SessionInfo session) {
+        return session.name() != null && !session.name().isBlank();
+    }
+
+    private static List<String> filterTokens(String filter) {
+        var normalized = filter == null ? "" : filter.toLowerCase(Locale.ROOT).trim();
+        return normalized.isEmpty() ? List.of() : List.of(normalized.split("\\s+"));
+    }
+
+    private static int relevanceScore(SessionInfo session, List<String> tokens) {
+        var label = displayLabel(session).toLowerCase(Locale.ROOT);
+        var fileName = session.path().getFileName() == null
+            ? session.path().toString().toLowerCase(Locale.ROOT)
+            : session.path().getFileName().toString().toLowerCase(Locale.ROOT);
+        var cwd = session.cwd().toLowerCase(Locale.ROOT);
+        var path = session.path().toString().toLowerCase(Locale.ROOT);
+        var score = 0;
+        for (var token : tokens) {
+            var tokenScore = fieldScore(label, token, 0);
+            tokenScore = Math.min(tokenScore, fieldScore(fileName, token, 100));
+            tokenScore = Math.min(tokenScore, fieldScore(cwd, token, 200));
+            tokenScore = Math.min(tokenScore, fieldScore(path, token, 300));
+            if (tokenScore == Integer.MAX_VALUE) {
+                return Integer.MAX_VALUE;
+            }
+            score = score > Integer.MAX_VALUE - tokenScore ? Integer.MAX_VALUE : score + tokenScore;
+        }
+        return score;
+    }
+
+    private static int fieldScore(String value, String token, int base) {
+        var index = value.indexOf(token);
+        return index < 0 ? Integer.MAX_VALUE : base + index;
+    }
+
+    enum SortMode {
+        RECENT("Recent"),
+        RELEVANCE("Relevance");
+
+        private final String label;
+
+        SortMode(String label) {
+            this.label = label;
+        }
+
+        private String label() {
+            return label;
+        }
+    }
+
+    enum NameFilter {
+        ALL("All"),
+        NAMED("Named");
+
+        private final String label;
+
+        NameFilter(String label) {
+            this.label = label;
+        }
+
+        private String label() {
+            return label;
+        }
+    }
+
     private static final class PickerComponent implements Component, Focusable {
         private final Input search = new Input();
         private final Input rename = new Input();
@@ -114,6 +195,7 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
         private Scope scope = Scope.CURRENT;
         private SortMode sortMode = SortMode.RECENT;
         private NameFilter nameFilter = NameFilter.ALL;
+        private boolean showPath;
 
         private PickerComponent(
             List<SessionInfo> currentSessions,
@@ -148,13 +230,15 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             var lines = new java.util.ArrayList<String>();
             lines.add(scope == Scope.CURRENT ? "Resume session (Current folder)" : "Resume session (All)");
             lines.add(pendingDeletePath == null
-                ? "Type to filter. %s scope. %s sort (%s). %s named (%s). Enter selects. Ctrl+D deletes. Ctrl+R renames. Esc cancels."
+                ? "%s scope · %s sort(%s) · %s named(%s) · %s path(%s)"
                     .formatted(
                         keyHint(EditorAction.SESSION_SCOPE_TOGGLE),
                         keyHint(EditorAction.SESSION_SORT_TOGGLE),
                         sortMode.label(),
                         keyHint(EditorAction.SESSION_NAMED_FILTER_TOGGLE),
-                        nameFilter.label()
+                        nameFilter.label(),
+                        keyHint(EditorAction.SESSION_PATH_TOGGLE),
+                        showPath ? "on" : "off"
                     )
                 : "Delete selected session? Enter confirms. Esc cancels.");
             lines.add("");
@@ -208,6 +292,10 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
                 toggleNameFilter();
                 return;
             }
+            if (keybindings.matches(data, EditorAction.SESSION_PATH_TOGGLE)) {
+                togglePath();
+                return;
+            }
             if (
                 keybindings.matches(data, EditorAction.CURSOR_UP) ||
                 keybindings.matches(data, EditorAction.CURSOR_DOWN) ||
@@ -251,7 +339,7 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
         }
 
         private void rebuildSessionList() {
-            this.sessions = new SelectList(sortedSessions().stream().map(session -> toSelectItem(session, showCwd())).toList(), 10, THEME);
+            this.sessions = new SelectList(sortedSessions().stream().map(session -> toSelectItem(session, showCwd(), showPath)).toList(), 10, THEME);
             this.sessions.setOnSelectionChange(ignored -> requestRender.run());
             this.sessions.setOnSelect(item -> onSelect.accept(Path.of(decodePath(item.value()))));
             this.sessions.setOnCancel(onCancel);
@@ -356,20 +444,18 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             requestRender.run();
         }
 
+        private void togglePath() {
+            showPath = !showPath;
+            rebuildSessionList();
+            requestRender.run();
+        }
+
         private List<SessionInfo> activeSessions() {
             return scope == Scope.ALL ? allSessions : currentSessions;
         }
 
         private List<SessionInfo> sortedSessions() {
-            var sessions = new ArrayList<>(activeSessions().stream().filter(this::matchesNameFilter).toList());
-            var filterTokens = filterTokens(search.getValue());
-            if (sortMode == SortMode.RELEVANCE && !filterTokens.isEmpty()) {
-                sessions.sort(
-                    Comparator.comparingInt((SessionInfo session) -> relevanceScore(session, filterTokens))
-                        .thenComparing(SessionInfo::modified, Comparator.reverseOrder())
-                );
-            }
-            return List.copyOf(sessions);
+            return filterAndSortSessions(activeSessions(), search.getValue(), sortMode, nameFilter);
         }
 
         private boolean showCwd() {
@@ -380,17 +466,14 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             return currentSessions.size() == allSessions.size() && currentSessions.containsAll(allSessions) && allSessions.containsAll(currentSessions);
         }
 
-        private boolean matchesNameFilter(SessionInfo session) {
-            return nameFilter == NameFilter.ALL || hasName(session);
-        }
-
-        private static SelectItem toSelectItem(SessionInfo session, boolean showCwd) {
-            var label = displayLabel(session);
-            var description = "%s · %d msg · %s%s".formatted(
+        private static SelectItem toSelectItem(SessionInfo session, boolean showCwd, boolean showPath) {
+            var label = PiSessionPicker.displayLabel(session);
+            var description = "%s · %d msg · %s%s%s".formatted(
                 session.path().getFileName(),
                 session.messageCount(),
                 formatAge(session.modified()),
-                showCwd && session.cwd() != null && !session.cwd().isBlank() ? " · " + session.cwd() : ""
+                showCwd && session.cwd() != null && !session.cwd().isBlank() ? " · " + session.cwd() : "",
+                showPath ? " · " + session.path() : ""
             );
             return new SelectItem(encodeValue(session, label), label, description);
         }
@@ -426,78 +509,9 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             return delimiter >= 0 ? value.substring(delimiter + VALUE_DELIMITER.length()) : value;
         }
 
-        private static List<String> filterTokens(String filter) {
-            var normalized = filter == null ? "" : filter.toLowerCase(Locale.ROOT).trim();
-            return normalized.isEmpty() ? List.of() : List.of(normalized.split("\\s+"));
-        }
-
-        private static int relevanceScore(SessionInfo session, List<String> tokens) {
-            var label = displayLabel(session).toLowerCase(Locale.ROOT);
-            var fileName = session.path().getFileName() == null
-                ? session.path().toString().toLowerCase(Locale.ROOT)
-                : session.path().getFileName().toString().toLowerCase(Locale.ROOT);
-            var cwd = session.cwd().toLowerCase(Locale.ROOT);
-            var path = session.path().toString().toLowerCase(Locale.ROOT);
-            var score = 0;
-            for (var token : tokens) {
-                var tokenScore = fieldScore(label, token, 0);
-                tokenScore = Math.min(tokenScore, fieldScore(fileName, token, 100));
-                tokenScore = Math.min(tokenScore, fieldScore(cwd, token, 200));
-                tokenScore = Math.min(tokenScore, fieldScore(path, token, 300));
-                if (tokenScore == Integer.MAX_VALUE) {
-                    return Integer.MAX_VALUE;
-                }
-                score = score > Integer.MAX_VALUE - tokenScore ? Integer.MAX_VALUE : score + tokenScore;
-            }
-            return score;
-        }
-
-        private static int fieldScore(String value, String token, int base) {
-            var index = value.indexOf(token);
-            return index < 0 ? Integer.MAX_VALUE : base + index;
-        }
-
-        private static String displayLabel(SessionInfo session) {
-            return session.name() == null || session.name().isBlank() ? session.firstMessage() : session.name();
-        }
-
-        private static boolean hasName(SessionInfo session) {
-            return session.name() != null && !session.name().isBlank();
-        }
-
         private enum Scope {
             CURRENT,
             ALL
-        }
-
-        private enum SortMode {
-            RECENT("Recent"),
-            RELEVANCE("Relevance");
-
-            private final String label;
-
-            SortMode(String label) {
-                this.label = label;
-            }
-
-            private String label() {
-                return label;
-            }
-        }
-
-        private enum NameFilter {
-            ALL("All"),
-            NAMED("Named");
-
-            private final String label;
-
-            NameFilter(String label) {
-                this.label = label;
-            }
-
-            private String label() {
-                return label;
-            }
         }
     }
 }

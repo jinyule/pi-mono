@@ -20,7 +20,7 @@ import org.junit.jupiter.api.io.TempDir;
 class PiSessionPickerTest {
     @Test
     void rendersSessionsAndSelectsCurrentItem() {
-        var terminal = new VirtualTerminal(80, 12);
+        var terminal = new VirtualTerminal(120, 12);
         var picker = new PiSessionPicker(terminal);
         Path[] selected = new Path[1];
 
@@ -187,30 +187,26 @@ class PiSessionPickerTest {
 
         Thread.ofVirtual().start(() -> picker.pick(
             List.of(
-                session("cwd-match.jsonl", "Cwd match", 2, Instant.now().minusSeconds(10), "/workspace/global"),
-                session("label-match.jsonl", "Global match", 2, Instant.now().minusSeconds(120), "/workspace/current")
+                session("late.jsonl", "Later global", 2, Instant.now().minusSeconds(10), "/workspace/current"),
+                session("early.jsonl", "Global first", 2, Instant.now().minusSeconds(120), "/workspace/current")
             ),
             List.of()
         ));
 
-        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Resume session")));
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Later global")));
 
         terminal.sendInput("global");
-        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Cwd match")));
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Global first")));
 
         var recentView = String.join("\n", terminal.getViewport());
         assertThat(recentView).contains("Recent");
-        assertThat(recentView.indexOf("Cwd match")).isLessThan(recentView.indexOf("Global match"));
+        assertThat(recentView.indexOf("Later global")).isLessThan(recentView.indexOf("Global first"));
 
         terminal.sendInput("\u0013");
-        waitFor(() -> {
-            var view = String.join("\n", terminal.getViewport());
-            return view.contains("Relevance") && view.indexOf("Global match") < view.indexOf("Cwd match");
-        });
+        waitFor(() -> String.join("\n", terminal.getViewport()).contains("Relevance"));
 
         var relevanceView = String.join("\n", terminal.getViewport());
         assertThat(relevanceView).contains("Relevance");
-        assertThat(relevanceView.indexOf("Global match")).isLessThan(relevanceView.indexOf("Cwd match"));
 
         terminal.sendInput("\u001b");
     }
@@ -251,6 +247,51 @@ class PiSessionPickerTest {
             .doesNotContain("Whitespace task");
 
         terminal.sendInput("\u001b");
+    }
+
+    @Test
+    void togglesPathDisplayInDescriptions() {
+        var terminal = new VirtualTerminal(200, 12);
+        var picker = new PiSessionPicker(terminal);
+        var session = session("path-toggle.jsonl", "Path toggle", 2, Instant.now().minusSeconds(15), "/workspace/path");
+
+        Thread.ofVirtual().start(() -> picker.pick(List.of(session), List.of()));
+
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Path toggle")));
+
+        var hiddenView = String.join("\n", terminal.getViewport());
+        assertThat(hiddenView)
+            .contains("path(off)")
+            .doesNotContain(session.path().toString());
+
+        terminal.sendInput("\u0010");
+        waitFor(() -> {
+            var view = String.join("\n", terminal.getViewport());
+            return view.contains("path(on)") && view.contains(session.path().toString());
+        });
+
+        var shownView = String.join("\n", terminal.getViewport());
+        assertThat(shownView)
+            .contains("path(on)")
+            .contains(session.path().toString());
+
+        terminal.sendInput("\u001b");
+    }
+
+    @Test
+    void filterAndSortSessionsPrioritizesBetterLabelMatches() {
+        var sessions = List.of(
+            session("late.jsonl", "Later global", 2, Instant.parse("2026-03-11T07:00:10Z"), "/workspace/current"),
+            session("early.jsonl", "Global first", 2, Instant.parse("2026-03-11T07:00:00Z"), "/workspace/current")
+        );
+
+        assertThat(PiSessionPicker.filterAndSortSessions(sessions, "global", PiSessionPicker.SortMode.RECENT, PiSessionPicker.NameFilter.ALL))
+            .extracting(SessionInfo::firstMessage)
+            .containsExactly("Later global", "Global first");
+
+        assertThat(PiSessionPicker.filterAndSortSessions(sessions, "global", PiSessionPicker.SortMode.RELEVANCE, PiSessionPicker.NameFilter.ALL))
+            .extracting(SessionInfo::firstMessage)
+            .containsExactly("Global first", "Later global");
     }
 
     private static SessionInfo session(String fileName, String firstMessage, int messageCount, Instant modified) {
