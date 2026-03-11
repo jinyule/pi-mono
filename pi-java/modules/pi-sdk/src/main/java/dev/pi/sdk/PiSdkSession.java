@@ -31,7 +31,7 @@ public final class PiSdkSession {
         this.persistenceSubscription = agent.subscribe(this::persistEvent);
     }
 
-    static PiSdkSession create(CreateAgentSessionOptions options) {
+    public static PiSdkSession create(CreateAgentSessionOptions options) {
         var sessionContext = options.sessionManager().buildSessionContext();
         var restoredMessages = sessionContext.messages().stream()
             .map(AgentMessages::fromLlmMessage)

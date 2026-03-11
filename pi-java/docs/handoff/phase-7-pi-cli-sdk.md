@@ -42,6 +42,8 @@
   - `--resume` rename first cut
 - 已完成第二十一刀：
   - richer HTML export first cut
+- 已完成第二十二刀：
+  - startup/session shell shared core first cut
 
 ## 已落地内容
 
@@ -173,11 +175,20 @@
   - session tree：显示完整 entry tree、label、active branch 与 current leaf
   - session entries：不再只渲染 replay 后 message transcript，而是渲染完整 session document 中的 message / compaction / branch summary / session info / custom 等 entry
   - current implementation 仍未追平 TS 版的 theme colors、tool rich render、JSONL download 与 client-side tree interaction
+- `PiAgentSession` 现在开始复用 `PiSdkSession` 的 shared bootstrap/persistence 核心：
+  - `pi-cli` 模块新增对 `pi-sdk` 的依赖
+  - `PiAgentSession.Builder` 改为构造 `CreateAgentSessionOptions` 并直接调用 `PiSdkSession.create(...)`
+  - agent 初始化、session replay、message persistence、initial metadata seed 不再在 `pi-cli` 内重复实现
+  - CLI 侧保留 tree/fork/compact/reload/instruction resources 等交互层语义
 - `/copy` 当前只复制最近一条 assistant 的 plain-text flatten 文本；未覆盖图片块、富文本选择、历史消息 picker，也还未抽出统一 slash-command registry。
 - `/tree` 当前是首版 selector：只覆盖 prefix search、up/down/enter/esc、基础树前缀渲染和当前 leaf 高亮；尚未接 TS 版的 summarize prompt、custom prompt、label edit、user-only/all-entry filter toggle、bookmark 语义。
 - `/fork` 当前也是首版 selector：只覆盖 prefix search、up/down/enter/esc 与 flat user-message list；尚未接 extension `session_before_fork` / `session_fork` 生命周期、double-escape action、RPC `fork/get_fork_messages`、cross-project `forkFrom`。
 - `/compact` 当前只覆盖手动 compaction；尚未接 TS 版的 LLM summary、`session_before_compact` / `session_compact` 生命周期、auto-compaction threshold、cancel/abort、file-op details、split-turn handling。
 - `/reload` 当前只覆盖 settings / instruction resources 首版重载；尚未接 TS 版的 extension runtime rebuild、theme/skills/prompts registry rebuild、loaded-resource diagnostics 面板与完整 startup pipeline。
+- startup/session shell shared core 这刀之后，`pi-cli` 与 `pi-sdk` 的重复点主要还剩：
+  - startup pipeline 的 module wiring / parser-to-runtime 装配
+  - instruction-resource-aware system prompt 组合逻辑仍在 `pi-cli`
+  - CLI 特有的 tree/fork/compact/reload 壳层
 
 ## 已确认语义
 
@@ -240,6 +251,7 @@
 - `--resume` delete first cut：`ctrl+d` 进入确认态，确认后删除文件并刷新列表
 - `--resume` rename first cut：`ctrl+r` 进入 rename mode，提交后追加 `session_info` 并刷新列表
 - richer HTML export first cut：metadata / tree / full-entry rendering，不再只看 replay 后 transcript
+- startup/session shell shared core first cut：`PiAgentSession` 改为包装 `PiSdkSession`
 
 ## 验证
 
@@ -256,4 +268,4 @@ npm.cmd run check
 
 1. 真实 `main()` / module wiring，把 `PiCliApplication`、`list-models`、session resolver / picker / export 接到启动入口。
 2. 把 `reload` 从 settings/resources 首版继续接到 extension runtime / startup pipeline。
-3. 阶段 8 的 selector/keybinding 行为追平。
+3. instruction-resource-aware system prompt 组合逻辑继续下沉，减少 `pi-cli` / `pi-sdk` 差异。

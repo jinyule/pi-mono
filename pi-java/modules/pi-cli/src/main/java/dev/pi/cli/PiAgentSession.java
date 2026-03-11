@@ -13,6 +13,8 @@ import dev.pi.ai.model.ThinkingBudgets;
 import dev.pi.ai.model.ThinkingLevel;
 import dev.pi.ai.model.Transport;
 import dev.pi.ai.stream.Subscription;
+import dev.pi.sdk.CreateAgentSessionOptions;
+import dev.pi.sdk.PiSdkSession;
 import dev.pi.session.InstructionFile;
 import dev.pi.session.InstructionResourceLoader;
 import dev.pi.session.InstructionResources;
@@ -27,37 +29,30 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
 public final class PiAgentSession implements PiInteractiveSession {
-    private final Agent agent;
-    private final SessionManager sessionManager;
+    private final PiSdkSession sdkSession;
     private final SettingsManager settingsManager;
     private final InstructionResourceLoader instructionResourceLoader;
     private volatile InstructionResources instructionResources;
     private final String systemPrompt;
     private final String appendSystemPrompt;
-    private final CopyOnWriteArrayList<SessionPersistenceError> persistenceErrors = new CopyOnWriteArrayList<>();
-    private final Subscription persistenceSubscription;
 
     private PiAgentSession(
-        Agent agent,
-        SessionManager sessionManager,
+        PiSdkSession sdkSession,
         SettingsManager settingsManager,
         InstructionResourceLoader instructionResourceLoader,
         InstructionResources instructionResources,
         String systemPrompt,
         String appendSystemPrompt
     ) {
-        this.agent = Objects.requireNonNull(agent, "agent");
-        this.sessionManager = Objects.requireNonNull(sessionManager, "sessionManager");
+        this.sdkSession = Objects.requireNonNull(sdkSession, "sdkSession");
         this.settingsManager = Objects.requireNonNull(settingsManager, "settingsManager");
         this.instructionResourceLoader = instructionResourceLoader;
         this.instructionResources = Objects.requireNonNull(instructionResources, "instructionResources");
         this.systemPrompt = systemPrompt;
         this.appendSystemPrompt = appendSystemPrompt;
-        this.persistenceSubscription = agent.subscribe(this::persistEvent);
     }
 
     public static Builder builder(
@@ -70,11 +65,11 @@ public final class PiAgentSession implements PiInteractiveSession {
     }
 
     public Agent agent() {
-        return agent;
+        return sdkSession.agent();
     }
 
     public SessionManager sessionManager() {
-        return sessionManager;
+        return sdkSession.sessionManager();
     }
 
     public SettingsManager settingsManager() {
@@ -87,89 +82,89 @@ public final class PiAgentSession implements PiInteractiveSession {
 
     @Override
     public String sessionId() {
-        return sessionManager.sessionId();
+        return sdkSession.sessionId();
     }
 
     @Override
     public AgentState state() {
-        return agent.state();
+        return sdkSession.state();
     }
 
     @Override
     public Subscription subscribe(Consumer<AgentEvent> listener) {
-        return agent.subscribe(listener);
+        return sdkSession.subscribe(listener);
     }
 
     @Override
     public Subscription subscribeState(Consumer<AgentState> listener) {
-        return agent.subscribeState(listener);
+        return sdkSession.subscribeState(listener);
     }
 
     @Override
     public CompletionStage<Void> prompt(String text) {
-        return agent.prompt(text);
+        return sdkSession.prompt(text);
     }
 
     public CompletionStage<Void> prompt(AgentMessage message) {
-        return agent.prompt(message);
+        return sdkSession.prompt(message);
     }
 
     @Override
     public CompletionStage<Void> resume() {
-        return agent.resume();
+        return sdkSession.resume();
     }
 
     @Override
     public CompletionStage<Void> waitForIdle() {
-        return agent.waitForIdle();
+        return sdkSession.waitForIdle();
     }
 
     @Override
     public void abort() {
-        agent.abort();
+        sdkSession.abort();
     }
 
     @Override
     public String leafId() {
-        return sessionManager.leafId();
+        return sessionManager().leafId();
     }
 
     @Override
     public List<SessionTreeNode> tree() {
-        return sessionManager.tree();
+        return sessionManager().tree();
     }
 
     @Override
     public TreeNavigationResult navigateTree(String targetId) {
         Objects.requireNonNull(targetId, "targetId");
-        if (agent.state().isStreaming()) {
+        if (sdkSession.state().isStreaming()) {
             throw new IllegalStateException("Cannot navigate tree while agent is processing");
         }
 
-        var entry = sessionManager.entry(targetId);
+        var entry = sessionManager().entry(targetId);
         if (entry == null) {
             throw new IllegalArgumentException("Unknown session entry: " + targetId);
         }
 
         var editorText = switch (entry) {
             case SessionEntry.MessageEntry messageEntry when "user".equals(messageEntry.message().path("role").asText()) -> {
-                sessionManager.navigate(messageEntry.parentId());
+                sessionManager().navigate(messageEntry.parentId());
                 yield extractUserEditorText(messageEntry);
             }
             default -> {
-                sessionManager.navigate(targetId);
+                sessionManager().navigate(targetId);
                 yield null;
             }
         };
 
         restoreAgentMessages();
-        return new TreeNavigationResult(sessionManager.leafId(), editorText);
+        return new TreeNavigationResult(sessionManager().leafId(), editorText);
     }
 
     @Override
     public List<ForkMessage> forkMessages() {
         var messages = new ArrayList<ForkMessage>();
-        for (var entry : sessionManager.entries()) {
+        for (var entry : sessionManager().entries()) {
             if (!(entry instanceof SessionEntry.MessageEntry messageEntry)) {
                 continue;
             }
@@ -187,34 +182,34 @@ public final class PiAgentSession implements PiInteractiveSession {
     @Override
     public ForkResult fork(String entryId) {
         Objects.requireNonNull(entryId, "entryId");
-        if (agent.state().isStreaming()) {
+        if (sdkSession.state().isStreaming()) {
             throw new IllegalStateException("Cannot fork while agent is processing");
         }
 
-        var entry = sessionManager.entry(entryId);
+        var entry = sessionManager().entry(entryId);
         if (!(entry instanceof SessionEntry.MessageEntry messageEntry) || !"user".equals(messageEntry.message().path("role").asText())) {
             throw new IllegalArgumentException("Invalid entry ID for forking");
         }
 
         var selectedText = extractUserEditorText(messageEntry);
         try {
-            sessionManager.createBranchedSession(messageEntry.parentId());
+            sessionManager().createBranchedSession(messageEntry.parentId());
         } catch (IOException exception) {
             throw new IllegalStateException("Failed to fork session", exception);
         }
-        agent.setSessionId(sessionManager.sessionId());
-        seedSessionMetadataIfNeeded(agent.state().thinkingLevel());
+        sdkSession.agent().setSessionId(sessionManager().sessionId());
+        seedSessionMetadataIfNeeded(sdkSession.state().thinkingLevel());
         restoreAgentMessages();
-        return new ForkResult(selectedText, sessionManager.sessionId());
+        return new ForkResult(selectedText, sessionManager().sessionId());
     }
 
     @Override
     public CompactionResult compact(String customInstructions) {
-        if (agent.state().isStreaming()) {
+        if (sdkSession.state().isStreaming()) {
             throw new IllegalStateException("Wait for the current response to finish before compacting");
         }
         try {
-            var result = PiCompactor.compact(sessionManager, customInstructions);
+            var result = PiCompactor.compact(sessionManager(), customInstructions);
             restoreAgentMessages();
             return result;
         } catch (IOException exception) {
@@ -224,7 +219,7 @@ public final class PiAgentSession implements PiInteractiveSession {
 
     @Override
     public ReloadResult reload() {
-        if (agent.state().isStreaming()) {
+        if (sdkSession.state().isStreaming()) {
             throw new IllegalStateException("Wait for the current response to finish before reloading");
         }
 
@@ -240,14 +235,14 @@ public final class PiAgentSession implements PiInteractiveSession {
             resourceErrors = instructionResourceLoader.drainErrors();
         }
 
-        agent.setSystemPrompt(composeSystemPrompt(systemPrompt, appendSystemPrompt, instructionResources));
+        sdkSession.agent().setSystemPrompt(composeSystemPrompt(systemPrompt, appendSystemPrompt, instructionResources));
         return new ReloadResult(settingsErrors, resourceErrors);
     }
 
     public List<SessionPersistenceError> drainPersistenceErrors() {
-        var drained = List.copyOf(persistenceErrors);
-        persistenceErrors.clear();
-        return drained;
+        return sdkSession.drainPersistenceErrors().stream()
+            .map(error -> new SessionPersistenceError(error.operation(), error.error()))
+            .toList();
     }
 
     private static String extractUserEditorText(SessionEntry.MessageEntry entry) {
@@ -273,37 +268,23 @@ public final class PiAgentSession implements PiInteractiveSession {
     }
 
     private void restoreAgentMessages() {
-        var restoredMessages = sessionManager.buildSessionContext().messages().stream()
+        var restoredMessages = sessionManager().buildSessionContext().messages().stream()
             .map(AgentMessages::fromLlmMessage)
             .toList();
-        agent.replaceMessages(restoredMessages);
-    }
-
-    private void persistEvent(AgentEvent event) {
-        if (!(event instanceof AgentEvent.MessageEnd messageEnd)) {
-            return;
-        }
-        if (messageEnd.message() instanceof AgentMessage.CustomMessage) {
-            return;
-        }
-        try {
-            sessionManager.appendMessage(AgentMessages.toLlmMessage(messageEnd.message()));
-        } catch (IOException exception) {
-            persistenceErrors.add(new SessionPersistenceError("append_message", exception));
-        }
+        sdkSession.agent().replaceMessages(restoredMessages);
     }
 
     private void seedSessionMetadataIfNeeded(ThinkingLevel thinkingLevel) {
-        if (!sessionManager.entries().isEmpty()) {
+        if (!sessionManager().entries().isEmpty()) {
             return;
         }
         try {
-            sessionManager.appendModelChange(agent.state().model().provider(), agent.state().model().id());
+            sessionManager().appendModelChange(sdkSession.state().model().provider(), sdkSession.state().model().id());
             if (thinkingLevel != null) {
-                sessionManager.appendThinkingLevelChange(thinkingLevel.value());
+                sessionManager().appendThinkingLevelChange(thinkingLevel.value());
             }
         } catch (IOException exception) {
-            persistenceErrors.add(new SessionPersistenceError("seed_session_metadata", exception));
+            throw new IllegalStateException("Failed to seed session metadata", exception);
         }
     }
 
@@ -447,84 +428,31 @@ public final class PiAgentSession implements PiInteractiveSession {
             var effectiveInstructionResources = instructionResourceLoader == null
                 ? instructionResources
                 : instructionResourceLoader.resources();
-            var sessionContext = sessionManager.buildSessionContext();
-            var restoredMessages = sessionContext.messages().stream()
-                .map(AgentMessages::fromLlmMessage)
-                .toList();
-            var resolvedThinkingLevel = thinkingLevel != null ? thinkingLevel : toThinkingLevel(sessionContext.thinkingLevel());
-            var agent = Agent.builder(model)
+            var options = CreateAgentSessionOptions.builder(model, streamFunction, sessionManager)
+                .settingsManager(settingsManager)
                 .systemPrompt(composeSystemPrompt(systemPrompt, appendSystemPrompt, effectiveInstructionResources))
-                .thinkingLevel(resolvedThinkingLevel)
+                .thinkingLevel(thinkingLevel)
                 .tools(tools)
-                .messages(restoredMessages)
-                .streamFunction(streamFunction)
-                .sessionId(sessionId == null ? sessionManager.sessionId() : sessionId)
+                .convertToLlm(convertToLlm)
+                .transformContext(transformContext)
+                .apiKeyProvider(apiKeyProvider)
+                .apiKey(apiKey)
+                .transport(transport)
+                .cacheRetention(cacheRetention)
+                .sessionId(sessionId)
                 .headers(headers)
+                .maxRetryDelayMs(maxRetryDelayMs)
+                .thinkingBudgets(thinkingBudgets)
                 .build();
 
-            if (convertToLlm != null) {
-                agent = Agent.builder(model)
-                    .systemPrompt(composeSystemPrompt(systemPrompt, appendSystemPrompt, effectiveInstructionResources))
-                    .thinkingLevel(resolvedThinkingLevel)
-                    .tools(tools)
-                    .messages(restoredMessages)
-                    .streamFunction(streamFunction)
-                    .convertToLlm(convertToLlm)
-                    .transformContext(transformContext)
-                    .apiKeyProvider(apiKeyProvider)
-                    .apiKey(apiKey)
-                    .transport(transport)
-                    .cacheRetention(cacheRetention)
-                    .sessionId(sessionId == null ? sessionManager.sessionId() : sessionId)
-                    .headers(headers)
-                    .maxRetryDelayMs(maxRetryDelayMs)
-                    .thinkingBudgets(thinkingBudgets)
-                    .build();
-            } else if (
-                transformContext != null ||
-                apiKeyProvider != null ||
-                apiKey != null ||
-                transport != null ||
-                cacheRetention != null ||
-                maxRetryDelayMs != null ||
-                thinkingBudgets != null
-            ) {
-                agent = Agent.builder(model)
-                    .systemPrompt(composeSystemPrompt(systemPrompt, appendSystemPrompt, effectiveInstructionResources))
-                    .thinkingLevel(resolvedThinkingLevel)
-                    .tools(tools)
-                    .messages(restoredMessages)
-                    .streamFunction(streamFunction)
-                    .transformContext(transformContext)
-                    .apiKeyProvider(apiKeyProvider)
-                    .apiKey(apiKey)
-                    .transport(transport)
-                    .cacheRetention(cacheRetention)
-                    .sessionId(sessionId == null ? sessionManager.sessionId() : sessionId)
-                    .headers(headers)
-                    .maxRetryDelayMs(maxRetryDelayMs)
-                    .thinkingBudgets(thinkingBudgets)
-                    .build();
-            }
-
-            var session = new PiAgentSession(
-                agent,
-                sessionManager,
+            return new PiAgentSession(
+                PiSdkSession.create(options),
                 settingsManager,
                 instructionResourceLoader,
                 effectiveInstructionResources,
                 systemPrompt,
                 appendSystemPrompt
             );
-            session.seedSessionMetadataIfNeeded(resolvedThinkingLevel);
-            return session;
-        }
-
-        private static ThinkingLevel toThinkingLevel(String value) {
-            if (value == null || value.isBlank() || "off".equals(value)) {
-                return null;
-            }
-            return ThinkingLevel.fromValue(value);
         }
 
     }
