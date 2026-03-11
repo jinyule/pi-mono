@@ -51,6 +51,8 @@
   - session selector summary 分段着色 first cut
 - 已完成第二十三刀：
   - tree/fork selector 复用 ANSI 层级 first cut
+- 已完成第二十四刀：
+  - session selector regex parse error first cut
 
 ## 本轮落地
 
@@ -187,6 +189,10 @@
   - overlay hint 用 muted
   - list selected row / metadata / no-match / scroll info 直接复用 session selector 的 ANSI 层级
   - 避免 tree/fork overlay 在视觉上回退成纯文本列表
+- `PiSessionPicker` 现在会把 regex parse error 明确显示在 search 区上方：
+  - query 解析失败时显示 `Invalid regex: ...`
+  - 该状态行走 error 样式
+  - 这样不会再和普通 `no match` 空结果混在一起
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -236,6 +242,7 @@
 - `PiSessionPickerTest`：all-scope loading summary 的分段 ANSI 序列
 - `PiSelectorThemeTest`：tree selector 的共享 ANSI 层级
 - `PiSelectorThemeTest`：fork selector 的共享 ANSI 层级
+- `PiSessionPickerTest`：regex parse error 的 error 样式
 
 最近通过：
 
@@ -246,5 +253,5 @@
 ## 下一步建议
 
 1. selector parity：继续评估 model/settings selector 是否复用同一套层级
-2. session selector：继续评估 rename/delete/search input 周边是否要补更多状态样式
+2. session selector：继续评估 search 为空 / no-match / regex-error 三种状态的层级是否还要细分
 3. keybindings：继续评估 app 层是否要补 model/thinking 相关动作

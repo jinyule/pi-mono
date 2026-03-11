@@ -582,6 +582,10 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
                     width,
                     loadingError != null ? PiCliAnsi::error : PiCliAnsi::muted
                 ));
+                var searchError = searchError();
+                if (searchError != null) {
+                    lines.addAll(styleInfoLines("Invalid regex: " + searchError, width, PiCliAnsi::error));
+                }
             }
             lines.add("");
             lines.addAll(search.render(width));
@@ -993,6 +997,10 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             return wrapInfoLine(text, width).stream()
                 .map(style)
                 .toList();
+        }
+
+        private String searchError() {
+            return parseSearchQuery(search.getValue()).error();
         }
 
         private static List<ThreadedSession> flattenThreadedSessions(List<SessionInfo> sessions, NameFilter nameFilter) {

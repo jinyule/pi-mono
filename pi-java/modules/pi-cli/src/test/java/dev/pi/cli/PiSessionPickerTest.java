@@ -210,6 +210,24 @@ class PiSessionPickerTest {
     }
 
     @Test
+    void showsRegexParseErrorsWithErrorStyling() {
+        var terminal = new RecordingTerminal(120, 12);
+        var picker = new PiSessionPicker(terminal);
+
+        Thread.ofVirtual().start(() -> picker.pick(
+            List.of(session("current.jsonl", "Current task", 2, Instant.now().minusSeconds(30), "/workspace/current")),
+            List.of(session("current.jsonl", "Current task", 2, Instant.now().minusSeconds(30), "/workspace/current"))
+        ));
+
+        waitFor(() -> terminal.output().contains("Resume session"));
+        terminal.sendInput("re:[");
+        waitFor(() -> terminal.output().contains("Invalid regex:"));
+
+        assertThat(terminal.output()).contains("\u001b[31mInvalid regex:");
+        terminal.sendInput("\u001b");
+    }
+
+    @Test
     void usesAppKeybindingsForNamedFilterToggle() {
         var terminal = new VirtualTerminal(100, 12);
         var picker = new PiSessionPicker(terminal);
