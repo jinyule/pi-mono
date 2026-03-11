@@ -441,6 +441,28 @@ class PiSessionPickerTest {
     }
 
     @Test
+    void filterAndSortSessionsDoesNotSearchPathText() {
+        var sessions = List.of(
+            new SessionInfo(
+                Path.of("sessions", "path-only", "alpha.jsonl"),
+                "alpha",
+                "/workspace/api",
+                null,
+                null,
+                Instant.parse("2026-03-11T06:59:00Z"),
+                Instant.parse("2026-03-11T07:00:00Z"),
+                2,
+                "Alpha task",
+                "normal transcript"
+            ),
+            sessionWithTranscript("beta.jsonl", "Beta", "normal transcript", Instant.parse("2026-03-11T07:00:10Z"))
+        );
+
+        assertThat(PiSessionPicker.filterAndSortSessions(sessions, "path-only", PiSessionPicker.SortMode.RECENT, PiSessionPicker.NameFilter.ALL))
+            .isEmpty();
+    }
+
+    @Test
     void togglesSortModeIntoThreadedTreeOrder() {
         var terminal = new VirtualTerminal(140, 12);
         var picker = new PiSessionPicker(terminal);

@@ -389,12 +389,11 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
     }
 
     private static String getSearchText(SessionInfo session) {
-        return "%s %s %s %s %s".formatted(
+        return "%s %s %s %s".formatted(
             session.id(),
             session.name() == null ? "" : session.name(),
             session.allMessagesText(),
-            session.cwd(),
-            session.path()
+            session.cwd()
         );
     }
 

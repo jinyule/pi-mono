@@ -23,6 +23,8 @@
   - session selector loading/progress header first cut
 - 已完成第九刀：
   - session selector TS-style fuzzy scoring first cut
+- 已完成第十刀：
+  - session selector search text scope parity first cut
 
 ## 本轮落地
 
@@ -82,6 +84,9 @@
   - gap 会按距离加罚分
   - 晚出现的命中会按位置轻微加罚分
   - `letters+digits` / `digits+letters` query 现在支持一次 alpha-numeric swapped fallback，例如 `codex52 -> 52codex`
+- `PiSessionPicker` 现在把 session selector search text 范围收敛到和 TS 一致的字段：
+  - 搜索只覆盖 `id/name/allMessagesText/cwd`
+  - `path` 仍可显示在 UI description 里，但不再参与匹配/排序
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -94,7 +99,6 @@
   - cycle/default 现在已基本对齐 TS，但 loading/progress header 还只是首版
   - keybindings 现在有文件加载首版，但还没有完整的 app/editor 分层 manager
   - path show/hide 目前只是 description 级别开关，还没有 TS 版右侧布局/缩略路径渲染
-  - 搜索文本目前仍覆盖 `path`，和 TS `session-selector-search.ts` 只搜 `id/name/allMessagesText/cwd` 还没完全一致
 - resolver 现在只在 `--session-dir` 未显式指定时提供 current/all 双 scope；显式 `--session-dir` 仍退化成单 scope
 
 ## 测试
@@ -112,6 +116,7 @@
 - `PiSessionPickerTest`：initial current loading header、all-scope progress header
 - `PiCliSessionResolverTest`：loader-style picker stub 覆盖 current/all lazy load
 - `PiSessionPickerTest`：连续命中、word boundary、alpha-numeric swapped fuzzy scoring/匹配
+- `PiSessionPickerTest`：`path` 只显示不参与搜索
 - `PiCliModuleTest`：从临时 agent dir 加载 `keybindings.json` 覆盖
 
 最近通过：
@@ -124,4 +129,4 @@
 
 1. session selector：继续细化 app/editor keybinding 分层
 2. session selector：补更接近 TS 的 path/cwd 布局细节
-3. session selector：收敛搜索文本范围到 TS 的 `id/name/allMessagesText/cwd`
+3. session selector：继续收敛 header/status/hint 文案到 TS
