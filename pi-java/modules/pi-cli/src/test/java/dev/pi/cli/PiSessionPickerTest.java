@@ -203,10 +203,10 @@ class PiSessionPickerTest {
         assertThat(recentView.indexOf("Later global")).isLessThan(recentView.indexOf("Global first"));
 
         terminal.sendInput("\u0013");
-        waitFor(() -> String.join("\n", terminal.getViewport()).contains("Relevance"));
+        waitFor(() -> String.join("\n", terminal.getViewport()).contains("Fuzzy"));
 
         var relevanceView = String.join("\n", terminal.getViewport());
-        assertThat(relevanceView).contains("Relevance");
+        assertThat(relevanceView).contains("Fuzzy");
 
         terminal.sendInput("\u001b");
     }
@@ -295,6 +295,42 @@ class PiSessionPickerTest {
     }
 
     @Test
+    void filterAndSortSessionsMatchesQuotedPhraseAcrossWhitespace() {
+        var sessions = List.of(
+            sessionWithTranscript("a.jsonl", "Alpha", "node\n\n   cve was discussed", Instant.parse("2026-03-11T07:00:00Z")),
+            sessionWithTranscript("b.jsonl", "Beta", "node something else", Instant.parse("2026-03-11T07:00:10Z"))
+        );
+
+        assertThat(PiSessionPicker.filterAndSortSessions(sessions, "\"node cve\"", PiSessionPicker.SortMode.RECENT, PiSessionPicker.NameFilter.ALL))
+            .extracting(SessionInfo::path)
+            .containsExactly(sessions.getFirst().path());
+    }
+
+    @Test
+    void filterAndSortSessionsSupportsCaseInsensitiveRegex() {
+        var sessions = List.of(
+            sessionWithTranscript("a.jsonl", "Alpha", "Brave is great", Instant.parse("2026-03-11T07:00:00Z")),
+            sessionWithTranscript("b.jsonl", "Beta", "bravery is not the same", Instant.parse("2026-03-11T07:00:10Z"))
+        );
+
+        assertThat(PiSessionPicker.filterAndSortSessions(sessions, "re:\\bbrave\\b", PiSessionPicker.SortMode.RECENT, PiSessionPicker.NameFilter.ALL))
+            .extracting(SessionInfo::path)
+            .containsExactly(sessions.getFirst().path());
+    }
+
+    @Test
+    void filterAndSortSessionsSupportsFuzzySubsequenceSearch() {
+        var sessions = List.of(
+            sessionWithTranscript("x.jsonl", "Alpha", "alpha beta gamma", Instant.parse("2026-03-11T07:00:00Z")),
+            sessionWithTranscript("y.jsonl", "Beta", "delta epsilon", Instant.parse("2026-03-11T07:00:10Z"))
+        );
+
+        assertThat(PiSessionPicker.filterAndSortSessions(sessions, "abg", PiSessionPicker.SortMode.RECENT, PiSessionPicker.NameFilter.ALL))
+            .extracting(SessionInfo::path)
+            .containsExactly(sessions.getFirst().path());
+    }
+
+    @Test
     void togglesSortModeIntoThreadedTreeOrder() {
         var terminal = new VirtualTerminal(140, 12);
         var picker = new PiSessionPicker(terminal);
@@ -307,7 +343,7 @@ class PiSessionPickerTest {
         waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("sort(Recent)")));
 
         terminal.sendInput("\u0013");
-        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("sort(Relevance)")));
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("sort(Fuzzy)")));
 
         terminal.sendInput("\u0013");
         waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("sort(Threaded)")));
@@ -418,6 +454,21 @@ class PiSessionPickerTest {
             messageCount,
             firstMessage,
             firstMessage
+        );
+    }
+
+    private static SessionInfo sessionWithTranscript(String fileName, String firstMessage, String allMessagesText, Instant modified) {
+        return new SessionInfo(
+            Path.of(fileName),
+            fileName.replace(".jsonl", ""),
+            "/workspace",
+            null,
+            null,
+            modified.minusSeconds(60),
+            modified,
+            1,
+            firstMessage,
+            allMessagesText
         );
     }
 

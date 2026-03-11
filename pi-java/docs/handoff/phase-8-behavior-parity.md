@@ -15,6 +15,8 @@
   - session selector path show/hide toggle first cut
 - 已完成第五刀：
   - session selector threaded sort first cut
+- 已完成第六刀：
+  - session selector fuzzy parser/search first cut
 
 ## 本轮落地
 
@@ -48,6 +50,12 @@
   - `threaded` 只在空 query 时启用树状布局
   - 非空 query 时，`threaded` 会先退化到当前的 `relevance` 首版
   - 树状展开按 `parentSessionPath` 建树，根/子节点按 `modified desc` 排序
+- `PiSessionPicker` 现在支持 fuzzy parser/search：
+  - `recent` / `fuzzy` 都会走 picker 自己的 parser，不再依赖 `SelectList` 的 contains-only 过滤
+  - 支持 quoted phrase（带空白归一化）
+  - 支持 `re:` case-insensitive regex
+  - 支持简单 subsequence fuzzy
+  - 搜索文本覆盖 `id/name/allMessagesText/cwd/path`
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -58,7 +66,7 @@
 
 - 这还是首版 scope toggle：
   - 还没有 TS 版的 loading/progress header
-  - sort toggle 现在有 `threaded`，但还没有 TS 版真正的 `fuzzy` matcher / parser（`re:`、quoted phrase、subsequence score 等）
+  - fuzzy 现在已经支持 quoted phrase / regex / subsequence，但 scoring 还不是 TS `@mariozechner/pi-tui` 的同款实现
   - cycle 顺序和默认态还没完全对齐 TS（当前仍从 `recent` 起步）
   - named-only filter 还没有接到 app-level keybinding/config 层，当前先挂在 `EditorKeybindings`
   - path show/hide 目前只是 description 级别开关，还没有 TS 版右侧布局/缩略路径渲染
@@ -75,6 +83,7 @@
 - `PiSessionPickerTest`：`Ctrl+P` path show/hide toggle
 - `PiSessionPickerTest`：`filterAndSortSessions()` 直接覆盖 recent/relevance 排序语义
 - `PiSessionPickerTest`：`Ctrl+S` 第三态进入 threaded tree 渲染
+- `PiSessionPickerTest`：quoted phrase / `re:` regex / subsequence fuzzy 搜索
 
 最近通过：
 
@@ -84,6 +93,6 @@
 
 ## 下一步建议
 
-1. session selector：补真正的 fuzzy matcher / parser
-2. session selector：评估 app-level keybinding/config 对齐
-3. session selector：补 TS 风格 loading/progress header
+1. session selector：评估 app-level keybinding/config 对齐
+2. session selector：补 TS 风格 loading/progress header
+3. session selector：进一步对齐 fuzzy scoring / cycle default

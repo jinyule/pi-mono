@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.regex.Pattern;
 
 public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker {
     private static final String VALUE_DELIMITER = "\u0000";
@@ -65,14 +66,31 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
 
     static List<SessionInfo> filterAndSortSessions(List<SessionInfo> sessions, String filter, SortMode sortMode, NameFilter nameFilter) {
         var visibleSessions = new ArrayList<>(sessions.stream().filter(session -> nameFilter == NameFilter.ALL || hasName(session)).toList());
-        var filterTokens = filterTokens(filter);
-        if (sortMode == SortMode.RELEVANCE && !filterTokens.isEmpty()) {
-            visibleSessions.sort(
-                Comparator.comparingInt((SessionInfo session) -> relevanceScore(session, filterTokens))
-                    .thenComparing(SessionInfo::modified, Comparator.reverseOrder())
-            );
+        var parsed = parseSearchQuery(filter);
+        if (parsed.error() != null) {
+            return List.of();
         }
-        return List.copyOf(visibleSessions);
+        if (parsed.isEmpty()) {
+            return List.copyOf(visibleSessions);
+        }
+        if (sortMode == SortMode.RECENT) {
+            return visibleSessions.stream()
+                .filter(session -> matchSession(session, parsed).matches())
+                .toList();
+        }
+        var matches = new ArrayList<SessionMatch>();
+        for (var session : visibleSessions) {
+            var match = matchSession(session, parsed);
+            if (!match.matches()) {
+                continue;
+            }
+            matches.add(new SessionMatch(session, match.score()));
+        }
+        matches.sort(
+            Comparator.comparingDouble(SessionMatch::score)
+                .thenComparing(SessionMatch::session, Comparator.comparing(SessionInfo::modified).reversed())
+        );
+        return matches.stream().map(SessionMatch::session).toList();
     }
 
     @Override
@@ -118,40 +136,147 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
         return session.name() != null && !session.name().isBlank();
     }
 
-    private static List<String> filterTokens(String filter) {
-        var normalized = filter == null ? "" : filter.toLowerCase(Locale.ROOT).trim();
-        return normalized.isEmpty() ? List.of() : List.of(normalized.split("\\s+"));
-    }
-
-    private static int relevanceScore(SessionInfo session, List<String> tokens) {
-        var label = displayLabel(session).toLowerCase(Locale.ROOT);
-        var fileName = session.path().getFileName() == null
-            ? session.path().toString().toLowerCase(Locale.ROOT)
-            : session.path().getFileName().toString().toLowerCase(Locale.ROOT);
-        var cwd = session.cwd().toLowerCase(Locale.ROOT);
-        var path = session.path().toString().toLowerCase(Locale.ROOT);
-        var score = 0;
-        for (var token : tokens) {
-            var tokenScore = fieldScore(label, token, 0);
-            tokenScore = Math.min(tokenScore, fieldScore(fileName, token, 100));
-            tokenScore = Math.min(tokenScore, fieldScore(cwd, token, 200));
-            tokenScore = Math.min(tokenScore, fieldScore(path, token, 300));
-            if (tokenScore == Integer.MAX_VALUE) {
-                return Integer.MAX_VALUE;
-            }
-            score = score > Integer.MAX_VALUE - tokenScore ? Integer.MAX_VALUE : score + tokenScore;
+    private static ParsedSearchQuery parseSearchQuery(String query) {
+        var trimmed = query == null ? "" : query.trim();
+        if (trimmed.isEmpty()) {
+            return new ParsedSearchQuery(SearchMode.TOKENS, List.of(), null, null);
         }
-        return score;
+        if (trimmed.startsWith("re:")) {
+            var pattern = trimmed.substring(3).trim();
+            if (pattern.isEmpty()) {
+                return new ParsedSearchQuery(SearchMode.REGEX, List.of(), null, "Empty regex");
+            }
+            try {
+                return new ParsedSearchQuery(SearchMode.REGEX, List.of(), Pattern.compile(pattern, Pattern.CASE_INSENSITIVE), null);
+            } catch (java.util.regex.PatternSyntaxException exception) {
+                return new ParsedSearchQuery(SearchMode.REGEX, List.of(), null, exception.getMessage());
+            }
+        }
+
+        var tokens = new ArrayList<SearchToken>();
+        var buffer = new StringBuilder();
+        var inQuote = false;
+        var hadUnclosedQuote = false;
+        for (var index = 0; index < trimmed.length(); index += 1) {
+            var ch = trimmed.charAt(index);
+            if (ch == '"') {
+                if (inQuote) {
+                    flushToken(tokens, buffer, SearchTokenKind.PHRASE);
+                    inQuote = false;
+                } else {
+                    flushToken(tokens, buffer, SearchTokenKind.FUZZY);
+                    inQuote = true;
+                }
+                continue;
+            }
+            if (!inQuote && Character.isWhitespace(ch)) {
+                flushToken(tokens, buffer, SearchTokenKind.FUZZY);
+                continue;
+            }
+            buffer.append(ch);
+        }
+        if (inQuote) {
+            hadUnclosedQuote = true;
+        }
+        if (hadUnclosedQuote) {
+            return new ParsedSearchQuery(
+                SearchMode.TOKENS,
+                List.of(trimmed.split("\\s+")).stream()
+                    .map(String::trim)
+                    .filter(token -> !token.isEmpty())
+                    .map(token -> new SearchToken(SearchTokenKind.FUZZY, token))
+                    .toList(),
+                null,
+                null
+            );
+        }
+        flushToken(tokens, buffer, SearchTokenKind.FUZZY);
+        return new ParsedSearchQuery(SearchMode.TOKENS, List.copyOf(tokens), null, null);
     }
 
-    private static int fieldScore(String value, String token, int base) {
-        var index = value.indexOf(token);
-        return index < 0 ? Integer.MAX_VALUE : base + index;
+    private static void flushToken(List<SearchToken> tokens, StringBuilder buffer, SearchTokenKind defaultKind) {
+        var value = buffer.toString().trim();
+        buffer.setLength(0);
+        if (!value.isEmpty()) {
+            tokens.add(new SearchToken(defaultKind, value));
+        }
+    }
+
+    private static MatchResult matchSession(SessionInfo session, ParsedSearchQuery parsed) {
+        var text = getSearchText(session);
+        if (parsed.mode() == SearchMode.REGEX) {
+            if (parsed.regex() == null) {
+                return new MatchResult(false, 0);
+            }
+            var matcher = parsed.regex().matcher(text);
+            if (!matcher.find()) {
+                return new MatchResult(false, 0);
+            }
+            return new MatchResult(true, matcher.start() * 0.1);
+        }
+        if (parsed.tokens().isEmpty()) {
+            return new MatchResult(true, 0);
+        }
+
+        var score = 0.0;
+        String normalizedText = null;
+        for (var token : parsed.tokens()) {
+            if (token.kind() == SearchTokenKind.PHRASE) {
+                if (normalizedText == null) {
+                    normalizedText = normalizeWhitespaceLower(text);
+                }
+                var phrase = normalizeWhitespaceLower(token.value());
+                if (phrase.isEmpty()) {
+                    continue;
+                }
+                var index = normalizedText.indexOf(phrase);
+                if (index < 0) {
+                    return new MatchResult(false, 0);
+                }
+                score += index * 0.1;
+                continue;
+            }
+
+            var fuzzy = fuzzyMatch(token.value(), text);
+            if (!fuzzy.matches()) {
+                return new MatchResult(false, 0);
+            }
+            score += fuzzy.score();
+        }
+        return new MatchResult(true, score);
+    }
+
+    private static FuzzyScore fuzzyMatch(String query, String text) {
+        var normalizedQuery = query.toLowerCase(Locale.ROOT);
+        var normalizedText = text.toLowerCase(Locale.ROOT);
+        var queryIndex = 0;
+        var score = 0.0;
+        for (var index = 0; index < normalizedText.length() && queryIndex < normalizedQuery.length(); index += 1) {
+            if (normalizedText.charAt(index) == normalizedQuery.charAt(queryIndex)) {
+                score += index;
+                queryIndex += 1;
+            }
+        }
+        return new FuzzyScore(queryIndex == normalizedQuery.length(), score);
+    }
+
+    private static String normalizeWhitespaceLower(String value) {
+        return value.toLowerCase(Locale.ROOT).replaceAll("\\s+", " ").trim();
+    }
+
+    private static String getSearchText(SessionInfo session) {
+        return "%s %s %s %s %s".formatted(
+            session.id(),
+            session.name() == null ? "" : session.name(),
+            session.allMessagesText(),
+            session.cwd(),
+            session.path()
+        );
     }
 
     enum SortMode {
         RECENT("Recent"),
-        RELEVANCE("Relevance"),
+        RELEVANCE("Fuzzy"),
         THREADED("Threaded");
 
         private final String label;
@@ -178,6 +303,51 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
         private String label() {
             return label;
         }
+    }
+
+    private enum SearchMode {
+        TOKENS,
+        REGEX
+    }
+
+    private enum SearchTokenKind {
+        FUZZY,
+        PHRASE
+    }
+
+    private record SearchToken(
+        SearchTokenKind kind,
+        String value
+    ) {
+    }
+
+    private record ParsedSearchQuery(
+        SearchMode mode,
+        List<SearchToken> tokens,
+        Pattern regex,
+        String error
+    ) {
+        private boolean isEmpty() {
+            return tokens.isEmpty() && regex == null;
+        }
+    }
+
+    private record MatchResult(
+        boolean matches,
+        double score
+    ) {
+    }
+
+    private record FuzzyScore(
+        boolean matches,
+        double score
+    ) {
+    }
+
+    private record SessionMatch(
+        SessionInfo session,
+        double score
+    ) {
     }
 
     private static final class PickerComponent implements Component, Focusable {
@@ -323,7 +493,7 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             }
 
             search.handleInput(data);
-            sessions.setFilter(search.getValue());
+            rebuildSessionList();
             requestRender.run();
         }
 
@@ -344,7 +514,7 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             this.sessions.setOnSelectionChange(ignored -> requestRender.run());
             this.sessions.setOnSelect(item -> onSelect.accept(Path.of(decodePath(item.value()))));
             this.sessions.setOnCancel(onCancel);
-            this.sessions.setFilter(search.getValue());
+            this.sessions.setFilter("");
         }
 
         private void deletePendingSession() {
