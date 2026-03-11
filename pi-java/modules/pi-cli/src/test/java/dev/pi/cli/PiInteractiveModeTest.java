@@ -108,6 +108,27 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void usesAppKeybindingForTreeOverlay() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(80, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+        var previousApp = PiAppKeybindings.global();
+        try {
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(PiAppAction.TREE, java.util.List.of("alt+t"))));
+
+            mode.start();
+            terminal.sendInput("Hello");
+            terminal.sendInput("\r");
+            terminal.sendInput("\u001bt");
+
+            waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Navigate session tree")));
+        } finally {
+            PiAppKeybindings.setGlobal(previousApp);
+            mode.stop();
+        }
+    }
+
+    @Test
     void handlesForkSlashCommand() {
         var session = new FakeSession();
         var terminal = new VirtualTerminal(80, 16);
@@ -140,6 +161,27 @@ class PiInteractiveModeTest {
             .doesNotContain("You: Hello\n\nAssistant: Ack: Hello");
 
         mode.stop();
+    }
+
+    @Test
+    void usesAppKeybindingForForkOverlay() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(80, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+        var previousApp = PiAppKeybindings.global();
+        try {
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(PiAppAction.FORK, java.util.List.of("alt+f"))));
+
+            mode.start();
+            terminal.sendInput("Hello");
+            terminal.sendInput("\r");
+            terminal.sendInput("\u001bf");
+
+            waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Fork from previous message")));
+        } finally {
+            PiAppKeybindings.setGlobal(previousApp);
+            mode.stop();
+        }
     }
 
     @Test
@@ -222,11 +264,33 @@ class PiInteractiveModeTest {
         stopped.get(2, TimeUnit.SECONDS);
     }
 
+    @Test
+    void usesAppKeybindingForInterrupt() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(80, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+        var previousApp = PiAppKeybindings.global();
+        try {
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(PiAppAction.INTERRUPT, java.util.List.of("alt+x"))));
+
+            mode.start();
+            terminal.sendInput("\u001b");
+            assertThat(session.abortCount).isZero();
+
+            terminal.sendInput("\u001bx");
+            assertThat(session.abortCount).isEqualTo(1);
+        } finally {
+            PiAppKeybindings.setGlobal(previousApp);
+            mode.stop();
+        }
+    }
+
     private static final class FakeSession implements PiInteractiveSession {
         private final List<String> prompts = new ArrayList<>();
         private final CopyOnWriteArrayList<Consumer<AgentState>> stateListeners = new CopyOnWriteArrayList<>();
         private final SessionManager sessionManager = SessionManager.inMemory("/workspace");
         private int reloadCount;
+        private int abortCount;
         private List<String> reloadWarnings = List.of();
         private AgentState state = new AgentState(
             "",
@@ -310,6 +374,7 @@ class PiInteractiveModeTest {
 
         @Override
         public void abort() {
+            abortCount += 1;
         }
 
         @Override

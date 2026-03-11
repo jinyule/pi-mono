@@ -43,6 +43,12 @@ final class PiCliKeybindingsLoader {
         Map.entry("renameSession", EditorAction.SESSION_RENAME)
     );
     private static final Map<String, PiAppAction> APP_ACTION_ALIASES = Map.of(
+        "interrupt",
+        PiAppAction.INTERRUPT,
+        "tree",
+        PiAppAction.TREE,
+        "fork",
+        PiAppAction.FORK,
         "toggleSessionNamedFilter",
         PiAppAction.TOGGLE_SESSION_NAMED_FILTER
     );

@@ -2,6 +2,8 @@ package dev.pi.cli;
 
 import dev.pi.agent.runtime.AgentState;
 import dev.pi.ai.stream.Subscription;
+import dev.pi.tui.Component;
+import dev.pi.tui.Focusable;
 import dev.pi.tui.OverlayAnchor;
 import dev.pi.tui.OverlayMargin;
 import dev.pi.tui.OverlayOptions;
@@ -11,6 +13,7 @@ import dev.pi.tui.Terminal;
 import dev.pi.tui.Text;
 import dev.pi.tui.Tui;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -23,6 +26,7 @@ public final class PiInteractiveMode implements AutoCloseable {
     private final Text transcript = new Text("", 1, 0, null);
     private final Text status = new Text("", 1, 0, null);
     private final Input input = new Input();
+    private final PromptInput promptInput = new PromptInput();
 
     private Subscription stateSubscription;
     private boolean started;
@@ -55,11 +59,10 @@ public final class PiInteractiveMode implements AutoCloseable {
         this.tui.addChild(header);
         this.tui.addChild(transcript);
         this.tui.addChild(status);
-        this.tui.addChild(input);
-        this.tui.setFocus(input);
+        this.tui.addChild(promptInput);
+        this.tui.setFocus(promptInput);
         this.input.setOnSubmit(this::submit);
         this.input.setOnExit(this::requestExit);
-        this.input.setOnEscape(session::abort);
     }
 
     public void setOnStop(Runnable onStop) {
@@ -336,5 +339,45 @@ public final class PiInteractiveMode implements AutoCloseable {
             current = current.getCause();
         }
         return current.getMessage() == null ? current.getClass().getSimpleName() : current.getMessage();
+    }
+
+    private final class PromptInput implements Component, Focusable {
+        @Override
+        public List<String> render(int width) {
+            return input.render(width);
+        }
+
+        @Override
+        public void handleInput(String data) {
+            var appKeybindings = PiAppKeybindings.global();
+            if (appKeybindings.matches(data, PiAppAction.INTERRUPT)) {
+                session.abort();
+                return;
+            }
+            if (appKeybindings.matches(data, PiAppAction.TREE)) {
+                handleTreeCommand();
+                return;
+            }
+            if (appKeybindings.matches(data, PiAppAction.FORK)) {
+                handleForkCommand();
+                return;
+            }
+            input.handleInput(data);
+        }
+
+        @Override
+        public boolean isFocused() {
+            return input.isFocused();
+        }
+
+        @Override
+        public void setFocused(boolean focused) {
+            input.setFocused(focused);
+        }
+
+        @Override
+        public void invalidate() {
+            input.invalidate();
+        }
     }
 }

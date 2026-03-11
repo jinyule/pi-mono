@@ -230,6 +230,9 @@ class PiCliModuleTest {
             agentDir.resolve("keybindings.json"),
             """
             {
+              "interrupt": "alt+x",
+              "tree": "alt+t",
+              "fork": "alt+f",
               "toggleSessionSort": "ctrl+g",
               "toggleSessionNamedFilter": ["alt+n"],
               "tab": "shift+tab"
@@ -258,6 +261,9 @@ class PiCliModuleTest {
             module.run("--help").toCompletableFuture().join();
 
             assertThat(EditorKeybindings.global().getKeys(EditorAction.SESSION_SORT_TOGGLE)).containsExactly("ctrl+g");
+            assertThat(PiAppKeybindings.global().getKeys(PiAppAction.INTERRUPT)).containsExactly("alt+x");
+            assertThat(PiAppKeybindings.global().getKeys(PiAppAction.TREE)).containsExactly("alt+t");
+            assertThat(PiAppKeybindings.global().getKeys(PiAppAction.FORK)).containsExactly("alt+f");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.TOGGLE_SESSION_NAMED_FILTER)).containsExactly("alt+n");
             assertThat(EditorKeybindings.global().getKeys(EditorAction.SESSION_SCOPE_TOGGLE)).containsExactly("shift+tab");
         } finally {

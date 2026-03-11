@@ -8,6 +8,12 @@ import java.util.Objects;
 
 final class PiAppKeybindings {
     private static final Map<PiAppAction, List<String>> DEFAULTS = Map.of(
+        PiAppAction.INTERRUPT,
+        List.of("escape"),
+        PiAppAction.TREE,
+        List.of(),
+        PiAppAction.FORK,
+        List.of(),
         PiAppAction.TOGGLE_SESSION_NAMED_FILTER,
         List.of("ctrl+n")
     );
