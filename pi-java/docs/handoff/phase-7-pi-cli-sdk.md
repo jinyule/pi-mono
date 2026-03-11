@@ -46,6 +46,8 @@
   - startup/session shell shared core first cut
 - 已完成第二十三刀：
   - real main/module wiring first cut
+- 已完成第二十四刀：
+  - `/reload` extension runtime / startup pipeline first cut
 
 ## 已落地内容
 
@@ -139,8 +141,9 @@
 - `PiAgentSession` 现在也已具备最小 manual reload 语义：
   - `settingsManager.reload()` 会刷新 global/project settings snapshot
   - 若配置了 `InstructionResourceLoader`，`reload()` 会重新读取 `AGENTS.md` / `CLAUDE.md` / `SYSTEM.md` / `APPEND_SYSTEM.md`
+  - 若配置了 `reloadAction`，`reload()` 会继续触发 runtime 侧重建，并把 warning surface 回传给 UI
   - reload 后会用新的 instruction resources 重新拼接 system prompt，并热更新到 `Agent`
-  - 当前返回 settings/resource warning 列表，供上层 UI 做状态提示
+  - 当前返回 settings/resource/extension warning 列表，供上层 UI 做状态提示
 
 ## 当前边界
 
@@ -187,11 +190,15 @@
   - 默认 sessionFactory 现在会串 `PiCliSessionResolver`、`SettingsManager`、`InstructionResourceLoader`、`PiAiClient`
   - 新增 `PiCliMain.main(String[] args)` 作为最小 CLI 入口
   - `PiCliModuleTest` 已覆盖 real `list-models` wiring、real `export` wiring、real `print` wiring
+  - 默认 sessionFactory 现在也会在显式 `--extension` 路径存在时创建 `ExtensionRuntime`，并把 `/reload` 接到 `ExtensionRuntime.reload()`
 - `/copy` 当前只复制最近一条 assistant 的 plain-text flatten 文本；未覆盖图片块、富文本选择、历史消息 picker，也还未抽出统一 slash-command registry。
 - `/tree` 当前是首版 selector：只覆盖 prefix search、up/down/enter/esc、基础树前缀渲染和当前 leaf 高亮；尚未接 TS 版的 summarize prompt、custom prompt、label edit、user-only/all-entry filter toggle、bookmark 语义。
 - `/fork` 当前也是首版 selector：只覆盖 prefix search、up/down/enter/esc 与 flat user-message list；尚未接 extension `session_before_fork` / `session_fork` 生命周期、double-escape action、RPC `fork/get_fork_messages`、cross-project `forkFrom`。
 - `/compact` 当前只覆盖手动 compaction；尚未接 TS 版的 LLM summary、`session_before_compact` / `session_compact` 生命周期、auto-compaction threshold、cancel/abort、file-op details、split-turn handling。
-- `/reload` 当前只覆盖 settings / instruction resources 首版重载；尚未接 TS 版的 extension runtime rebuild、theme/skills/prompts registry rebuild、loaded-resource diagnostics 面板与完整 startup pipeline。
+- `/reload` 当前已覆盖 settings / instruction resources / 显式 extension runtime 首版重载：
+  - `PiAgentSession.ReloadResult` 新增 `extensionWarnings`
+  - default `PiCliModule` 会把 `ExtensionRuntime.reload()` 的 `failures()` 格式化为 warning surface
+  - 仍未接 TS 版的 theme/skills/prompts registry rebuild、loaded-resource diagnostics 面板与更广义 startup pipeline 重建
 - startup/session shell shared core 这刀之后，`pi-cli` 与 `pi-sdk` 的重复点主要还剩：
   - startup pipeline 的 module wiring / parser-to-runtime 装配
   - instruction-resource-aware system prompt 组合逻辑仍在 `pi-cli`
@@ -201,6 +208,7 @@
   - `interactive` handler 当前通过启动 `PiInteractiveMode` 并阻塞进程生命周期维持运行，尚未有更细的退出信号
   - `@file` 参数还未接到 real module wiring；当前会报 clear error
   - help/version 仍未接到真实输出路径
+  - extension runtime 当前只消费显式 `--extension` 路径；还未接默认发现目录或 settings-driven extension source
 
 ## 已确认语义
 
@@ -229,6 +237,7 @@
 - `/fork` 只允许从 user message 发起；新 session 以该消息的 parent 为 branched path，因此 editor 预填的是被选中的 user 文本，conversation state 恢复的是它之前的上下文。
 - `/compact` 当前 summary 文本结构为固定章节模板（Goal / Custom Focus / Previous Summary / Summarized Messages），`tokensBefore` 采用基于序列化文本长度的轻量估算。
 - `/reload` 当前在非 streaming 状态下可执行；会刷新 `SettingsManager`、可选 `InstructionResourceLoader`，并把最新 system prompt 热更新到当前 `Agent`，但不会重建扩展 runtime。
+- `/reload` 当前在非 streaming 状态下可执行；会刷新 `SettingsManager`、可选 `InstructionResourceLoader`、可选 `ExtensionRuntime`，并把最新 system prompt 热更新到当前 `Agent`。
 
 ## 测试
 
@@ -265,6 +274,7 @@
 - richer HTML export first cut：metadata / tree / full-entry rendering，不再只看 replay 后 transcript
 - startup/session shell shared core first cut：`PiAgentSession` 改为包装 `PiSdkSession`
 - real main/module wiring first cut：`PiCliModule.application()/run()` + `PiCliMain`
+- `/reload` extension runtime / startup pipeline first cut：`ReloadResult.extensionWarnings`、`PiAgentSession.reloadAction`、default `PiCliModule` extension runtime reload wiring
 
 ## 验证
 
@@ -279,6 +289,6 @@ npm.cmd run check
 
 按依赖顺序，下一刀建议进入 CLI 收口：
 
-1. 把 `reload` 从 settings/resources 首版继续接到 extension runtime / startup pipeline。
-2. instruction-resource-aware system prompt 组合逻辑继续下沉，减少 `pi-cli` / `pi-sdk` 差异。
-3. 继续补 real module wiring 的 help/version、`@file`、interactive exit 语义。
+1. instruction-resource-aware system prompt 组合逻辑继续下沉，减少 `pi-cli` / `pi-sdk` 差异。
+2. 继续补 real module wiring 的 help/version、`@file`、interactive exit 语义。
+3. 再往后接 theme/skills/prompts registry rebuild 与 loaded-resource diagnostics。

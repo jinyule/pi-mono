@@ -179,12 +179,30 @@ class PiInteractiveModeTest {
         terminal.sendInput("/reload");
         terminal.sendInput("\r");
 
-        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Reloaded settings and instruction resources")));
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Reloaded settings, instruction resources, and extensions")));
 
         assertThat(session.reloadCount).isEqualTo(1);
         assertThat(session.state().systemPrompt()).isEqualTo("Reloaded system prompt");
         assertThat(String.join("\n", terminal.getViewport()))
-            .contains("Reloaded settings and instruction resources");
+            .contains("Reloaded settings, instruction resources, and extensions");
+
+        mode.stop();
+    }
+
+    @Test
+    void handlesReloadSlashCommandWarnings() {
+        var session = new FakeSession();
+        session.reloadWarnings = List.of("reload-plugin.jar: broken extension");
+        var terminal = new VirtualTerminal(80, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("/reload");
+        terminal.sendInput("\r");
+
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Reloaded with 1 warning")));
+
+        assertThat(String.join("\n", terminal.getViewport())).contains("Reloaded with 1 warning");
 
         mode.stop();
     }
@@ -194,6 +212,7 @@ class PiInteractiveModeTest {
         private final CopyOnWriteArrayList<Consumer<AgentState>> stateListeners = new CopyOnWriteArrayList<>();
         private final SessionManager sessionManager = SessionManager.inMemory("/workspace");
         private int reloadCount;
+        private List<String> reloadWarnings = List.of();
         private AgentState state = new AgentState(
             "",
             new Model(
@@ -357,7 +376,7 @@ class PiInteractiveModeTest {
             reloadCount++;
             state = state.withSystemPrompt("Reloaded system prompt");
             emitState();
-            return new ReloadResult(List.of(), List.of());
+            return new ReloadResult(List.of(), List.of(), reloadWarnings);
         }
 
         private void emitState() {

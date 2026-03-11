@@ -4,6 +4,7 @@ import dev.pi.agent.runtime.AgentLoopConfig;
 import dev.pi.ai.PiAiClient;
 import dev.pi.ai.model.Model;
 import dev.pi.ai.registry.ModelRegistry;
+import dev.pi.extension.spi.ExtensionRuntime;
 import dev.pi.session.InstructionResourceLoader;
 import dev.pi.session.SettingsManager;
 import dev.pi.tui.ProcessTerminal;
@@ -151,9 +152,12 @@ public final class PiCliModule {
         var settingsManager = SettingsManager.create(cwd);
         var instructionLoader = new InstructionResourceLoader(cwd);
         instructionLoader.reload();
+        var extensionRuntime = args.noExtensions() || args.extensions().isEmpty()
+            ? null
+            : new ExtensionRuntime(args.extensions());
         var model = resolveModel(args, aiClient.modelRegistry());
 
-        return PiAgentSession.builder(
+        var builder = PiAgentSession.builder(
             model,
             sessionManager,
             settingsManager,
@@ -164,8 +168,11 @@ public final class PiCliModule {
             .systemPrompt(args.systemPrompt())
             .appendSystemPrompt(args.appendSystemPrompt())
             .thinkingLevel(args.thinking() == null ? null : args.thinking().toReasoningLevel())
-            .apiKey(args.apiKey())
-            .build();
+            .apiKey(args.apiKey());
+        if (extensionRuntime != null) {
+            builder.reloadAction(() -> extensionRuntime.reload().failures().stream().map(PiCliModule::formatExtensionFailure).toList());
+        }
+        return builder.build();
     }
 
     private static Model resolveModel(PiCliArgs args, ModelRegistry registry) {
@@ -226,5 +233,9 @@ public final class PiCliModule {
             throw new IllegalArgumentException("CLI mode requires a prompt message");
         }
         return String.join(System.lineSeparator(), args.messages());
+    }
+
+    private static String formatExtensionFailure(dev.pi.extension.spi.ExtensionLoadFailure failure) {
+        return "%s: %s".formatted(failure.source().getFileName(), failure.message());
     }
 }

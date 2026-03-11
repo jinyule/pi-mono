@@ -38,6 +38,7 @@ public final class PiAgentSession implements PiInteractiveSession {
     private volatile InstructionResources instructionResources;
     private final String systemPrompt;
     private final String appendSystemPrompt;
+    private final ReloadAction reloadAction;
 
     private PiAgentSession(
         PiSdkSession sdkSession,
@@ -45,7 +46,8 @@ public final class PiAgentSession implements PiInteractiveSession {
         InstructionResourceLoader instructionResourceLoader,
         InstructionResources instructionResources,
         String systemPrompt,
-        String appendSystemPrompt
+        String appendSystemPrompt,
+        ReloadAction reloadAction
     ) {
         this.sdkSession = Objects.requireNonNull(sdkSession, "sdkSession");
         this.settingsManager = Objects.requireNonNull(settingsManager, "settingsManager");
@@ -53,6 +55,7 @@ public final class PiAgentSession implements PiInteractiveSession {
         this.instructionResources = Objects.requireNonNull(instructionResources, "instructionResources");
         this.systemPrompt = systemPrompt;
         this.appendSystemPrompt = appendSystemPrompt;
+        this.reloadAction = reloadAction;
     }
 
     public static Builder builder(
@@ -235,8 +238,17 @@ public final class PiAgentSession implements PiInteractiveSession {
             resourceErrors = instructionResourceLoader.drainErrors();
         }
 
+        var extensionWarnings = List.<String>of();
+        if (reloadAction != null) {
+            try {
+                extensionWarnings = List.copyOf(reloadAction.reload());
+            } catch (Exception exception) {
+                extensionWarnings = List.of(rootMessage(exception));
+            }
+        }
+
         sdkSession.agent().setSystemPrompt(composeSystemPrompt(systemPrompt, appendSystemPrompt, instructionResources));
-        return new ReloadResult(settingsErrors, resourceErrors);
+        return new ReloadResult(settingsErrors, resourceErrors, extensionWarnings);
     }
 
     public List<SessionPersistenceError> drainPersistenceErrors() {
@@ -298,6 +310,11 @@ public final class PiAgentSession implements PiInteractiveSession {
         }
     }
 
+    @FunctionalInterface
+    public interface ReloadAction {
+        List<String> reload() throws Exception;
+    }
+
     public static final class Builder {
         private final Model model;
         private final SessionManager sessionManager;
@@ -307,6 +324,7 @@ public final class PiAgentSession implements PiInteractiveSession {
         private AgentLoopConfig.AssistantStreamFunction streamFunction;
         private String systemPrompt;
         private String appendSystemPrompt;
+        private ReloadAction reloadAction;
         private ThinkingLevel thinkingLevel;
         private List<AgentTool<?>> tools = List.of();
         private AgentLoopConfig.MessageConverter convertToLlm;
@@ -349,6 +367,11 @@ public final class PiAgentSession implements PiInteractiveSession {
 
         public Builder appendSystemPrompt(String appendSystemPrompt) {
             this.appendSystemPrompt = appendSystemPrompt;
+            return this;
+        }
+
+        public Builder reloadAction(ReloadAction reloadAction) {
+            this.reloadAction = reloadAction;
             return this;
         }
 
@@ -451,10 +474,19 @@ public final class PiAgentSession implements PiInteractiveSession {
                 instructionResourceLoader,
                 effectiveInstructionResources,
                 systemPrompt,
-                appendSystemPrompt
+                appendSystemPrompt,
+                reloadAction
             );
         }
 
+    }
+
+    private static String rootMessage(Throwable throwable) {
+        var current = throwable;
+        while (current.getCause() != null && current.getCause() != current) {
+            current = current.getCause();
+        }
+        return current.getMessage() == null ? current.getClass().getSimpleName() : current.getMessage();
     }
 
     private static String composeSystemPrompt(

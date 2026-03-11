@@ -233,12 +233,32 @@ class PiAgentSessionTest {
 
         assertThat(result.settingsErrors()).isEmpty();
         assertThat(result.resourceErrors()).isEmpty();
+        assertThat(result.extensionWarnings()).isEmpty();
         assertThat(session.state().systemPrompt())
             .contains("Project system v2")
             .contains("Project agents v2")
             .doesNotContain("Project system v1")
             .doesNotContain("Project agents v1");
         assertThat(settingsManager.effective().getString("/theme")).isEqualTo("light");
+    }
+
+    @Test
+    void reloadReturnsExtensionWarningsFromReloadAction() {
+        var session = PiAgentSession.builder(
+            testModel(),
+            SessionManager.inMemory("/workspace"),
+            SettingsManager.inMemory(),
+            new InstructionResources(List.of(), "System prompt", List.of())
+        )
+            .streamFunction(fakeAssistant("Ack"))
+            .reloadAction(() -> List.of("reload-plugin.jar: broken extension"))
+            .build();
+
+        var result = session.reload();
+
+        assertThat(result.settingsErrors()).isEmpty();
+        assertThat(result.resourceErrors()).isEmpty();
+        assertThat(result.extensionWarnings()).containsExactly("reload-plugin.jar: broken extension");
     }
 
     private static Model testModel() {
