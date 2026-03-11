@@ -7,6 +7,7 @@ import dev.pi.ai.model.Model;
 import dev.pi.ai.model.ThinkingBudgets;
 import dev.pi.ai.model.ThinkingLevel;
 import dev.pi.ai.model.Transport;
+import dev.pi.session.InstructionResources;
 import dev.pi.session.SessionManager;
 import dev.pi.session.SettingsManager;
 import java.util.LinkedHashMap;
@@ -19,6 +20,7 @@ public record CreateAgentSessionOptions(
     AgentLoopConfig.AssistantStreamFunction streamFunction,
     SessionManager sessionManager,
     SettingsManager settingsManager,
+    InstructionResources instructionResources,
     String systemPrompt,
     String appendSystemPrompt,
     ThinkingLevel thinkingLevel,
@@ -39,6 +41,7 @@ public record CreateAgentSessionOptions(
         Objects.requireNonNull(streamFunction, "streamFunction");
         Objects.requireNonNull(sessionManager, "sessionManager");
         settingsManager = settingsManager == null ? SettingsManager.inMemory() : settingsManager;
+        instructionResources = instructionResources == null ? InstructionResources.empty() : instructionResources;
         tools = tools == null ? List.of() : List.copyOf(tools);
         headers = headers == null ? Map.of() : Map.copyOf(headers);
     }
@@ -56,6 +59,7 @@ public record CreateAgentSessionOptions(
         private final AgentLoopConfig.AssistantStreamFunction streamFunction;
         private final SessionManager sessionManager;
         private SettingsManager settingsManager;
+        private InstructionResources instructionResources;
         private String systemPrompt;
         private String appendSystemPrompt;
         private ThinkingLevel thinkingLevel;
@@ -88,6 +92,11 @@ public record CreateAgentSessionOptions(
 
         public Builder systemPrompt(String systemPrompt) {
             this.systemPrompt = systemPrompt;
+            return this;
+        }
+
+        public Builder instructionResources(InstructionResources instructionResources) {
+            this.instructionResources = instructionResources;
             return this;
         }
 
@@ -170,6 +179,7 @@ public record CreateAgentSessionOptions(
                 streamFunction,
                 sessionManager,
                 settingsManager,
+                instructionResources,
                 systemPrompt,
                 appendSystemPrompt,
                 thinkingLevel,

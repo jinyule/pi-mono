@@ -15,7 +15,6 @@ import dev.pi.ai.model.Transport;
 import dev.pi.ai.stream.Subscription;
 import dev.pi.sdk.CreateAgentSessionOptions;
 import dev.pi.sdk.PiSdkSession;
-import dev.pi.session.InstructionFile;
 import dev.pi.session.InstructionResourceLoader;
 import dev.pi.session.InstructionResources;
 import dev.pi.session.SessionEntry;
@@ -247,7 +246,7 @@ public final class PiAgentSession implements PiInteractiveSession {
             }
         }
 
-        sdkSession.agent().setSystemPrompt(composeSystemPrompt(systemPrompt, appendSystemPrompt, instructionResources));
+        sdkSession.updateSystemPrompt(systemPrompt, appendSystemPrompt, instructionResources);
         return new ReloadResult(settingsErrors, resourceErrors, extensionWarnings);
     }
 
@@ -453,7 +452,9 @@ public final class PiAgentSession implements PiInteractiveSession {
                 : instructionResourceLoader.resources();
             var options = CreateAgentSessionOptions.builder(model, streamFunction, sessionManager)
                 .settingsManager(settingsManager)
-                .systemPrompt(composeSystemPrompt(systemPrompt, appendSystemPrompt, effectiveInstructionResources))
+                .instructionResources(effectiveInstructionResources)
+                .systemPrompt(systemPrompt)
+                .appendSystemPrompt(appendSystemPrompt)
                 .thinkingLevel(thinkingLevel)
                 .tools(tools)
                 .convertToLlm(convertToLlm)
@@ -487,38 +488,5 @@ public final class PiAgentSession implements PiInteractiveSession {
             current = current.getCause();
         }
         return current.getMessage() == null ? current.getClass().getSimpleName() : current.getMessage();
-    }
-
-    private static String composeSystemPrompt(
-        String explicitSystemPrompt,
-        String appendSystemPrompt,
-        InstructionResources instructionResources
-    ) {
-        var sections = new ArrayList<String>();
-        var baseSystemPrompt = explicitSystemPrompt != null && !explicitSystemPrompt.isBlank()
-            ? explicitSystemPrompt
-            : instructionResources.systemPrompt();
-        if (baseSystemPrompt != null && !baseSystemPrompt.isBlank()) {
-            sections.add(baseSystemPrompt.trim());
-        }
-        for (var contextFile : instructionResources.contextFiles()) {
-            sections.add(formatContextFile(contextFile));
-        }
-        for (var prompt : instructionResources.appendSystemPrompts()) {
-            if (prompt != null && !prompt.isBlank()) {
-                sections.add(prompt.trim());
-            }
-        }
-        if (appendSystemPrompt != null && !appendSystemPrompt.isBlank()) {
-            sections.add(appendSystemPrompt.trim());
-        }
-        return String.join("\n\n", sections);
-    }
-
-    private static String formatContextFile(InstructionFile instructionFile) {
-        return "Context from %s:\n%s".formatted(
-            instructionFile.path().getFileName(),
-            instructionFile.content().trim()
-        );
     }
 }

@@ -48,6 +48,8 @@
   - real main/module wiring first cut
 - 已完成第二十四刀：
   - `/reload` extension runtime / startup pipeline first cut
+- 已完成第二十五刀：
+  - instruction-resource-aware system prompt composition downshift first cut
 
 ## 已落地内容
 
@@ -142,7 +144,7 @@
   - `settingsManager.reload()` 会刷新 global/project settings snapshot
   - 若配置了 `InstructionResourceLoader`，`reload()` 会重新读取 `AGENTS.md` / `CLAUDE.md` / `SYSTEM.md` / `APPEND_SYSTEM.md`
   - 若配置了 `reloadAction`，`reload()` 会继续触发 runtime 侧重建，并把 warning surface 回传给 UI
-  - reload 后会用新的 instruction resources 重新拼接 system prompt，并热更新到 `Agent`
+  - reload 后会委托 `PiSdkSession.updateSystemPrompt(...)` 用新的 instruction resources 重新拼接 system prompt，并热更新到 `Agent`
   - 当前返回 settings/resource/extension warning 列表，供上层 UI 做状态提示
 
 ## 当前边界
@@ -185,6 +187,7 @@
   - `PiAgentSession.Builder` 改为构造 `CreateAgentSessionOptions` 并直接调用 `PiSdkSession.create(...)`
   - agent 初始化、session replay、message persistence、initial metadata seed 不再在 `pi-cli` 内重复实现
   - CLI 侧保留 tree/fork/compact/reload/instruction resources 等交互层语义
+  - system prompt 组合逻辑也已开始下沉：`CreateAgentSessionOptions` 新增 `instructionResources`，`PiSdkSession` 统一处理 compose/update
 - `PiCliModule` 现在开始承担真实装配职责：
   - 暴露 `application()` / `run()`，内部用真实 `PiCliApplication` handler 装配 `list-models` / `export` / `print` / `json` / `rpc` / `interactive`
   - 默认 sessionFactory 现在会串 `PiCliSessionResolver`、`SettingsManager`、`InstructionResourceLoader`、`PiAiClient`
@@ -199,10 +202,15 @@
   - `PiAgentSession.ReloadResult` 新增 `extensionWarnings`
   - default `PiCliModule` 会把 `ExtensionRuntime.reload()` 的 `failures()` 格式化为 warning surface
   - 仍未接 TS 版的 theme/skills/prompts registry rebuild、loaded-resource diagnostics 面板与更广义 startup pipeline 重建
+- instruction-resource-aware system prompt 组合逻辑当前已下沉到 shared layer：
+  - `CreateAgentSessionOptions` 新增 `instructionResources`
+  - `PiSdkSession.create(...)` 现在会统一组合 explicit system prompt、resource system prompt、context files、resource append prompts、CLI append prompt
+  - `PiSdkSession.updateSystemPrompt(...)` 复用同一套组合逻辑
+  - `PiAgentSession` 不再自行维护 `composeSystemPrompt(...)`
 - startup/session shell shared core 这刀之后，`pi-cli` 与 `pi-sdk` 的重复点主要还剩：
   - startup pipeline 的 module wiring / parser-to-runtime 装配
-  - instruction-resource-aware system prompt 组合逻辑仍在 `pi-cli`
   - CLI 特有的 tree/fork/compact/reload 壳层
+  - startup pipeline 的 CLI 专属参数拼装仍主要留在 `pi-cli`
 - real main/module wiring 目前的边界：
   - 默认 `ModelRegistry` 仍为空；若未显式注入或预注册模型，session mode 会以 clear error 失败
   - `interactive` handler 当前通过启动 `PiInteractiveMode` 并阻塞进程生命周期维持运行，尚未有更细的退出信号
@@ -275,6 +283,7 @@
 - startup/session shell shared core first cut：`PiAgentSession` 改为包装 `PiSdkSession`
 - real main/module wiring first cut：`PiCliModule.application()/run()` + `PiCliMain`
 - `/reload` extension runtime / startup pipeline first cut：`ReloadResult.extensionWarnings`、`PiAgentSession.reloadAction`、default `PiCliModule` extension runtime reload wiring
+- instruction-resource-aware system prompt composition downshift first cut：`CreateAgentSessionOptions.instructionResources`、`SessionPromptComposer`、`PiSdkSession.updateSystemPrompt(...)`
 
 ## 验证
 
@@ -289,6 +298,6 @@ npm.cmd run check
 
 按依赖顺序，下一刀建议进入 CLI 收口：
 
-1. instruction-resource-aware system prompt 组合逻辑继续下沉，减少 `pi-cli` / `pi-sdk` 差异。
-2. 继续补 real module wiring 的 help/version、`@file`、interactive exit 语义。
+1. 继续补 real module wiring 的 help/version、`@file`、interactive exit 语义。
+2. 继续下沉 startup pipeline 里剩余的 CLI 专属参数拼装，减少 `pi-cli` / `pi-sdk` 差异。
 3. 再往后接 theme/skills/prompts registry rebuild 与 loaded-resource diagnostics。

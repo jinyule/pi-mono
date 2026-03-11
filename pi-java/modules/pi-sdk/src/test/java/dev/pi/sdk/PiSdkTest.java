@@ -10,7 +10,8 @@ import dev.pi.ai.model.StopReason;
 import dev.pi.ai.model.TextContent;
 import dev.pi.ai.model.Usage;
 import dev.pi.ai.stream.AssistantMessageEventStream;
-import dev.pi.ai.stream.Subscription;
+import dev.pi.session.InstructionFile;
+import dev.pi.session.InstructionResources;
 import dev.pi.session.SessionManager;
 import java.nio.file.Path;
 import java.util.List;
@@ -48,6 +49,29 @@ class PiSdkTest {
         var sessionManager = sdk.createPersistentSession(Path.of("session.jsonl"), "/workspace");
 
         assertThat(sessionManager.persistent()).isTrue();
+    }
+
+    @Test
+    void composesSystemPromptFromInstructionResources() {
+        var sdk = new PiSdk();
+        var session = sdk.createAgentSession(CreateAgentSessionOptions.builder(
+            testModel(),
+            fakeAssistant("Ack: hi"),
+            sdk.createInMemorySession("/workspace")
+        )
+            .instructionResources(new InstructionResources(
+                List.of(new InstructionFile(Path.of("/workspace/AGENTS.md"), "Repo instructions")),
+                "Resource system prompt",
+                List.of("Resource append prompt")
+            ))
+            .appendSystemPrompt("CLI append prompt")
+            .build());
+
+        assertThat(session.state().systemPrompt())
+            .contains("Resource system prompt")
+            .contains("Context from AGENTS.md:\nRepo instructions")
+            .contains("Resource append prompt")
+            .contains("CLI append prompt");
     }
 
     private static Model testModel() {

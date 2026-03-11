@@ -8,6 +8,7 @@ import dev.pi.agent.runtime.AgentState;
 import dev.pi.ai.model.Message;
 import dev.pi.ai.model.ThinkingLevel;
 import dev.pi.ai.stream.Subscription;
+import dev.pi.session.InstructionResources;
 import dev.pi.session.SessionManager;
 import dev.pi.session.SettingsManager;
 import java.io.IOException;
@@ -40,7 +41,11 @@ public final class PiSdkSession {
             ? options.thinkingLevel()
             : toThinkingLevel(sessionContext.thinkingLevel());
         var builder = Agent.builder(options.model())
-            .systemPrompt(composeSystemPrompt(options.systemPrompt(), options.appendSystemPrompt()))
+            .systemPrompt(SessionPromptComposer.compose(
+                options.systemPrompt(),
+                options.appendSystemPrompt(),
+                options.instructionResources()
+            ))
             .thinkingLevel(resolvedThinkingLevel)
             .tools(options.tools())
             .messages(restoredMessages)
@@ -126,6 +131,14 @@ public final class PiSdkSession {
         agent.abort();
     }
 
+    public void updateSystemPrompt(
+        String systemPrompt,
+        String appendSystemPrompt,
+        InstructionResources instructionResources
+    ) {
+        agent.setSystemPrompt(SessionPromptComposer.compose(systemPrompt, appendSystemPrompt, instructionResources));
+    }
+
     public List<SessionPersistenceError> drainPersistenceErrors() {
         var drained = List.copyOf(persistenceErrors);
         persistenceErrors.clear();
@@ -165,16 +178,6 @@ public final class PiSdkSession {
             return null;
         }
         return ThinkingLevel.fromValue(value);
-    }
-
-    private static String composeSystemPrompt(String systemPrompt, String appendSystemPrompt) {
-        if (systemPrompt == null || systemPrompt.isBlank()) {
-            return appendSystemPrompt == null ? "" : appendSystemPrompt;
-        }
-        if (appendSystemPrompt == null || appendSystemPrompt.isBlank()) {
-            return systemPrompt;
-        }
-        return systemPrompt + "\n\n" + appendSystemPrompt;
     }
 
     public record SessionPersistenceError(
