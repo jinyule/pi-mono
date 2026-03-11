@@ -151,7 +151,8 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
 
     enum SortMode {
         RECENT("Recent"),
-        RELEVANCE("Relevance");
+        RELEVANCE("Relevance"),
+        THREADED("Threaded");
 
         private final String label;
 
@@ -339,7 +340,7 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
         }
 
         private void rebuildSessionList() {
-            this.sessions = new SelectList(sortedSessions().stream().map(session -> toSelectItem(session, showCwd(), showPath)).toList(), 10, THEME);
+            this.sessions = new SelectList(sessionItems(), 10, THEME);
             this.sessions.setOnSelectionChange(ignored -> requestRender.run());
             this.sessions.setOnSelect(item -> onSelect.accept(Path.of(decodePath(item.value()))));
             this.sessions.setOnCancel(onCancel);
@@ -433,7 +434,11 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
         }
 
         private void toggleSort() {
-            sortMode = sortMode == SortMode.RECENT ? SortMode.RELEVANCE : SortMode.RECENT;
+            sortMode = switch (sortMode) {
+                case RECENT -> SortMode.RELEVANCE;
+                case RELEVANCE -> SortMode.THREADED;
+                case THREADED -> SortMode.RECENT;
+            };
             rebuildSessionList();
             requestRender.run();
         }
@@ -455,7 +460,21 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
         }
 
         private List<SessionInfo> sortedSessions() {
-            return filterAndSortSessions(activeSessions(), search.getValue(), sortMode, nameFilter);
+            var effectiveSortMode = sortMode == SortMode.THREADED && !search.getValue().isBlank()
+                ? SortMode.RELEVANCE
+                : sortMode;
+            return filterAndSortSessions(activeSessions(), search.getValue(), effectiveSortMode, nameFilter);
+        }
+
+        private List<SelectItem> sessionItems() {
+            if (sortMode == SortMode.THREADED && search.getValue().isBlank()) {
+                return flattenThreadedSessions(activeSessions(), nameFilter).stream()
+                    .map(session -> toSelectItem(session.session(), showCwd(), showPath, session.prefix()))
+                    .toList();
+            }
+            return sortedSessions().stream()
+                .map(session -> toSelectItem(session, showCwd(), showPath, ""))
+                .toList();
         }
 
         private boolean showCwd() {
@@ -466,8 +485,73 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             return currentSessions.size() == allSessions.size() && currentSessions.containsAll(allSessions) && allSessions.containsAll(currentSessions);
         }
 
-        private static SelectItem toSelectItem(SessionInfo session, boolean showCwd, boolean showPath) {
-            var label = PiSessionPicker.displayLabel(session);
+        private static List<ThreadedSession> flattenThreadedSessions(List<SessionInfo> sessions, NameFilter nameFilter) {
+            var visibleSessions = sessions.stream()
+                .filter(session -> nameFilter == NameFilter.ALL || hasName(session))
+                .toList();
+            var nodesByPath = new java.util.LinkedHashMap<Path, ThreadedNode>();
+            for (var session : visibleSessions) {
+                nodesByPath.put(session.path(), new ThreadedNode(session));
+            }
+
+            var roots = new ArrayList<ThreadedNode>();
+            for (var node : nodesByPath.values()) {
+                var parentPath = node.session().parentSessionPath();
+                if (parentPath != null && !parentPath.isBlank()) {
+                    var parent = nodesByPath.get(Path.of(parentPath).toAbsolutePath().normalize());
+                    if (parent != null) {
+                        parent.children().add(node);
+                        continue;
+                    }
+                }
+                roots.add(node);
+            }
+
+            var byModified = Comparator.comparing((ThreadedNode node) -> node.session().modified()).reversed();
+            sortThreadedNodes(roots, byModified);
+
+            var flattened = new ArrayList<ThreadedSession>();
+            for (var index = 0; index < roots.size(); index += 1) {
+                flattenThreadedNode(roots.get(index), List.of(), index == roots.size() - 1, flattened);
+            }
+            return List.copyOf(flattened);
+        }
+
+        private static void sortThreadedNodes(List<ThreadedNode> nodes, Comparator<ThreadedNode> comparator) {
+            nodes.sort(comparator);
+            for (var node : nodes) {
+                sortThreadedNodes(node.children(), comparator);
+            }
+        }
+
+        private static void flattenThreadedNode(
+            ThreadedNode node,
+            List<Boolean> ancestry,
+            boolean isLast,
+            List<ThreadedSession> flattened
+        ) {
+            flattened.add(new ThreadedSession(node.session(), treePrefix(ancestry, isLast)));
+            var nextAncestry = new ArrayList<Boolean>(ancestry);
+            nextAncestry.add(isLast);
+            for (var index = 0; index < node.children().size(); index += 1) {
+                flattenThreadedNode(node.children().get(index), nextAncestry, index == node.children().size() - 1, flattened);
+            }
+        }
+
+        private static String treePrefix(List<Boolean> ancestry, boolean isLast) {
+            if (ancestry.isEmpty()) {
+                return "";
+            }
+            var prefix = new StringBuilder();
+            for (var branchIsLast : ancestry) {
+                prefix.append(branchIsLast ? "   " : "│  ");
+            }
+            prefix.append(isLast ? "└─ " : "├─ ");
+            return prefix.toString();
+        }
+
+        private static SelectItem toSelectItem(SessionInfo session, boolean showCwd, boolean showPath, String prefix) {
+            var label = prefix + PiSessionPicker.displayLabel(session);
             var description = "%s · %d msg · %s%s%s".formatted(
                 session.path().getFileName(),
                 session.messageCount(),
@@ -512,6 +596,21 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
         private enum Scope {
             CURRENT,
             ALL
+        }
+
+        private record ThreadedNode(
+            SessionInfo session,
+            List<ThreadedNode> children
+        ) {
+            private ThreadedNode(SessionInfo session) {
+                this(session, new ArrayList<>());
+            }
+        }
+
+        private record ThreadedSession(
+            SessionInfo session,
+            String prefix
+        ) {
         }
     }
 }

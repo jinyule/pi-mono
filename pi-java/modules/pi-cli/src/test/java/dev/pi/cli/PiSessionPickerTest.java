@@ -294,6 +294,33 @@ class PiSessionPickerTest {
             .containsExactly("Global first", "Later global");
     }
 
+    @Test
+    void togglesSortModeIntoThreadedTreeOrder() {
+        var terminal = new VirtualTerminal(140, 12);
+        var picker = new PiSessionPicker(terminal);
+        var root = sessionWithParent("root.jsonl", null, "Root task", 3, Instant.parse("2026-03-11T07:00:20Z"), "/workspace/root");
+        var child = sessionWithParent("child.jsonl", root.path().toString(), "Child task", 2, Instant.parse("2026-03-11T07:00:10Z"), "/workspace/root");
+        var sibling = sessionWithParent("sibling.jsonl", null, "Sibling task", 1, Instant.parse("2026-03-11T07:00:00Z"), "/workspace/root");
+
+        Thread.ofVirtual().start(() -> picker.pick(List.of(sibling, child, root), List.of()));
+
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("sort(Recent)")));
+
+        terminal.sendInput("\u0013");
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("sort(Relevance)")));
+
+        terminal.sendInput("\u0013");
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("sort(Threaded)")));
+
+        var threadedView = String.join("\n", terminal.getViewport());
+        assertThat(threadedView)
+            .contains("Root task")
+            .contains("└─ Child task")
+            .contains("Sibling task");
+
+        terminal.sendInput("\u001b");
+    }
+
     private static SessionInfo session(String fileName, String firstMessage, int messageCount, Instant modified) {
         return session(fileName, firstMessage, messageCount, modified, "/workspace");
     }
@@ -364,6 +391,28 @@ class PiSessionPickerTest {
             cwd,
             name,
             null,
+            modified.minusSeconds(60),
+            modified,
+            messageCount,
+            firstMessage,
+            firstMessage
+        );
+    }
+
+    private static SessionInfo sessionWithParent(
+        String fileName,
+        String parentSessionPath,
+        String firstMessage,
+        int messageCount,
+        Instant modified,
+        String cwd
+    ) {
+        return new SessionInfo(
+            Path.of(fileName),
+            fileName.replace(".jsonl", ""),
+            cwd,
+            null,
+            parentSessionPath,
             modified.minusSeconds(60),
             modified,
             messageCount,

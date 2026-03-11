@@ -13,6 +13,8 @@
   - session selector named-only filter first cut
 - 已完成第四刀：
   - session selector path show/hide toggle first cut
+- 已完成第五刀：
+  - session selector threaded sort first cut
 
 ## 本轮落地
 
@@ -41,6 +43,11 @@
   - `Ctrl+P` 切到 `on`
   - path 会追加到 session description，便于区分同名 session 文件
 - `pi-tui` 层新增 `SESSION_PATH_TOGGLE` action，默认键位是 `ctrl+p`
+- `PiSessionPicker` 现在支持 threaded sort：
+  - 当前 cycle 顺序是 `recent -> relevance -> threaded -> recent`
+  - `threaded` 只在空 query 时启用树状布局
+  - 非空 query 时，`threaded` 会先退化到当前的 `relevance` 首版
+  - 树状展开按 `parentSessionPath` 建树，根/子节点按 `modified desc` 排序
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -51,7 +58,8 @@
 
 - 这还是首版 scope toggle：
   - 还没有 TS 版的 loading/progress header
-  - sort toggle 还不是 TS 的完整三态（还没有 `threaded` / `fuzzy`）
+  - sort toggle 现在有 `threaded`，但还没有 TS 版真正的 `fuzzy` matcher / parser（`re:`、quoted phrase、subsequence score 等）
+  - cycle 顺序和默认态还没完全对齐 TS（当前仍从 `recent` 起步）
   - named-only filter 还没有接到 app-level keybinding/config 层，当前先挂在 `EditorKeybindings`
   - path show/hide 目前只是 description 级别开关，还没有 TS 版右侧布局/缩略路径渲染
 - resolver 现在只在 `--session-dir` 未显式指定时提供 current/all 双 scope；显式 `--session-dir` 仍退化成单 scope
@@ -66,6 +74,7 @@
 - `PiSessionPickerTest`：`Ctrl+N` named-only filter、blank name 排除
 - `PiSessionPickerTest`：`Ctrl+P` path show/hide toggle
 - `PiSessionPickerTest`：`filterAndSortSessions()` 直接覆盖 recent/relevance 排序语义
+- `PiSessionPickerTest`：`Ctrl+S` 第三态进入 threaded tree 渲染
 
 最近通过：
 
@@ -75,6 +84,6 @@
 
 ## 下一步建议
 
-1. session selector：补 threaded/fuzzy sort mode
+1. session selector：补真正的 fuzzy matcher / parser
 2. session selector：评估 app-level keybinding/config 对齐
 3. session selector：补 TS 风格 loading/progress header
