@@ -542,8 +542,7 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
                 return List.copyOf(lines);
             }
             var lines = new java.util.ArrayList<String>();
-            lines.add(scope == Scope.CURRENT ? "Resume session (Current folder)" : "Resume session (All)");
-            lines.add(scopeSummary());
+            lines.add(composeHeaderLine(width));
             if (pendingDeletePath != null) {
                 lines.add("Delete session? [Enter] confirm · [Esc] cancel");
                 lines.add("");
@@ -929,6 +928,19 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
                 return "○ Current Folder | Loading " + progressText(allProgress);
             }
             return "○ Current Folder | ◉ All";
+        }
+
+        private String composeHeaderLine(int width) {
+            var title = scope == Scope.CURRENT ? "Resume session (Current folder)" : "Resume session (All)";
+            var summary = scopeSummary();
+            if (width <= 0) {
+                return title + " " + summary;
+            }
+            var totalLength = title.length() + 1 + summary.length();
+            if (totalLength >= width) {
+                return title + " " + summary;
+            }
+            return title + " ".repeat(width - totalLength) + summary;
         }
 
         private static String progressText(ProgressSnapshot progress) {

@@ -276,6 +276,22 @@ class PiSessionPickerTest {
     }
 
     @Test
+    void rendersTitleAndScopeSummaryOnSingleHeaderLine() {
+        var terminal = new VirtualTerminal(140, 12);
+        var picker = new PiSessionPicker(terminal);
+
+        Thread.ofVirtual().start(() -> picker.pick(
+            List.of(session("current.jsonl", "Current task", 2, Instant.now().minusSeconds(30), "/workspace/current")),
+            List.of(session("current.jsonl", "Current task", 2, Instant.now().minusSeconds(30), "/workspace/current"))
+        ));
+
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line ->
+            line.contains("Resume session (Current folder)") && line.contains("◉ Current Folder | ○ All")));
+
+        terminal.sendInput("\u001b");
+    }
+
+    @Test
     void showsAllLoadingProgressAfterScopeToggle() {
         var terminal = new VirtualTerminal(140, 12);
         var picker = new PiSessionPicker(terminal);

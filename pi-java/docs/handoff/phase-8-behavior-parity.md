@@ -31,6 +31,8 @@
   - session selector app/editor keybinding layering first cut
 - 已完成第十三刀：
   - session selector path/cwd metadata layout first cut
+- 已完成第十四刀：
+  - session selector single-row title/scope header first cut
 
 ## 本轮落地
 
@@ -113,6 +115,10 @@
   - `path` 只在 `path(on)` 时显示
   - `cwd` 只在 all-scope / same-scope 兼容场景显示
   - home 目录前缀会折叠成 `~`
+- `PiSessionPicker` 现在把 title 和 scope summary 合到同一行：
+  - current scope 会显示 `Resume session (Current folder) ... ◉ Current Folder | ○ All`
+  - all scope / loading scope 也复用同一行结构
+  - 这让顶栏结构更接近 TS 的 left-title / right-status
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -124,8 +130,8 @@
 - 这还是首版 scope toggle：
   - cycle/default 现在已基本对齐 TS，但 loading/progress header 还只是首版
   - path show/hide 目前还是 description 级别开关，还没有 TS 版右侧布局/列宽截断渲染
-  - header 布局还是 Java 当前的纵向 3-4 行，不是 TS 那种 title-left / status-right 的单行顶栏
   - app 层 keybindings 目前还只落了 `toggleSessionNamedFilter`，还没有扩到更多 interactive-mode app actions
+  - 顶栏现在虽然合成单行了，但仍然没有 TS 那种宽度感知截断/对齐和颜色层级
 - resolver 现在只在 `--session-dir` 未显式指定时提供 current/all 双 scope；显式 `--session-dir` 仍退化成单 scope
 
 ## 测试
@@ -148,6 +154,7 @@
 - `PiSessionPickerTest`：named filter 改走 app keybindings
 - `KeyMatcherTest`：generic `alt+<char>` sequence
 - `PiSessionPickerTest`：默认 metadata 不显示 session file name
+- `PiSessionPickerTest`：title 和 scope summary 共用单行顶栏
 - `PiCliModuleTest`：从临时 agent dir 加载 `keybindings.json` 覆盖
 
 最近通过：
@@ -158,6 +165,6 @@
 
 ## 下一步建议
 
-1. session selector：如果要继续追平，再考虑 title-left / status-right 顶栏布局
-2. keybindings：把 app 层继续扩到更多 interactive-mode action
-3. session selector：如果需要更像 TS，再做右侧 metadata 截断/对齐布局
+1. keybindings：把 app 层继续扩到更多 interactive-mode action
+2. session selector：如果需要更像 TS，再做顶栏/metadata 的宽度感知截断与对齐
+3. session selector：如果继续追平，再补 status/error/info 的更细粒度样式层级
