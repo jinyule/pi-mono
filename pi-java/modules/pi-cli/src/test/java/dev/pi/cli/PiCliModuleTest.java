@@ -17,6 +17,8 @@ import dev.pi.ai.registry.ApiProviderRegistry;
 import dev.pi.ai.registry.ModelRegistry;
 import dev.pi.ai.stream.Subscription;
 import dev.pi.session.SessionManager;
+import dev.pi.tui.EditorAction;
+import dev.pi.tui.EditorKeybindings;
 import dev.pi.tui.Terminal;
 import java.nio.charset.StandardCharsets;
 import java.io.StringReader;
@@ -218,6 +220,47 @@ class PiCliModuleTest {
         run.join();
 
         assertThat(terminal.stopped).isTrue();
+    }
+
+    @Test
+    void loadsKeybindingsFromAgentDir(@TempDir Path tempDir) throws Exception {
+        var agentDir = tempDir.resolve(".pi").resolve("agent");
+        Files.createDirectories(agentDir);
+        Files.writeString(
+            agentDir.resolve("keybindings.json"),
+            """
+            {
+              "toggleSessionSort": "ctrl+g",
+              "toggleSessionNamedFilter": ["alt+n"],
+              "tab": "shift+tab"
+            }
+            """,
+            StandardCharsets.UTF_8
+        );
+
+        var previous = EditorKeybindings.global();
+        try {
+            EditorKeybindings.setGlobal(new EditorKeybindings());
+            var module = new PiCliModule(
+                tempDir,
+                new StringReader(""),
+                new StringBuilder(),
+                new StringBuilder(),
+                new PiCliParser(),
+                aiClientWithModels(model("claude-3-7-sonnet", "anthropic")),
+                args -> new FakePrintSession(),
+                NoOpTerminal::new,
+                new PiCliKeybindingsLoader(agentDir)
+            );
+
+            module.run("--help").toCompletableFuture().join();
+
+            assertThat(EditorKeybindings.global().getKeys(EditorAction.SESSION_SORT_TOGGLE)).containsExactly("ctrl+g");
+            assertThat(EditorKeybindings.global().getKeys(EditorAction.SESSION_NAMED_FILTER_TOGGLE)).containsExactly("alt+n");
+            assertThat(EditorKeybindings.global().getKeys(EditorAction.SESSION_SCOPE_TOGGLE)).containsExactly("shift+tab");
+        } finally {
+            EditorKeybindings.setGlobal(previous);
+        }
     }
 
     private static PiAiClient aiClientWithModels(Model... models) {

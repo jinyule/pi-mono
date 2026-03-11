@@ -7,6 +7,7 @@ import dev.pi.ai.registry.ModelRegistry;
 import dev.pi.extension.spi.ExtensionRuntime;
 import dev.pi.session.InstructionResourceLoader;
 import dev.pi.session.SettingsManager;
+import dev.pi.tui.EditorKeybindings;
 import dev.pi.tui.ProcessTerminal;
 import dev.pi.tui.Terminal;
 import java.io.BufferedReader;
@@ -33,6 +34,7 @@ public final class PiCliModule {
     private final PiAiClient aiClient;
     private final PiCliApplication.SessionFactory sessionFactory;
     private final Supplier<Terminal> terminalFactory;
+    private final PiCliKeybindingsLoader keybindingsLoader;
     private final PiCliApplication application;
 
     public PiCliModule() {
@@ -44,7 +46,8 @@ public final class PiCliModule {
             new PiCliParser(),
             PiAiClient.createDefault(),
             null,
-            ProcessTerminal::new
+            ProcessTerminal::new,
+            PiCliKeybindingsLoader.createDefault()
         );
     }
 
@@ -58,6 +61,20 @@ public final class PiCliModule {
         PiCliApplication.SessionFactory sessionFactory,
         Supplier<Terminal> terminalFactory
     ) {
+        this(cwd, input, stdout, stderr, parser, aiClient, sessionFactory, terminalFactory, PiCliKeybindingsLoader.createDefault());
+    }
+
+    PiCliModule(
+        Path cwd,
+        Reader input,
+        Appendable stdout,
+        Appendable stderr,
+        PiCliParser parser,
+        PiAiClient aiClient,
+        PiCliApplication.SessionFactory sessionFactory,
+        Supplier<Terminal> terminalFactory,
+        PiCliKeybindingsLoader keybindingsLoader
+    ) {
         this.cwd = Objects.requireNonNull(cwd, "cwd").toAbsolutePath().normalize();
         this.input = Objects.requireNonNull(input, "input");
         this.stdout = Objects.requireNonNull(stdout, "stdout");
@@ -65,6 +82,7 @@ public final class PiCliModule {
         this.parser = Objects.requireNonNull(parser, "parser");
         this.aiClient = Objects.requireNonNull(aiClient, "aiClient");
         this.terminalFactory = Objects.requireNonNull(terminalFactory, "terminalFactory");
+        this.keybindingsLoader = Objects.requireNonNull(keybindingsLoader, "keybindingsLoader");
         this.sessionFactory = sessionFactory == null ? this::createDefaultSession : sessionFactory;
         this.application = PiCliApplication.builder(this.sessionFactory)
             .parser(this.parser)
@@ -96,6 +114,7 @@ public final class PiCliModule {
     }
 
     public CompletionStage<Void> run(String... argv) {
+        EditorKeybindings.setGlobal(keybindingsLoader.load());
         return application.run(argv);
     }
 

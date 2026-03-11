@@ -17,6 +17,8 @@
   - session selector threaded sort first cut
 - 已完成第六刀：
   - session selector fuzzy parser/search first cut
+- 已完成第七刀：
+  - keybindings.json loader first cut
 
 ## 本轮落地
 
@@ -56,6 +58,10 @@
   - 支持 `re:` case-insensitive regex
   - 支持简单 subsequence fuzzy
   - 搜索文本覆盖 `id/name/allMessagesText/cwd/path`
+- `PiCliModule` 现在会在启动前加载 `~/.pi/agent/keybindings.json`
+  - 当前首版支持 session selector 相关 alias：`toggleSessionSort`、`toggleSessionNamedFilter`、`toggleSessionPath`、`renameSession`、`deleteSession`、`tab`
+  - 也接受 `EditorAction` 枚举名直接覆盖
+  - 加载失败会静默回退到默认键位
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -68,7 +74,7 @@
   - 还没有 TS 版的 loading/progress header
   - fuzzy 现在已经支持 quoted phrase / regex / subsequence，但 scoring 还不是 TS `@mariozechner/pi-tui` 的同款实现
   - cycle 顺序和默认态还没完全对齐 TS（当前仍从 `recent` 起步）
-  - named-only filter 还没有接到 app-level keybinding/config 层，当前先挂在 `EditorKeybindings`
+  - keybindings 现在有文件加载首版，但还没有完整的 app/editor 分层 manager
   - path show/hide 目前只是 description 级别开关，还没有 TS 版右侧布局/缩略路径渲染
 - resolver 现在只在 `--session-dir` 未显式指定时提供 current/all 双 scope；显式 `--session-dir` 仍退化成单 scope
 
@@ -84,6 +90,7 @@
 - `PiSessionPickerTest`：`filterAndSortSessions()` 直接覆盖 recent/relevance 排序语义
 - `PiSessionPickerTest`：`Ctrl+S` 第三态进入 threaded tree 渲染
 - `PiSessionPickerTest`：quoted phrase / `re:` regex / subsequence fuzzy 搜索
+- `PiCliModuleTest`：从临时 agent dir 加载 `keybindings.json` 覆盖
 
 最近通过：
 
@@ -93,6 +100,6 @@
 
 ## 下一步建议
 
-1. session selector：评估 app-level keybinding/config 对齐
-2. session selector：补 TS 风格 loading/progress header
-3. session selector：进一步对齐 fuzzy scoring / cycle default
+1. session selector：补 TS 风格 loading/progress header
+2. session selector：进一步对齐 fuzzy scoring / cycle default
+3. session selector：继续细化 app/editor keybinding 分层
