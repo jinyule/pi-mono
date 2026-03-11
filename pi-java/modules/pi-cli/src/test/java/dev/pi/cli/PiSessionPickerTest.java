@@ -10,6 +10,8 @@ import dev.pi.session.SessionManager;
 import dev.pi.session.SessionInfo;
 import dev.pi.tui.EditorAction;
 import dev.pi.tui.EditorKeybindings;
+import dev.pi.tui.SelectItem;
+import dev.pi.tui.SelectList;
 import dev.pi.tui.TerminalText;
 import dev.pi.tui.VirtualTerminal;
 import java.nio.charset.StandardCharsets;
@@ -93,6 +95,25 @@ class PiSessionPickerTest {
             .doesNotContain("alpha.jsonl");
 
         terminal.sendInput("\u001b");
+    }
+
+    @Test
+    void stylesSelectedRowsAndMetadataWithAnsiHierarchy() {
+        var list = new SelectList(
+            List.of(
+                new SelectItem("alpha", "Alpha task", "2 msg · 1m"),
+                new SelectItem("beta", "Beta task", "4 msg · 2m")
+            ),
+            5,
+            PiSessionPicker.sessionTheme()
+        );
+
+        var lines = list.render(48);
+
+        assertThat(lines.getFirst())
+            .contains("\u001b[36m")
+            .contains("\u001b[1m");
+        assertThat(lines.get(1)).contains("\u001b[90m");
     }
 
     @Test

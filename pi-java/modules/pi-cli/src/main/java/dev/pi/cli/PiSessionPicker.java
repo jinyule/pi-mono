@@ -32,27 +32,27 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
     private static final SelectListTheme THEME = new SelectListTheme() {
         @Override
         public String selectedPrefix(String text) {
-            return text;
+            return PiCliAnsi.accent(text);
         }
 
         @Override
         public String selectedText(String text) {
-            return text;
+            return PiCliAnsi.bold(text);
         }
 
         @Override
         public String description(String text) {
-            return text;
+            return PiCliAnsi.muted(text);
         }
 
         @Override
         public String scrollInfo(String text) {
-            return text;
+            return PiCliAnsi.muted(text);
         }
 
         @Override
         public String noMatch(String text) {
-            return text;
+            return PiCliAnsi.muted(text);
         }
     };
 
@@ -163,6 +163,10 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
 
     static boolean hasName(SessionInfo session) {
         return session.name() != null && !session.name().isBlank();
+    }
+
+    static SelectListTheme sessionTheme() {
+        return THEME;
     }
 
     private static ParsedSearchQuery parseSearchQuery(String query) {

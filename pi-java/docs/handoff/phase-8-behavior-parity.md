@@ -43,6 +43,8 @@
   - session selector metadata 响应式列宽 first cut
 - 已完成第十九刀：
   - session selector 顶部 info/hint 行显式换行 first cut
+- 已完成第二十刀：
+  - session selector ANSI 样式层级 first cut
 
 ## 本轮落地
 
@@ -157,6 +159,11 @@
   - `scope/regex/phrase/delete/rename` 提示行也会按词折行
   - rename / delete 等顶部说明行同样复用这套换行逻辑
   - 这避免窄终端直接按列数硬截断，把 `sort(Threaded)` 之类 token 切碎
+- `PiSessionPicker` 现在补了 session selector 的 ANSI 样式层级：
+  - selected prefix 用 accent
+  - selected row 文本用 bold
+  - metadata / scroll info / no-match 文本用 muted
+  - 先把层级落在 session list 本身，后续再往顶部 status/info 区扩
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -200,6 +207,7 @@
 - `SelectListTest`：中等宽度下仍保留 description 列
 - `PiSessionPickerTest`：中等宽度下 session metadata 不会过早消失
 - `PiSessionPickerTest`：窄终端下 info/hint token 不会被硬换列切碎
+- `PiSessionPickerTest`：selected row / metadata 的 ANSI 序列层级
 
 最近通过：
 
@@ -209,6 +217,6 @@
 
 ## 下一步建议
 
-1. session selector：继续补 status/error/info 的更细粒度样式层级
-2. session selector：继续评估 selected row / metadata 的 ANSI 样式层级
+1. session selector：继续把顶部 status/error/info 行接到 ANSI 样式层级
+2. session selector：继续评估 tree/model/settings selector 是否复用同一套层级
 3. keybindings：继续评估 app 层是否要补 model/thinking 相关动作
