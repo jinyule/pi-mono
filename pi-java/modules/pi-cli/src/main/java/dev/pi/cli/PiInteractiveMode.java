@@ -354,6 +354,10 @@ public final class PiInteractiveMode implements AutoCloseable {
                 session.abort();
                 return;
             }
+            if (appKeybindings.matches(data, PiAppAction.RESUME)) {
+                handleResumeCommand();
+                return;
+            }
             if (appKeybindings.matches(data, PiAppAction.TREE)) {
                 handleTreeCommand();
                 return;
@@ -379,5 +383,15 @@ public final class PiInteractiveMode implements AutoCloseable {
         public void invalidate() {
             input.invalidate();
         }
+    }
+
+    private void handleResumeCommand() {
+        try {
+            session.resume().toCompletableFuture().join();
+            manualStatus = "Resumed session";
+        } catch (RuntimeException exception) {
+            manualStatus = "Error: " + rootMessage(exception);
+        }
+        renderState(session.state());
     }
 }

@@ -45,6 +45,8 @@ final class PiCliKeybindingsLoader {
     private static final Map<String, PiAppAction> APP_ACTION_ALIASES = Map.of(
         "interrupt",
         PiAppAction.INTERRUPT,
+        "resume",
+        PiAppAction.RESUME,
         "tree",
         PiAppAction.TREE,
         "fork",

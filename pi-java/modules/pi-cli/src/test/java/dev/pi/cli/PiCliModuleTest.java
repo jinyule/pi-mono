@@ -231,6 +231,7 @@ class PiCliModuleTest {
             """
             {
               "interrupt": "alt+x",
+              "resume": "alt+u",
               "tree": "alt+t",
               "fork": "alt+f",
               "toggleSessionSort": "ctrl+g",
@@ -262,6 +263,7 @@ class PiCliModuleTest {
 
             assertThat(EditorKeybindings.global().getKeys(EditorAction.SESSION_SORT_TOGGLE)).containsExactly("ctrl+g");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.INTERRUPT)).containsExactly("alt+x");
+            assertThat(PiAppKeybindings.global().getKeys(PiAppAction.RESUME)).containsExactly("alt+u");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.TREE)).containsExactly("alt+t");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.FORK)).containsExactly("alt+f");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.TOGGLE_SESSION_NAMED_FILTER)).containsExactly("alt+n");

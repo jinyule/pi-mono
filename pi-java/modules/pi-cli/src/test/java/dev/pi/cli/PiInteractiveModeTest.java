@@ -285,12 +285,33 @@ class PiInteractiveModeTest {
         }
     }
 
+    @Test
+    void usesAppKeybindingForResume() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(80, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+        var previousApp = PiAppKeybindings.global();
+        try {
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(PiAppAction.RESUME, java.util.List.of("alt+u"))));
+
+            mode.start();
+            terminal.sendInput("\u001bu");
+
+            waitFor(() -> session.resumeCount == 1);
+            assertThat(String.join("\n", terminal.getViewport())).contains("Resumed session");
+        } finally {
+            PiAppKeybindings.setGlobal(previousApp);
+            mode.stop();
+        }
+    }
+
     private static final class FakeSession implements PiInteractiveSession {
         private final List<String> prompts = new ArrayList<>();
         private final CopyOnWriteArrayList<Consumer<AgentState>> stateListeners = new CopyOnWriteArrayList<>();
         private final SessionManager sessionManager = SessionManager.inMemory("/workspace");
         private int reloadCount;
         private int abortCount;
+        private int resumeCount;
         private List<String> reloadWarnings = List.of();
         private AgentState state = new AgentState(
             "",
@@ -364,6 +385,7 @@ class PiInteractiveModeTest {
 
         @Override
         public CompletionStage<Void> resume() {
+            resumeCount += 1;
             return CompletableFuture.completedFuture(null);
         }
 

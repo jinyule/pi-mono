@@ -35,6 +35,8 @@
   - session selector single-row title/scope header first cut
 - 已完成第十五刀：
   - interactive app keybindings 扩到 interrupt/tree/fork
+- 已完成第十六刀：
+  - interactive app keybindings 补 resume
 
 ## 本轮落地
 
@@ -125,9 +127,12 @@
   - 新增 `interrupt`（默认 `escape`）
   - 新增 `tree`（默认无快捷键，可配置）
   - 新增 `fork`（默认无快捷键，可配置）
+- `PiAppKeybindings` 现在继续补了 `resume`（默认无快捷键，可配置）
 - `PiCliKeybindingsLoader` 现在支持从 `keybindings.json` 读取 `interrupt` / `tree` / `fork`
+- `PiCliKeybindingsLoader` 现在也支持读取 `resume`
 - `PiInteractiveMode` 现在在 prompt 层先消费 app keybindings：
   - app `interrupt` 会调用 `session.abort()`
+  - app `resume` 会调用 `session.resume()`
   - app `tree` 会打开 tree overlay
   - app `fork` 会打开 fork overlay
   - 其余输入再继续落到 `Input`
@@ -143,7 +148,7 @@
   - cycle/default 现在已基本对齐 TS，但 loading/progress header 还只是首版
   - path show/hide 目前还是 description 级别开关，还没有 TS 版右侧布局/列宽截断渲染
   - 顶栏现在虽然合成单行了，但仍然没有 TS 那种宽度感知截断/对齐和颜色层级
-  - app 层还没扩到 TS 里的更多 action，例如 model/thinking/follow-up/dequeue/new-session/resume
+  - app 层还没扩到 TS 里的更多 action，例如 model/thinking/follow-up/dequeue/new-session
 - resolver 现在只在 `--session-dir` 未显式指定时提供 current/all 双 scope；显式 `--session-dir` 仍退化成单 scope
 
 ## 测试
@@ -169,6 +174,7 @@
 - `PiSessionPickerTest`：title 和 scope summary 共用单行顶栏
 - `PiCliModuleTest`：从临时 agent dir 加载 `keybindings.json` 覆盖
 - `PiInteractiveModeTest`：app keybindings 驱动 tree / fork / interrupt
+- `PiInteractiveModeTest`：app keybindings 驱动 resume
 
 最近通过：
 
@@ -178,6 +184,6 @@
 
 ## 下一步建议
 
-1. keybindings：继续评估 app 层要不要补 `resume` 等已实现动作
-2. session selector：如果需要更像 TS，再做顶栏/metadata 的宽度感知截断与对齐
-3. session selector：如果继续追平，再补 status/error/info 的更细粒度样式层级
+1. session selector：如果需要更像 TS，再做顶栏/metadata 的宽度感知截断与对齐
+2. session selector：如果继续追平，再补 status/error/info 的更细粒度样式层级
+3. keybindings：继续评估 app 层是否要补 model/thinking 相关动作

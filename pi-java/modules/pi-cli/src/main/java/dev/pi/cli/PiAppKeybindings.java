@@ -10,6 +10,8 @@ final class PiAppKeybindings {
     private static final Map<PiAppAction, List<String>> DEFAULTS = Map.of(
         PiAppAction.INTERRUPT,
         List.of("escape"),
+        PiAppAction.RESUME,
+        List.of(),
         PiAppAction.TREE,
         List.of(),
         PiAppAction.FORK,
