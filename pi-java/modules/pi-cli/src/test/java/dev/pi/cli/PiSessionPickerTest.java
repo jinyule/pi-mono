@@ -180,6 +180,41 @@ class PiSessionPickerTest {
         terminal.sendInput("\u001b");
     }
 
+    @Test
+    void togglesSortModeAndPrioritizesBetterMatches() {
+        var terminal = new VirtualTerminal(100, 12);
+        var picker = new PiSessionPicker(terminal);
+
+        Thread.ofVirtual().start(() -> picker.pick(
+            List.of(
+                session("cwd-match.jsonl", "Cwd match", 2, Instant.now().minusSeconds(10), "/workspace/global"),
+                session("label-match.jsonl", "Global match", 2, Instant.now().minusSeconds(120), "/workspace/current")
+            ),
+            List.of()
+        ));
+
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Resume session")));
+
+        terminal.sendInput("global");
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Cwd match")));
+
+        var recentView = String.join("\n", terminal.getViewport());
+        assertThat(recentView).contains("Recent");
+        assertThat(recentView.indexOf("Cwd match")).isLessThan(recentView.indexOf("Global match"));
+
+        terminal.sendInput("\u0013");
+        waitFor(() -> {
+            var view = String.join("\n", terminal.getViewport());
+            return view.contains("Relevance") && view.indexOf("Global match") < view.indexOf("Cwd match");
+        });
+
+        var relevanceView = String.join("\n", terminal.getViewport());
+        assertThat(relevanceView).contains("Relevance");
+        assertThat(relevanceView.indexOf("Global match")).isLessThan(relevanceView.indexOf("Cwd match"));
+
+        terminal.sendInput("\u001b");
+    }
+
     private static SessionInfo session(String fileName, String firstMessage, int messageCount, Instant modified) {
         return session(fileName, firstMessage, messageCount, modified, "/workspace");
     }

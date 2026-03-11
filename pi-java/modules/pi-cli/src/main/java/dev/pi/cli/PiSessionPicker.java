@@ -18,7 +18,9 @@ import java.nio.file.Files;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
@@ -110,6 +112,7 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
         private String renamingPath;
         private String renamingCurrentName;
         private Scope scope = Scope.CURRENT;
+        private SortMode sortMode = SortMode.RECENT;
 
         private PickerComponent(
             List<SessionInfo> currentSessions,
@@ -144,8 +147,8 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             var lines = new java.util.ArrayList<String>();
             lines.add(scope == Scope.CURRENT ? "Resume session (Current folder)" : "Resume session (All)");
             lines.add(pendingDeletePath == null
-                ? "Type to filter. %s toggles scope. Enter selects. Ctrl+D deletes. Ctrl+R renames. Esc cancels."
-                    .formatted(keyHint(EditorAction.SESSION_SCOPE_TOGGLE))
+                ? "Type to filter. %s toggles scope. %s toggles sort (%s). Enter selects. Ctrl+D deletes. Ctrl+R renames. Esc cancels."
+                    .formatted(keyHint(EditorAction.SESSION_SCOPE_TOGGLE), keyHint(EditorAction.SESSION_SORT_TOGGLE), sortMode.label())
                 : "Delete selected session? Enter confirms. Esc cancels.");
             lines.add("");
             lines.addAll(search.render(width));
@@ -188,6 +191,10 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             }
             if (keybindings.matches(data, EditorAction.SESSION_SCOPE_TOGGLE)) {
                 toggleScope();
+                return;
+            }
+            if (keybindings.matches(data, EditorAction.SESSION_SORT_TOGGLE)) {
+                toggleSort();
                 return;
             }
             if (
@@ -233,7 +240,7 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
         }
 
         private void rebuildSessionList() {
-            this.sessions = new SelectList(activeSessions().stream().map(session -> toSelectItem(session, showCwd())).toList(), 10, THEME);
+            this.sessions = new SelectList(sortedSessions().stream().map(session -> toSelectItem(session, showCwd())).toList(), 10, THEME);
             this.sessions.setOnSelectionChange(ignored -> requestRender.run());
             this.sessions.setOnSelect(item -> onSelect.accept(Path.of(decodePath(item.value()))));
             this.sessions.setOnCancel(onCancel);
@@ -326,8 +333,26 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             requestRender.run();
         }
 
+        private void toggleSort() {
+            sortMode = sortMode == SortMode.RECENT ? SortMode.RELEVANCE : SortMode.RECENT;
+            rebuildSessionList();
+            requestRender.run();
+        }
+
         private List<SessionInfo> activeSessions() {
             return scope == Scope.ALL ? allSessions : currentSessions;
+        }
+
+        private List<SessionInfo> sortedSessions() {
+            var sessions = new ArrayList<>(activeSessions());
+            var filterTokens = filterTokens(search.getValue());
+            if (sortMode == SortMode.RELEVANCE && !filterTokens.isEmpty()) {
+                sessions.sort(
+                    Comparator.comparingInt((SessionInfo session) -> relevanceScore(session, filterTokens))
+                        .thenComparing(SessionInfo::modified, Comparator.reverseOrder())
+                );
+            }
+            return List.copyOf(sessions);
         }
 
         private boolean showCwd() {
@@ -339,7 +364,7 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
         }
 
         private static SelectItem toSelectItem(SessionInfo session, boolean showCwd) {
-            var label = session.name() == null || session.name().isBlank() ? session.firstMessage() : session.name();
+            var label = displayLabel(session);
             var description = "%s · %d msg · %s%s".formatted(
                 session.path().getFileName(),
                 session.messageCount(),
@@ -380,9 +405,59 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             return delimiter >= 0 ? value.substring(delimiter + VALUE_DELIMITER.length()) : value;
         }
 
+        private static List<String> filterTokens(String filter) {
+            var normalized = filter == null ? "" : filter.toLowerCase(Locale.ROOT).trim();
+            return normalized.isEmpty() ? List.of() : List.of(normalized.split("\\s+"));
+        }
+
+        private static int relevanceScore(SessionInfo session, List<String> tokens) {
+            var label = displayLabel(session).toLowerCase(Locale.ROOT);
+            var fileName = session.path().getFileName() == null
+                ? session.path().toString().toLowerCase(Locale.ROOT)
+                : session.path().getFileName().toString().toLowerCase(Locale.ROOT);
+            var cwd = session.cwd().toLowerCase(Locale.ROOT);
+            var path = session.path().toString().toLowerCase(Locale.ROOT);
+            var score = 0;
+            for (var token : tokens) {
+                var tokenScore = fieldScore(label, token, 0);
+                tokenScore = Math.min(tokenScore, fieldScore(fileName, token, 100));
+                tokenScore = Math.min(tokenScore, fieldScore(cwd, token, 200));
+                tokenScore = Math.min(tokenScore, fieldScore(path, token, 300));
+                if (tokenScore == Integer.MAX_VALUE) {
+                    return Integer.MAX_VALUE;
+                }
+                score = score > Integer.MAX_VALUE - tokenScore ? Integer.MAX_VALUE : score + tokenScore;
+            }
+            return score;
+        }
+
+        private static int fieldScore(String value, String token, int base) {
+            var index = value.indexOf(token);
+            return index < 0 ? Integer.MAX_VALUE : base + index;
+        }
+
+        private static String displayLabel(SessionInfo session) {
+            return session.name() == null || session.name().isBlank() ? session.firstMessage() : session.name();
+        }
+
         private enum Scope {
             CURRENT,
             ALL
+        }
+
+        private enum SortMode {
+            RECENT("Recent"),
+            RELEVANCE("Relevance");
+
+            private final String label;
+
+            SortMode(String label) {
+                this.label = label;
+            }
+
+            private String label() {
+                return label;
+            }
         }
     }
 }

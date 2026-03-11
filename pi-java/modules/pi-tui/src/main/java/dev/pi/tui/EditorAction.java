@@ -20,6 +20,7 @@ public enum EditorAction {
     EXIT,
     SELECT_CANCEL,
     SESSION_SCOPE_TOGGLE,
+    SESSION_SORT_TOGGLE,
     SESSION_DELETE,
     SESSION_RENAME,
     YANK,
