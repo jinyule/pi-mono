@@ -48,7 +48,8 @@
   - path 会追加到 session description，便于区分同名 session 文件
 - `pi-tui` 层新增 `SESSION_PATH_TOGGLE` action，默认键位是 `ctrl+p`
 - `PiSessionPicker` 现在支持 threaded sort：
-  - 当前 cycle 顺序是 `recent -> relevance -> threaded -> recent`
+  - 当前默认从 `threaded` 起步
+  - 当前 cycle 顺序是 `threaded -> recent -> fuzzy -> threaded`
   - `threaded` 只在空 query 时启用树状布局
   - 非空 query 时，`threaded` 会先退化到当前的 `relevance` 首版
   - 树状展开按 `parentSessionPath` 建树，根/子节点按 `modified desc` 排序
@@ -73,7 +74,7 @@
 - 这还是首版 scope toggle：
   - 还没有 TS 版的 loading/progress header
   - fuzzy 现在已经支持 quoted phrase / regex / subsequence，但 scoring 还不是 TS `@mariozechner/pi-tui` 的同款实现
-  - cycle 顺序和默认态还没完全对齐 TS（当前仍从 `recent` 起步）
+  - cycle/default 现在已基本对齐 TS，但 loading/progress header 仍缺失
   - keybindings 现在有文件加载首版，但还没有完整的 app/editor 分层 manager
   - path show/hide 目前只是 description 级别开关，还没有 TS 版右侧布局/缩略路径渲染
 - resolver 现在只在 `--session-dir` 未显式指定时提供 current/all 双 scope；显式 `--session-dir` 仍退化成单 scope
@@ -101,5 +102,5 @@
 ## 下一步建议
 
 1. session selector：补 TS 风格 loading/progress header
-2. session selector：进一步对齐 fuzzy scoring / cycle default
+2. session selector：进一步对齐 fuzzy scoring
 3. session selector：继续细化 app/editor keybinding 分层

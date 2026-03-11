@@ -38,7 +38,6 @@ class PiSessionPickerTest {
             .contains("Second task")
             .contains("/workspace");
 
-        terminal.sendInput("\u001b[B");
         terminal.sendInput("\r");
 
         waitFor(() -> selected[0] != null);
@@ -114,11 +113,11 @@ class PiSessionPickerTest {
         waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Delete selected session?")));
         terminal.sendInput("\r");
 
-        waitFor(() -> !Files.exists(first));
+        waitFor(() -> !Files.exists(second));
 
         assertThat(String.join("\n", terminal.getViewport()))
-            .contains("Second task")
-            .doesNotContain("First task");
+            .contains("First task")
+            .doesNotContain("Second task");
 
         terminal.sendInput("\u001b");
     }
@@ -197,6 +196,13 @@ class PiSessionPickerTest {
 
         terminal.sendInput("global");
         waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Global first")));
+
+        var threadedView = String.join("\n", terminal.getViewport());
+        assertThat(threadedView).contains("Threaded");
+        assertThat(threadedView.indexOf("Global first")).isLessThan(threadedView.indexOf("Later global"));
+
+        terminal.sendInput("\u0013");
+        waitFor(() -> String.join("\n", terminal.getViewport()).contains("Recent"));
 
         var recentView = String.join("\n", terminal.getViewport());
         assertThat(recentView).contains("Recent");
@@ -340,12 +346,6 @@ class PiSessionPickerTest {
 
         Thread.ofVirtual().start(() -> picker.pick(List.of(sibling, child, root), List.of()));
 
-        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("sort(Recent)")));
-
-        terminal.sendInput("\u0013");
-        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("sort(Fuzzy)")));
-
-        terminal.sendInput("\u0013");
         waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("sort(Threaded)")));
 
         var threadedView = String.join("\n", terminal.getViewport());

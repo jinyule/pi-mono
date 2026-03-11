@@ -364,7 +364,7 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
         private String renamingPath;
         private String renamingCurrentName;
         private Scope scope = Scope.CURRENT;
-        private SortMode sortMode = SortMode.RECENT;
+        private SortMode sortMode = SortMode.THREADED;
         private NameFilter nameFilter = NameFilter.ALL;
         private boolean showPath;
 
@@ -605,9 +605,9 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
 
         private void toggleSort() {
             sortMode = switch (sortMode) {
+                case THREADED -> SortMode.RECENT;
                 case RECENT -> SortMode.RELEVANCE;
                 case RELEVANCE -> SortMode.THREADED;
-                case THREADED -> SortMode.RECENT;
             };
             rebuildSessionList();
             requestRender.run();
