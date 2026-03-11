@@ -25,6 +25,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
 public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker {
@@ -536,26 +537,27 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
         public List<String> render(int width) {
             if (renamingPath != null) {
                 var lines = new ArrayList<String>();
-                lines.add("Rename session");
-                lines.addAll(wrapInfoLine(
+                lines.add(PiCliAnsi.bold("Rename session"));
+                lines.addAll(styleInfoLines(
                     renamingCurrentName == null || renamingCurrentName.isBlank()
                         ? "Enter new name. Enter saves. Esc cancels."
                         : "Current name: " + renamingCurrentName,
-                    width
+                    width,
+                    PiCliAnsi::muted
                 ));
                 lines.add("");
                 lines.addAll(rename.render(width));
                 lines.add("");
-                lines.addAll(wrapInfoLine("Enter saves. Esc cancels.", width));
+                lines.addAll(styleInfoLines("Enter saves. Esc cancels.", width, PiCliAnsi::muted));
                 return List.copyOf(lines);
             }
             var lines = new java.util.ArrayList<String>();
             lines.add(composeHeaderLine(width));
             if (pendingDeletePath != null) {
-                lines.addAll(wrapInfoLine("Delete session? [Enter] confirm · [Esc] cancel", width));
+                lines.addAll(styleInfoLines("Delete session? [Enter] confirm · [Esc] cancel", width, PiCliAnsi::warning));
                 lines.add("");
             } else {
-                lines.addAll(wrapInfoLine(
+                lines.addAll(styleInfoLines(
                     "%s sort(%s) · %s named(%s) · %s path(%s)"
                         .formatted(
                             keyHint(EditorAction.SESSION_SORT_TOGGLE),
@@ -565,9 +567,10 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
                             keyHint(EditorAction.SESSION_PATH_TOGGLE),
                             showPath ? "on" : "off"
                         ),
-                    width
+                    width,
+                    PiCliAnsi::muted
                 ));
-                lines.addAll(wrapInfoLine(
+                lines.addAll(styleInfoLines(
                     loadingError != null
                         ? "Failed to load sessions: " + loadingError
                         : "%s scope · re:<pattern> regex · \"phrase\" exact · %s delete · %s rename"
@@ -576,7 +579,8 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
                                 keyHint(EditorAction.SESSION_DELETE),
                                 keyHint(EditorAction.SESSION_RENAME)
                             ),
-                    width
+                    width,
+                    loadingError != null ? PiCliAnsi::error : PiCliAnsi::muted
                 ));
             }
             lines.add("");
@@ -949,16 +953,16 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             var titleWidth = TerminalText.visibleWidth(title);
             var summaryWidth = TerminalText.visibleWidth(summary);
             if (titleWidth + 1 + summaryWidth <= width) {
-                return title + " ".repeat(width - titleWidth - summaryWidth) + summary;
+                return PiCliAnsi.bold(title) + " ".repeat(width - titleWidth - summaryWidth) + PiCliAnsi.muted(summary);
             }
             if (summaryWidth >= width) {
-                return TerminalText.truncateToWidth(summary, width);
+                return PiCliAnsi.muted(TerminalText.truncateToWidth(summary, width));
             }
             var availableTitleWidth = width - summaryWidth - 1;
             if (availableTitleWidth <= 0) {
-                return TerminalText.truncateToWidth(summary, width);
+                return PiCliAnsi.muted(TerminalText.truncateToWidth(summary, width));
             }
-            return TerminalText.truncateToWidth(title, availableTitleWidth) + " " + summary;
+            return PiCliAnsi.bold(TerminalText.truncateToWidth(title, availableTitleWidth)) + " " + PiCliAnsi.muted(summary);
         }
 
         private static String progressText(ProgressSnapshot progress) {
@@ -970,6 +974,12 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
 
         private static List<String> wrapInfoLine(String text, int width) {
             return TerminalText.wrapText(text, Math.max(1, width));
+        }
+
+        private static List<String> styleInfoLines(String text, int width, UnaryOperator<String> style) {
+            return wrapInfoLine(text, width).stream()
+                .map(style)
+                .toList();
         }
 
         private static List<ThreadedSession> flattenThreadedSessions(List<SessionInfo> sessions, NameFilter nameFilter) {

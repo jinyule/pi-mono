@@ -10,8 +10,10 @@ import dev.pi.session.SessionManager;
 import dev.pi.session.SessionInfo;
 import dev.pi.tui.EditorAction;
 import dev.pi.tui.EditorKeybindings;
+import dev.pi.tui.InputHandler;
 import dev.pi.tui.SelectItem;
 import dev.pi.tui.SelectList;
+import dev.pi.tui.Terminal;
 import dev.pi.tui.TerminalText;
 import dev.pi.tui.VirtualTerminal;
 import java.nio.charset.StandardCharsets;
@@ -114,6 +116,60 @@ class PiSessionPickerTest {
             .contains("\u001b[36m")
             .contains("\u001b[1m");
         assertThat(lines.get(1)).contains("\u001b[90m");
+    }
+
+    @Test
+    void stylesHeaderAndHintLinesWithAnsiHierarchy() {
+        var terminal = new RecordingTerminal(120, 12);
+        var picker = new PiSessionPicker(terminal);
+
+        Thread.ofVirtual().start(() -> picker.pick(
+            List.of(session("current.jsonl", "Current task", 2, Instant.now().minusSeconds(30), "/workspace/current")),
+            List.of(session("current.jsonl", "Current task", 2, Instant.now().minusSeconds(30), "/workspace/current"))
+        ));
+
+        waitFor(() -> terminal.output().contains("Resume session"));
+
+        assertThat(terminal.output())
+            .contains("\u001b[1mResume session (Current folder)")
+            .contains("\u001b[90m◉ Current Folder | ○ All")
+            .contains("\u001b[90mtab scope");
+
+        terminal.sendInput("\u001b");
+    }
+
+    @Test
+    void stylesDeleteAndLoadErrorLinesWithAnsiHierarchy() {
+        var deleteTerminal = new RecordingTerminal(120, 12);
+        var deletePicker = new PiSessionPicker(deleteTerminal);
+
+        Thread.ofVirtual().start(() -> deletePicker.pick(
+            List.of(session("current.jsonl", "Current task", 2, Instant.now().minusSeconds(30), "/workspace/current")),
+            List.of(session("current.jsonl", "Current task", 2, Instant.now().minusSeconds(30), "/workspace/current"))
+        ));
+
+        waitFor(() -> deleteTerminal.output().contains("Resume session"));
+        deleteTerminal.sendInput("\u0004");
+        waitFor(() -> deleteTerminal.output().contains("Delete session?"));
+
+        assertThat(deleteTerminal.output()).contains("\u001b[33mDelete session? [Enter] confirm · [Esc] cancel\u001b[0m");
+        deleteTerminal.sendInput("\u001b");
+
+        var errorTerminal = new RecordingTerminal(120, 12);
+        var errorPicker = new PiSessionPicker(errorTerminal);
+        Thread.ofVirtual().start(() -> {
+            try {
+                errorPicker.pick(progress -> {
+                    throw new IllegalStateException("boom");
+                }, progress -> List.of());
+            } catch (RuntimeException ignored) {
+            }
+        });
+
+        waitFor(() -> errorTerminal.output().contains("Failed to load sessions: boom"));
+
+        assertThat(errorTerminal.output()).contains("\u001b[31mFailed to load sessions: boom\u001b[0m");
+        errorTerminal.sendInput("\u001b");
     }
 
     @Test
@@ -805,5 +861,52 @@ class PiSessionPickerTest {
             }
         }
         throw new AssertionError("condition not met");
+    }
+
+    private static final class RecordingTerminal implements Terminal {
+        private final int columns;
+        private final int rows;
+        private final List<String> writes = new CopyOnWriteArrayList<>();
+        private volatile InputHandler inputHandler;
+
+        private RecordingTerminal(int columns, int rows) {
+            this.columns = columns;
+            this.rows = rows;
+        }
+
+        @Override
+        public void start(InputHandler onInput, Runnable onResize) {
+            inputHandler = onInput;
+        }
+
+        @Override
+        public void stop() {
+            inputHandler = null;
+        }
+
+        @Override
+        public void write(String data) {
+            writes.add(data);
+        }
+
+        @Override
+        public int columns() {
+            return columns;
+        }
+
+        @Override
+        public int rows() {
+            return rows;
+        }
+
+        private void sendInput(String data) {
+            if (inputHandler != null) {
+                inputHandler.onInput(data);
+            }
+        }
+
+        private String output() {
+            return String.join("", writes);
+        }
     }
 }

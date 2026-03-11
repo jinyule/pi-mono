@@ -45,6 +45,8 @@
   - session selector 顶部 info/hint 行显式换行 first cut
 - 已完成第二十刀：
   - session selector ANSI 样式层级 first cut
+- 已完成第二十一刀：
+  - session selector 顶部 status/error/info ANSI first cut
 
 ## 本轮落地
 
@@ -164,6 +166,13 @@
   - selected row 文本用 bold
   - metadata / scroll info / no-match 文本用 muted
   - 先把层级落在 session list 本身，后续再往顶部 status/info 区扩
+- `PiSessionPicker` 现在把顶部区域也接到 ANSI 层级：
+  - header title 用 bold
+  - scope summary 用 muted
+  - sort/named/path 状态行与搜索 hint 行用 muted
+  - delete confirm 用 warning
+  - load error 用 error
+  - rename title 也改成 bold，rename 提示改成 muted
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -208,6 +217,8 @@
 - `PiSessionPickerTest`：中等宽度下 session metadata 不会过早消失
 - `PiSessionPickerTest`：窄终端下 info/hint token 不会被硬换列切碎
 - `PiSessionPickerTest`：selected row / metadata 的 ANSI 序列层级
+- `PiSessionPickerTest`：header/hint 的 ANSI 序列层级
+- `PiSessionPickerTest`：delete confirm / load error 的 ANSI 序列层级
 
 最近通过：
 
@@ -217,6 +228,6 @@
 
 ## 下一步建议
 
-1. session selector：继续把顶部 status/error/info 行接到 ANSI 样式层级
+1. session selector：继续评估 active scope / loading progress 是否要做更细粒度分色
 2. session selector：继续评估 tree/model/settings selector 是否复用同一套层级
 3. keybindings：继续评估 app 层是否要补 model/thinking 相关动作

@@ -16,6 +16,14 @@ final class PiCliAnsi {
         return style("1", text);
     }
 
+    static String warning(String text) {
+        return style("33", text);
+    }
+
+    static String error(String text) {
+        return style("31", text);
+    }
+
     private static String style(String code, String text) {
         return "\u001b[" + code + "m" + text + "\u001b[0m";
     }
