@@ -77,6 +77,24 @@ class PiSessionPickerTest {
     }
 
     @Test
+    void omitsSessionFileNameFromDefaultMetadata() {
+        var terminal = new VirtualTerminal(100, 12);
+        var picker = new PiSessionPicker(terminal);
+
+        var sessions = List.of(session("alpha.jsonl", "Alpha task", 2, Instant.now().minusSeconds(60)));
+        Thread.ofVirtual().start(() -> picker.pick(sessions, sessions));
+
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Alpha task")));
+
+        assertThat(String.join("\n", terminal.getViewport()))
+            .contains("/workspace")
+            .contains("2 msg")
+            .doesNotContain("alpha.jsonl");
+
+        terminal.sendInput("\u001b");
+    }
+
+    @Test
     void usesAppKeybindingsForNamedFilterToggle() {
         var terminal = new VirtualTerminal(100, 12);
         var picker = new PiSessionPicker(terminal);

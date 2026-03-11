@@ -1005,13 +1005,16 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
 
         private static SelectItem toSelectItem(SessionInfo session, boolean showCwd, boolean showPath, String prefix) {
             var label = prefix + PiSessionPicker.displayLabel(session);
-            var description = "%s · %d msg · %s%s%s".formatted(
-                session.path().getFileName(),
-                session.messageCount(),
-                formatAge(session.modified()),
-                showCwd && session.cwd() != null && !session.cwd().isBlank() ? " · " + session.cwd() : "",
-                showPath ? " · " + session.path() : ""
-            );
+            var metadata = new ArrayList<String>();
+            if (showPath) {
+                metadata.add(shortenPath(session.path().toString()));
+            }
+            if (showCwd && session.cwd() != null && !session.cwd().isBlank()) {
+                metadata.add(shortenPath(session.cwd()));
+            }
+            metadata.add("%d msg".formatted(session.messageCount()));
+            metadata.add(formatAge(session.modified()));
+            var description = String.join(" · ", metadata);
             return new SelectItem(encodeValue(session, label), label, description);
         }
 
@@ -1037,6 +1040,14 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
                 return elapsed.toHours() + "h";
             }
             return elapsed.toDays() + "d";
+        }
+
+        private static String shortenPath(String path) {
+            if (path == null || path.isBlank()) {
+                return path;
+            }
+            var home = Path.of(System.getProperty("user.home")).toAbsolutePath().normalize().toString();
+            return path.startsWith(home) ? "~" + path.substring(home.length()) : path;
         }
 
         private static String encodeValue(SessionInfo session, String label) {
