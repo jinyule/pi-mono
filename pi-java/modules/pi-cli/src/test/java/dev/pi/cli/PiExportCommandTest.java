@@ -7,11 +7,13 @@ import dev.pi.ai.model.Message;
 import dev.pi.ai.model.StopReason;
 import dev.pi.ai.model.TextContent;
 import dev.pi.ai.model.Usage;
+import dev.pi.session.SessionJsonlCodec;
 import dev.pi.session.SessionManager;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -51,6 +53,58 @@ class PiExportCommandTest {
         assertThatThrownBy(() -> new PiExportCommand().export(tempDir.resolve("missing.jsonl"), null))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("Session file not found");
+    }
+
+    @Test
+    void exportsRicherHtmlWithMetadataTreeAndAllEntryTypes(@TempDir Path tempDir) throws Exception {
+        var sessionFile = tempDir.resolve("rich-session.jsonl");
+        var outputFile = tempDir.resolve("rich-export.html");
+        var codec = new SessionJsonlCodec();
+        var session = SessionManager.create(sessionFile, tempDir.toString());
+        session.appendSessionInfo("Debug run");
+        var userEntryId = session.appendMessage(userMessage("Inspect export", 1L));
+        session.appendLabelChange(userEntryId, "Entry label");
+        var assistantEntryId = session.appendMessage(assistantMessage("Exported <ok>"));
+        session.appendModelChange("anthropic", "claude-rich");
+        session.appendThinkingLevelChange("high");
+        session.appendCompaction(
+            "Compacted prior context",
+            assistantEntryId,
+            128,
+            codec.valueToTree(Map.of("source", "manual")),
+            false
+        );
+        session.appendBranchSummary(
+            userEntryId,
+            "Branch summary text",
+            codec.valueToTree(Map.of("reason", "fork")),
+            true
+        );
+        session.appendCustomMessage(
+            "notice",
+            codec.valueToTree(Map.of("text", "Custom payload")),
+            codec.valueToTree(Map.of("kind", "info")),
+            true
+        );
+
+        new PiExportCommand().export(sessionFile, outputFile);
+
+        var html = Files.readString(outputFile, StandardCharsets.UTF_8);
+        assertThat(html).contains("Session metadata");
+        assertThat(html).contains("Session tree");
+        assertThat(html).contains("Debug run");
+        assertThat(html).contains("Entry count");
+        assertThat(html).contains("Current leaf");
+        assertThat(html).contains("Entry label");
+        assertThat(html).contains("Model change");
+        assertThat(html).contains("Thinking level");
+        assertThat(html).contains("Compaction");
+        assertThat(html).contains("Branch summary");
+        assertThat(html).contains("Custom message");
+        assertThat(html).contains("Branch summary text");
+        assertThat(html).contains("Compacted prior context");
+        assertThat(html).contains("Assistant: Exported &lt;ok&gt;");
+        assertThat(html).contains("&quot;kind&quot; : &quot;info&quot;");
     }
 
     private static Message.UserMessage userMessage(String text, long timestamp) {

@@ -1,6 +1,6 @@
 # 阶段 7 交接：`pi-cli` / `pi-sdk`
 
-更新时间：2026-03-10
+更新时间：2026-03-11
 
 ## 当前状态
 
@@ -40,6 +40,8 @@
   - `--resume` delete first cut
 - 已完成第二十刀：
   - `--resume` rename first cut
+- 已完成第二十一刀：
+  - richer HTML export first cut
 
 ## 已落地内容
 
@@ -166,7 +168,11 @@
   - 新增 `SESSION_RENAME` keybinding action，默认 `ctrl+r`
   - 进入独立 rename mode，输入新名字后回车提交
   - 通过 `SessionManager.open(...).appendSessionInfo(name)` 写回 session，并立即刷新 picker 列表
-- `PiExportCommand` 当前输出的是 basic standalone HTML transcript；还未追平 TS 版的 tree sidebar、theme colors、tool rich render、JSONL download、branch highlighting。
+- `PiExportCommand` 现在已具备更厚一点的 standalone HTML export：
+  - sidebar metadata：session id / name / cwd / current leaf / entry count / active branch length
+  - session tree：显示完整 entry tree、label、active branch 与 current leaf
+  - session entries：不再只渲染 replay 后 message transcript，而是渲染完整 session document 中的 message / compaction / branch summary / session info / custom 等 entry
+  - current implementation 仍未追平 TS 版的 theme colors、tool rich render、JSONL download 与 client-side tree interaction
 - `/copy` 当前只复制最近一条 assistant 的 plain-text flatten 文本；未覆盖图片块、富文本选择、历史消息 picker，也还未抽出统一 slash-command registry。
 - `/tree` 当前是首版 selector：只覆盖 prefix search、up/down/enter/esc、基础树前缀渲染和当前 leaf 高亮；尚未接 TS 版的 summarize prompt、custom prompt、label edit、user-only/all-entry filter toggle、bookmark 语义。
 - `/fork` 当前也是首版 selector：只覆盖 prefix search、up/down/enter/esc 与 flat user-message list；尚未接 extension `session_before_fork` / `session_fork` 生命周期、double-escape action、RPC `fork/get_fork_messages`、cross-project `forkFrom`。
@@ -190,6 +196,10 @@
 - `--resume` 当前已支持 delete first cut；但仍未追平 TS 版的 trash CLI、rename、status banner、sort mode、current/all scope toggle。
 - `--resume` 当前已支持 rename first cut；但仍未追平 TS 版的 trash CLI、status banner、sort mode、current/all scope toggle。
 - `--export <session.jsonl> [output.html]` 现在会在 session/runtime 之外短路执行，默认输出 `pi-java-session-<basename>.html`。
+- richer HTML export 现在直接消费 `SessionManager.entries()` + `tree()` + `branch()`：
+  - message entry 继续沿用 `PiMessageRenderer`
+  - non-message entry 会按类型输出 metadata / summary / JSON details
+  - 当前 leaf path 会在 sidebar tree 和 entry cards 上双重高亮
 - `/copy` 优先同时写入 OSC52 与 system clipboard；只要任一后端成功即视为成功。
 - `/tree` 首版默认隐藏 `label` / `session_info` / `model_change` / `thinking_level_change` / `custom` 等非导航主节点，只显示 message / compaction / branch summary / custom_message。
 - `/tree` 目前不做 branch summarization；切 leaf 仅更新内存中的 session leaf，并立即用 `SessionManager.buildSessionContext()` replay 到 `Agent`。
@@ -229,6 +239,7 @@
 - `--resume` token-based richer search：覆盖 label/path/cwd，多关键词按 AND 语义过滤
 - `--resume` delete first cut：`ctrl+d` 进入确认态，确认后删除文件并刷新列表
 - `--resume` rename first cut：`ctrl+r` 进入 rename mode，提交后追加 `session_info` 并刷新列表
+- richer HTML export first cut：metadata / tree / full-entry rendering，不再只看 replay 后 transcript
 
 ## 验证
 
@@ -243,6 +254,6 @@ npm.cmd run check
 
 按依赖顺序，下一刀建议进入 CLI 收口：
 
-1. richer HTML export。
-2. 真实 `main()` / module wiring，把 `PiCliApplication`、`list-models`、session resolver / picker / export 接到启动入口。
-3. 把 `reload` 从 settings/resources 首版继续接到 extension runtime / startup pipeline。
+1. 真实 `main()` / module wiring，把 `PiCliApplication`、`list-models`、session resolver / picker / export 接到启动入口。
+2. 把 `reload` 从 settings/resources 首版继续接到 extension runtime / startup pipeline。
+3. 阶段 8 的 selector/keybinding 行为追平。

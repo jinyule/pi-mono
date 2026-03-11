@@ -11,7 +11,7 @@
 
 ## 当前任务状态
 
-更新时间：2026-03-10
+更新时间：2026-03-11
 
 - 阶段 0：已完成。
 - 阶段 1：已完成 `core model / event types`、`AssistantMessageEventStream / EventStream`、`ApiProviderRegistry / ModelRegistry / CredentialResolver / PiAiClient facade`、`AssistantMessage partial assembler`、`SSE parser / WebSocket adapter`、`openai-responses provider`、`openai-completions provider`、`anthropic-messages provider`、`google-generative-ai provider`、`bedrock-converse-stream provider`、`message transform / validation / compat` 抽象层、provider 交叉行为测试矩阵（`abort` / `handoff` / `image input` / `cross-provider coverage`）。
@@ -45,7 +45,7 @@
 - 阶段 6：已完成 `Image` 第一批：terminal image capability detect、Kitty/iTerm2 sequence encode、base64 dimension detect、fallback placeholder、基础 image tests。
 - 阶段 6：已完成 `VirtualTerminal` 第一批：lightweight ANSI emulator、viewport/scroll buffer/input/resize hooks、viewport-level render/key golden tests。
 - 阶段 6：已收尾。
-- 阶段 7：已开始，已完成 `pi-cli` CLI 参数解析（运行模式、通用启动选项、初始 file/message 输入拆分、未知 flag 保留）、`PiAgentSession` skeleton、最小 `interactive` mode shell（state render、prompt submit、session persistence bridge）、`print` mode（stdout/stderr output、final assistant selection）、`json` mode（JSONL event/state envelope）、`rpc` mode（command/response + notification JSONL）、`pi-sdk` facade（`PiSdk` / `PiSdkSession` / `createAgentSession()` / session helpers）、CLI startup dispatcher（`PiCliApplication`）、`list-models` command、resume/new session resolution primitives（`SessionManager.create/continueRecent`、`PiCliSessionResolver`）、`--resume` picker 首版（当前目录 session list + search + select/cancel）、`--export` HTML transcript 首版、`/copy` 首版（最近 assistant 文本复制到 OSC52 / system clipboard）、`/tree` 首版（session tree overlay + in-place leaf navigation + user message prefill）、`/fork` 首版（user-message selector + 新 session branch extraction + editor prefill）、`/compact` 首版（deterministic local summary + compaction entry append + context replay）、`/reload` 首版（settings reload + instruction resources reload + system prompt rebuild）、`--resume` all-sessions scope 首版（默认跨 project session roots 聚合）、`--resume` richer search 首版（token contains，覆盖 label/path/cwd）、`--resume` delete 首版（confirm + file delete + list refresh）、`--resume` rename 首版（rename mode + `session_info` append + list refresh）。
+- 阶段 7：已开始，已完成 `pi-cli` CLI 参数解析（运行模式、通用启动选项、初始 file/message 输入拆分、未知 flag 保留）、`PiAgentSession` skeleton、最小 `interactive` mode shell（state render、prompt submit、session persistence bridge）、`print` mode（stdout/stderr output、final assistant selection）、`json` mode（JSONL event/state envelope）、`rpc` mode（command/response + notification JSONL）、`pi-sdk` facade（`PiSdk` / `PiSdkSession` / `createAgentSession()` / session helpers）、CLI startup dispatcher（`PiCliApplication`）、`list-models` command、resume/new session resolution primitives（`SessionManager.create/continueRecent`、`PiCliSessionResolver`）、`--resume` picker 首版（当前目录 session list + search + select/cancel）、`--export` HTML transcript 首版、`/copy` 首版（最近 assistant 文本复制到 OSC52 / system clipboard）、`/tree` 首版（session tree overlay + in-place leaf navigation + user message prefill）、`/fork` 首版（user-message selector + 新 session branch extraction + editor prefill）、`/compact` 首版（deterministic local summary + compaction entry append + context replay）、`/reload` 首版（settings reload + instruction resources reload + system prompt rebuild）、`--resume` all-sessions scope 首版（默认跨 project session roots 聚合）、`--resume` richer search 首版（token contains，覆盖 label/path/cwd）、`--resume` delete 首版（confirm + file delete + list refresh）、`--resume` rename 首版（rename mode + `session_info` append + list refresh）、`--export` richer HTML export 首版（metadata/sidebar/tree/full-entry render）。
 - 阶段 8 到阶段 9：未开始。
 
 ## 阶段 0：项目骨架
@@ -139,6 +139,7 @@
 18. 补 `--resume` richer search。（已完成首版：token contains）
 19. 补 `--resume` delete。（已完成首版：confirm + file delete）
 20. 补 `--resume` rename。（已完成首版：rename mode + session_info append）
+21. 补 richer HTML export。（已完成首版：metadata/sidebar/tree/full-entry render）
 
 ## 阶段 8：行为追平
 
