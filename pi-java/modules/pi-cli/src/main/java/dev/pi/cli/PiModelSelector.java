@@ -58,22 +58,23 @@ public final class PiModelSelector implements Component, Focusable {
             lines.add(scopeSummary());
             lines.add(PiCliAnsi.muted("tab scope · type to filter · Enter selects · Esc cancels"));
         } else {
-            lines.add(PiCliAnsi.muted("Type to filter. Enter selects. Esc cancels."));
+            lines.add(PiCliAnsi.warning("Only showing models with configured API keys (see README for details)"));
+            lines.add(PiCliAnsi.muted("Type to filter · Enter selects · Esc cancels"));
         }
         lines.add("");
         lines.addAll(search.render(width));
         lines.add("");
-        var selectedModel = selectedModel();
-        if (selectedModel != null) {
-            lines.addAll(renderSelectedDetail(selectedModel, width));
-            lines.add("");
-        }
         if (visibleModels.isEmpty()) {
             lines.add(PiCliAnsi.muted(search.getValue() == null || search.getValue().isBlank()
                 ? "  No models available"
                 : "  No matching models"));
         } else {
             lines.addAll(models.render(width));
+            var selectedModel = selectedModel();
+            if (selectedModel != null) {
+                lines.add("");
+                lines.addAll(renderSelectedDetailPanel(selectedModel, width));
+            }
         }
         return List.copyOf(lines);
     }
@@ -237,10 +238,11 @@ public final class PiModelSelector implements Component, Focusable {
             .orElse(null);
     }
 
-    private static List<String> renderSelectedDetail(PiInteractiveSession.SelectableModel model, int width) {
+    private static List<String> renderSelectedDetailPanel(PiInteractiveSession.SelectableModel model, int width) {
         var lines = new ArrayList<String>();
-        var title = "Selected: " + model.provider() + "/" + model.modelId() + (model.current() ? " ✓" : "");
-        lines.add(PiCliAnsi.bold(TerminalText.truncateToWidth(title, width, "...")));
+        lines.add(PiCliAnsi.bold("Selected model"));
+        var title = model.provider() + "/" + model.modelId() + (model.current() ? " ✓" : "");
+        lines.add(TerminalText.truncateToWidth(title, width, "..."));
         var detail = selectedDetail(model);
         if (!detail.isBlank()) {
             lines.add(PiCliAnsi.muted(TerminalText.truncateToWidth(detail, width, "...")));

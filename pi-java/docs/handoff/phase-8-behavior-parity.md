@@ -109,6 +109,8 @@
   - interactive model selector selected-detail first cut
 - 已完成第五十二刀：
   - interactive pending queue steering parity first cut
+- 已完成第五十三刀：
+  - interactive model selector bottom detail panel first cut
 
 ## 本轮落地
 
@@ -535,6 +537,13 @@
   - 会改成 queue steering message，并回显 `Queued steering message`
   - status 区现在会先显示 `Steering: ...`，再显示 `Follow-up: ...`
   - `alt+up` 的恢复顺序也和 TS 一致：先 steering，再 follow-up
+- `PiModelSelector` 现在把 selected detail 改成独立底部面板：
+  - detail 不再插在 search 输入和列表之间
+  - 列表渲染后会在底部追加 `Selected model`
+  - 下面再显示 `provider/model` 和一行 metadata 摘要
+- `PiModelSelector` 现在在 all-scope 下补了 TS 风格 warning：
+  - 顶部会显示 `Only showing models with configured API keys (see README for details)`
+  - 仍保留 Java 版现有 `type/filter/select/cancel` hint，不回退交互提示
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+l`
@@ -672,6 +681,8 @@
 - `PiAgentSessionTest`：`dequeue()` 会按 `steering -> follow-up` 顺序恢复 queued messages
 - `PiAgentSessionTest`：`queuedSteeringMessages()` 会暴露 runtime steering queue 文本
 - `PiInteractiveModeTest`：streaming 中普通回车会 queue steering，并在状态区显示 `Steering: ...`
+- `PiModelSelectorTest`：all-scope 会显示 configured-API-key warning
+- `PiModelSelectorTest`：selected detail 改成底部独立面板，并会随选择同步更新
 
 最近通过：
 
@@ -681,7 +692,7 @@
 
 ## 下一步建议
 
-1. selector parity：继续评估 model selector 是否需要 TS 式双栏/详情布局；当前已补单区 detail，但还不是独立 detail panel
+1. selector parity：继续评估 model selector 是否需要更接近 TS 的 provider/name 行布局；当前已补底部 detail panel，但还没有 selector 内部独立边框/面板样式
 2. settings selector parity：继续评估 `theme` / `hide thinking` / `quiet startup`；这些键在 Java 侧还缺真实 runtime 绑定
 3. pending queue parity：继续补 compaction queue 合并展示与恢复；steering/follow-up runtime queue 已接上，但 Java 侧仍没有 compaction pending queue
 4. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件
