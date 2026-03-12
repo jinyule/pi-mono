@@ -16,6 +16,7 @@ final class PiAppKeybindings {
         Map.entry(PiAppAction.CYCLE_MODEL_BACKWARD, List.of("shift+ctrl+p")),
         Map.entry(PiAppAction.CYCLE_THINKING_LEVEL, List.of("shift+tab")),
         Map.entry(PiAppAction.SELECT_MODEL, List.of("ctrl+l")),
+        Map.entry(PiAppAction.EXPAND_TOOLS, List.of("ctrl+o")),
         Map.entry(PiAppAction.TOGGLE_THINKING, List.of("ctrl+t")),
         Map.entry(PiAppAction.FOLLOW_UP, List.of("alt+enter")),
         Map.entry(PiAppAction.DEQUEUE, List.of("alt+up")),

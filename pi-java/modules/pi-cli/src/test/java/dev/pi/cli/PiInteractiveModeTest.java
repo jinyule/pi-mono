@@ -2,6 +2,7 @@ package dev.pi.cli;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import dev.pi.agent.runtime.AgentEvent;
 import dev.pi.agent.runtime.AgentMessage;
 import dev.pi.agent.runtime.AgentMessages;
@@ -655,6 +656,40 @@ class PiInteractiveModeTest {
             terminal.sendInput("\u001bq");
 
             stopped.get(2, TimeUnit.SECONDS);
+        } finally {
+            PiAppKeybindings.setGlobal(previousApp);
+            mode.stop();
+        }
+    }
+
+    @Test
+    void usesAppKeybindingForExpandTools() {
+        var details = JsonNodeFactory.instance.objectNode()
+            .put("path", "README.md")
+            .put("truncated", false);
+        var session = new FakeSession().withToolResultMessage("read", "Read summary", details);
+        var terminal = new VirtualTerminal(100, 20);
+        var mode = new PiInteractiveMode(session, terminal);
+        var previousApp = PiAppKeybindings.global();
+        try {
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(PiAppAction.EXPAND_TOOLS, java.util.List.of("alt+h"))));
+
+            mode.start();
+            assertThat(String.join("\n", terminal.getViewport()))
+                .contains("Tool read: Read summary")
+                .doesNotContain("Details:");
+
+            terminal.sendInput("\u001bh");
+
+            waitFor(() -> String.join("\n", terminal.getViewport()).contains("Details:"));
+            assertThat(String.join("\n", terminal.getViewport()))
+                .contains("Tool details: expanded")
+                .contains("\"path\" : \"README.md\"");
+
+            terminal.sendInput("\u001bh");
+
+            waitFor(() -> String.join("\n", terminal.getViewport()).contains("Tool details: collapsed"));
+            assertThat(String.join("\n", terminal.getViewport())).doesNotContain("Details:");
         } finally {
             PiAppKeybindings.setGlobal(previousApp);
             mode.stop();
@@ -1491,6 +1526,23 @@ class PiInteractiveModeTest {
                     new Usage(1, 1, 0, 0, 2, new Usage.Cost(0.0, 0.0, 0.0, 0.0, 0.0)),
                     dev.pi.ai.model.StopReason.STOP,
                     null,
+                    2L
+                ));
+            } catch (Exception exception) {
+                throw new AssertionError(exception);
+            }
+            syncState();
+            return this;
+        }
+
+        private FakeSession withToolResultMessage(String toolName, String text, com.fasterxml.jackson.databind.JsonNode details) {
+            try {
+                sessionManager.appendMessage(new Message.ToolResultMessage(
+                    "tool-1",
+                    toolName,
+                    List.of(new TextContent(text, null)),
+                    details,
+                    false,
                     2L
                 ));
             } catch (Exception exception) {

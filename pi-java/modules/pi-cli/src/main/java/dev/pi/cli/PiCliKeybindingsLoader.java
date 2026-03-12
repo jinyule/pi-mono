@@ -51,6 +51,7 @@ final class PiCliKeybindingsLoader {
         Map.entry("cycleModelBackward", PiAppAction.CYCLE_MODEL_BACKWARD),
         Map.entry("cycleThinkingLevel", PiAppAction.CYCLE_THINKING_LEVEL),
         Map.entry("selectModel", PiAppAction.SELECT_MODEL),
+        Map.entry("expandTools", PiAppAction.EXPAND_TOOLS),
         Map.entry("toggleThinking", PiAppAction.TOGGLE_THINKING),
         Map.entry("followUp", PiAppAction.FOLLOW_UP),
         Map.entry("dequeue", PiAppAction.DEQUEUE),

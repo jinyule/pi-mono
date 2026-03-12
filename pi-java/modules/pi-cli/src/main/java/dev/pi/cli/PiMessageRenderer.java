@@ -14,30 +14,38 @@ public final class PiMessageRenderer {
     }
 
     public static String renderMessage(AgentMessage message) {
-        return renderMessage(message, false);
+        return renderMessage(message, false, false);
     }
 
     public static String renderMessage(AgentMessage message, boolean hideThinking) {
+        return renderMessage(message, hideThinking, false);
+    }
+
+    public static String renderMessage(AgentMessage message, boolean hideThinking, boolean expandToolDetails) {
         return switch (message) {
             case AgentMessage.UserMessage userMessage -> "You: " + renderUserContent(userMessage.content());
             case AgentMessage.AssistantMessage assistantMessage ->
                 "Assistant: " + renderAssistantContent(assistantMessage.content(), hideThinking);
             case AgentMessage.ToolResultMessage toolResultMessage ->
-                "Tool %s: %s".formatted(toolResultMessage.toolName(), renderUserContent(toolResultMessage.content()));
+                "Tool %s: %s".formatted(toolResultMessage.toolName(), renderToolResult(toolResultMessage, expandToolDetails));
             case AgentMessage.CustomMessage customMessage ->
                 "%s: %s".formatted(customMessage.role(), String.valueOf(customMessage.payload()));
         };
     }
 
     public static String renderStreamingMessage(AgentMessage message) {
-        return renderStreamingMessage(message, false);
+        return renderStreamingMessage(message, false, false);
     }
 
     public static String renderStreamingMessage(AgentMessage message, boolean hideThinking) {
+        return renderStreamingMessage(message, hideThinking, false);
+    }
+
+    public static String renderStreamingMessage(AgentMessage message, boolean hideThinking, boolean expandToolDetails) {
         return switch (message) {
             case AgentMessage.AssistantMessage assistantMessage ->
                 "Assistant (streaming): " + renderAssistantContent(assistantMessage.content(), hideThinking);
-            default -> renderMessage(message, hideThinking);
+            default -> renderMessage(message, hideThinking, expandToolDetails);
         };
     }
 
@@ -74,5 +82,20 @@ public final class PiMessageRenderer {
             case ThinkingContent thinkingContent -> hideThinking ? "" : "Thinking: " + thinkingContent.thinking();
             case ToolCall toolCall -> "Tool call %s(%s)".formatted(toolCall.name(), toolCall.arguments());
         };
+    }
+
+    private static String renderToolResult(AgentMessage.ToolResultMessage message, boolean expandToolDetails) {
+        var renderedContent = renderUserContent(message.content());
+        if (!expandToolDetails || message.details() == null || message.details().isNull()) {
+            return renderedContent;
+        }
+        var renderedDetails = message.details().toPrettyString();
+        if (renderedDetails == null || renderedDetails.isBlank() || "null".equals(renderedDetails)) {
+            return renderedContent;
+        }
+        if (renderedContent.isBlank()) {
+            return "Details:\n" + renderedDetails;
+        }
+        return renderedContent + "\nDetails:\n" + renderedDetails;
     }
 }

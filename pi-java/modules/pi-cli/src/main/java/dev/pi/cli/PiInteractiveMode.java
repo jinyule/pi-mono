@@ -38,6 +38,7 @@ public final class PiInteractiveMode implements AutoCloseable {
     private String manualStatus;
     private Runnable onStop;
     private long lastClearTimeMillis;
+    private boolean expandToolDetails;
 
     public PiInteractiveMode(PiInteractiveSession session) {
         this(session, new ProcessTerminal());
@@ -193,10 +194,10 @@ public final class PiInteractiveMode implements AutoCloseable {
         var lines = new ArrayList<String>();
         var hideThinking = session.settingsSelection().hideThinkingBlock();
         for (var message : state.messages()) {
-            lines.add(PiMessageRenderer.renderMessage(message, hideThinking));
+            lines.add(PiMessageRenderer.renderMessage(message, hideThinking, expandToolDetails));
         }
         if (state.isStreaming() && state.streamMessage() != null) {
-            lines.add(PiMessageRenderer.renderStreamingMessage(state.streamMessage(), hideThinking));
+            lines.add(PiMessageRenderer.renderStreamingMessage(state.streamMessage(), hideThinking, expandToolDetails));
         }
         return String.join("\n\n", lines);
     }
@@ -759,6 +760,10 @@ public final class PiInteractiveMode implements AutoCloseable {
                 handleSelectModelCommand();
                 return;
             }
+            if (appKeybindings.matches(data, PiAppAction.EXPAND_TOOLS)) {
+                handleToggleToolDetailsCommand();
+                return;
+            }
             if (appKeybindings.matches(data, PiAppAction.TOGGLE_THINKING)) {
                 handleToggleThinkingCommand();
                 return;
@@ -860,6 +865,12 @@ public final class PiInteractiveMode implements AutoCloseable {
         } catch (RuntimeException exception) {
             manualStatus = "Error: " + rootMessage(exception);
         }
+        renderState(session.state());
+    }
+
+    private void handleToggleToolDetailsCommand() {
+        expandToolDetails = !expandToolDetails;
+        manualStatus = "Tool details: " + (expandToolDetails ? "expanded" : "collapsed");
         renderState(session.state());
     }
 

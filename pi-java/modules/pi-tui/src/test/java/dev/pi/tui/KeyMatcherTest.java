@@ -16,6 +16,11 @@ class KeyMatcherTest {
     }
 
     @Test
+    void matchesConfiguredCtrlOSequence() {
+        assertThat(KeyMatcher.matches("\u000f", "ctrl+o")).isTrue();
+    }
+
+    @Test
     void matchesConfiguredCtrlTSequence() {
         assertThat(KeyMatcher.matches("\u0014", "ctrl+t")).isTrue();
     }

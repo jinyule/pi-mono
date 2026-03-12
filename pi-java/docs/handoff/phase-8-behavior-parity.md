@@ -147,6 +147,8 @@
   - interactive app keybinding clear parity first cut
 - 已完成第七十刀：
   - interactive app keybinding exit parity first cut
+- 已完成第七十一刀：
+  - interactive app keybinding expand-tools parity first cut
 
 ## 本轮落地
 
@@ -799,6 +801,9 @@
 - PiAppAction / PiAppKeybindings / PiCliKeybindingsLoader 现在补了 exit app action、默认 ctrl+d 和 keybindings.json alias
 - PiInteractiveMode 现在支持可配置 exit 键位，并保持只有空输入时才退出，避免打断已有的编辑/删除语义
 - PiCliModuleTest / PiInteractiveModeTest 现在覆盖 exit 的 loader alias 和 empty-input exit
+- PiAppAction / PiAppKeybindings / PiCliKeybindingsLoader 现在补了 expandTools app action、默认 ctrl+o 和 keybindings.json alias
+- PiMessageRenderer / PiInteractiveMode 现在支持按键切换 tool result details 展开，并保持默认 transcript 不变
+- PiCliModuleTest / PiInteractiveModeTest / KeyMatcherTest 现在覆盖 expandTools 的 loader alias、tool details toggle 和 ctrl+o 键位匹配
 
 最近通过：
 
@@ -809,6 +814,6 @@
 ## 下一步建议
 
 1. selector parity：继续评估 model selector 是否要补 all-scope warning/hint copy 的 TS 细节，或继续压空状态 copy/层级
-2. settings selector parity：继续评估 `theme` 等剩余项；当前已补 hint/keybinding parity、hide-thinking transcript parity、quiet-startup header parity，以及 toggleThinking / clear / exit app keybinding，但 Java 侧仍未覆盖 TS 的 startup resource listing / theme runtime
+2. settings selector parity：继续评估 `theme` 等剩余项；当前已补 hint/keybinding parity、hide-thinking transcript parity、quiet-startup header parity，以及 toggleThinking / clear / exit / expandTools app keybinding，但 Java 侧仍未覆盖 TS 的 startup resource listing / theme runtime
 3. pending queue parity：继续补 compaction queue 合并展示与恢复；steering/follow-up runtime queue 已接上，但 Java 侧仍没有 compaction pending queue
 4. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件
