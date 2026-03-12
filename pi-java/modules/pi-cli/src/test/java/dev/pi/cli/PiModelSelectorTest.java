@@ -36,6 +36,7 @@ class PiModelSelectorTest {
         assertThat(lines).anyMatch(line -> line.contains("Model name: GPT-5"));
         assertThat(lines).anyMatch(line -> line.contains("Thinking: minimal"));
         assertThat(lines).anyMatch(line -> line.contains("Context: 400k ctx"));
+        assertThat(lines).anyMatch(line -> line.contains("────"));
     }
 
     @Test

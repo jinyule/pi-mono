@@ -113,6 +113,8 @@
   - interactive model selector bottom detail panel first cut
 - 已完成第五十四刀：
   - interactive model selector provider/detail split first cut
+- 已完成第五十五刀：
+  - interactive model selector detail panel container first cut
 
 ## 本轮落地
 
@@ -550,6 +552,10 @@
   - 列表 description 现在只保留 provider badge（`[provider]`）
   - `model name` / `thinking` / `context` 全部下沉到底部 detail panel
   - detail panel 改成显式字段行：`Model name:`、`Thinking:`、`Context:`
+- `PiModelSelector` 现在继续把 detail panel 容器层级往 TS 靠：
+  - selected detail panel 顶部和底部都会渲染 muted separator
+  - `Selected model`、`provider/model`、detail 字段会被包进独立 panel 区
+  - 窄终端下 separator 和 detail 行都继续走安全截断，不会把 panel 撑破 viewport
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+l`
@@ -690,6 +696,7 @@
 - `PiModelSelectorTest`：all-scope 会显示 configured-API-key warning
 - `PiModelSelectorTest`：selected detail 改成底部独立面板，并会随选择同步更新
 - `PiModelSelectorTest`：detail panel 会显示 `Model name:` / `Thinking:` / `Context:` 字段行
+- `PiModelSelectorTest`：detail panel 会渲染独立 separator 容器
 
 最近通过：
 
@@ -699,7 +706,7 @@
 
 ## 下一步建议
 
-1. selector parity：继续评估 model selector 是否需要 selector 内部独立边框/面板样式；row/detail 分工已基本落到位，但还没做 TS 那种容器层级
+1. selector parity：继续评估 model selector detail panel 是否要补 title/detail 的 ANSI 分层，或把 all/scoped summary 再压近 TS copy
 2. settings selector parity：继续评估 `theme` / `hide thinking` / `quiet startup`；这些键在 Java 侧还缺真实 runtime 绑定
 3. pending queue parity：继续补 compaction queue 合并展示与恢复；steering/follow-up runtime queue 已接上，但 Java 侧仍没有 compaction pending queue
 4. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件
