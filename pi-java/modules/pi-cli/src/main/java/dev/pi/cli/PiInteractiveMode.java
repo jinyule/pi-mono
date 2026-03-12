@@ -151,6 +151,10 @@ public final class PiInteractiveMode implements AutoCloseable {
             requestExit();
             return;
         }
+        if (session.state().isStreaming()) {
+            handleSteerCommand(value);
+            return;
+        }
         manualStatus = null;
         input.setValue("");
         tui.requestRender();
@@ -206,8 +210,12 @@ public final class PiInteractiveMode implements AutoCloseable {
             lines.add("Ready");
         }
 
+        var queuedSteering = session.queuedSteeringMessages();
         var queuedFollowUps = session.queuedFollowUps();
-        if (!queuedFollowUps.isEmpty()) {
+        if (!queuedSteering.isEmpty() || !queuedFollowUps.isEmpty()) {
+            for (var message : queuedSteering) {
+                lines.add("Steering: " + message);
+            }
             for (var message : queuedFollowUps) {
                 lines.add("Follow-up: " + message);
             }
@@ -840,6 +848,17 @@ public final class PiInteractiveMode implements AutoCloseable {
             session.followUp(text).toCompletableFuture().join();
             input.setValue("");
             manualStatus = "Queued follow-up";
+        } catch (RuntimeException exception) {
+            manualStatus = "Error: " + rootMessage(exception);
+        }
+        renderState(session.state());
+    }
+
+    private void handleSteerCommand(String text) {
+        try {
+            session.steer(text).toCompletableFuture().join();
+            input.setValue("");
+            manualStatus = "Queued steering message";
         } catch (RuntimeException exception) {
             manualStatus = "Error: " + rootMessage(exception);
         }

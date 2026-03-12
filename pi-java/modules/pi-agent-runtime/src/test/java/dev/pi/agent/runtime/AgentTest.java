@@ -142,6 +142,23 @@ class AgentTest {
         }
     }
 
+    @Test
+    void exposesSteeringQueueSnapshotAndDrain() {
+        var agent = Agent.builder(model())
+            .systemPrompt("System")
+            .streamFunction(successStream("Hello back."))
+            .build();
+        var first = new AgentMessage.UserMessage(List.of(new TextContent("First", null)), 10L);
+        var second = new AgentMessage.UserMessage(List.of(new TextContent("Second", null)), 20L);
+
+        agent.steer(first);
+        agent.steer(second);
+
+        assertThat(agent.steeringMessages()).containsExactly(first, second);
+        assertThat(agent.drainSteeringQueue()).containsExactly(first, second);
+        assertThat(agent.steeringMessages()).isEmpty();
+    }
+
     private static AgentLoopConfig.AssistantStreamFunction successStream(String text) {
         return (model, context, options) -> {
             var stream = new AssistantMessageEventStream();

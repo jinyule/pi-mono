@@ -711,6 +711,26 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void submitQueuesSteeringWhileStreaming() {
+        var session = new FakeSession().withStreaming(true);
+        var terminal = new VirtualTerminal(100, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("Queued");
+        terminal.sendInput("\r");
+
+        waitFor(() -> session.steeringMessages.contains("Queued"));
+        var viewport = String.join("\n", terminal.getViewport());
+        assertThat(viewport).contains("Queued steering message");
+        assertThat(viewport).contains("Steering: Queued");
+        assertThat(viewport).contains("alt+up to edit queued messages");
+        assertThat(session.prompts).doesNotContain("Queued");
+
+        mode.stop();
+    }
+
+    @Test
     void followUpActsLikeSubmitWhenIdle() {
         var session = new FakeSession();
         var terminal = new VirtualTerminal(100, 16);
@@ -828,7 +848,9 @@ class PiInteractiveModeTest {
         private String lastModelProviderChange;
         private boolean streaming;
         private List<String> reloadWarnings = List.of();
+        private final List<String> steeringMessages = new ArrayList<>();
         private final List<String> followUps = new ArrayList<>();
+        private final List<String> queuedSteeringMessages = new ArrayList<>();
         private final List<String> queuedFollowUps = new ArrayList<>();
         private List<SelectableModel> selectableModels = List.of();
         private DequeueResult dequeueResult = new DequeueResult("", 0);
@@ -899,6 +921,13 @@ class PiInteractiveModeTest {
                 throw new AssertionError(exception);
             }
             syncState();
+            return CompletableFuture.completedFuture(null);
+        }
+
+        @Override
+        public CompletionStage<Void> steer(String text) {
+            steeringMessages.add(text);
+            queuedSteeringMessages.add(text);
             return CompletableFuture.completedFuture(null);
         }
 
@@ -1086,6 +1115,11 @@ class PiInteractiveModeTest {
         }
 
         @Override
+        public List<String> queuedSteeringMessages() {
+            return List.copyOf(queuedSteeringMessages);
+        }
+
+        @Override
         public List<String> queuedFollowUps() {
             return List.copyOf(queuedFollowUps);
         }
@@ -1093,6 +1127,7 @@ class PiInteractiveModeTest {
         @Override
         public DequeueResult dequeue() {
             var current = dequeueResult;
+            queuedSteeringMessages.clear();
             queuedFollowUps.clear();
             dequeueResult = new DequeueResult("", 0);
             return current;

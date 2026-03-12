@@ -166,6 +166,17 @@ public final class Agent {
         }
     }
 
+    public List<AgentMessage> drainSteeringQueue() {
+        synchronized (monitor) {
+            if (steeringQueue.isEmpty()) {
+                return List.of();
+            }
+            var messages = List.copyOf(steeringQueue);
+            steeringQueue.clear();
+            return messages;
+        }
+    }
+
     public List<AgentMessage> drainFollowUpQueue() {
         synchronized (monitor) {
             if (followUpQueue.isEmpty()) {
@@ -174,6 +185,12 @@ public final class Agent {
             var messages = List.copyOf(followUpQueue);
             followUpQueue.clear();
             return messages;
+        }
+    }
+
+    public List<AgentMessage> steeringMessages() {
+        synchronized (monitor) {
+            return List.copyOf(steeringQueue);
         }
     }
 

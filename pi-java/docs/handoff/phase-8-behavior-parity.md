@@ -107,6 +107,8 @@
   - interactive model selector custom search/ranking first cut
 - 已完成第五十一刀：
   - interactive model selector selected-detail first cut
+- 已完成第五十二刀：
+  - interactive pending queue steering parity first cut
 
 ## 本轮落地
 
@@ -517,6 +519,22 @@
   - 搜索框下方会显示 `Selected: provider/model`
   - 第二行会显示 `model name` / `thinking` / `context window` 摘要
   - 列表上下移动时，detail 会跟着当前选中项同步刷新
+- `Agent` 现在补了 steering queue snapshot/drain：
+  - 暴露 `steeringMessages()`
+  - 暴露 `drainSteeringQueue()`
+  - CLI/session 层现在可以像 follow-up 一样读取和恢复 steering queue
+- `PiInteractiveSession` 现在补了 steering queue contract：
+  - 暴露 `steer(String)`
+  - 暴露 `queuedSteeringMessages()`
+- `PiAgentSession` 现在补了 steering queue 接线：
+  - streaming 中普通回车走 `Agent.steer(...)`
+  - `queuedSteeringMessages()` 会把 runtime steering queue 渲染成 editor-friendly 文本
+  - `dequeue()` 现在会按 `steering -> follow-up` 顺序合并恢复所有 runtime queued messages
+- `PiInteractiveMode` 现在补了 pending queue steering parity 首版：
+  - streaming 中普通回车不再直接报 `Agent is already processing`
+  - 会改成 queue steering message，并回显 `Queued steering message`
+  - status 区现在会先显示 `Steering: ...`，再显示 `Follow-up: ...`
+  - `alt+up` 的恢复顺序也和 TS 一致：先 steering，再 follow-up
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+l`
@@ -650,6 +668,10 @@
 - `PiModelSelectorTest`：空结果时显示 `No matching models`
 - `PiModelSelectorTest`：顶部会显示当前选中模型的 detail
 - `PiModelSelectorTest`：方向键移动后 detail 会切到新选中项
+- `AgentTest`：`steeringMessages()` / `drainSteeringQueue()` snapshot + drain
+- `PiAgentSessionTest`：`dequeue()` 会按 `steering -> follow-up` 顺序恢复 queued messages
+- `PiAgentSessionTest`：`queuedSteeringMessages()` 会暴露 runtime steering queue 文本
+- `PiInteractiveModeTest`：streaming 中普通回车会 queue steering，并在状态区显示 `Steering: ...`
 
 最近通过：
 
@@ -661,5 +683,5 @@
 
 1. selector parity：继续评估 model selector 是否需要 TS 式双栏/详情布局；当前已补单区 detail，但还不是独立 detail panel
 2. settings selector parity：继续评估 `theme` / `hide thinking` / `quiet startup`；这些键在 Java 侧还缺真实 runtime 绑定
-3. pending queue parity：补 steering / compaction queue 合并展示与恢复（前提是先补 Java CLI steering 入口）
+3. pending queue parity：继续补 compaction queue 合并展示与恢复；steering/follow-up runtime queue 已接上，但 Java 侧仍没有 compaction pending queue
 4. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件

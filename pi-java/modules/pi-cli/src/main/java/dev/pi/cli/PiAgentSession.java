@@ -12,6 +12,7 @@ import dev.pi.ai.model.Model;
 import dev.pi.ai.model.StopReason;
 import dev.pi.ai.model.ThinkingBudgets;
 import dev.pi.ai.model.ThinkingLevel;
+import dev.pi.ai.model.TextContent;
 import dev.pi.ai.model.Transport;
 import dev.pi.ai.model.Usage;
 import dev.pi.ai.stream.Subscription;
@@ -132,6 +133,16 @@ public final class PiAgentSession implements PiInteractiveSession {
 
     public CompletionStage<Void> prompt(AgentMessage message) {
         return sdkSession.prompt(message);
+    }
+
+    @Override
+    public CompletionStage<Void> steer(String text) {
+        Objects.requireNonNull(text, "text");
+        sdkSession.agent().steer(new AgentMessage.UserMessage(
+            List.of(new TextContent(text, null)),
+            System.currentTimeMillis()
+        ));
+        return java.util.concurrent.CompletableFuture.completedFuture(null);
     }
 
     @Override
@@ -357,6 +368,14 @@ public final class PiAgentSession implements PiInteractiveSession {
     }
 
     @Override
+    public List<String> queuedSteeringMessages() {
+        return sdkSession.agent().steeringMessages().stream()
+            .map(PiAgentSession::renderQueuedMessage)
+            .filter(text -> !text.isBlank())
+            .toList();
+    }
+
+    @Override
     public List<String> queuedFollowUps() {
         return sdkSession.agent().followUpMessages().stream()
             .map(PiAgentSession::renderQueuedMessage)
@@ -366,7 +385,9 @@ public final class PiAgentSession implements PiInteractiveSession {
 
     @Override
     public DequeueResult dequeue() {
-        var messages = sdkSession.agent().drainFollowUpQueue();
+        var messages = new ArrayList<AgentMessage>();
+        messages.addAll(sdkSession.agent().drainSteeringQueue());
+        messages.addAll(sdkSession.agent().drainFollowUpQueue());
         if (messages.isEmpty()) {
             return new DequeueResult("", 0);
         }

@@ -563,6 +563,28 @@ class PiAgentSessionTest {
     }
 
     @Test
+    void dequeueRestoresQueuedSteeringBeforeFollowUpsToEditorText() {
+        var session = PiAgentSession.builder(
+            testModel(),
+            SessionManager.inMemory("/workspace"),
+            SettingsManager.inMemory(),
+            new InstructionResources(List.of(), "", List.of())
+        )
+            .streamFunction(fakeAssistant("ready"))
+            .build();
+
+        session.steer("first steering").toCompletableFuture().join();
+        session.steer("second steering").toCompletableFuture().join();
+        session.followUp("follow-up").toCompletableFuture().join();
+
+        var result = session.dequeue();
+
+        assertThat(result.restoredCount()).isEqualTo(3);
+        assertThat(result.editorText()).isEqualTo("first steering\n\nsecond steering\n\nfollow-up");
+        assertThat(session.agent().hasQueuedMessages()).isFalse();
+    }
+
+    @Test
     void selectModelAppliesExactCycleTarget() throws Exception {
         var initialModel = testReasoningModel("openai", "gpt-5");
         var nextModel = testReasoningModel("anthropic", "claude-3-7-sonnet");
@@ -692,6 +714,23 @@ class PiAgentSessionTest {
         session.followUp("second queued").toCompletableFuture().join();
 
         assertThat(session.queuedFollowUps()).containsExactly("first queued", "second queued");
+    }
+
+    @Test
+    void queuedSteeringMessagesExposeQueuedMessages() {
+        var session = PiAgentSession.builder(
+            testModel(),
+            SessionManager.inMemory("/workspace"),
+            SettingsManager.inMemory(),
+            new InstructionResources(List.of(), "", List.of())
+        )
+            .streamFunction(fakeAssistant("ready"))
+            .build();
+
+        session.steer("first steering").toCompletableFuture().join();
+        session.steer("second steering").toCompletableFuture().join();
+
+        assertThat(session.queuedSteeringMessages()).containsExactly("first steering", "second steering");
     }
 
     private static Model testModel() {

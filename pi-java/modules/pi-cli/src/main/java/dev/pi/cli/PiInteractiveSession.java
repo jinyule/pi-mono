@@ -27,6 +27,10 @@ public interface PiInteractiveSession {
         return prompt(PiMessageRenderer.renderUserContent(message.content()));
     }
 
+    default CompletionStage<Void> steer(String text) {
+        throw new UnsupportedOperationException("Steering queueing is not available");
+    }
+
     CompletionStage<Void> resume();
 
     CompletionStage<Void> waitForIdle();
@@ -79,6 +83,10 @@ public interface PiInteractiveSession {
 
     default CompletionStage<Void> followUp(String text) {
         throw new UnsupportedOperationException("Follow-up queueing is not available");
+    }
+
+    default List<String> queuedSteeringMessages() {
+        return List.of();
     }
 
     default List<String> queuedFollowUps() {
