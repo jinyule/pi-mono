@@ -99,6 +99,8 @@
   - interactive model selector richer metadata first cut
 - 已完成第四十七刀：
   - interactive model selector all/scoped dual-scope first cut
+- 已完成第四十八刀：
+  - startup model resolution saved-defaults first cut
 
 ## 本轮落地
 
@@ -470,6 +472,14 @@
   - scoped models 存在时默认进 `Scoped`
   - `Tab` 会在 `All` / `Scoped` 间切换
   - 仍复用现有 search/filter/select 交互
+- `PiCliModule.createDefaultSession()` 现在会把 `SettingsManager` 传进 startup model resolution：
+  - 没有显式 `--provider/--model` 且没有命中 `--models` scoped target 时
+  - 会优先尝试 `defaultProvider/defaultModel`
+  - 恢复上次 interactive model selector / cycle 持久化的默认模型
+- `PiCliModule.resolveModel()` 现在补了 saved-defaults fallback：
+  - `defaultProvider + defaultModel` 同时存在时走精确 provider/model 命中
+  - 只有 `defaultModel` 时，会在 registry 里做唯一 model id 命中
+  - 保存的默认模型失效或变得不唯一时，会回退到原有启动解析逻辑，不会把 CLI 启动卡死
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+l`
@@ -593,6 +603,9 @@
 - `PiModelSelectorTest`：排序后选择仍会命中原始 model index
 - `PiAgentSessionTest`：`modelSelection()` 会同时暴露 all/scoped 两个 selector 视图
 - `PiModelSelectorTest`：`Tab` 会在 all/scoped 双 scope 间切换，并命中 all-scope target
+- `PiCliModuleTest`：startup model resolution 会优先使用保存的 `defaultProvider/defaultModel`
+- `PiCliModuleTest`：只有 `defaultModel` 且唯一命中时，也会恢复保存的默认模型
+- `PiCliModuleTest`：保存的默认模型失效时会回退到原有解析逻辑
 
 最近通过：
 

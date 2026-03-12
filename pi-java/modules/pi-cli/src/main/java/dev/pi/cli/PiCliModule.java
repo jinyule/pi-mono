@@ -219,7 +219,7 @@ public final class PiCliModule {
             : new ExtensionRuntime(args.extensions());
         var scopedCycleModels = resolveScopedCycleModels(args.modelPatterns(), aiClient.modelRegistry());
         var cycleModels = resolveCycleModels(args, aiClient.modelRegistry(), scopedCycleModels);
-        var model = resolveModel(args, aiClient.modelRegistry(), scopedCycleModels);
+        var model = resolveModel(args, aiClient.modelRegistry(), scopedCycleModels, settingsManager);
         var initialThinkingLevel = resolveInitialThinkingLevel(args, scopedCycleModels);
 
         var builder = PiAgentSession.builder(
@@ -244,6 +244,15 @@ public final class PiCliModule {
     }
 
     static Model resolveModel(PiCliArgs args, ModelRegistry registry, List<PiAgentSession.CycleModel> scopedCycleModels) {
+        return resolveModel(args, registry, scopedCycleModels, null);
+    }
+
+    static Model resolveModel(
+        PiCliArgs args,
+        ModelRegistry registry,
+        List<PiAgentSession.CycleModel> scopedCycleModels,
+        SettingsManager settingsManager
+    ) {
         Objects.requireNonNull(args, "args");
         Objects.requireNonNull(registry, "registry");
 
@@ -279,6 +288,13 @@ public final class PiCliModule {
             return scopedCycleModels.getFirst().model();
         }
 
+        if (settingsManager != null) {
+            var defaultModel = resolveDefaultModel(registry, settingsManager);
+            if (defaultModel != null) {
+                return defaultModel;
+            }
+        }
+
         var models = allModels(registry);
         if (models.size() == 1) {
             return models.getFirst();
@@ -287,6 +303,26 @@ public final class PiCliModule {
             throw new IllegalStateException("No models registered. Configure the ModelRegistry before running the CLI.");
         }
         throw new IllegalStateException("Multiple models are registered; pass --provider and --model.");
+    }
+
+    private static Model resolveDefaultModel(ModelRegistry registry, SettingsManager settingsManager) {
+        var defaultProvider = settingsManager.effective().getString("/defaultProvider");
+        var defaultModel = settingsManager.effective().getString("/defaultModel");
+        if (defaultProvider != null && !defaultProvider.isBlank() && defaultModel != null && !defaultModel.isBlank()) {
+            try {
+                return registry.require(defaultProvider, defaultModel);
+            } catch (IllegalArgumentException | IllegalStateException ignored) {
+            }
+        }
+        if (defaultModel != null && !defaultModel.isBlank()) {
+            var matches = allModels(registry).stream()
+                .filter(model -> model.id().equals(defaultModel))
+                .toList();
+            if (matches.size() == 1) {
+                return matches.getFirst();
+            }
+        }
+        return null;
     }
 
     private static List<Model> allModels(ModelRegistry registry) {

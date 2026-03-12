@@ -16,12 +16,14 @@ import dev.pi.ai.model.Usage;
 import dev.pi.ai.registry.ApiProviderRegistry;
 import dev.pi.ai.registry.ModelRegistry;
 import dev.pi.ai.stream.Subscription;
+import dev.pi.session.Settings;
+import dev.pi.session.SettingsManager;
 import dev.pi.session.SessionManager;
 import dev.pi.tui.EditorAction;
 import dev.pi.tui.EditorKeybindings;
 import dev.pi.tui.Terminal;
-import java.nio.charset.StandardCharsets;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -306,10 +308,106 @@ class PiCliModuleTest {
         assertThat(scoped.getLast().thinkingLevel()).isNull();
     }
 
+    @Test
+    void resolveModelUsesSavedDefaultProviderAndModel() {
+        var registry = new ModelRegistry();
+        registry.registerAll(List.of(
+            model("claude-3-7-sonnet", "anthropic"),
+            model("gpt-4o", "openai")
+        ));
+        var settingsManager = SettingsManager.inMemory(
+            Settings.empty().withMutations(root -> {
+                root.put("defaultProvider", "openai");
+                root.put("defaultModel", "gpt-4o");
+            }),
+            Settings.empty()
+        );
+
+        var resolved = PiCliModule.resolveModel(defaultArgs(), registry, List.of(), settingsManager);
+
+        assertThat(resolved.provider()).isEqualTo("openai");
+        assertThat(resolved.id()).isEqualTo("gpt-4o");
+    }
+
+    @Test
+    void resolveModelUsesUniqueSavedDefaultModelWithoutProvider() {
+        var registry = new ModelRegistry();
+        registry.registerAll(List.of(
+            model("claude-3-7-sonnet", "anthropic"),
+            model("gpt-4o", "openai")
+        ));
+        var settingsManager = SettingsManager.inMemory(
+            Settings.empty().withMutations(root -> root.put("defaultModel", "gpt-4o")),
+            Settings.empty()
+        );
+
+        var resolved = PiCliModule.resolveModel(defaultArgs(), registry, List.of(), settingsManager);
+
+        assertThat(resolved.provider()).isEqualTo("openai");
+        assertThat(resolved.id()).isEqualTo("gpt-4o");
+    }
+
+    @Test
+    void resolveModelFallsBackWhenSavedDefaultNoLongerExists() {
+        var registry = new ModelRegistry();
+        registry.registerAll(List.of(model("claude-3-7-sonnet", "anthropic")));
+        var settingsManager = SettingsManager.inMemory(
+            Settings.empty().withMutations(root -> {
+                root.put("defaultProvider", "openai");
+                root.put("defaultModel", "gpt-4o");
+            }),
+            Settings.empty()
+        );
+
+        var resolved = PiCliModule.resolveModel(defaultArgs(), registry, List.of(), settingsManager);
+
+        assertThat(resolved.provider()).isEqualTo("anthropic");
+        assertThat(resolved.id()).isEqualTo("claude-3-7-sonnet");
+    }
+
     private static PiAiClient aiClientWithModels(Model... models) {
         var registry = new ModelRegistry();
         registry.registerAll(List.of(models));
         return new PiAiClient(new ApiProviderRegistry(), registry, CredentialResolver.defaultResolver());
+    }
+
+    private static PiCliArgs defaultArgs() {
+        return new PiCliArgs(
+            PiCliMode.INTERACTIVE,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of()
+        );
     }
 
     private static Model model(String id, String provider) {
