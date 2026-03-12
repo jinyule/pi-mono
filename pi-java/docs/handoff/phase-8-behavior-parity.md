@@ -408,6 +408,16 @@
   - 无可选替代模型时回显 `Only one model available`
   - 有可选项时打开 model selector overlay
   - 选中后回显 `Selected provider/model`
+- `Agent` 现在补了 `followUpMessages()` snapshot：
+  - interactive mode 可以读取当前 runtime follow-up queue
+  - 不会像 `drainFollowUpQueue()` 那样消费队列
+- `PiAgentSession` 现在暴露 `queuedFollowUps()`：
+  - 会把 runtime follow-up queue 渲染成 editor-friendly 文本列表
+  - 供 interactive mode 在状态区显示 pending message 预览
+- `PiInteractiveMode` 现在补了 pending follow-up queue status 首版：
+  - status 主行后会追加 `Follow-up: ...` 列表
+  - 底部会追加 `↳ alt+up to edit queued messages` 提示
+  - 当前首版只显示 follow-up queue，还没把 steering/compaction queue 合并进来
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+l`
@@ -425,7 +435,10 @@
 - `selectModel` 还是首版：
   - 当前只暴露 cycle scope 内的模型，不会打开完整 provider/model registry
   - selector description 只显示 thinking level，还没有 TS 的 richer provider/model metadata
-- 当前 `dequeue` 只恢复 follow-up queue，还没有 TS 那种 steering/compaction queue 合并恢复和 pending queue 可视化
+- 当前 queue parity 还是首版：
+  - `dequeue` 只恢复 follow-up queue
+  - status 也只显示 follow-up queue
+  - 还没有 TS 那种 steering/compaction queue 合并恢复与合并展示
 - resolver 现在只在 `--session-dir` 未显式指定时提供 current/all 双 scope；显式 `--session-dir` 仍退化成单 scope
 
 ## 测试
@@ -517,6 +530,8 @@
 - `PiInteractiveModeTest`：`Ctrl+L` 会打开 model selector，并把选中结果写回 session
 - `PiCliModuleTest`：从 `keybindings.json` 加载 `selectModel`
 - `KeyMatcherTest`：匹配 `ctrl+l`
+- `PiAgentSessionTest`：`queuedFollowUps()` 会反映 runtime queue 中的 follow-up 文本
+- `PiInteractiveModeTest`：streaming 中排队 follow-up 后，状态区会显示 pending message 和 `alt+up` 提示
 
 最近通过：
 
@@ -526,7 +541,7 @@
 
 ## 下一步建议
 
-1. pending queue parity：补 follow-up / steering queue 可视化，再决定是否合并到 status/footer
+1. pending queue parity：补 steering / compaction queue 合并展示与恢复
 2. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件
 2. selector parity：继续评估 model/settings selector 是否复用同一套层级
 3. selector parity：继续把 model selector 从 cycle scope 扩到 richer registry/provider metadata

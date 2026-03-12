@@ -297,6 +297,14 @@ public final class PiAgentSession implements PiInteractiveSession {
     }
 
     @Override
+    public List<String> queuedFollowUps() {
+        return sdkSession.agent().followUpMessages().stream()
+            .map(PiAgentSession::renderQueuedMessage)
+            .filter(text -> !text.isBlank())
+            .toList();
+    }
+
+    @Override
     public DequeueResult dequeue() {
         var messages = sdkSession.agent().drainFollowUpQueue();
         if (messages.isEmpty()) {

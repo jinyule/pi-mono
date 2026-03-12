@@ -699,7 +699,10 @@ class PiInteractiveModeTest {
             terminal.sendInput("\u001b\r");
 
             waitFor(() -> session.followUps.contains("Queued"));
-            assertThat(String.join("\n", terminal.getViewport())).contains("Queued follow-up");
+            var viewport = String.join("\n", terminal.getViewport());
+            assertThat(viewport).contains("Queued follow-up");
+            assertThat(viewport).contains("Follow-up: Queued");
+            assertThat(viewport).contains("alt+up to edit queued messages");
             assertThat(session.prompts).doesNotContain("Queued");
         } finally {
             PiAppKeybindings.setGlobal(previousApp);
@@ -826,6 +829,7 @@ class PiInteractiveModeTest {
         private boolean streaming;
         private List<String> reloadWarnings = List.of();
         private final List<String> followUps = new ArrayList<>();
+        private final List<String> queuedFollowUps = new ArrayList<>();
         private List<SelectableModel> selectableModels = List.of();
         private DequeueResult dequeueResult = new DequeueResult("", 0);
         private AgentState state = new AgentState(
@@ -1077,12 +1081,19 @@ class PiInteractiveModeTest {
         @Override
         public CompletionStage<Void> followUp(String text) {
             followUps.add(text);
+            queuedFollowUps.add(text);
             return CompletableFuture.completedFuture(null);
+        }
+
+        @Override
+        public List<String> queuedFollowUps() {
+            return List.copyOf(queuedFollowUps);
         }
 
         @Override
         public DequeueResult dequeue() {
             var current = dequeueResult;
+            queuedFollowUps.clear();
             dequeueResult = new DequeueResult("", 0);
             return current;
         }

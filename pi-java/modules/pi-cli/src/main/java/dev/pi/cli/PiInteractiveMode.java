@@ -188,19 +188,27 @@ public final class PiInteractiveMode implements AutoCloseable {
     }
 
     private String renderStatus(AgentState state) {
+        var lines = new ArrayList<String>();
         if (manualStatus != null && !manualStatus.isBlank()) {
-            return manualStatus;
+            lines.add(manualStatus);
+        } else if (state.error() != null && !state.error().isBlank()) {
+            lines.add("Error: " + state.error());
+        } else if (!state.pendingToolCalls().isEmpty()) {
+            lines.add("Running tools: " + String.join(", ", state.pendingToolCalls()));
+        } else if (state.isStreaming()) {
+            lines.add("Streaming response...");
+        } else {
+            lines.add("Ready");
         }
-        if (state.error() != null && !state.error().isBlank()) {
-            return "Error: " + state.error();
+
+        var queuedFollowUps = session.queuedFollowUps();
+        if (!queuedFollowUps.isEmpty()) {
+            for (var message : queuedFollowUps) {
+                lines.add("Follow-up: " + message);
+            }
+            lines.add("↳ " + dequeueKeyDisplay() + " to edit queued messages");
         }
-        if (!state.pendingToolCalls().isEmpty()) {
-            return "Running tools: " + String.join(", ", state.pendingToolCalls());
-        }
-        if (state.isStreaming()) {
-            return "Streaming response...";
-        }
-        return "Ready";
+        return String.join("\n", lines);
     }
 
     private String renderFooter(AgentState state) {
@@ -820,6 +828,11 @@ public final class PiInteractiveMode implements AutoCloseable {
             manualStatus = "Error: " + rootMessage(exception);
         }
         renderState(session.state());
+    }
+
+    private String dequeueKeyDisplay() {
+        var keys = PiAppKeybindings.global().getKeys(PiAppAction.DEQUEUE);
+        return keys.isEmpty() ? "dequeue" : keys.getFirst();
     }
 
     private static String formatModelCycleStatus(PiInteractiveSession.ModelCycleResult result) {

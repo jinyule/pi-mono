@@ -61,6 +61,10 @@ public interface PiInteractiveSession {
         throw new UnsupportedOperationException("Follow-up queueing is not available");
     }
 
+    default List<String> queuedFollowUps() {
+        return List.of();
+    }
+
     default DequeueResult dequeue() {
         throw new UnsupportedOperationException("Queued message restore is not available");
     }

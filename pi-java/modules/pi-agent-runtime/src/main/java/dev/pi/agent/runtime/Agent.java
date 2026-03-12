@@ -169,6 +169,12 @@ public final class Agent {
         }
     }
 
+    public List<AgentMessage> followUpMessages() {
+        synchronized (monitor) {
+            return List.copyOf(followUpQueue);
+        }
+    }
+
     public void clearAllQueues() {
         synchronized (monitor) {
             steeringQueue.clear();

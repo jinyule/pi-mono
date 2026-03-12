@@ -503,6 +503,23 @@ class PiAgentSessionTest {
         assertThat(session.state().thinkingLevel()).isEqualTo(ThinkingLevel.HIGH);
     }
 
+    @Test
+    void queuedFollowUpsExposeQueuedMessages() {
+        var session = PiAgentSession.builder(
+            testModel(),
+            SessionManager.inMemory("/workspace"),
+            SettingsManager.inMemory(),
+            new InstructionResources(List.of(), "", List.of())
+        )
+            .streamFunction(fakeAssistant("ready"))
+            .build();
+
+        session.followUp("first queued").toCompletableFuture().join();
+        session.followUp("second queued").toCompletableFuture().join();
+
+        assertThat(session.queuedFollowUps()).containsExactly("first queued", "second queued");
+    }
+
     private static Model testModel() {
         return new Model(
             "test-model",
