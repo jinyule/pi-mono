@@ -1,6 +1,8 @@
 package dev.pi.cli;
 
 import dev.pi.tui.Component;
+import dev.pi.tui.EditorAction;
+import dev.pi.tui.EditorKeybindings;
 import dev.pi.tui.Focusable;
 import dev.pi.tui.SettingItem;
 import dev.pi.tui.SettingsList;
@@ -8,6 +10,7 @@ import dev.pi.tui.SettingsListOptions;
 import dev.pi.tui.SettingsListTheme;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 
@@ -83,7 +86,10 @@ public final class PiSettingsSelector implements Component, Focusable {
     public List<String> render(int width) {
         var lines = new ArrayList<String>();
         lines.add(PiCliAnsi.bold("Settings"));
-        lines.add(PiCliAnsi.muted("Type to search. Enter or Space changes. Esc cancels."));
+        lines.add(PiCliAnsi.muted(
+            "Type to search. %s or space changes. %s cancels."
+                .formatted(keyHint(EditorAction.SUBMIT), keyHint(EditorAction.SELECT_CANCEL))
+        ));
         lines.add("");
         lines.addAll(settingsList.render(width));
         return List.copyOf(lines);
@@ -129,7 +135,7 @@ public final class PiSettingsSelector implements Component, Focusable {
 
             @Override
             public String cursor() {
-                return PiCliAnsi.accent("→ ");
+                return PiCliAnsi.accent("→");
             }
 
             @Override
@@ -137,5 +143,10 @@ public final class PiSettingsSelector implements Component, Focusable {
                 return PiCliAnsi.muted(text);
             }
         };
+    }
+
+    private static String keyHint(EditorAction action) {
+        var keys = EditorKeybindings.global().getKeys(action);
+        return keys.isEmpty() ? action.name().toLowerCase(Locale.ROOT) : keys.getFirst();
     }
 }

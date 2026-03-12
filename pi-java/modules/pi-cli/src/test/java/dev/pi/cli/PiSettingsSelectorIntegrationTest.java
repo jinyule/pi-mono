@@ -9,9 +9,12 @@ import dev.pi.ai.model.Model;
 import dev.pi.ai.model.ThinkingLevel;
 import dev.pi.ai.model.Usage;
 import dev.pi.ai.stream.Subscription;
+import dev.pi.tui.EditorAction;
+import dev.pi.tui.EditorKeybindings;
 import dev.pi.tui.Terminal;
 import dev.pi.tui.VirtualTerminal;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -85,6 +88,31 @@ class PiSettingsSelectorIntegrationTest {
         assertThat(session.updatedSettings).contains("transport=sse");
 
         mode.stop();
+    }
+
+    @Test
+    void settingsSelectorHintsReflectCustomKeybindings() {
+        var previous = EditorKeybindings.global();
+        try {
+            EditorKeybindings.setGlobal(new EditorKeybindings(Map.of(
+                EditorAction.SUBMIT, List.of("ctrl+j"),
+                EditorAction.SELECT_CANCEL, List.of("alt+x")
+            )));
+
+            var selector = new PiSettingsSelector(
+                new FakeSettingsSession().settingsSelection(),
+                (settingId, value) -> {
+                },
+                () -> {
+                }
+            );
+
+            assertThat(String.join("\n", selector.render(90)))
+                .contains("Type to search. ctrl+j or space changes. alt+x cancels.")
+                .contains("Type to search · ctrl+j/space to change · alt+x to cancel");
+        } finally {
+            EditorKeybindings.setGlobal(previous);
+        }
     }
 
     private static final class FakeSettingsSession implements PiInteractiveSession {

@@ -132,7 +132,9 @@
 - 已完成第六十三刀：
   - interactive model selector detail field hierarchy first cut
 - 已完成第六十四刀：
-  - interactive model selector wrapped hints/warning first cut
+
+- 已完成第六十五刀：
+  - interactive settings selector keybinding-aware hints first cut
 
 ## 本轮落地
 
@@ -762,6 +764,11 @@
 - `PiModelSelectorTest`：detail field 的 label/value 会分别渲染 bold/muted ANSI
 - `PiModelSelectorTest`：窄终端下 warning/hint 会按宽度换行且不超宽
 
+- PiSettingsSelector 现在把 settings overlay 顶部 hint 接到 EditorKeybindings.global()，submit/cancel 文案会随配置变化
+  - space 继续保留为固定 secondary activate key
+- SettingsList 现在把底部 search/change/cancel hint 也改成读取 EditorKeybindings.global()，不再硬编码 enter/esc
+- PiSettingsSelectorIntegrationTest：custom keybindings 下会覆盖 settings selector 顶部/底部 hint 渲染
+
 最近通过：
 
 ```bash
@@ -771,6 +778,6 @@
 ## 下一步建议
 
 1. selector parity：继续评估 model selector 是否要补 all-scope warning/hint copy 的 TS 细节，或继续压空状态 copy/层级
-2. settings selector parity：继续评估 `theme` / `hide thinking` / `quiet startup`；这些键在 Java 侧还缺真实 runtime 绑定
+2. settings selector parity：继续评估 `theme` / `hide thinking` / `quiet startup`；当前已补 hint/keybinding parity，但这些键在 Java 侧还缺真实 runtime 绑定
 3. pending queue parity：继续补 compaction queue 合并展示与恢复；steering/follow-up runtime queue 已接上，但 Java 侧仍没有 compaction pending queue
 4. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件

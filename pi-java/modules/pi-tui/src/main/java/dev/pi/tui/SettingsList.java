@@ -254,9 +254,11 @@ public final class SettingsList implements Component, Focusable {
 
     private void addHintLine(List<String> lines, int width) {
         lines.add("");
+        var submitKey = keyHint(EditorAction.SUBMIT);
+        var cancelKey = keyHint(EditorAction.SELECT_CANCEL);
         var hint = searchEnabled
-            ? "  Type to search · Enter/Space to change · Esc to cancel"
-            : "  Enter/Space to change · Esc to cancel";
+            ? "  Type to search · %s/space to change · %s to cancel".formatted(submitKey, cancelKey)
+            : "  %s/space to change · %s to cancel".formatted(submitKey, cancelKey);
         lines.add(TerminalText.truncateToWidth(theme.hint(hint), width));
     }
 
@@ -268,5 +270,10 @@ public final class SettingsList implements Component, Focusable {
             }
         }
         return queryIndex == query.length();
+    }
+
+    private static String keyHint(EditorAction action) {
+        var keys = EditorKeybindings.global().getKeys(action);
+        return keys.isEmpty() ? action.name().toLowerCase(Locale.ROOT) : keys.getFirst();
     }
 }
