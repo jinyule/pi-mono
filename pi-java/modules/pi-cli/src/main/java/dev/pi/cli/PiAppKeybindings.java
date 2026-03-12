@@ -12,6 +12,8 @@ final class PiAppKeybindings {
         List.of("escape"),
         PiAppAction.RESUME,
         List.of(),
+        PiAppAction.CYCLE_MODEL_FORWARD,
+        List.of("ctrl+p"),
         PiAppAction.CYCLE_THINKING_LEVEL,
         List.of("shift+tab"),
         PiAppAction.TREE,

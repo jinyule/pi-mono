@@ -38,6 +38,8 @@ public final class PiAgentSession implements PiInteractiveSession {
     private final String systemPrompt;
     private final String appendSystemPrompt;
     private final ReloadAction reloadAction;
+    private final List<CycleModel> cycleModels;
+    private final boolean scopedCycleModels;
 
     private PiAgentSession(
         PiSdkSession sdkSession,
@@ -46,7 +48,9 @@ public final class PiAgentSession implements PiInteractiveSession {
         InstructionResources instructionResources,
         String systemPrompt,
         String appendSystemPrompt,
-        ReloadAction reloadAction
+        ReloadAction reloadAction,
+        List<CycleModel> cycleModels,
+        boolean scopedCycleModels
     ) {
         this.sdkSession = Objects.requireNonNull(sdkSession, "sdkSession");
         this.settingsManager = Objects.requireNonNull(settingsManager, "settingsManager");
@@ -55,6 +59,8 @@ public final class PiAgentSession implements PiInteractiveSession {
         this.systemPrompt = systemPrompt;
         this.appendSystemPrompt = appendSystemPrompt;
         this.reloadAction = reloadAction;
+        this.cycleModels = List.copyOf(Objects.requireNonNullElse(cycleModels, List.of()));
+        this.scopedCycleModels = scopedCycleModels;
     }
 
     public static Builder builder(
@@ -129,6 +135,27 @@ public final class PiAgentSession implements PiInteractiveSession {
     @Override
     public void abort() {
         sdkSession.abort();
+    }
+
+    @Override
+    public ModelCycleResult cycleModelForward() {
+        if (sdkSession.state().isStreaming()) {
+            throw new IllegalStateException("Wait for the current response to finish before switching models");
+        }
+        if (cycleModels.size() <= 1) {
+            return null;
+        }
+
+        var currentIndex = indexOfModel(sdkSession.state().model());
+        var nextIndex = currentIndex < 0 ? 0 : (currentIndex + 1) % cycleModels.size();
+        var next = cycleModels.get(nextIndex);
+        var nextThinkingLevel = applyCycleModel(next);
+        return new ModelCycleResult(
+            next.model().provider(),
+            next.model().id(),
+            nextThinkingLevel == null ? "off" : nextThinkingLevel.value(),
+            scopedCycleModels
+        );
     }
 
     @Override
@@ -335,6 +362,15 @@ public final class PiAgentSession implements PiInteractiveSession {
         List<String> reload() throws Exception;
     }
 
+    public record CycleModel(
+        Model model,
+        ThinkingLevel thinkingLevel
+    ) {
+        public CycleModel {
+            Objects.requireNonNull(model, "model");
+        }
+    }
+
     public static final class Builder {
         private final Model model;
         private final SessionManager sessionManager;
@@ -357,6 +393,8 @@ public final class PiAgentSession implements PiInteractiveSession {
         private final Map<String, String> headers = new LinkedHashMap<>();
         private Long maxRetryDelayMs;
         private ThinkingBudgets thinkingBudgets;
+        private List<CycleModel> cycleModels = List.of();
+        private boolean scopedCycleModels;
 
         private Builder(
             Model model,
@@ -463,6 +501,12 @@ public final class PiAgentSession implements PiInteractiveSession {
             return this;
         }
 
+        public Builder cycleModels(List<CycleModel> cycleModels, boolean scopedCycleModels) {
+            this.cycleModels = cycleModels == null ? List.of() : List.copyOf(cycleModels);
+            this.scopedCycleModels = scopedCycleModels;
+            return this;
+        }
+
         public PiAgentSession build() {
             if (streamFunction == null) {
                 throw new IllegalStateException("PiAgentSession streamFunction must be configured");
@@ -497,10 +541,44 @@ public final class PiAgentSession implements PiInteractiveSession {
                 effectiveInstructionResources,
                 systemPrompt,
                 appendSystemPrompt,
-                reloadAction
+                reloadAction,
+                cycleModels,
+                scopedCycleModels
             );
         }
 
+    }
+
+    private int indexOfModel(Model model) {
+        for (var index = 0; index < cycleModels.size(); index++) {
+            if (sameModel(cycleModels.get(index).model(), model)) {
+                return index;
+            }
+        }
+        return -1;
+    }
+
+    private ThinkingLevel applyCycleModel(CycleModel next) {
+        var currentThinkingLevel = sdkSession.state().thinkingLevel();
+        var nextThinkingLevel = next.model().reasoning()
+            ? (next.thinkingLevel() == null ? currentThinkingLevel : next.thinkingLevel())
+            : null;
+
+        sdkSession.agent().setModel(next.model());
+        try {
+            sessionManager().appendModelChange(next.model().provider(), next.model().id());
+            if (!Objects.equals(currentThinkingLevel, nextThinkingLevel)) {
+                sdkSession.agent().setThinkingLevel(nextThinkingLevel);
+                sessionManager().appendThinkingLevelChange(nextThinkingLevel == null ? "off" : nextThinkingLevel.value());
+            }
+        } catch (IOException exception) {
+            throw new IllegalStateException("Failed to persist model change", exception);
+        }
+        return nextThinkingLevel;
+    }
+
+    private static boolean sameModel(Model left, Model right) {
+        return Objects.equals(left.provider(), right.provider()) && Objects.equals(left.id(), right.id());
     }
 
     private static String rootMessage(Throwable throwable) {

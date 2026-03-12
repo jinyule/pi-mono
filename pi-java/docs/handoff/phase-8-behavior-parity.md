@@ -67,6 +67,8 @@
   - interactive footer provider-aware model summary first cut
 - 已完成第三十一刀：
   - interactive cycleThinkingLevel app keybinding first cut
+- 已完成第三十二刀：
+  - interactive cycleModelForward app keybinding first cut
 
 ## 本轮落地
 
@@ -251,6 +253,23 @@
   - 每次切换都会调用 agent state update
   - 并追加 `thinking_level_change`
   - `off` 会按字符串 `off` 写入，保持和现有 session replay 兼容
+- `PiAppKeybindings` 现在继续补了 `cycleModelForward`：
+  - 默认键位是 `ctrl+p`
+  - `PiCliKeybindingsLoader` 现在支持 `cycleModelForward` alias
+- `PiCliModule` 现在把 `--models` 接到了 interactive model cycle 首版：
+  - 没有显式 `--provider/--model` 时，会优先从 `--models` scope 里选第一个 model 作为启动 model
+  - scope 解析首版支持 `provider/modelId`、纯 `modelId`、contains fallback，以及 `*` / `?` / `[]` 风格 glob
+  - scope pattern 首版也支持 `:high` / `:low` 这类 thinking suffix，并把它带进 cycle target
+  - 如果 `--models` 没解析出任何命中，会退回 registry 全量 models，避免把 cycle 直接做死
+- `PiAgentSession` 现在支持 forward model cycle：
+  - cycle 列表优先使用 `--models` 解析出的 scope；否则退回当前 registry 全量 models
+  - 每次切换都会更新 agent state，并追加 `model_change`
+  - 若目标 model 不支持 reasoning，会把 thinking level 清成 `off` 并追加 `thinking_level_change`
+  - 若目标 scoped model 自带 thinking suffix，会在切换时一并应用
+- `PiInteractiveMode` 现在会在 prompt 层消费 `cycleModelForward`：
+  - 触发后调用 `session.cycleModelForward()`
+  - 成功时状态行回显 `Switched to provider/model`
+  - 若目标 thinking 非 `off`，会追加 `(thinking: level)`
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -317,6 +336,10 @@
 - `KeyMatcherTest`：`shift+tab` 匹配
 - `PiInteractiveModeTest`：app keybinding 驱动 thinking level cycle
 - `PiCliModuleTest`：从 `keybindings.json` 加载 `cycleThinkingLevel`
+- `PiAgentSessionTest`：forward cycle 会持久化 `model_change` / `thinking_level_change`
+- `PiInteractiveModeTest`：app keybinding 驱动 model forward cycle
+- `PiCliModuleTest`：从 `keybindings.json` 加载 `cycleModelForward`
+- `PiCliModuleTest`：`--models` pattern 会解析成 scoped cycle models
 
 最近通过：
 
@@ -328,4 +351,4 @@
 
 1. footer parity：继续评估 context window/auto-compact 指标，以及更窄宽度下的截断策略
 2. selector parity：继续评估 model/settings selector 是否复用同一套层级
-3. keybindings：继续评估 app 层是否要补 cycleModel / newSession / followUp 等动作
+3. keybindings：继续评估 cycleModelBackward / selectModel / newSession / followUp / dequeue 等动作

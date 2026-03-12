@@ -10,6 +10,7 @@ import dev.pi.ai.model.Message;
 import dev.pi.ai.model.Model;
 import dev.pi.ai.model.StopReason;
 import dev.pi.ai.model.TextContent;
+import dev.pi.ai.model.ThinkingLevel;
 import dev.pi.ai.model.Usage;
 import dev.pi.ai.stream.AssistantMessageEventStream;
 import dev.pi.session.InstructionResourceLoader;
@@ -259,6 +260,54 @@ class PiAgentSessionTest {
         assertThat(result.settingsErrors()).isEmpty();
         assertThat(result.resourceErrors()).isEmpty();
         assertThat(result.extensionWarnings()).containsExactly("reload-plugin.jar: broken extension");
+    }
+
+    @Test
+    void cyclesForwardThroughScopedModelsAndPersistsModelChange() {
+        var sessionManager = SessionManager.inMemory("/workspace");
+        var nextModel = new Model(
+            "reasoning-model",
+            "Reasoning Model",
+            "openai-responses",
+            "openai",
+            "https://example.com",
+            true,
+            List.of("text"),
+            new Usage.Cost(0.0, 0.0, 0.0, 0.0, 0.0),
+            128_000,
+            8_192,
+            null,
+            null
+        );
+
+        var session = PiAgentSession.builder(
+            testModel(),
+            sessionManager,
+            SettingsManager.inMemory(),
+            new InstructionResources(List.of(), "", List.of())
+        )
+            .streamFunction(fakeAssistant("Ack"))
+            .cycleModels(List.of(
+                new PiAgentSession.CycleModel(testModel(), null),
+                new PiAgentSession.CycleModel(nextModel, ThinkingLevel.HIGH)
+            ), true)
+            .build();
+
+        var result = session.cycleModelForward();
+
+        assertThat(result).isNotNull();
+        assertThat(result.modelId()).isEqualTo("reasoning-model");
+        assertThat(result.thinkingLevel()).isEqualTo("high");
+        assertThat(result.scoped()).isTrue();
+        assertThat(session.state().model().id()).isEqualTo("reasoning-model");
+        assertThat(session.state().thinkingLevel()).isEqualTo(ThinkingLevel.HIGH);
+
+        var entries = sessionManager.entries();
+        assertThat(entries.get(entries.size() - 2)).isInstanceOf(dev.pi.session.SessionEntry.ModelChangeEntry.class);
+        assertThat(entries.get(entries.size() - 1)).isInstanceOf(dev.pi.session.SessionEntry.ThinkingLevelChangeEntry.class);
+        assertThat(((dev.pi.session.SessionEntry.ModelChangeEntry) entries.get(entries.size() - 2)).modelId()).isEqualTo("reasoning-model");
+        assertThat(((dev.pi.session.SessionEntry.ThinkingLevelChangeEntry) entries.get(entries.size() - 1)).thinkingLevel())
+            .isEqualTo("high");
     }
 
     private static Model testModel() {

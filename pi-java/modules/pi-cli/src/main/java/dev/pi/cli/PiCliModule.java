@@ -3,6 +3,7 @@ package dev.pi.cli;
 import dev.pi.agent.runtime.AgentLoopConfig;
 import dev.pi.ai.PiAiClient;
 import dev.pi.ai.model.Model;
+import dev.pi.ai.model.ThinkingLevel;
 import dev.pi.ai.registry.ModelRegistry;
 import dev.pi.extension.spi.ExtensionRuntime;
 import dev.pi.session.InstructionResourceLoader;
@@ -19,6 +20,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Pattern;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Supplier;
@@ -215,7 +217,10 @@ public final class PiCliModule {
         var extensionRuntime = args.noExtensions() || args.extensions().isEmpty()
             ? null
             : new ExtensionRuntime(args.extensions());
-        var model = resolveModel(args, aiClient.modelRegistry());
+        var scopedCycleModels = resolveScopedCycleModels(args.modelPatterns(), aiClient.modelRegistry());
+        var cycleModels = resolveCycleModels(args, aiClient.modelRegistry(), scopedCycleModels);
+        var model = resolveModel(args, aiClient.modelRegistry(), scopedCycleModels);
+        var initialThinkingLevel = resolveInitialThinkingLevel(args, scopedCycleModels);
 
         var builder = PiAgentSession.builder(
             model,
@@ -227,15 +232,16 @@ public final class PiCliModule {
             .streamFunction(AgentLoopConfig.AssistantStreamFunction.fromClient(aiClient))
             .systemPrompt(args.systemPrompt())
             .appendSystemPrompt(args.appendSystemPrompt())
-            .thinkingLevel(args.thinking() == null ? null : args.thinking().toReasoningLevel())
-            .apiKey(args.apiKey());
+            .thinkingLevel(initialThinkingLevel)
+            .apiKey(args.apiKey())
+            .cycleModels(cycleModels, !args.modelPatterns().isEmpty() && !scopedCycleModels.isEmpty());
         if (extensionRuntime != null) {
             builder.reloadAction(() -> extensionRuntime.reload().failures().stream().map(PiCliModule::formatExtensionFailure).toList());
         }
         return builder.build();
     }
 
-    private static Model resolveModel(PiCliArgs args, ModelRegistry registry) {
+    static Model resolveModel(PiCliArgs args, ModelRegistry registry, List<PiAgentSession.CycleModel> scopedCycleModels) {
         Objects.requireNonNull(args, "args");
         Objects.requireNonNull(registry, "registry");
 
@@ -267,6 +273,10 @@ public final class PiCliModule {
             throw new IllegalStateException("Model id %s is ambiguous; pass --provider as well".formatted(args.model()));
         }
 
+        if (!args.modelPatterns().isEmpty() && !scopedCycleModels.isEmpty()) {
+            return scopedCycleModels.getFirst().model();
+        }
+
         var models = allModels(registry);
         if (models.size() == 1) {
             return models.getFirst();
@@ -283,6 +293,123 @@ public final class PiCliModule {
             models.addAll(registry.getModels(provider));
         }
         return List.copyOf(models);
+    }
+
+    static List<PiAgentSession.CycleModel> resolveCycleModels(
+        PiCliArgs args,
+        ModelRegistry registry,
+        List<PiAgentSession.CycleModel> scopedCycleModels
+    ) {
+        Objects.requireNonNull(args, "args");
+        Objects.requireNonNull(registry, "registry");
+        Objects.requireNonNull(scopedCycleModels, "scopedCycleModels");
+        if (!args.modelPatterns().isEmpty() && !scopedCycleModels.isEmpty()) {
+            return scopedCycleModels;
+        }
+        return allModels(registry).stream()
+            .map(model -> new PiAgentSession.CycleModel(model, null))
+            .toList();
+    }
+
+    static List<PiAgentSession.CycleModel> resolveScopedCycleModels(List<String> patterns, ModelRegistry registry) {
+        Objects.requireNonNull(patterns, "patterns");
+        Objects.requireNonNull(registry, "registry");
+        var availableModels = allModels(registry);
+        var scopedModels = new ArrayList<PiAgentSession.CycleModel>();
+        for (var rawPattern : patterns) {
+            if (rawPattern == null || rawPattern.isBlank()) {
+                continue;
+            }
+            var parsedPattern = parseCycleModelPattern(rawPattern);
+            var matches = parsedPattern.glob()
+                ? availableModels.stream().filter(model -> matchesGlob(parsedPattern.pattern(), model)).toList()
+                : matchExactOrContains(parsedPattern.pattern(), availableModels);
+            for (var model : matches) {
+                if (scopedModels.stream().anyMatch(existing -> sameModel(existing.model(), model))) {
+                    continue;
+                }
+                scopedModels.add(new PiAgentSession.CycleModel(model, parsedPattern.thinkingLevel()));
+            }
+        }
+        return List.copyOf(scopedModels);
+    }
+
+    private static List<Model> matchExactOrContains(String pattern, List<Model> availableModels) {
+        var exactMatches = availableModels.stream()
+            .filter(model -> fullModelId(model).equalsIgnoreCase(pattern) || model.id().equalsIgnoreCase(pattern))
+            .toList();
+        if (!exactMatches.isEmpty()) {
+            return exactMatches;
+        }
+        var normalized = pattern.toLowerCase();
+        return availableModels.stream()
+            .filter(model -> fullModelId(model).toLowerCase().contains(normalized) || model.id().toLowerCase().contains(normalized))
+            .toList();
+    }
+
+    private static ParsedCycleModelPattern parseCycleModelPattern(String rawPattern) {
+        var colonIndex = rawPattern.lastIndexOf(':');
+        if (colonIndex <= 0 || colonIndex == rawPattern.length() - 1) {
+            return new ParsedCycleModelPattern(rawPattern, null, hasGlob(rawPattern));
+        }
+        var suffix = rawPattern.substring(colonIndex + 1);
+        try {
+            var thinkingLevel = PiCliThinkingLevel.fromValue(suffix).toReasoningLevel();
+            var pattern = rawPattern.substring(0, colonIndex);
+            return new ParsedCycleModelPattern(pattern, thinkingLevel, hasGlob(pattern));
+        } catch (IllegalArgumentException ignored) {
+            return new ParsedCycleModelPattern(rawPattern, null, hasGlob(rawPattern));
+        }
+    }
+
+    private static boolean hasGlob(String pattern) {
+        return pattern.indexOf('*') >= 0 || pattern.indexOf('?') >= 0 || pattern.indexOf('[') >= 0;
+    }
+
+    private static boolean matchesGlob(String pattern, Model model) {
+        var regex = globToRegex(pattern);
+        return regex.matcher(fullModelId(model)).matches() || regex.matcher(model.id()).matches();
+    }
+
+    private static Pattern globToRegex(String pattern) {
+        var regex = new StringBuilder("^");
+        for (var index = 0; index < pattern.length(); index++) {
+            var ch = pattern.charAt(index);
+            switch (ch) {
+                case '*' -> regex.append(".*");
+                case '?' -> regex.append('.');
+                case '[', ']' -> regex.append(ch);
+                case '\\', '.', '(', ')', '+', '{', '}', '^', '$', '|' -> regex.append('\\').append(ch);
+                default -> regex.append(ch);
+            }
+        }
+        regex.append('$');
+        return Pattern.compile(regex.toString(), Pattern.CASE_INSENSITIVE);
+    }
+
+    private static ThinkingLevel resolveInitialThinkingLevel(PiCliArgs args, List<PiAgentSession.CycleModel> scopedCycleModels) {
+        if (args.thinking() != null) {
+            return args.thinking().toReasoningLevel();
+        }
+        if (args.provider() != null || args.model() != null || args.modelPatterns().isEmpty() || scopedCycleModels.isEmpty()) {
+            return null;
+        }
+        return scopedCycleModels.getFirst().thinkingLevel();
+    }
+
+    private static String fullModelId(Model model) {
+        return model.provider() + "/" + model.id();
+    }
+
+    private static boolean sameModel(Model left, Model right) {
+        return left.provider().equals(right.provider()) && left.id().equals(right.id());
+    }
+
+    private record ParsedCycleModelPattern(
+        String pattern,
+        ThinkingLevel thinkingLevel,
+        boolean glob
+    ) {
     }
 
     private static String formatExtensionFailure(dev.pi.extension.spi.ExtensionLoadFailure failure) {

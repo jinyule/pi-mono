@@ -33,6 +33,10 @@ public interface PiInteractiveSession {
 
     void abort();
 
+    default ModelCycleResult cycleModelForward() {
+        throw new UnsupportedOperationException("Model cycling is not available");
+    }
+
     default String cycleThinkingLevel() {
         throw new UnsupportedOperationException("Thinking level cycling is not available");
     }
@@ -90,6 +94,14 @@ public interface PiInteractiveSession {
         String summary,
         String firstKeptEntryId,
         int tokensBefore
+    ) {
+    }
+
+    record ModelCycleResult(
+        String provider,
+        String modelId,
+        String thinkingLevel,
+        boolean scoped
     ) {
     }
 

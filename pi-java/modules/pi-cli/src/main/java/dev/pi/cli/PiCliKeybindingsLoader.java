@@ -47,6 +47,8 @@ final class PiCliKeybindingsLoader {
         PiAppAction.INTERRUPT,
         "resume",
         PiAppAction.RESUME,
+        "cycleModelForward",
+        PiAppAction.CYCLE_MODEL_FORWARD,
         "cycleThinkingLevel",
         PiAppAction.CYCLE_THINKING_LEVEL,
         "tree",

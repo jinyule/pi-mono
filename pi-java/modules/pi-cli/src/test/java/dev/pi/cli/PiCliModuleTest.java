@@ -232,6 +232,7 @@ class PiCliModuleTest {
             {
               "interrupt": "alt+x",
               "resume": "alt+u",
+              "cycleModelForward": "alt+p",
               "cycleThinkingLevel": "alt+i",
               "tree": "alt+t",
               "fork": "alt+f",
@@ -265,6 +266,7 @@ class PiCliModuleTest {
             assertThat(EditorKeybindings.global().getKeys(EditorAction.SESSION_SORT_TOGGLE)).containsExactly("ctrl+g");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.INTERRUPT)).containsExactly("alt+x");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.RESUME)).containsExactly("alt+u");
+            assertThat(PiAppKeybindings.global().getKeys(PiAppAction.CYCLE_MODEL_FORWARD)).containsExactly("alt+p");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.CYCLE_THINKING_LEVEL)).containsExactly("alt+i");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.TREE)).containsExactly("alt+t");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.FORK)).containsExactly("alt+f");
@@ -274,6 +276,24 @@ class PiCliModuleTest {
             EditorKeybindings.setGlobal(previous);
             PiAppKeybindings.setGlobal(previousApp);
         }
+    }
+
+    @Test
+    void resolvesScopedCycleModelsFromPatterns() {
+        var registry = new ModelRegistry();
+        registry.registerAll(List.of(
+            model("claude-3-7-sonnet", "anthropic"),
+            model("claude-3-5-haiku", "anthropic"),
+            model("gpt-4o", "openai")
+        ));
+
+        var scoped = PiCliModule.resolveScopedCycleModels(List.of("anthropic/*:high", "gpt-4o"), registry);
+
+        assertThat(scoped)
+            .extracting(cycleModel -> cycleModel.model().provider() + "/" + cycleModel.model().id())
+            .containsExactly("anthropic/claude-3-7-sonnet", "anthropic/claude-3-5-haiku", "openai/gpt-4o");
+        assertThat(scoped.getFirst().thinkingLevel()).isEqualTo(dev.pi.ai.model.ThinkingLevel.HIGH);
+        assertThat(scoped.getLast().thinkingLevel()).isNull();
     }
 
     private static PiAiClient aiClientWithModels(Model... models) {

@@ -377,6 +377,31 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void usesAppKeybindingForCycleModelForward() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(100, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+        var previousApp = PiAppKeybindings.global();
+        try {
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(
+                PiAppAction.CYCLE_MODEL_FORWARD,
+                java.util.List.of("ctrl+p")
+            )));
+
+            mode.start();
+            terminal.sendInput("\u0010");
+
+            waitFor(() -> "next-model".equals(session.lastModelIdChange));
+            assertThat(String.join("\n", terminal.getViewport()))
+                .contains("Switched to openai/next-model")
+                .contains("model: openai/next-model");
+        } finally {
+            PiAppKeybindings.setGlobal(previousApp);
+            mode.stop();
+        }
+    }
+
+    @Test
     void usesAppKeybindingForCycleThinkingLevel() {
         var session = new FakeSession().withReasoningModel("reasoning-model", null);
         var terminal = new VirtualTerminal(100, 16);
@@ -407,6 +432,7 @@ class PiInteractiveModeTest {
         private int abortCount;
         private int resumeCount;
         private String lastThinkingLevelChange;
+        private String lastModelIdChange;
         private List<String> reloadWarnings = List.of();
         private AgentState state = new AgentState(
             "",
@@ -492,6 +518,28 @@ class PiInteractiveModeTest {
         @Override
         public void abort() {
             abortCount += 1;
+        }
+
+        @Override
+        public ModelCycleResult cycleModelForward() {
+            var nextModel = new Model(
+                "next-model",
+                "Next Model",
+                state.model().api(),
+                state.model().provider(),
+                "https://example.com",
+                true,
+                List.of("text"),
+                new Usage.Cost(0.0, 0.0, 0.0, 0.0, 0.0),
+                128_000,
+                8_192,
+                null,
+                null
+            );
+            state = state.withModel(nextModel);
+            lastModelIdChange = nextModel.id();
+            emitState();
+            return new ModelCycleResult(nextModel.provider(), nextModel.id(), "off", false);
         }
 
         @Override

@@ -492,6 +492,10 @@ public final class PiInteractiveMode implements AutoCloseable {
                 handleResumeCommand();
                 return;
             }
+            if (appKeybindings.matches(data, PiAppAction.CYCLE_MODEL_FORWARD)) {
+                handleCycleModelForwardCommand();
+                return;
+            }
             if (appKeybindings.matches(data, PiAppAction.CYCLE_THINKING_LEVEL)) {
                 handleCycleThinkingLevelCommand();
                 return;
@@ -533,6 +537,16 @@ public final class PiInteractiveMode implements AutoCloseable {
         renderState(session.state());
     }
 
+    private void handleCycleModelForwardCommand() {
+        try {
+            var result = session.cycleModelForward();
+            manualStatus = result == null ? "Only one model available" : formatModelCycleStatus(result);
+        } catch (RuntimeException exception) {
+            manualStatus = "Error: " + rootMessage(exception);
+        }
+        renderState(session.state());
+    }
+
     private void handleCycleThinkingLevelCommand() {
         try {
             manualStatus = "Thinking level: " + session.cycleThinkingLevel();
@@ -540,5 +554,13 @@ public final class PiInteractiveMode implements AutoCloseable {
             manualStatus = "Error: " + rootMessage(exception);
         }
         renderState(session.state());
+    }
+
+    private static String formatModelCycleStatus(PiInteractiveSession.ModelCycleResult result) {
+        var summary = "Switched to " + result.provider() + "/" + result.modelId();
+        if (!"off".equals(result.thinkingLevel())) {
+            return summary + " (thinking: " + result.thinkingLevel() + ")";
+        }
+        return summary;
     }
 }
