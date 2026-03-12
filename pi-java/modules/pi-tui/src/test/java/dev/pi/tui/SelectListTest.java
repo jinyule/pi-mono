@@ -175,4 +175,50 @@ class SelectListTest {
         assertThat(line).endsWith("2 msg · 1m");
         assertThat(line).doesNotContain("A very long session label that should truncate");
     }
+
+    @Test
+    void stylesSelectedDescriptionIndependently() {
+        var theme = new SelectListTheme() {
+            @Override
+            public String selectedPrefix(String text) {
+                return text;
+            }
+
+            @Override
+            public String selectedText(String text) {
+                return "<sel>" + text + "</sel>";
+            }
+
+            @Override
+            public String selectedDescription(String text) {
+                return "<desc>" + text + "</desc>";
+            }
+
+            @Override
+            public String description(String text) {
+                return text;
+            }
+
+            @Override
+            public String scrollInfo(String text) {
+                return text;
+            }
+
+            @Override
+            public String noMatch(String text) {
+                return text;
+            }
+        };
+        var list = new SelectList(
+            List.of(new SelectItem("alpha", "Alpha task", "[openai]")),
+            5,
+            theme
+        );
+
+        var line = list.render(48).getFirst();
+
+        assertThat(line).contains("<sel>Alpha task</sel>");
+        assertThat(line).contains("<desc>");
+        assertThat(line).endsWith("</desc>");
+    }
 }

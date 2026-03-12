@@ -125,7 +125,9 @@ public final class SelectList implements Component {
 
         if (selected) {
             if (itemLayout != null) {
-                return selectedPrefix + theme.selectedText(itemLayout.display() + itemLayout.spacing() + itemLayout.description());
+                return selectedPrefix
+                    + theme.selectedText(itemLayout.display())
+                    + theme.selectedDescription(itemLayout.spacing() + itemLayout.description());
             }
             return selectedPrefix + theme.selectedText(TerminalText.truncateToWidth(display, availableWidth, ""));
         }

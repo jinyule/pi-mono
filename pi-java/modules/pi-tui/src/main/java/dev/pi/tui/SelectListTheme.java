@@ -5,6 +5,10 @@ public interface SelectListTheme {
 
     String selectedText(String text);
 
+    default String selectedDescription(String text) {
+        return description(text);
+    }
+
     String description(String text);
 
     String scrollInfo(String text);
