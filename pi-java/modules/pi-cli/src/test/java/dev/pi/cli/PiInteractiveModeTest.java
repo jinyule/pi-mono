@@ -1380,6 +1380,8 @@ class PiInteractiveModeTest {
                 "auto",
                 hideThinkingBlock,
                 quietStartup,
+                "dark",
+                List.of("dark", "light"),
                 state.model().reasoning(),
                 state.thinkingLevel() == null ? "off" : state.thinkingLevel().value(),
                 state.model().reasoning() ? List.of("off", "minimal", "low", "medium", "high", "xhigh") : List.of()

@@ -69,6 +69,8 @@ public interface PiInteractiveSession {
             "auto",
             false,
             false,
+            "dark",
+            List.of("dark", "light"),
             false,
             "off",
             List.of()
@@ -205,11 +207,14 @@ public interface PiInteractiveSession {
         String transport,
         boolean hideThinkingBlock,
         boolean quietStartup,
+        String theme,
+        List<String> availableThemes,
         boolean reasoningAvailable,
         String thinkingLevel,
         List<String> availableThinkingLevels
     ) {
         public SettingsSelection {
+            availableThemes = List.copyOf(availableThemes);
             availableThinkingLevels = List.copyOf(availableThinkingLevels);
         }
     }

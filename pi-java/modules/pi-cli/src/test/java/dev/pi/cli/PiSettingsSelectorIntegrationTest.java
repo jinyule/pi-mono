@@ -129,6 +129,22 @@ class PiSettingsSelectorIntegrationTest {
     }
 
     @Test
+    void settingsSelectorTogglesTheme() {
+        var updates = new CopyOnWriteArrayList<String>();
+        var selector = new PiSettingsSelector(
+            new FakeSettingsSession().settingsSelection(),
+            (settingId, value) -> updates.add(settingId + "=" + value),
+            () -> {
+            }
+        );
+
+        selector.handleInput("theme");
+        selector.handleInput(" ");
+
+        assertThat(updates).contains("theme=light");
+    }
+
+    @Test
     void settingsSelectorHintsReflectCustomKeybindings() {
         var previous = EditorKeybindings.global();
         try {
@@ -246,6 +262,8 @@ class PiSettingsSelectorIntegrationTest {
                 transport,
                 hideThinkingBlock,
                 quietStartup,
+                "dark",
+                List.of("dark", "light"),
                 state.model().reasoning(),
                 state.thinkingLevel() == null ? "off" : state.thinkingLevel().value(),
                 List.of("off", "minimal", "low", "medium", "high", "xhigh")

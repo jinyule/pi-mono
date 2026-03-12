@@ -86,6 +86,14 @@ public final class PiSettingsSelector implements Component, Focusable {
             List.of("true", "false"),
             null
         ));
+        items.add(new SettingItem(
+            "theme",
+            "Theme",
+            "Color theme for the interface",
+            settings.theme(),
+            settings.availableThemes(),
+            null
+        ));
 
         this.settingsList = new SettingsList(
             items,

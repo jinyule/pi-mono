@@ -161,6 +161,8 @@
   - interactive app keybinding external-editor parity first cut
 - 已完成第七十七刀：
   - interactive model selector warning/hint copy parity first cut
+- 已完成第七十八刀：
+  - interactive settings selector theme first cut
 
 ## 本轮落地
 
@@ -847,6 +849,17 @@
 - PiModelSelector 现在统一空结果文案为 `No matching models`，不再区分 blank query 的 `No models available`
 - PiModelSelector detail panel 现在把 `Model Name` label 的大小写对齐到 TS 组件
 - PiModelSelectorTest 现在覆盖 scoped hint 拆行、`Model Name:` label 和统一 no-match copy
+- PiInteractiveSession.SettingsSelection / PiAgentSession 现在补了 theme settings contract：
+  - 暴露当前 theme
+  - 暴露当前可切换的 theme 列表
+  - 当前首版只提供 `dark/light`，并把已有自定义值放在列表首位保留
+- PiAgentSession 现在支持 `theme` setting 更新：
+  - 会把值写回 global settings 的 `/theme`
+  - 当前只做持久化，不做 runtime theme preview / live switch
+- PiSettingsSelector 现在新增 `Theme` 条目：
+  - 描述文案是 `Color theme for the interface`
+  - 当前首版沿用 `SettingsList` 的 cycle 交互，不做 submenu 预览
+- PiSettingsSelectorIntegrationTest 现在覆盖 `Theme` 条目切换
 
 最近通过：
 

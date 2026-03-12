@@ -323,6 +323,8 @@ public final class PiAgentSession implements PiInteractiveSession {
             transportValue(sdkSession.agent().transport()),
             settingsManager.effective().getBoolean("/hideThinkingBlock", false),
             settingsManager.effective().getBoolean("/quietStartup", false),
+            currentTheme(),
+            availableThemes(),
             sdkSession.state().model().reasoning(),
             thinkingLevel,
             sdkSession.state().model().reasoning() ? AVAILABLE_THINKING_LEVELS : List.of()
@@ -340,6 +342,7 @@ public final class PiAgentSession implements PiInteractiveSession {
             case "transport" -> updateTransportSetting(value);
             case "hide-thinking" -> updateHideThinkingSetting(value);
             case "quiet-startup" -> updateQuietStartupSetting(value);
+            case "theme" -> updateThemeSetting(value);
             case "thinking" -> updateThinkingSetting(value);
             default -> throw new IllegalArgumentException("Unknown setting: " + settingId);
         }
@@ -1054,6 +1057,32 @@ public final class PiAgentSession implements PiInteractiveSession {
     private void updateQuietStartupSetting(String value) {
         var quiet = parseBooleanSetting("quiet-startup", value);
         settingsManager.updateGlobal(settings -> settings.withMutations(root -> root.put("quietStartup", quiet)));
+    }
+
+    private void updateThemeSetting(String value) {
+        var normalized = value == null ? "" : value.trim();
+        if (normalized.isEmpty()) {
+            throw new IllegalArgumentException("Invalid value for theme: " + value);
+        }
+        settingsManager.updateGlobal(settings -> settings.withMutations(root -> root.put("theme", normalized)));
+    }
+
+    private String currentTheme() {
+        var configuredTheme = settingsManager.effective().getString("/theme");
+        return configuredTheme == null || configuredTheme.isBlank() ? "dark" : configuredTheme.trim();
+    }
+
+    private List<String> availableThemes() {
+        var themes = new ArrayList<String>();
+        var currentTheme = currentTheme();
+        themes.add(currentTheme);
+        if (!"dark".equals(currentTheme)) {
+            themes.add("dark");
+        }
+        if (!"light".equals(currentTheme)) {
+            themes.add("light");
+        }
+        return List.copyOf(themes);
     }
 
     private static boolean parseBooleanSetting(String settingId, String value) {
