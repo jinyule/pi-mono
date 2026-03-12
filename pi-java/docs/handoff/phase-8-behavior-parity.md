@@ -1,6 +1,6 @@
 # 阶段 8 交接：行为追平
 
-更新时间：2026-03-11
+更新时间：2026-03-12
 
 ## 当前状态
 
@@ -53,6 +53,8 @@
   - tree/fork selector 复用 ANSI 层级 first cut
 - 已完成第二十四刀：
   - session selector regex parse error first cut
+- 已完成第二十五刀：
+  - session selector empty/no-match/error state hierarchy first cut
 
 ## 本轮落地
 
@@ -193,6 +195,12 @@
   - query 解析失败时显示 `Invalid regex: ...`
   - 该状态行走 error 样式
   - 这样不会再和普通 `no match` 空结果混在一起
+- `PiSessionPicker` 现在把 empty/no-match/error 三种列表状态拆开了：
+  - current/all scope 为空且 query 为空时，显示 `No sessions in ...`
+  - named-only 打开且可见结果为空时，显示 `No named sessions in ...`
+  - query 非空但无匹配时，显示 `No matches for "..."`
+  - regex 非法时，列表区显示 `Invalid regex query`
+  - current/all scope 正在 loading 或 load error 时，列表区不再退回 `No matching commands`
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -243,6 +251,10 @@
 - `PiSelectorThemeTest`：tree selector 的共享 ANSI 层级
 - `PiSelectorThemeTest`：fork selector 的共享 ANSI 层级
 - `PiSessionPickerTest`：regex parse error 的 error 样式
+- `PiSessionPickerTest`：current scope empty 状态不再回退到 `No matching commands`
+- `PiSessionPickerTest`：search no-match 状态显示 `No matches for "..."`
+- `PiSessionPickerTest`：regex error 状态和 no-match 状态分离
+- `PiSessionPickerTest`：loading / load error 状态不再渲染通用 no-match 文案
 
 最近通过：
 
@@ -253,5 +265,5 @@
 ## 下一步建议
 
 1. selector parity：继续评估 model/settings selector 是否复用同一套层级
-2. session selector：继续评估 search 为空 / no-match / regex-error 三种状态的层级是否还要细分
+2. session selector：继续评估 path/cwd metadata 是否要进一步追平 TS 的右侧布局与截断
 3. keybindings：继续评估 app 层是否要补 model/thinking 相关动作

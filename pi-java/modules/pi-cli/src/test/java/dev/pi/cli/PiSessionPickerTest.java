@@ -169,7 +169,9 @@ class PiSessionPickerTest {
 
         waitFor(() -> errorTerminal.output().contains("Failed to load sessions: boom"));
 
-        assertThat(errorTerminal.output()).contains("\u001b[31mFailed to load sessions: boom\u001b[0m");
+        assertThat(errorTerminal.output())
+            .contains("\u001b[31mFailed to load sessions: boom\u001b[0m")
+            .doesNotContain("No matching commands");
         errorTerminal.sendInput("\u001b");
     }
 
@@ -224,6 +226,69 @@ class PiSessionPickerTest {
         waitFor(() -> terminal.output().contains("Invalid regex:"));
 
         assertThat(terminal.output()).contains("\u001b[31mInvalid regex:");
+        terminal.sendInput("\u001b");
+    }
+
+    @Test
+    void showsScopedEmptyStateInsteadOfGenericNoMatchCopy() {
+        var terminal = new RecordingTerminal(120, 12);
+        var picker = new PiSessionPicker(terminal);
+
+        Thread.ofVirtual().start(() -> picker.pick(
+            List.of(),
+            List.of(session("global.jsonl", "Global task", 2, Instant.now().minusSeconds(30), "/workspace/global"))
+        ));
+
+        waitFor(() -> terminal.output().contains("Resume session"));
+        waitFor(() -> terminal.output().contains("No sessions in current folder"));
+
+        assertThat(terminal.output())
+            .contains("\u001b[90mNo sessions in current folder\u001b[0m")
+            .doesNotContain("No matching commands");
+
+        terminal.sendInput("\u001b");
+    }
+
+    @Test
+    void showsSearchNoMatchStateInsteadOfGenericCommandCopy() {
+        var terminal = new RecordingTerminal(120, 12);
+        var picker = new PiSessionPicker(terminal);
+
+        Thread.ofVirtual().start(() -> picker.pick(
+            List.of(session("current.jsonl", "Current task", 2, Instant.now().minusSeconds(30), "/workspace/current")),
+            List.of(session("current.jsonl", "Current task", 2, Instant.now().minusSeconds(30), "/workspace/current"))
+        ));
+
+        waitFor(() -> terminal.output().contains("Resume session"));
+        terminal.sendInput("missing");
+        waitFor(() -> terminal.output().contains("No matches for \"missing\""));
+
+        assertThat(terminal.output())
+            .contains("\u001b[90mNo matches for \"missing\"\u001b[0m")
+            .doesNotContain("No matching commands");
+
+        terminal.sendInput("\u001b");
+    }
+
+    @Test
+    void keepsRegexErrorsDistinctFromNoMatchState() {
+        var terminal = new RecordingTerminal(120, 12);
+        var picker = new PiSessionPicker(terminal);
+
+        Thread.ofVirtual().start(() -> picker.pick(
+            List.of(session("current.jsonl", "Current task", 2, Instant.now().minusSeconds(30), "/workspace/current")),
+            List.of(session("current.jsonl", "Current task", 2, Instant.now().minusSeconds(30), "/workspace/current"))
+        ));
+
+        waitFor(() -> terminal.output().contains("Resume session"));
+        terminal.sendInput("re:[");
+        waitFor(() -> terminal.output().contains("Invalid regex query"));
+
+        assertThat(terminal.output())
+            .contains("\u001b[31mInvalid regex query\u001b[0m")
+            .doesNotContain("No matches for")
+            .doesNotContain("No matching commands");
+
         terminal.sendInput("\u001b");
     }
 
@@ -379,6 +444,7 @@ class PiSessionPickerTest {
         Thread.ofVirtual().start(() -> picker.pick(progress -> currentSessions.join(), progress -> List.of()));
 
         waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Loading current")));
+        assertThat(String.join("\n", terminal.getViewport())).doesNotContain("No matching commands");
 
         currentSessions.complete(List.of(session("loaded.jsonl", "Loaded task", 1, Instant.now().minusSeconds(5))));
 

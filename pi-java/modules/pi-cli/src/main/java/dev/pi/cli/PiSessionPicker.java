@@ -590,7 +590,7 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             lines.add("");
             lines.addAll(search.render(width));
             lines.add("");
-            lines.addAll(sessions.render(width));
+            lines.addAll(renderSessionResults(width));
             return List.copyOf(lines);
         }
 
@@ -997,6 +997,31 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             return wrapInfoLine(text, width).stream()
                 .map(style)
                 .toList();
+        }
+
+        private List<String> renderSessionResults(int width) {
+            if (!sessionItems().isEmpty()) {
+                return sessions.render(width);
+            }
+            if (activeScopeLoading() || loadingError != null) {
+                return List.of();
+            }
+            var searchError = searchError();
+            if (searchError != null) {
+                return styleInfoLines("Invalid regex query", width, PiCliAnsi::error);
+            }
+            var query = search.getValue() == null ? "" : search.getValue().trim();
+            if (!query.isEmpty()) {
+                return styleInfoLines("No matches for \"" + query + "\"", width, PiCliAnsi::muted);
+            }
+            if (nameFilter == NameFilter.NAMED) {
+                return styleInfoLines(scope == Scope.CURRENT ? "No named sessions in current folder" : "No named sessions in all folders", width, PiCliAnsi::muted);
+            }
+            return styleInfoLines(scope == Scope.CURRENT ? "No sessions in current folder" : "No sessions in all folders", width, PiCliAnsi::muted);
+        }
+
+        private boolean activeScopeLoading() {
+            return scope == Scope.CURRENT ? currentLoading : allLoading;
         }
 
         private String searchError() {
