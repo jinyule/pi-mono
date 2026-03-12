@@ -93,6 +93,8 @@
   - interactive app keybinding cycleModelBackward first cut
 - 已完成第四十四刀：
   - interactive app keybinding newSession first cut
+- 已完成第四十五刀：
+  - interactive `/settings` selector first cut
 
 ## 本轮落地
 
@@ -418,6 +420,26 @@
   - status 主行后会追加 `Follow-up: ...` 列表
   - 底部会追加 `↳ alt+up to edit queued messages` 提示
   - 当前首版只显示 follow-up queue，还没把 steering/compaction queue 合并进来
+- `PiInteractiveSession` 现在补了 settings selector contract：
+  - 暴露 `settingsSelection()` 当前快照
+  - 暴露 `updateSetting(id, value)` 供 interactive overlay 回写
+- `PiAgentSession` 现在补了 settings selector first cut：
+  - `autocompact` 会直接写回 global settings
+  - `steering-mode` / `follow-up-mode` 会同时更新 runtime queue mode 和 global settings
+  - `thinking` 会同时更新 agent thinking level、session `thinking_level_change`、global `defaultThinkingLevel`
+- `PiSdkSession` 现在在启动时会从 settings 恢复：
+  - `defaultThinkingLevel`
+  - `steeringMode`
+  - `followUpMode`
+- `PiSettingsSelector` 现在补了 settings overlay 首版：
+  - 标题/提示行复用当前 ANSI 层级
+  - 内部复用 `SettingsList` 的 search + cycle 交互
+  - 当前首版覆盖 `Auto-compact`、`Steering mode`、`Follow-up mode`
+  - reasoning model 下会额外显示 `Thinking level`
+- `PiInteractiveMode` 现在支持 `/settings`：
+  - 输入 `/settings` 会打开 settings overlay
+  - 设置修改后会立即重绘 footer / status
+  - 当前还没有单独的 app keybinding，也还没扩到 theme/transport/UI settings
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+l`
@@ -532,6 +554,10 @@
 - `KeyMatcherTest`：匹配 `ctrl+l`
 - `PiAgentSessionTest`：`queuedFollowUps()` 会反映 runtime queue 中的 follow-up 文本
 - `PiInteractiveModeTest`：streaming 中排队 follow-up 后，状态区会显示 pending message 和 `alt+up` 提示
+- `PiAgentSessionTest`：session 会从 settings 恢复默认 queue modes / thinking level
+- `PiAgentSessionTest`：`updateSetting()` 会持久化 `autocompact` / queue mode / thinking level
+- `PiSettingsSelectorIntegrationTest`：`/settings` 会打开 overlay 并即时切换 auto-compact
+- `PiSettingsSelectorIntegrationTest`：reasoning model 下 settings overlay 会显示 thinking level
 
 最近通过：
 
@@ -541,7 +567,7 @@
 
 ## 下一步建议
 
-1. pending queue parity：补 steering / compaction queue 合并展示与恢复
-2. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件
-2. selector parity：继续评估 model/settings selector 是否复用同一套层级
-3. selector parity：继续把 model selector 从 cycle scope 扩到 richer registry/provider metadata
+1. settings selector parity：继续扩到 `theme` / `transport` / `hide thinking` / `quiet startup` 等已存在 settings 面
+2. selector parity：继续把 model selector 从 cycle scope 扩到 richer registry/provider metadata
+3. pending queue parity：补 steering / compaction queue 合并展示与恢复（前提是先补 Java CLI steering 入口）
+4. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件

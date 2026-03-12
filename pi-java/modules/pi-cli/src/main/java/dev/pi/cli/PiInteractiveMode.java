@@ -141,6 +141,11 @@ public final class PiInteractiveMode implements AutoCloseable {
             handleReloadCommand();
             return;
         }
+        if ("/settings".equals(trimmed)) {
+            input.setValue("");
+            handleSettingsCommand();
+            return;
+        }
         if ("/exit".equals(trimmed) || "/quit".equals(trimmed)) {
             input.setValue("");
             requestExit();
@@ -579,6 +584,40 @@ public final class PiInteractiveMode implements AutoCloseable {
             new OverlayOptions(
                 width,
                 40,
+                maxHeight,
+                OverlayAnchor.CENTER,
+                0,
+                0,
+                null,
+                null,
+                OverlayMargin.uniform(1)
+            )
+        ));
+    }
+
+    private void handleSettingsCommand() {
+        var overlayRef = new AtomicReference<dev.pi.tui.OverlayHandle>();
+        var selector = new PiSettingsSelector(
+            session.settingsSelection(),
+            (settingId, value) -> {
+                session.updateSetting(settingId, value);
+                manualStatus = null;
+                renderState(session.state());
+            },
+            () -> {
+                var overlay = overlayRef.get();
+                if (overlay != null) {
+                    overlay.hide();
+                }
+            }
+        );
+        var width = Math.max(48, Math.min(96, terminal.columns() - 2));
+        var maxHeight = Math.max(10, Math.floorDiv(terminal.rows(), 2));
+        overlayRef.set(tui.showOverlay(
+            selector,
+            new OverlayOptions(
+                width,
+                48,
                 maxHeight,
                 OverlayAnchor.CENTER,
                 0,

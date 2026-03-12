@@ -53,6 +53,21 @@ public interface PiInteractiveSession {
         throw new UnsupportedOperationException("Model selector is not available");
     }
 
+    default SettingsSelection settingsSelection() {
+        return new SettingsSelection(
+            false,
+            "one-at-a-time",
+            "one-at-a-time",
+            false,
+            "off",
+            List.of()
+        );
+    }
+
+    default void updateSetting(String settingId, String value) {
+        throw new UnsupportedOperationException("Settings updates are not available");
+    }
+
     default String newSession() {
         throw new UnsupportedOperationException("Starting a new session is not available");
     }
@@ -160,6 +175,19 @@ public interface PiInteractiveSession {
         String thinkingLevel,
         boolean current
     ) {
+    }
+
+    record SettingsSelection(
+        boolean autoCompact,
+        String steeringMode,
+        String followUpMode,
+        boolean reasoningAvailable,
+        String thinkingLevel,
+        List<String> availableThinkingLevels
+    ) {
+        public SettingsSelection {
+            availableThinkingLevels = List.copyOf(availableThinkingLevels);
+        }
     }
 
     record DequeueResult(

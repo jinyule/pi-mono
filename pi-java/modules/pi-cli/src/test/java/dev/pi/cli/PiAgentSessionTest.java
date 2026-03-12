@@ -15,6 +15,7 @@ import dev.pi.ai.model.Usage;
 import dev.pi.ai.stream.AssistantMessageEventStream;
 import dev.pi.session.InstructionResourceLoader;
 import dev.pi.session.InstructionResources;
+import dev.pi.session.Settings;
 import dev.pi.session.SessionManager;
 import dev.pi.session.SettingsManager;
 import java.nio.charset.StandardCharsets;
@@ -263,6 +264,60 @@ class PiAgentSessionTest {
         assertThat(result.settingsErrors()).isEmpty();
         assertThat(result.resourceErrors()).isEmpty();
         assertThat(result.extensionWarnings()).containsExactly("reload-plugin.jar: broken extension");
+    }
+
+    @Test
+    void buildsQueueModesAndThinkingLevelFromSettings() {
+        var globalSettings = Settings.empty().withMutations(root -> {
+            root.put("steeringMode", "all");
+            root.put("followUpMode", "all");
+            root.put("defaultThinkingLevel", "high");
+        });
+        var session = PiAgentSession.builder(
+            testReasoningModel("anthropic", "claude-3-7-sonnet"),
+            SessionManager.inMemory("/workspace"),
+            SettingsManager.inMemory(globalSettings, Settings.empty()),
+            new InstructionResources(List.of(), "", List.of())
+        )
+            .streamFunction(fakeAssistant("Ack"))
+            .build();
+
+        assertThat(session.agent().steeringMode()).isEqualTo(dev.pi.agent.runtime.Agent.QueueMode.ALL);
+        assertThat(session.agent().followUpMode()).isEqualTo(dev.pi.agent.runtime.Agent.QueueMode.ALL);
+        assertThat(session.state().thinkingLevel()).isEqualTo(ThinkingLevel.HIGH);
+        assertThat(session.settingsSelection().steeringMode()).isEqualTo("all");
+        assertThat(session.settingsSelection().followUpMode()).isEqualTo("all");
+        assertThat(session.settingsSelection().thinkingLevel()).isEqualTo("high");
+    }
+
+    @Test
+    void updateSettingPersistsQueueModesAndThinkingLevel() {
+        var sessionManager = SessionManager.inMemory("/workspace");
+        var settingsManager = SettingsManager.inMemory();
+        var session = PiAgentSession.builder(
+            testReasoningModel("anthropic", "claude-3-7-sonnet"),
+            sessionManager,
+            settingsManager,
+            new InstructionResources(List.of(), "", List.of())
+        )
+            .streamFunction(fakeAssistant("Ack"))
+            .build();
+
+        session.updateSetting("autocompact", "false");
+        session.updateSetting("steering-mode", "all");
+        session.updateSetting("follow-up-mode", "all");
+        session.updateSetting("thinking", "high");
+
+        assertThat(settingsManager.effective().getBoolean("/compaction/enabled", true)).isFalse();
+        assertThat(settingsManager.effective().getString("/steeringMode")).isEqualTo("all");
+        assertThat(settingsManager.effective().getString("/followUpMode")).isEqualTo("all");
+        assertThat(settingsManager.effective().getString("/defaultThinkingLevel")).isEqualTo("high");
+        assertThat(session.agent().steeringMode()).isEqualTo(dev.pi.agent.runtime.Agent.QueueMode.ALL);
+        assertThat(session.agent().followUpMode()).isEqualTo(dev.pi.agent.runtime.Agent.QueueMode.ALL);
+        assertThat(session.state().thinkingLevel()).isEqualTo(ThinkingLevel.HIGH);
+        assertThat(sessionManager.entries().getLast()).isInstanceOf(dev.pi.session.SessionEntry.ThinkingLevelChangeEntry.class);
+        assertThat(((dev.pi.session.SessionEntry.ThinkingLevelChangeEntry) sessionManager.entries().getLast()).thinkingLevel())
+            .isEqualTo("high");
     }
 
     @Test

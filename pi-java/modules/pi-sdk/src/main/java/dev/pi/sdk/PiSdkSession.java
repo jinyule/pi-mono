@@ -40,6 +40,9 @@ public final class PiSdkSession {
         var resolvedThinkingLevel = options.thinkingLevel() != null
             ? options.thinkingLevel()
             : toThinkingLevel(sessionContext.thinkingLevel());
+        if (resolvedThinkingLevel == null) {
+            resolvedThinkingLevel = toThinkingLevel(options.settingsManager().effective().getString("/defaultThinkingLevel"));
+        }
         var builder = Agent.builder(options.model())
             .systemPrompt(SessionPromptComposer.compose(
                 options.systemPrompt(),
@@ -47,6 +50,8 @@ public final class PiSdkSession {
                 options.instructionResources()
             ))
             .thinkingLevel(resolvedThinkingLevel)
+            .steeringMode(toQueueMode(options.settingsManager().effective().getString("/steeringMode")))
+            .followUpMode(toQueueMode(options.settingsManager().effective().getString("/followUpMode")))
             .tools(options.tools())
             .messages(restoredMessages)
             .streamFunction(options.streamFunction())
@@ -178,6 +183,13 @@ public final class PiSdkSession {
             return null;
         }
         return ThinkingLevel.fromValue(value);
+    }
+
+    private static Agent.QueueMode toQueueMode(String value) {
+        if ("all".equals(value)) {
+            return Agent.QueueMode.ALL;
+        }
+        return Agent.QueueMode.ONE_AT_A_TIME;
     }
 
     public record SessionPersistenceError(

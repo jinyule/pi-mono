@@ -33,6 +33,8 @@ import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 
 public final class PiAgentSession implements PiInteractiveSession {
+    private static final List<String> AVAILABLE_THINKING_LEVELS = List.of("off", "minimal", "low", "medium", "high", "xhigh");
+
     private final PiSdkSession sdkSession;
     private final SettingsManager settingsManager;
     private final InstructionResourceLoader instructionResourceLoader;
@@ -268,6 +270,32 @@ public final class PiAgentSession implements PiInteractiveSession {
             nextThinkingLevel == null ? "off" : nextThinkingLevel.value(),
             scopedCycleModels
         );
+    }
+
+    @Override
+    public SettingsSelection settingsSelection() {
+        var thinkingLevel = sdkSession.state().thinkingLevel() == null ? "off" : sdkSession.state().thinkingLevel().value();
+        return new SettingsSelection(
+            settingsManager.effective().getBoolean("/compaction/enabled", true),
+            queueModeValue(sdkSession.agent().steeringMode()),
+            queueModeValue(sdkSession.agent().followUpMode()),
+            sdkSession.state().model().reasoning(),
+            thinkingLevel,
+            sdkSession.state().model().reasoning() ? AVAILABLE_THINKING_LEVELS : List.of()
+        );
+    }
+
+    @Override
+    public void updateSetting(String settingId, String value) {
+        Objects.requireNonNull(settingId, "settingId");
+        Objects.requireNonNull(value, "value");
+        switch (settingId) {
+            case "autocompact" -> updateAutoCompaction(value);
+            case "steering-mode" -> updateQueueModeSetting(value, true);
+            case "follow-up-mode" -> updateQueueModeSetting(value, false);
+            case "thinking" -> updateThinkingSetting(value);
+            default -> throw new IllegalArgumentException("Unknown setting: " + settingId);
+        }
     }
 
     @Override
@@ -858,5 +886,70 @@ public final class PiAgentSession implements PiInteractiveSession {
             case MEDIUM -> ThinkingLevel.HIGH;
             case HIGH, XHIGH -> null;
         };
+    }
+
+    private void updateAutoCompaction(String value) {
+        var enabled = parseBooleanSetting("autocompact", value);
+        settingsManager.updateGlobal(settings -> settings.withMutations(root -> root.with("compaction").put("enabled", enabled)));
+    }
+
+    private void updateQueueModeSetting(String value, boolean steering) {
+        var queueMode = parseQueueMode(value);
+        if (steering) {
+            sdkSession.agent().setSteeringMode(queueMode);
+            settingsManager.updateGlobal(settings -> settings.withMutations(root -> root.put("steeringMode", value)));
+            return;
+        }
+        sdkSession.agent().setFollowUpMode(queueMode);
+        settingsManager.updateGlobal(settings -> settings.withMutations(root -> root.put("followUpMode", value)));
+    }
+
+    private void updateThinkingSetting(String value) {
+        if (!sdkSession.state().model().reasoning()) {
+            throw new IllegalStateException("Thinking level is not available for current model");
+        }
+
+        var normalized = normalizeThinkingLevel(value);
+        settingsManager.updateGlobal(settings -> settings.withMutations(root -> root.put("defaultThinkingLevel", normalized)));
+
+        var currentValue = sdkSession.state().thinkingLevel() == null ? "off" : sdkSession.state().thinkingLevel().value();
+        if (currentValue.equals(normalized)) {
+            return;
+        }
+
+        var nextThinkingLevel = "off".equals(normalized) ? null : ThinkingLevel.fromValue(normalized);
+        sdkSession.agent().setThinkingLevel(nextThinkingLevel);
+        try {
+            sessionManager().appendThinkingLevelChange(normalized);
+        } catch (IOException exception) {
+            throw new IllegalStateException("Failed to persist thinking level", exception);
+        }
+    }
+
+    private static boolean parseBooleanSetting(String settingId, String value) {
+        return switch (value) {
+            case "true" -> true;
+            case "false" -> false;
+            default -> throw new IllegalArgumentException("Invalid value for " + settingId + ": " + value);
+        };
+    }
+
+    private static Agent.QueueMode parseQueueMode(String value) {
+        return switch (value) {
+            case "all" -> Agent.QueueMode.ALL;
+            case "one-at-a-time" -> Agent.QueueMode.ONE_AT_A_TIME;
+            default -> throw new IllegalArgumentException("Unknown queue mode: " + value);
+        };
+    }
+
+    private static String queueModeValue(Agent.QueueMode queueMode) {
+        return queueMode == Agent.QueueMode.ALL ? "all" : "one-at-a-time";
+    }
+
+    private static String normalizeThinkingLevel(String value) {
+        if ("off".equals(value)) {
+            return value;
+        }
+        return ThinkingLevel.fromValue(value).value();
     }
 }
