@@ -78,6 +78,14 @@ public final class PiSettingsSelector implements Component, Focusable {
             List.of("true", "false"),
             null
         ));
+        items.add(new SettingItem(
+            "quiet-startup",
+            "Quiet startup",
+            "Hide the interactive startup header",
+            settings.quietStartup() ? "true" : "false",
+            List.of("true", "false"),
+            null
+        ));
 
         this.settingsList = new SettingsList(
             items,

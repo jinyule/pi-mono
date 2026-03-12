@@ -174,6 +174,9 @@ public final class PiInteractiveMode implements AutoCloseable {
     }
 
     private String renderHeader(AgentState state) {
+        if (session.settingsSelection().quietStartup()) {
+            return "";
+        }
         return """
             pi-java interactive
             model: %s/%s

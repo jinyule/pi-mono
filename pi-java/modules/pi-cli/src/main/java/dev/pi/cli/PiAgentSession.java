@@ -322,6 +322,7 @@ public final class PiAgentSession implements PiInteractiveSession {
             queueModeValue(sdkSession.agent().followUpMode()),
             transportValue(sdkSession.agent().transport()),
             settingsManager.effective().getBoolean("/hideThinkingBlock", false),
+            settingsManager.effective().getBoolean("/quietStartup", false),
             sdkSession.state().model().reasoning(),
             thinkingLevel,
             sdkSession.state().model().reasoning() ? AVAILABLE_THINKING_LEVELS : List.of()
@@ -338,6 +339,7 @@ public final class PiAgentSession implements PiInteractiveSession {
             case "follow-up-mode" -> updateQueueModeSetting(value, false);
             case "transport" -> updateTransportSetting(value);
             case "hide-thinking" -> updateHideThinkingSetting(value);
+            case "quiet-startup" -> updateQuietStartupSetting(value);
             case "thinking" -> updateThinkingSetting(value);
             default -> throw new IllegalArgumentException("Unknown setting: " + settingId);
         }
@@ -1047,6 +1049,11 @@ public final class PiAgentSession implements PiInteractiveSession {
     private void updateHideThinkingSetting(String value) {
         var hidden = parseBooleanSetting("hide-thinking", value);
         settingsManager.updateGlobal(settings -> settings.withMutations(root -> root.put("hideThinkingBlock", hidden)));
+    }
+
+    private void updateQuietStartupSetting(String value) {
+        var quiet = parseBooleanSetting("quiet-startup", value);
+        settingsManager.updateGlobal(settings -> settings.withMutations(root -> root.put("quietStartup", quiet)));
     }
 
     private static boolean parseBooleanSetting(String settingId, String value) {

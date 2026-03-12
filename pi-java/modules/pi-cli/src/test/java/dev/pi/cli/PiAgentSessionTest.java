@@ -380,6 +380,29 @@ class PiAgentSessionTest {
     }
 
     @Test
+    void restoresAndUpdatesQuietStartupSetting() {
+        var settingsManager = SettingsManager.inMemory(
+            Settings.empty().withMutations(root -> root.put("quietStartup", true)),
+            Settings.empty()
+        );
+        var session = PiAgentSession.builder(
+            testReasoningModel("anthropic", "claude-3-7-sonnet"),
+            SessionManager.inMemory("/workspace"),
+            settingsManager,
+            new InstructionResources(List.of(), "", List.of())
+        )
+            .streamFunction(fakeAssistant("Ack"))
+            .build();
+
+        assertThat(session.settingsSelection().quietStartup()).isTrue();
+
+        session.updateSetting("quiet-startup", "false");
+
+        assertThat(settingsManager.effective().getBoolean("/quietStartup", true)).isFalse();
+        assertThat(session.settingsSelection().quietStartup()).isFalse();
+    }
+
+    @Test
     void cyclesForwardThroughScopedModelsAndPersistsModelChange() {
         var sessionManager = SessionManager.inMemory("/workspace");
         var nextModel = new Model(

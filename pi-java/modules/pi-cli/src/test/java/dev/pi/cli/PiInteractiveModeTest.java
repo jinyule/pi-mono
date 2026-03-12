@@ -61,6 +61,23 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void hidesHeaderWhenQuietStartupIsEnabled() {
+        var session = new FakeSession().withQuietStartup(true);
+        var terminal = new VirtualTerminal(60, 12);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+
+        assertThat(String.join("\n", terminal.getViewport()))
+            .doesNotContain("pi-java interactive")
+            .doesNotContain("model: openai/test-model")
+            .contains("Ready")
+            .contains(">");
+
+        mode.stop();
+    }
+
+    @Test
     void handlesCopySlashCommand() {
         var session = new FakeSession();
         var terminal = new VirtualTerminal(60, 12);
@@ -860,6 +877,7 @@ class PiInteractiveModeTest {
         private int resumeCount;
         private boolean autoCompactionEnabled = true;
         private boolean hideThinkingBlock;
+        private boolean quietStartup;
         private int availableProviderCount = 1;
         private String cwd = "/workspace";
         private String lastThinkingLevelChange;
@@ -1003,6 +1021,7 @@ class PiInteractiveModeTest {
                 "one-at-a-time",
                 "auto",
                 hideThinkingBlock,
+                quietStartup,
                 state.model().reasoning(),
                 state.thinkingLevel() == null ? "off" : state.thinkingLevel().value(),
                 state.model().reasoning() ? List.of("off", "minimal", "low", "medium", "high", "xhigh") : List.of()
@@ -1318,6 +1337,12 @@ class PiInteractiveModeTest {
 
         private FakeSession withHideThinkingBlock(boolean hideThinkingBlock) {
             this.hideThinkingBlock = hideThinkingBlock;
+            emitState();
+            return this;
+        }
+
+        private FakeSession withQuietStartup(boolean quietStartup) {
+            this.quietStartup = quietStartup;
             emitState();
             return this;
         }

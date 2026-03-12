@@ -69,6 +69,7 @@ public interface PiInteractiveSession {
             "auto",
             false,
             false,
+            false,
             "off",
             List.of()
         );
@@ -203,6 +204,7 @@ public interface PiInteractiveSession {
         String followUpMode,
         String transport,
         boolean hideThinkingBlock,
+        boolean quietStartup,
         boolean reasoningAvailable,
         String thinkingLevel,
         List<String> availableThinkingLevels

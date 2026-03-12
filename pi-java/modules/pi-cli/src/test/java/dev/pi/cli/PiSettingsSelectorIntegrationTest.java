@@ -113,6 +113,22 @@ class PiSettingsSelectorIntegrationTest {
     }
 
     @Test
+    void settingsSelectorTogglesQuietStartup() {
+        var updates = new CopyOnWriteArrayList<String>();
+        var selector = new PiSettingsSelector(
+            new FakeSettingsSession().settingsSelection(),
+            (settingId, value) -> updates.add(settingId + "=" + value),
+            () -> {
+            }
+        );
+
+        selector.handleInput("quiet");
+        selector.handleInput(" ");
+
+        assertThat(updates).contains("quiet-startup=true");
+    }
+
+    @Test
     void settingsSelectorHintsReflectCustomKeybindings() {
         var previous = EditorKeybindings.global();
         try {
@@ -143,6 +159,7 @@ class PiSettingsSelectorIntegrationTest {
         private boolean autoCompactionEnabled = true;
         private String transport = "auto";
         private boolean hideThinkingBlock;
+        private boolean quietStartup;
         private AgentState state = new AgentState(
             "",
             new Model(
@@ -228,6 +245,7 @@ class PiSettingsSelectorIntegrationTest {
                 "one-at-a-time",
                 transport,
                 hideThinkingBlock,
+                quietStartup,
                 state.model().reasoning(),
                 state.thinkingLevel() == null ? "off" : state.thinkingLevel().value(),
                 List.of("off", "minimal", "low", "medium", "high", "xhigh")
@@ -245,6 +263,9 @@ class PiSettingsSelectorIntegrationTest {
             }
             if ("hide-thinking".equals(settingId)) {
                 hideThinkingBlock = "true".equals(value);
+            }
+            if ("quiet-startup".equals(settingId)) {
+                quietStartup = "true".equals(value);
             }
             if ("thinking".equals(settingId)) {
                 state = state.withThinkingLevel("off".equals(value) ? null : ThinkingLevel.fromValue(value));
