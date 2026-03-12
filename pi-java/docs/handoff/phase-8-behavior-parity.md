@@ -153,6 +153,8 @@
   - interactive app keybinding paste-image parity first cut
 - 已完成第七十三刀：
   - interactive startup header keybinding hints first cut
+- 已完成第七十四刀：
+  - restartable process-terminal lifecycle first cut
 
 ## 本轮落地
 
@@ -816,6 +818,9 @@
 - startup header hints 会读取 `PiAppKeybindings.global()`，因此 custom app keybindings 会同步反映到 header 文案里
 - `quietStartup=true` 仍然会整体隐藏这些 startup header hints，不会因为新增提示行把静默启动行为打破
 - PiInteractiveModeTest 现在覆盖 startup header hints 的 keybinding-aware 渲染
+- `ProcessTerminal` 现在在每次 `start()` 时都会重新创建 backend，并在 `stop()` 后释放旧 backend；这让 stop/start 生命周期重新变成可重入
+- `ProcessTerminalTest` 现在覆盖 stop 后 restart 会拿到 fresh backend，而不是继续复用已关闭的 backend
+- 这刀是后续 `suspend` / `externalEditor` 的前置底座；此前它们在 Java 侧无法可靠实现，根因就是 `ProcessTerminal.stop()` 会把底层 backend 关死
 
 最近通过：
 

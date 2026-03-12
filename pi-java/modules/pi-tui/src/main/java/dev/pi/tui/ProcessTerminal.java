@@ -17,10 +17,11 @@ public final class ProcessTerminal implements Terminal {
     private static final String DISABLE_KITTY_KEYBOARD_PROTOCOL = "\u001b[<u";
     private static final Pattern KITTY_PROTOCOL_RESPONSE = Pattern.compile("^\u001b\\[\\?(\\d+)u$");
 
-    private final Backend backend;
+    private final BackendFactory backendFactory;
     private final TerminalInputBuffer inputBuffer = new TerminalInputBuffer();
     private final Object lifecycleMonitor = new Object();
 
+    private Backend backend;
     private volatile InputHandler inputHandler;
     private volatile boolean kittyProtocolActive;
 
@@ -30,11 +31,15 @@ public final class ProcessTerminal implements Terminal {
     private AtomicBoolean running = new AtomicBoolean(false);
 
     public ProcessTerminal() {
-        this(new JlineBackend());
+        this(JlineBackend::new);
     }
 
     ProcessTerminal(Backend backend) {
-        this.backend = Objects.requireNonNull(backend, "backend");
+        this(() -> Objects.requireNonNull(backend, "backend"));
+    }
+
+    ProcessTerminal(BackendFactory backendFactory) {
+        this.backendFactory = Objects.requireNonNull(backendFactory, "backendFactory");
     }
 
     @Override
@@ -47,6 +52,7 @@ public final class ProcessTerminal implements Terminal {
                 return;
             }
 
+            backend = backendFactory.create();
             inputBuffer.clear();
             kittyProtocolActive = false;
             inputHandler = onInput;
@@ -66,6 +72,7 @@ public final class ProcessTerminal implements Terminal {
         Thread threadToJoin;
         Backend.Registration registrationToClose;
         Attributes attributesToRestore;
+        Backend backendToClose;
 
         synchronized (lifecycleMonitor) {
             if (!running.get()) {
@@ -76,11 +83,13 @@ public final class ProcessTerminal implements Terminal {
             threadToJoin = inputThread;
             registrationToClose = resizeRegistration;
             attributesToRestore = originalAttributes;
+            backendToClose = backend;
 
             inputThread = null;
             resizeRegistration = null;
             originalAttributes = null;
             inputHandler = null;
+            backend = null;
         }
 
         if (threadToJoin != null) {
@@ -91,36 +100,40 @@ public final class ProcessTerminal implements Terminal {
         inputBuffer.clear();
 
         if (kittyProtocolActive) {
-            backend.write(DISABLE_KITTY_KEYBOARD_PROTOCOL);
+            backendToClose.write(DISABLE_KITTY_KEYBOARD_PROTOCOL);
             kittyProtocolActive = false;
         }
-        backend.write(DISABLE_BRACKETED_PASTE);
-        backend.flush();
+        backendToClose.write(DISABLE_BRACKETED_PASTE);
+        backendToClose.flush();
 
         if (registrationToClose != null) {
             registrationToClose.close();
         }
         if (attributesToRestore != null) {
-            backend.restore(attributesToRestore);
+            backendToClose.restore(attributesToRestore);
         }
 
-        backend.close();
+        backendToClose.close();
     }
 
     @Override
     public void write(String data) {
-        backend.write(data);
-        backend.flush();
+        var currentBackend = backend;
+        if (currentBackend == null) {
+            return;
+        }
+        currentBackend.write(data);
+        currentBackend.flush();
     }
 
     @Override
     public int columns() {
-        return backend.columns();
+        return requireBackend().columns();
     }
 
     @Override
     public int rows() {
-        return backend.rows();
+        return requireBackend().rows();
     }
 
     @Override
@@ -168,11 +181,12 @@ public final class ProcessTerminal implements Terminal {
     }
 
     private void readLoop() {
+        var activeBackend = requireBackend();
         var readBuffer = new char[1024];
 
         try {
             while (running.get()) {
-                var read = backend.read(readBuffer, 50);
+                var read = activeBackend.read(readBuffer, 50);
                 if (read == NonBlockingReader.READ_EXPIRED) {
                     dispatch(inputBuffer.flush());
                     continue;
@@ -217,9 +231,20 @@ public final class ProcessTerminal implements Terminal {
         }
 
         kittyProtocolActive = true;
-        backend.write(ENABLE_KITTY_KEYBOARD_PROTOCOL);
-        backend.flush();
+        var currentBackend = backend;
+        if (currentBackend != null) {
+            currentBackend.write(ENABLE_KITTY_KEYBOARD_PROTOCOL);
+            currentBackend.flush();
+        }
         return true;
+    }
+
+    private Backend requireBackend() {
+        var currentBackend = backend;
+        if (currentBackend == null) {
+            throw new IllegalStateException("Terminal backend is not active");
+        }
+        return currentBackend;
     }
 
     private static void joinQuietly(Thread thread) {
@@ -258,6 +283,11 @@ public final class ProcessTerminal implements Terminal {
         interface Registration {
             void close();
         }
+    }
+
+    @FunctionalInterface
+    interface BackendFactory {
+        Backend create();
     }
 
     private static final class JlineBackend implements Backend {

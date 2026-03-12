@@ -86,6 +86,37 @@ class ProcessTerminalTest {
         );
     }
 
+    @Test
+    void canRestartWithFreshBackendAfterStop() {
+        var backends = new ArrayList<FakeBackend>();
+        var terminal = new ProcessTerminal(() -> {
+            var backend = new FakeBackend();
+            backends.add(backend);
+            return backend;
+        });
+        var firstEvents = new ArrayList<String>();
+
+        terminal.start(firstEvents::add, () -> {
+        });
+        backends.getFirst().enqueue("a");
+        waitUntil(() -> firstEvents.size() == 1);
+        terminal.stop();
+
+        var secondEvents = new ArrayList<String>();
+        terminal.start(secondEvents::add, () -> {
+        });
+        backends.get(1).enqueue("b");
+        waitUntil(() -> secondEvents.size() == 1);
+        terminal.stop();
+
+        assertThat(backends).hasSize(2);
+        assertThat(firstEvents).containsExactly("a");
+        assertThat(secondEvents).containsExactly("b");
+        assertThat(backends.getFirst().closed()).isTrue();
+        assertThat(backends.get(1).closed()).isTrue();
+        assertThat(backends.get(1).enterRawModeCalls()).isEqualTo(1);
+    }
+
     private static void waitUntil(Check check) {
         var deadline = System.nanoTime() + 1_000_000_000L;
         while (System.nanoTime() < deadline) {
