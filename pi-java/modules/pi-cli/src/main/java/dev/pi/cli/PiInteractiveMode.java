@@ -750,6 +750,10 @@ public final class PiInteractiveMode implements AutoCloseable {
                 handleSelectModelCommand();
                 return;
             }
+            if (appKeybindings.matches(data, PiAppAction.TOGGLE_THINKING)) {
+                handleToggleThinkingCommand();
+                return;
+            }
             if (appKeybindings.matches(data, PiAppAction.FOLLOW_UP)) {
                 handleFollowUpCommand();
                 return;
@@ -822,6 +826,17 @@ public final class PiInteractiveMode implements AutoCloseable {
     private void handleCycleThinkingLevelCommand() {
         try {
             manualStatus = "Thinking level: " + session.cycleThinkingLevel();
+        } catch (RuntimeException exception) {
+            manualStatus = "Error: " + rootMessage(exception);
+        }
+        renderState(session.state());
+    }
+
+    private void handleToggleThinkingCommand() {
+        var hidden = !session.settingsSelection().hideThinkingBlock();
+        try {
+            session.updateSetting("hide-thinking", hidden ? "true" : "false");
+            manualStatus = "Thinking blocks: " + (hidden ? "hidden" : "visible");
         } catch (RuntimeException exception) {
             manualStatus = "Error: " + rootMessage(exception);
         }

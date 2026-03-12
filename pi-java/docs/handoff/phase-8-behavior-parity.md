@@ -141,6 +141,9 @@
 - 已完成第六十七刀：
   - interactive settings selector quiet-startup parity first cut
 
+- 已完成第六十八刀：
+  - interactive app keybinding toggle-thinking parity first cut
+
 ## 本轮落地
 
 - `PiCliSessionResolver` 现在在 `--resume` 路径下会同时准备：
@@ -782,6 +785,10 @@
 - PiSettingsSelector 现在新增 Quiet startup 项，并放在 settings 列表底部，避免把现有 reasoning/hide-thinking 可见项挤出 overlay 视口
 - PiInteractiveMode 现在会在 quietStartup=true 时隐藏 interactive header；当前这只覆盖 Java 侧 header 静默，TS 那套 startup resource listing silence 仍待后续补齐
 - PiAgentSessionTest / PiSettingsSelectorIntegrationTest / PiInteractiveModeTest 现在覆盖 quiet-startup 的持久化、selector 切换和 header 静默
+- PiAppAction / PiAppKeybindings / PiCliKeybindingsLoader 现在补了 toggleThinking app action、默认 ctrl+t 和 keybindings.json alias
+- PiInteractiveMode 现在会直接复用 hide-thinking setting 路径切换 thinking block 可见性，并立即刷新 transcript + status（Thinking blocks: hidden|visible）
+- KeyMatcher 现在补了 ctrl+t，避免默认 toggle-thinking 键位在 Java 侧失效
+- PiCliModuleTest / PiInteractiveModeTest / KeyMatcherTest 现在覆盖 toggle-thinking 的 loader alias、默认键位匹配和 interactive transcript/status 切换
 
 最近通过：
 
@@ -792,6 +799,6 @@
 ## 下一步建议
 
 1. selector parity：继续评估 model selector 是否要补 all-scope warning/hint copy 的 TS 细节，或继续压空状态 copy/层级
-2. settings selector parity：继续评估 `theme` 等剩余项；当前已补 hint/keybinding parity、hide-thinking transcript parity、quiet-startup header parity，但 Java 侧仍未覆盖 TS 的 startup resource listing / theme runtime
+2. settings selector parity：继续评估 `theme` 等剩余项；当前已补 hint/keybinding parity、hide-thinking transcript parity、quiet-startup header parity，以及 toggleThinking app keybinding，但 Java 侧仍未覆盖 TS 的 startup resource listing / theme runtime
 3. pending queue parity：继续补 compaction queue 合并展示与恢复；steering/follow-up runtime queue 已接上，但 Java 侧仍没有 compaction pending queue
 4. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件

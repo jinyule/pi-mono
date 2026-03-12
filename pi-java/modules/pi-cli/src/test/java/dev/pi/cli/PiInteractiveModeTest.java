@@ -688,6 +688,32 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void usesAppKeybindingForToggleThinking() {
+        var session = new FakeSession().withAssistantThinkingMessage("Reason through options", "Final answer");
+        var terminal = new VirtualTerminal(100, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+        var previousApp = PiAppKeybindings.global();
+        try {
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(
+                PiAppAction.TOGGLE_THINKING,
+                java.util.List.of("ctrl+t")
+            )));
+
+            mode.start();
+            terminal.sendInput("\u0014");
+
+            waitFor(() -> String.join("\n", terminal.getViewport()).contains("Thinking blocks: hidden"));
+            assertThat(String.join("\n", terminal.getViewport()))
+                .contains("Assistant: Final answer")
+                .contains("Thinking blocks: hidden")
+                .doesNotContain("Thinking: Reason through options");
+        } finally {
+            PiAppKeybindings.setGlobal(previousApp);
+            mode.stop();
+        }
+    }
+
+    @Test
     void usesAppKeybindingForNewSession() {
         var session = new FakeSession();
         var terminal = new VirtualTerminal(100, 16);
