@@ -7,6 +7,7 @@ enum PiAppAction {
     CYCLE_MODEL_BACKWARD,
     CYCLE_THINKING_LEVEL,
     FOLLOW_UP,
+    DEQUEUE,
     NEW_SESSION,
     TREE,
     FORK,

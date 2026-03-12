@@ -158,6 +158,17 @@ public final class Agent {
         }
     }
 
+    public List<AgentMessage> drainFollowUpQueue() {
+        synchronized (monitor) {
+            if (followUpQueue.isEmpty()) {
+                return List.of();
+            }
+            var messages = List.copyOf(followUpQueue);
+            followUpQueue.clear();
+            return messages;
+        }
+    }
+
     public void clearAllQueues() {
         synchronized (monitor) {
             steeringQueue.clear();

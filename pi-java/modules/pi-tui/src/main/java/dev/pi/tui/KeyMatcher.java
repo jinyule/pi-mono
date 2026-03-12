@@ -18,6 +18,7 @@ public final class KeyMatcher {
         Map.entry("home", "\u001b[H"),
         Map.entry("end", "\u001b[F"),
         Map.entry("alt+enter", "\u001b\r"),
+        Map.entry("alt+up", "\u001bp"),
         Map.entry("ctrl+a", "\u0001"),
         Map.entry("ctrl+b", "\u0002"),
         Map.entry("ctrl+c", "\u0003"),
@@ -69,6 +70,7 @@ public final class KeyMatcher {
             case "right" -> "\u001b[C".equals(data);
             case "home" -> "\u001b[H".equals(data) || "\u001bOH".equals(data);
             case "end" -> "\u001b[F".equals(data) || "\u001bOF".equals(data);
+            case "alt+up" -> "\u001bp".equals(data) || "\u001b[1;3A".equals(data);
             case "alt+left" -> "\u001b[1;3D".equals(data) || "\u001bB".equals(data);
             case "alt+right" -> "\u001b[1;3C".equals(data) || "\u001bF".equals(data);
             case "alt+enter" -> "\u001b\r".equals(data);

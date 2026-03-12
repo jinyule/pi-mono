@@ -53,6 +53,10 @@ public interface PiInteractiveSession {
         throw new UnsupportedOperationException("Follow-up queueing is not available");
     }
 
+    default DequeueResult dequeue() {
+        throw new UnsupportedOperationException("Queued message restore is not available");
+    }
+
     default String leafId() {
         return null;
     }
@@ -134,6 +138,12 @@ public interface PiInteractiveSession {
         String modelId,
         String thinkingLevel,
         boolean scoped
+    ) {
+    }
+
+    record DequeueResult(
+        String editorText,
+        int restoredCount
     ) {
     }
 

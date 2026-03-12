@@ -450,6 +450,27 @@ class PiAgentSessionTest {
         assertThat(session.agent().hasQueuedMessages()).isFalse();
     }
 
+    @Test
+    void dequeueRestoresQueuedFollowUpsToEditorText() {
+        var session = PiAgentSession.builder(
+            testModel(),
+            SessionManager.inMemory("/workspace"),
+            SettingsManager.inMemory(),
+            new InstructionResources(List.of(), "", List.of())
+        )
+            .streamFunction(fakeAssistant("ready"))
+            .build();
+
+        session.followUp("first queued").toCompletableFuture().join();
+        session.followUp("second queued").toCompletableFuture().join();
+
+        var result = session.dequeue();
+
+        assertThat(result.restoredCount()).isEqualTo(2);
+        assertThat(result.editorText()).isEqualTo("first queued\n\nsecond queued");
+        assertThat(session.agent().hasQueuedMessages()).isFalse();
+    }
+
     private static Model testModel() {
         return new Model(
             "test-model",

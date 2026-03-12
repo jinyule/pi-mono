@@ -247,6 +247,20 @@ public final class PiAgentSession implements PiInteractiveSession {
     }
 
     @Override
+    public DequeueResult dequeue() {
+        var messages = sdkSession.agent().drainFollowUpQueue();
+        if (messages.isEmpty()) {
+            return new DequeueResult("", 0);
+        }
+        var editorText = messages.stream()
+            .map(PiAgentSession::renderQueuedMessage)
+            .filter(text -> !text.isBlank())
+            .reduce((left, right) -> left + "\n\n" + right)
+            .orElse("");
+        return new DequeueResult(editorText, messages.size());
+    }
+
+    @Override
     public String leafId() {
         return sessionManager().leafId();
     }
@@ -374,6 +388,13 @@ public final class PiAgentSession implements PiInteractiveSession {
         return sdkSession.drainPersistenceErrors().stream()
             .map(error -> new SessionPersistenceError(error.operation(), error.error()))
             .toList();
+    }
+
+    private static String renderQueuedMessage(AgentMessage message) {
+        return switch (message) {
+            case AgentMessage.UserMessage userMessage -> PiMessageRenderer.renderUserContent(userMessage.content());
+            default -> PiMessageRenderer.renderMessage(message);
+        };
     }
 
     private static String extractUserEditorText(SessionEntry.MessageEntry entry) {

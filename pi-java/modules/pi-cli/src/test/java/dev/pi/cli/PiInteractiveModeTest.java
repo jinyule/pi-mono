@@ -731,6 +731,55 @@ class PiInteractiveModeTest {
         }
     }
 
+    @Test
+    void usesAppKeybindingForDequeue() {
+        var session = new FakeSession().withDequeuedMessages("Queued one\n\nQueued two", 2);
+        var terminal = new VirtualTerminal(100, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+        var previousApp = PiAppKeybindings.global();
+        try {
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(
+                PiAppAction.DEQUEUE,
+                java.util.List.of("alt+up")
+            )));
+
+            mode.start();
+            terminal.sendInput("draft");
+            terminal.sendInput("\u001bp");
+
+            var viewport = String.join("\n", terminal.getViewport());
+            assertThat(viewport).contains("Restored 2 queued messages");
+            assertThat(viewport).contains("Queued one");
+            assertThat(viewport).contains("Queued two");
+            assertThat(viewport).contains("draft");
+        } finally {
+            PiAppKeybindings.setGlobal(previousApp);
+            mode.stop();
+        }
+    }
+
+    @Test
+    void dequeueShowsEmptyStatusWhenNothingQueued() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(100, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+        var previousApp = PiAppKeybindings.global();
+        try {
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(
+                PiAppAction.DEQUEUE,
+                java.util.List.of("alt+up")
+            )));
+
+            mode.start();
+            terminal.sendInput("\u001bp");
+
+            assertThat(String.join("\n", terminal.getViewport())).contains("No queued messages");
+        } finally {
+            PiAppKeybindings.setGlobal(previousApp);
+            mode.stop();
+        }
+    }
+
     private static final class FakeSession implements PiInteractiveSession {
         private final List<String> prompts = new ArrayList<>();
         private final CopyOnWriteArrayList<Consumer<AgentState>> stateListeners = new CopyOnWriteArrayList<>();
@@ -746,6 +795,7 @@ class PiInteractiveModeTest {
         private boolean streaming;
         private List<String> reloadWarnings = List.of();
         private final List<String> followUps = new ArrayList<>();
+        private DequeueResult dequeueResult = new DequeueResult("", 0);
         private AgentState state = new AgentState(
             "",
             new Model(
@@ -964,6 +1014,13 @@ class PiInteractiveModeTest {
         }
 
         @Override
+        public DequeueResult dequeue() {
+            var current = dequeueResult;
+            dequeueResult = new DequeueResult("", 0);
+            return current;
+        }
+
+        @Override
         public String leafId() {
             return sessionManager.leafId();
         }
@@ -1141,6 +1198,11 @@ class PiInteractiveModeTest {
                 ));
             }
             emitState();
+            return this;
+        }
+
+        private FakeSession withDequeuedMessages(String editorText, int restoredCount) {
+            this.dequeueResult = new DequeueResult(editorText, restoredCount);
             return this;
         }
 

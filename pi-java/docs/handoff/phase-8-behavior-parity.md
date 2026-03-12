@@ -380,10 +380,24 @@
   - editor 为空时直接忽略
   - streaming 中触发会清空 editor，并回显 `Queued follow-up`
   - idle 时会退化成普通 submit，和 TS 版 `Alt+Enter` 语义保持一致
+- `PiAppAction` / `PiAppKeybindings` 现在继续补了 `dequeue`：
+  - 默认键位是 `alt+up`
+  - `PiCliKeybindingsLoader` 现在支持 `dequeue` alias
+- `Agent` 现在补了 `drainFollowUpQueue()`：
+  - 会返回当前 follow-up 队列内容
+  - 同时原子清空 runtime queue，供 interactive mode 恢复 editor 使用
+- `PiAgentSession` 现在支持 `dequeue()`：
+  - 会把 follow-up queue 里的 user message 重新拼回 editor 文本
+  - 多条消息之间用空行分隔，和 TS 版 restore queue 的文案结构保持一致
+- `PiInteractiveMode` 现在会在 prompt 层消费 `dequeue`：
+  - 有排队消息时会把它们恢复回 editor
+  - 当前 editor 已有草稿时，会把 queued messages 放前面，再接当前草稿
+  - 队列为空时回显 `No queued messages`
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
 - `KeyMatcher` 现在显式支持 `ctrl+p`
+- `KeyMatcher` 现在显式支持 `alt+up`
 - `PiSessionPicker.filterAndSortSessions()` 现在抽成包内静态辅助方法，直接用单元测试兜住 `recent/relevance` 排序语义
 
 ## 当前边界
@@ -392,7 +406,8 @@
   - cycle/default 现在已基本对齐 TS，但 loading/progress header 还只是首版
   - path show/hide 目前还是 description 级别开关，还没有 TS 版右侧布局/列宽截断渲染
   - 顶栏现在虽然合成单行了，但仍然没有 TS 那种宽度感知截断/对齐和颜色层级
-  - app 层还没扩到 TS 里的更多 action，例如 select-model/dequeue
+  - app 层还没扩到 TS 里的更多 action，例如 select-model
+- 当前 `dequeue` 只恢复 follow-up queue，还没有 TS 那种 steering/compaction queue 合并恢复和 pending queue 可视化
 - resolver 现在只在 `--session-dir` 未显式指定时提供 current/all 双 scope；显式 `--session-dir` 仍退化成单 scope
 
 ## 测试
@@ -475,6 +490,11 @@
 - `PiInteractiveModeTest`：streaming 中 `Alt+Enter` 会走 follow-up queue
 - `PiInteractiveModeTest`：idle 中 `Alt+Enter` 会退化成普通 submit
 - `PiCliModuleTest`：从 `keybindings.json` 加载 `followUp`
+- `PiAgentSessionTest`：`dequeue()` 会恢复所有 follow-up queue 文本并清空 runtime queue
+- `PiInteractiveModeTest`：`Alt+Up` 会把 queued messages 恢复回 editor，并保留当前草稿
+- `PiInteractiveModeTest`：空队列下 `Alt+Up` 会回显 `No queued messages`
+- `PiCliModuleTest`：从 `keybindings.json` 加载 `dequeue`
+- `KeyMatcherTest`：匹配 `alt+up`
 
 最近通过：
 
@@ -484,7 +504,7 @@
 
 ## 下一步建议
 
-1. keybindings parity：继续评估 `selectModel` / `dequeue`
+1. keybindings parity：继续评估 `selectModel`
 2. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件
 2. selector parity：继续评估 model/settings selector 是否复用同一套层级
-3. keybindings：继续评估 `selectModel` / `dequeue` 与 pending follow-up 可视化
+3. keybindings：继续评估 `selectModel` 与 pending follow-up/steering queue 可视化

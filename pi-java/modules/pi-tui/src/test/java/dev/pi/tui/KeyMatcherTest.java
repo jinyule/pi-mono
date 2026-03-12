@@ -30,4 +30,10 @@ class KeyMatcherTest {
         assertThat(KeyMatcher.matches("\u001b[112;6u", "shift+ctrl+p")).isTrue();
         assertThat(KeyMatcher.matches("\u001b[112;6u", "ctrl+shift+p")).isTrue();
     }
+
+    @Test
+    void matchesAltUpSequence() {
+        assertThat(KeyMatcher.matches("\u001bp", "alt+up")).isTrue();
+        assertThat(KeyMatcher.matches("\u001b[1;3A", "alt+up")).isTrue();
+    }
 }

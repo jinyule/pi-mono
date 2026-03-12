@@ -640,6 +640,10 @@ public final class PiInteractiveMode implements AutoCloseable {
                 handleFollowUpCommand();
                 return;
             }
+            if (appKeybindings.matches(data, PiAppAction.DEQUEUE)) {
+                handleDequeueCommand();
+                return;
+            }
             if (appKeybindings.matches(data, PiAppAction.NEW_SESSION)) {
                 handleNewSessionCommand();
                 return;
@@ -734,6 +738,29 @@ public final class PiInteractiveMode implements AutoCloseable {
             session.followUp(text).toCompletableFuture().join();
             input.setValue("");
             manualStatus = "Queued follow-up";
+        } catch (RuntimeException exception) {
+            manualStatus = "Error: " + rootMessage(exception);
+        }
+        renderState(session.state());
+    }
+
+    private void handleDequeueCommand() {
+        try {
+            var result = session.dequeue();
+            if (result.restoredCount() == 0 || result.editorText() == null || result.editorText().isBlank()) {
+                manualStatus = "No queued messages";
+                renderState(session.state());
+                return;
+            }
+            var currentText = input.getValue();
+            var combined = result.editorText();
+            if (currentText != null && !currentText.isBlank()) {
+                combined = combined + "\n\n" + currentText;
+            }
+            input.setValue(combined);
+            manualStatus = result.restoredCount() == 1
+                ? "Restored 1 queued message"
+                : "Restored %d queued messages".formatted(result.restoredCount());
         } catch (RuntimeException exception) {
             manualStatus = "Error: " + rootMessage(exception);
         }

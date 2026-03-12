@@ -7,27 +7,18 @@ import java.util.Map;
 import java.util.Objects;
 
 final class PiAppKeybindings {
-    private static final Map<PiAppAction, List<String>> DEFAULTS = Map.of(
-        PiAppAction.INTERRUPT,
-        List.of("escape"),
-        PiAppAction.RESUME,
-        List.of(),
-        PiAppAction.CYCLE_MODEL_FORWARD,
-        List.of("ctrl+p"),
-        PiAppAction.CYCLE_MODEL_BACKWARD,
-        List.of("shift+ctrl+p"),
-        PiAppAction.CYCLE_THINKING_LEVEL,
-        List.of("shift+tab"),
-        PiAppAction.FOLLOW_UP,
-        List.of("alt+enter"),
-        PiAppAction.NEW_SESSION,
-        List.of(),
-        PiAppAction.TREE,
-        List.of(),
-        PiAppAction.FORK,
-        List.of(),
-        PiAppAction.TOGGLE_SESSION_NAMED_FILTER,
-        List.of("ctrl+n")
+    private static final Map<PiAppAction, List<String>> DEFAULTS = Map.ofEntries(
+        Map.entry(PiAppAction.INTERRUPT, List.of("escape")),
+        Map.entry(PiAppAction.RESUME, List.of()),
+        Map.entry(PiAppAction.CYCLE_MODEL_FORWARD, List.of("ctrl+p")),
+        Map.entry(PiAppAction.CYCLE_MODEL_BACKWARD, List.of("shift+ctrl+p")),
+        Map.entry(PiAppAction.CYCLE_THINKING_LEVEL, List.of("shift+tab")),
+        Map.entry(PiAppAction.FOLLOW_UP, List.of("alt+enter")),
+        Map.entry(PiAppAction.DEQUEUE, List.of("alt+up")),
+        Map.entry(PiAppAction.NEW_SESSION, List.of()),
+        Map.entry(PiAppAction.TREE, List.of()),
+        Map.entry(PiAppAction.FORK, List.of()),
+        Map.entry(PiAppAction.TOGGLE_SESSION_NAMED_FILTER, List.of("ctrl+n"))
     );
 
     private static PiAppKeybindings global = new PiAppKeybindings();

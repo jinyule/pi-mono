@@ -42,27 +42,18 @@ final class PiCliKeybindingsLoader {
         Map.entry("deleteSession", EditorAction.SESSION_DELETE),
         Map.entry("renameSession", EditorAction.SESSION_RENAME)
     );
-    private static final Map<String, PiAppAction> APP_ACTION_ALIASES = Map.of(
-        "interrupt",
-        PiAppAction.INTERRUPT,
-        "resume",
-        PiAppAction.RESUME,
-        "cycleModelForward",
-        PiAppAction.CYCLE_MODEL_FORWARD,
-        "cycleModelBackward",
-        PiAppAction.CYCLE_MODEL_BACKWARD,
-        "cycleThinkingLevel",
-        PiAppAction.CYCLE_THINKING_LEVEL,
-        "followUp",
-        PiAppAction.FOLLOW_UP,
-        "newSession",
-        PiAppAction.NEW_SESSION,
-        "tree",
-        PiAppAction.TREE,
-        "fork",
-        PiAppAction.FORK,
-        "toggleSessionNamedFilter",
-        PiAppAction.TOGGLE_SESSION_NAMED_FILTER
+    private static final Map<String, PiAppAction> APP_ACTION_ALIASES = Map.ofEntries(
+        Map.entry("interrupt", PiAppAction.INTERRUPT),
+        Map.entry("resume", PiAppAction.RESUME),
+        Map.entry("cycleModelForward", PiAppAction.CYCLE_MODEL_FORWARD),
+        Map.entry("cycleModelBackward", PiAppAction.CYCLE_MODEL_BACKWARD),
+        Map.entry("cycleThinkingLevel", PiAppAction.CYCLE_THINKING_LEVEL),
+        Map.entry("followUp", PiAppAction.FOLLOW_UP),
+        Map.entry("dequeue", PiAppAction.DEQUEUE),
+        Map.entry("newSession", PiAppAction.NEW_SESSION),
+        Map.entry("tree", PiAppAction.TREE),
+        Map.entry("fork", PiAppAction.FORK),
+        Map.entry("toggleSessionNamedFilter", PiAppAction.TOGGLE_SESSION_NAMED_FILTER)
     );
 
     private final Path agentDir;
