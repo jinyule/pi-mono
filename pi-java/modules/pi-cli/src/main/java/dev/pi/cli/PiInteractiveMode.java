@@ -345,7 +345,8 @@ public final class PiInteractiveMode implements AutoCloseable {
         var parts = new ArrayList<String>();
         var normalizedCwd = shortenHomePath(cwd);
         if (normalizedCwd != null && !normalizedCwd.isBlank()) {
-            parts.add(normalizedCwd);
+            var branch = PiGitBranchResolver.resolve(cwd);
+            parts.add(branch == null || branch.isBlank() ? normalizedCwd : normalizedCwd + " (" + branch + ")");
         }
         if (sessionName != null && !sessionName.isBlank()) {
             parts.add(sessionName.trim());

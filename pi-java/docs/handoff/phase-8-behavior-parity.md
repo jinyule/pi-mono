@@ -85,6 +85,8 @@
   - interactive footer cwd/session line first cut
 - 已完成第四十刀：
   - interactive footer cwd/session middle-truncation first cut
+- 已完成第四十一刀：
+  - interactive footer git-branch first cut
 
 ## 本轮落地
 
@@ -325,6 +327,14 @@
   - footer 第二行的 `cwd • session name` 不再只做尾部截断
   - 长路径会改成中间截断，尽量同时保留路径前缀、路径尾部和 session name
   - 视觉 copy 对齐 TS `FooterComponent` 的长 `pwd` 处理方式
+- `PiGitBranchResolver` 现在补了 `.git/HEAD` 解析首版：
+  - 会从 session cwd 向上查找 `.git`
+  - 兼容 `.git/HEAD` 目录仓库和 `gitdir:` worktree 形式
+  - detached HEAD 会显示成 `detached`
+- `PiInteractiveMode` 现在会把 footer 第二行扩成 `cwd (branch) • session name`：
+  - branch 存在时插入 `(<branch>)`
+  - 仍然复用 middle truncation，避免 branch 抢掉 session name 的可见空间
+  - 当前首版是按 render 时静态读取 `.git/HEAD`，还没有 watcher/cached invalidation
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -405,6 +415,8 @@
 - `PiInteractiveModeTest`：`15` 行终端下 footer 会显示 `cwd • session name`
 - `TerminalTextTest`：middle truncation 会保留首尾可见片段，并兼容 ANSI 文本
 - `PiInteractiveModeTest`：长 `cwd` footer 第二行会改成中间截断，并保留 session name
+- `PiGitBranchResolverTest`：普通 repo、detached HEAD、worktree `gitdir:` 三种分支解析
+- `PiInteractiveModeTest`：footer 第二行会显示 `cwd (branch) • session name`
 
 最近通过：
 
@@ -414,6 +426,6 @@
 
 ## 下一步建议
 
-1. footer parity：继续评估 git branch 第二行数据源，以及是否补 `cwd (branch) • session` 组合 copy
+1. footer parity：继续评估 git branch watcher/cached invalidation，以及 extension status 第三行
 2. selector parity：继续评估 model/settings selector 是否复用同一套层级
 3. keybindings：继续评估 cycleModelBackward / selectModel / newSession / followUp / dequeue 等动作

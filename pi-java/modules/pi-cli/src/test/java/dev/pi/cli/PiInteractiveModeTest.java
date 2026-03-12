@@ -28,8 +28,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 class PiInteractiveModeTest {
+    @TempDir
+    java.nio.file.Path tempDir;
+
     @Test
     void rendersHeaderAndSubmitsPromptThroughTui() {
         var session = new FakeSession();
@@ -140,6 +144,32 @@ class PiInteractiveModeTest {
             .contains("...")
             .contains("Scratchpad")
             .doesNotContain("/workspace/projects/java/cli/pi-mono/very-long-directory-name");
+
+        mode.stop();
+    }
+
+    @Test
+    void rendersGitBranchInFooterMetaLine() throws Exception {
+        var project = tempDir.resolve("project");
+        var gitDir = project.resolve(".git");
+        java.nio.file.Files.createDirectories(gitDir);
+        java.nio.file.Files.writeString(
+            gitDir.resolve("HEAD"),
+            "ref: refs/heads/feature/footer\n",
+            java.nio.charset.StandardCharsets.UTF_8
+        );
+
+        var session = new FakeSession()
+            .withCwd(project.toString())
+            .withSessionName("Scratch");
+        var terminal = new VirtualTerminal(120, 15);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+
+        assertThat(String.join("\n", terminal.getViewport()))
+            .contains("(feature/footer)")
+            .contains("Scratch");
 
         mode.stop();
     }
