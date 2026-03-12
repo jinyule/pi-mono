@@ -53,6 +53,8 @@ public final class PiModelSelector implements Component, Focusable {
     @Override
     public List<String> render(int width) {
         var lines = new ArrayList<String>();
+        lines.add(separatorLine(width));
+        lines.add("");
         lines.add(PiCliAnsi.bold("Select model"));
         if (!scopedModels.isEmpty()) {
             lines.add(scopeSummary());
@@ -76,6 +78,8 @@ public final class PiModelSelector implements Component, Focusable {
                 lines.addAll(renderSelectedDetailPanel(selectedModel, width));
             }
         }
+        lines.add("");
+        lines.add(separatorLine(width));
         return List.copyOf(lines);
     }
 
@@ -229,18 +233,18 @@ public final class PiModelSelector implements Component, Focusable {
 
     private static List<String> renderSelectedDetailPanel(PiInteractiveSession.SelectableModel model, int width) {
         var lines = new ArrayList<String>();
-        lines.add(detailSeparator(width));
+        lines.add(separatorLine(width));
         lines.add(PiCliAnsi.bold("Selected model"));
         var title = "  " + model.provider() + "/" + model.modelId() + (model.current() ? " ✓" : "");
         lines.add(TerminalText.truncateToWidth(title, width, "..."));
         for (var detailLine : selectedDetailLines(model)) {
             lines.add(PiCliAnsi.muted(TerminalText.truncateToWidth("  " + detailLine, width, "...")));
         }
-        lines.add(detailSeparator(width));
+        lines.add(separatorLine(width));
         return List.copyOf(lines);
     }
 
-    private static String detailSeparator(int width) {
+    private static String separatorLine(int width) {
         return PiCliAnsi.muted("─".repeat(Math.max(1, width)));
     }
 

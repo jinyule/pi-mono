@@ -27,6 +27,7 @@ class PiModelSelectorTest {
 
         var lines = selector.render(100);
 
+        assertThat(lines.getFirst()).contains("────");
         assertThat(lines).anyMatch(line -> line.contains("Select model"));
         assertThat(lines).anyMatch(line -> line.contains("Only showing models with configured API keys"));
         assertThat(lines).anyMatch(line -> line.contains("gpt-5 ✓"));
@@ -37,6 +38,7 @@ class PiModelSelectorTest {
         assertThat(lines).anyMatch(line -> line.contains("Thinking: minimal"));
         assertThat(lines).anyMatch(line -> line.contains("Context: 400k ctx"));
         assertThat(lines).anyMatch(line -> line.contains("────"));
+        assertThat(lines.getLast()).contains("────");
     }
 
     @Test
