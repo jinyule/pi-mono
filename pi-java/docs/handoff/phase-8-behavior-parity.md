@@ -63,6 +63,8 @@
   - interactive footer token/cost/model first cut
 - 已完成第二十九刀：
   - interactive footer ANSI hierarchy first cut
+- 已完成第三十刀：
+  - interactive footer provider-aware model summary first cut
 
 ## 本轮落地
 
@@ -231,6 +233,10 @@
   - model id 走 bold
   - reasoning suffix（`• high` / `• thinking off`）走 muted
   - 右侧宽度不足时会优先保留 model id，再截断 suffix，避免把最关键的 model 标识先裁掉
+- `PiInteractiveMode` 现在继续把 provider 信息接到 footer 右侧摘要：
+  - 宽度足够时显示 `provider/model`
+  - provider 前缀走 muted，model id 继续走 bold
+  - 宽度不足时会先退回只显示 model，再考虑截断，避免 provider 抢掉 model 的可见空间
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -293,6 +299,7 @@
 - `PiInteractiveModeTest`：`14` 行终端下渲染 usage/cost/model footer
 - `PiInteractiveModeTest`：footer usage/model 的 ANSI 层级
 - `PiInteractiveModeTest`：reasoning model footer 会显示 thinking level
+- `PiInteractiveModeTest`：宽度足够时 footer 会显示 provider 前缀
 
 最近通过：
 
@@ -302,6 +309,6 @@
 
 ## 下一步建议
 
-1. footer parity：继续评估 provider 展示、context window/auto-compact 指标，以及更窄宽度下的截断策略
+1. footer parity：继续评估 context window/auto-compact 指标，以及更窄宽度下的截断策略
 2. selector parity：继续评估 model/settings selector 是否复用同一套层级
 3. keybindings：继续评估 app 层是否要补 model/thinking 相关动作

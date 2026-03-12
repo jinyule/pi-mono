@@ -130,6 +130,20 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void rendersProviderPrefixInFooterWhenWidthAllows() {
+        var session = new FakeSession();
+        var terminal = new RecordingTerminal(100, 14);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        waitFor(() -> terminal.output().contains("test-model"));
+
+        assertThat(terminal.output()).contains("\u001b[90mopenai/\u001b[0m\u001b[1mtest-model\u001b[0m");
+
+        mode.stop();
+    }
+
+    @Test
     void handlesTreeSlashCommand() {
         var session = new FakeSession();
         var terminal = new VirtualTerminal(80, 16);

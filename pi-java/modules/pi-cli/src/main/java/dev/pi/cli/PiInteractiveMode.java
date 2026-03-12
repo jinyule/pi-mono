@@ -277,21 +277,36 @@ public final class PiInteractiveMode implements AutoCloseable {
         if (width <= 0) {
             return "";
         }
+        var providerPrefix = state.model().provider() == null || state.model().provider().isBlank()
+            ? ""
+            : state.model().provider() + "/";
         var modelLabel = state.model().id();
+        var providerWidth = TerminalText.visibleWidth(providerPrefix);
+        var modelWidth = TerminalText.visibleWidth(modelLabel);
+        var includeProvider = !providerPrefix.isBlank() && providerWidth + modelWidth <= width;
+        if (!includeProvider) {
+            providerPrefix = "";
+            providerWidth = 0;
+        }
+
         if (!state.model().reasoning()) {
+            if (providerWidth + modelWidth <= width) {
+                return PiCliAnsi.muted(providerPrefix) + PiCliAnsi.bold(modelLabel);
+            }
             return PiCliAnsi.bold(TerminalText.truncateToWidth(modelLabel, width, "..."));
         }
 
         var suffix = " • " + (state.thinkingLevel() == null ? "thinking off" : state.thinkingLevel().value());
-        var modelWidth = TerminalText.visibleWidth(modelLabel);
         var suffixWidth = TerminalText.visibleWidth(suffix);
-        if (modelWidth + suffixWidth <= width) {
-            return PiCliAnsi.bold(modelLabel) + PiCliAnsi.muted(suffix);
+        if (providerWidth + modelWidth + suffixWidth <= width) {
+            return PiCliAnsi.muted(providerPrefix) + PiCliAnsi.bold(modelLabel) + PiCliAnsi.muted(suffix);
         }
-        if (modelWidth >= width) {
+        if (providerWidth + modelWidth >= width) {
             return PiCliAnsi.bold(TerminalText.truncateToWidth(modelLabel, width, "..."));
         }
-        return PiCliAnsi.bold(modelLabel) + PiCliAnsi.muted(TerminalText.truncateToWidth(suffix, width - modelWidth, "..."));
+        return PiCliAnsi.muted(providerPrefix)
+            + PiCliAnsi.bold(modelLabel)
+            + PiCliAnsi.muted(TerminalText.truncateToWidth(suffix, width - providerWidth - modelWidth, "..."));
     }
 
     private static String formatTokens(int count) {
