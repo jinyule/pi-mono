@@ -32,6 +32,7 @@ class PiModelSelectorTest {
         assertThat(lines).anyMatch(line -> line.contains("[openai]"));
         assertThat(lines).anyMatch(line -> line.contains("GPT-5"));
         assertThat(lines).anyMatch(line -> line.contains("400k ctx"));
+        assertThat(lines).anyMatch(line -> line.contains("Selected: openai/gpt-5"));
     }
 
     @Test
@@ -151,5 +152,28 @@ class PiModelSelectorTest {
         selector.handleInput("z");
 
         assertThat(selector.render(100)).anyMatch(line -> line.contains("No matching models"));
+    }
+
+    @Test
+    void updatesSelectedDetailWhenSelectionChanges() {
+        var selector = new PiModelSelector(
+            new PiInteractiveSession.ModelSelection(
+                List.of(
+                    new PiInteractiveSession.SelectableModel(0, "openai", "gpt-5", "GPT-5", "minimal", true, true, 400_000),
+                    new PiInteractiveSession.SelectableModel(1, "anthropic", "claude-3-7-sonnet", "Claude 3.7 Sonnet", "high", false, true, 200_000)
+                ),
+                List.of()
+            ),
+            ignored -> {
+            },
+            () -> {
+            },
+            () -> {
+            }
+        );
+
+        selector.handleInput("\u001b[B");
+
+        assertThat(selector.render(100)).anyMatch(line -> line.contains("Selected: anthropic/claude-3-7-sonnet"));
     }
 }

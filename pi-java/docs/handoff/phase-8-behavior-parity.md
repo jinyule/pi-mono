@@ -105,6 +105,8 @@
   - interactive transport setting first cut
 - 已完成第五十刀：
   - interactive model selector custom search/ranking first cut
+- 已完成第五十一刀：
+  - interactive model selector selected-detail first cut
 
 ## 本轮落地
 
@@ -511,6 +513,10 @@
 - `PiModelSelector` 现在补了模型专用 empty copy：
   - 无 query 且列表为空时显示 `No models available`
   - 有 query 但无命中时显示 `No matching models`
+- `PiModelSelector` 现在补了 selected-detail 面：
+  - 搜索框下方会显示 `Selected: provider/model`
+  - 第二行会显示 `model name` / `thinking` / `context window` 摘要
+  - 列表上下移动时，detail 会跟着当前选中项同步刷新
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+l`
@@ -642,6 +648,8 @@
 - `PiModelSelectorTest`：provider / modelName 查询会命中正确模型
 - `PiModelSelectorTest`：exact / prefix 命中会排在更宽泛匹配前面
 - `PiModelSelectorTest`：空结果时显示 `No matching models`
+- `PiModelSelectorTest`：顶部会显示当前选中模型的 detail
+- `PiModelSelectorTest`：方向键移动后 detail 会切到新选中项
 
 最近通过：
 
@@ -651,7 +659,7 @@
 
 ## 下一步建议
 
-1. selector parity：继续补 model selector 的详情布局 / selected detail 面，当前还只有行内 metadata
+1. selector parity：继续评估 model selector 是否需要 TS 式双栏/详情布局；当前已补单区 detail，但还不是独立 detail panel
 2. settings selector parity：继续评估 `theme` / `hide thinking` / `quiet startup`；这些键在 Java 侧还缺真实 runtime 绑定
 3. pending queue parity：补 steering / compaction queue 合并展示与恢复（前提是先补 Java CLI steering 入口）
 4. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件

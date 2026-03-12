@@ -7,6 +7,7 @@ import dev.pi.tui.Focusable;
 import dev.pi.tui.Input;
 import dev.pi.tui.SelectItem;
 import dev.pi.tui.SelectList;
+import dev.pi.tui.TerminalText;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -62,6 +63,11 @@ public final class PiModelSelector implements Component, Focusable {
         lines.add("");
         lines.addAll(search.render(width));
         lines.add("");
+        var selectedModel = selectedModel();
+        if (selectedModel != null) {
+            lines.addAll(renderSelectedDetail(selectedModel, width));
+            lines.add("");
+        }
         if (visibleModels.isEmpty()) {
             lines.add(PiCliAnsi.muted(search.getValue() == null || search.getValue().isBlank()
                 ? "  No models available"
@@ -207,6 +213,43 @@ public final class PiModelSelector implements Component, Focusable {
     private static String metadata(PiInteractiveSession.SelectableModel model) {
         var parts = new ArrayList<String>();
         parts.add("[" + model.provider() + "]");
+        if (model.modelName() != null && !model.modelName().isBlank() && !model.modelName().equals(model.modelId())) {
+            parts.add(model.modelName());
+        }
+        if (model.reasoning()) {
+            parts.add("thinking: " + model.thinkingLevel());
+        }
+        if (model.contextWindow() > 0) {
+            parts.add(formatContextWindow(model.contextWindow()));
+        }
+        return String.join(" · ", parts);
+    }
+
+    private PiInteractiveSession.SelectableModel selectedModel() {
+        var item = models.getSelectedItem();
+        if (item == null) {
+            return null;
+        }
+        var index = decodeIndex(item.value());
+        return visibleModels.stream()
+            .filter(model -> model.index() == index)
+            .findFirst()
+            .orElse(null);
+    }
+
+    private static List<String> renderSelectedDetail(PiInteractiveSession.SelectableModel model, int width) {
+        var lines = new ArrayList<String>();
+        var title = "Selected: " + model.provider() + "/" + model.modelId() + (model.current() ? " ✓" : "");
+        lines.add(PiCliAnsi.bold(TerminalText.truncateToWidth(title, width, "...")));
+        var detail = selectedDetail(model);
+        if (!detail.isBlank()) {
+            lines.add(PiCliAnsi.muted(TerminalText.truncateToWidth(detail, width, "...")));
+        }
+        return List.copyOf(lines);
+    }
+
+    private static String selectedDetail(PiInteractiveSession.SelectableModel model) {
+        var parts = new ArrayList<String>();
         if (model.modelName() != null && !model.modelName().isBlank() && !model.modelName().equals(model.modelId())) {
             parts.add(model.modelName());
         }
