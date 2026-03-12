@@ -131,4 +131,48 @@ class SelectListTest {
             .contains("Alpha task")
             .contains("2 msg");
     }
+
+    @Test
+    void rightAlignsDescriptionsAtWideWidths() {
+        var list = new SelectList(
+            List.of(new SelectItem("alpha", "Alpha task", "2 msg · 1m")),
+            5,
+            THEME
+        );
+
+        var line = list.render(48).getFirst();
+
+        assertThat(TerminalText.visibleWidth(line)).isLessThanOrEqualTo(48);
+        assertThat(line).endsWith("2 msg · 1m");
+        assertThat(line).containsPattern("Alpha task\\s{2,}2 msg · 1m$");
+    }
+
+    @Test
+    void expandsDescriptionWhenLabelIsShort() {
+        var list = new SelectList(
+            List.of(new SelectItem("alpha", "Alpha", "/workspace/project/path · 2 msg · 1m")),
+            5,
+            THEME
+        );
+
+        var line = list.render(48).getFirst();
+
+        assertThat(TerminalText.visibleWidth(line)).isLessThanOrEqualTo(48);
+        assertThat(line).contains("/workspace/project/path · 2 msg · 1m");
+    }
+
+    @Test
+    void keepsRightSideMetadataVisibleWhenLabelTruncates() {
+        var list = new SelectList(
+            List.of(new SelectItem("alpha", "A very long session label that should truncate", "2 msg · 1m")),
+            5,
+            THEME
+        );
+
+        var line = list.render(32).getFirst();
+
+        assertThat(TerminalText.visibleWidth(line)).isLessThanOrEqualTo(32);
+        assertThat(line).endsWith("2 msg · 1m");
+        assertThat(line).doesNotContain("A very long session label that should truncate");
+    }
 }

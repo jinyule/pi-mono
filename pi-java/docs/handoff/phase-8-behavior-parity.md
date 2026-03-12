@@ -57,6 +57,8 @@
   - session selector empty/no-match/error state hierarchy first cut
 - 已完成第二十六刀：
   - session selector empty-state hint parity first cut
+- 已完成第二十七刀：
+  - selector metadata right-aligned layout first cut
 
 ## 本轮落地
 
@@ -208,6 +210,11 @@
   - current scope 且 named-only 为空时，显示 `Press ctrl+n to show all, or tab to view all.`
   - all scope 且 named-only 为空时，显示 `No named sessions found. Press ctrl+n to show all.`
   - `current/all` 同源时不会误报不可用的 scope-toggle 提示
+- `SelectList` 现在把 description 布局继续往 TS selector 靠：
+  - 不再给 label 预留固定空列
+  - 会从实际 label 宽度回收空余列给右侧 description
+  - 短 label + 长 metadata 场景下，会优先保住 `cwd/path/msg/age` 尾部信息
+  - 行尾额外保留安全边距，避免 item 正好打满 terminal 宽度时被终端自动换行
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -264,6 +271,9 @@
 - `PiSessionPickerTest`：loading / load error 状态不再渲染通用 no-match 文案
 - `PiSessionPickerTest`：current scope empty 状态显示 `tab` 恢复提示
 - `PiSessionPickerTest`：named-only 为空时显示 named filter / scope 恢复提示
+- `SelectListTest`：宽终端下 description 右侧对齐
+- `SelectListTest`：短 label 时不再白白吞掉 metadata 空间
+- `SelectListTest`：长 label 截断时仍优先保住右侧 metadata
 
 最近通过：
 
@@ -274,5 +284,5 @@
 ## 下一步建议
 
 1. selector parity：继续评估 model/settings selector 是否复用同一套层级
-2. session selector：继续评估 path/cwd metadata 是否要进一步追平 TS 的右侧布局与截断
+2. session selector：继续评估 path/cwd metadata 的颜色层级与 current/named 状态强调
 3. keybindings：继续评估 app 层是否要补 model/thinking 相关动作

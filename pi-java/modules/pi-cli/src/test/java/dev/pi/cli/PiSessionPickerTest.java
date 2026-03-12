@@ -43,7 +43,7 @@ class PiSessionPickerTest {
         );
         Thread.ofVirtual().start(() -> selected[0] = picker.pick(sessions, sessions));
 
-        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> !line.isBlank()));
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("First task")));
 
         assertThat(String.join("\n", terminal.getViewport()))
             .contains("Resume session")

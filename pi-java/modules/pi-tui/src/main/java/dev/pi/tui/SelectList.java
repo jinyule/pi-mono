@@ -120,7 +120,7 @@ public final class SelectList implements Component {
         var selectedPrefix = theme.selectedPrefix("→ ");
         var plainPrefix = "  ";
         var prefix = selected ? selectedPrefix : plainPrefix;
-        var availableWidth = Math.max(1, width - TerminalText.visibleWidth(prefix));
+        var availableWidth = Math.max(1, width - TerminalText.visibleWidth(prefix) - 2);
         var itemLayout = layoutItem(display, description, availableWidth);
 
         if (selected) {
@@ -148,21 +148,27 @@ public final class SelectList implements Component {
             return null;
         }
 
-        var labelColumnWidth = Math.min(32, Math.max(minDisplayWidth, Math.floorDiv(availableWidth, 2)));
-        labelColumnWidth = Math.min(labelColumnWidth, availableWidth - gapWidth - minDescriptionWidth);
-        if (labelColumnWidth < minDisplayWidth) {
+        var descriptionVisibleWidth = TerminalText.visibleWidth(description);
+        var preferredDescriptionWidth = Math.min(descriptionVisibleWidth, availableWidth - gapWidth - minDisplayWidth);
+        if (preferredDescriptionWidth < minDescriptionWidth) {
             return null;
         }
 
-        var truncatedDisplay = TerminalText.truncateToWidth(display, labelColumnWidth, "");
+        var maxDisplayWidth = Math.min(32, availableWidth - gapWidth - preferredDescriptionWidth);
+        if (maxDisplayWidth < minDisplayWidth) {
+            maxDisplayWidth = minDisplayWidth;
+        }
+
+        var truncatedDisplay = TerminalText.truncateToWidth(display, maxDisplayWidth, "");
         var actualDisplayWidth = TerminalText.visibleWidth(truncatedDisplay);
-        var descriptionWidth = availableWidth - labelColumnWidth - gapWidth;
+        var descriptionWidth = Math.min(descriptionVisibleWidth, availableWidth - actualDisplayWidth - gapWidth);
         if (descriptionWidth < minDescriptionWidth) {
             return null;
         }
 
-        var spacing = " ".repeat(Math.max(gapWidth, labelColumnWidth - actualDisplayWidth + gapWidth));
         var truncatedDescription = TerminalText.truncateToWidth(description, descriptionWidth, "");
+        var actualDescriptionWidth = TerminalText.visibleWidth(truncatedDescription);
+        var spacing = " ".repeat(Math.max(gapWidth, availableWidth - actualDisplayWidth - actualDescriptionWidth));
         return new ItemLayout(truncatedDisplay, spacing, truncatedDescription);
     }
 
