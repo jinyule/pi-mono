@@ -113,6 +113,45 @@ class PiSettingsSelectorIntegrationTest {
     }
 
     @Test
+    void settingsSelectorUsesTsStyleDescriptions() {
+        var selector = new PiSettingsSelector(
+            new FakeSettingsSession().settingsSelection(),
+            (settingId, value) -> {
+            },
+            () -> {
+            }
+        );
+
+        selector.handleInput("steer");
+        assertThat(String.join("\n", selector.render(140)))
+            .contains("Enter while streaming queues steering messages.");
+
+        selector = new PiSettingsSelector(
+            new FakeSettingsSession().settingsSelection(),
+            (settingId, value) -> {
+            },
+            () -> {
+            }
+        );
+
+        selector.handleInput("trans");
+        assertThat(String.join("\n", selector.render(140)))
+            .contains("Preferred transport for providers that support multiple transports");
+
+        selector = new PiSettingsSelector(
+            new FakeSettingsSession().settingsSelection(),
+            (settingId, value) -> {
+            },
+            () -> {
+            }
+        );
+
+        selector.handleInput("quiet");
+        assertThat(String.join("\n", selector.render(140)))
+            .contains("Disable verbose printing at startup");
+    }
+
+    @Test
     void settingsSelectorTogglesHideThinking() {
         var session = new FakeSettingsSession();
         var terminal = new VirtualTerminal(90, 16);

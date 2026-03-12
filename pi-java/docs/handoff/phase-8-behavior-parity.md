@@ -914,6 +914,13 @@
 - `Tui` 现在暴露 runtime setter，PiInteractiveMode 每次 `renderState()` 都会把 `showHardwareCursor` / `clearOnShrink` 同步到当前 TUI
 - `DiffRenderer` 现在在 `clearOnShrink=false` 且尾部整段收缩时不再强制 full redraw，避免这个 setting 变成空开关
 - DiffRendererTest / TuiTest / PiSettingsSelectorIntegrationTest 现在覆盖 `clear-on-shrink`、hardware cursor runtime toggle 和 settings selector 切换
+- `PiSettingsSelector` 现在继续把 settings overlay 的 copy 收敛到 TS：
+  - `Steering mode` 改成 `Enter while streaming queues steering messages. ...`
+  - `Follow-up mode` 改成 `Alt+Enter queues follow-up messages until agent stops. ...`
+  - `Transport` 改成 `Preferred transport for providers that support multiple transports`
+  - `Quiet startup` 改成 `Disable verbose printing at startup`
+- `PiSettingsSelector` 现在把 `Transport` 的可选值顺序改成 `sse -> websocket -> auto`，和 TS `/settings` selector 保持一致
+- `PiSettingsSelectorIntegrationTest` 现在覆盖 TS-style settings descriptions，避免后续 copy 回退
 
 最近通过：
 
@@ -925,6 +932,6 @@ npm.cmd run check
 ## 下一步建议
 
 1. selector parity：继续评估 model selector 是否要补 all-scope warning/hint copy 的 TS 细节，或继续压空状态 copy/层级
-2. settings selector parity：继续评估 `theme` 等剩余项；当前已补 hint/keybinding parity、hide-thinking transcript parity、quiet-startup header parity、double-escape、editor-padding、dark/light runtime ANSI 主题切换、`Theme` submenu preview、`Thinking level` submenu，以及 hardware-cursor/clear-on-shrink，但 Java 侧仍未覆盖 TS 的 startup resource listing / custom theme loader
+2. settings selector parity：继续评估 `theme` 等剩余项；当前已补 hint/keybinding parity、hide-thinking transcript parity、quiet-startup header parity、double-escape、editor-padding、dark/light runtime ANSI 主题切换、`Theme` submenu preview、`Thinking level` submenu、hardware-cursor/clear-on-shrink，以及 steering/follow-up/transport/quiet-startup 的 TS-style copy，但 Java 侧仍未覆盖 TS 的 startup resource listing / custom theme loader
 3. pending queue parity：继续补 compaction queue 合并展示与恢复；steering/follow-up runtime queue 已接上，但 Java 侧仍没有 compaction pending queue
 4. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件

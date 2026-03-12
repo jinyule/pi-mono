@@ -55,7 +55,7 @@ public final class PiSettingsSelector implements Component, Focusable {
         items.add(new SettingItem(
             "steering-mode",
             "Steering mode",
-            "Queued steering messages: deliver one-at-a-time or all at once",
+            "Enter while streaming queues steering messages. 'one-at-a-time': deliver one, wait for response. 'all': deliver all at once.",
             settings.steeringMode(),
             List.of("one-at-a-time", "all"),
             null
@@ -63,7 +63,7 @@ public final class PiSettingsSelector implements Component, Focusable {
         items.add(new SettingItem(
             "follow-up-mode",
             "Follow-up mode",
-            "Queued follow-ups: deliver one-at-a-time or all at once",
+            "Alt+Enter queues follow-up messages until agent stops. 'one-at-a-time': deliver one, wait for response. 'all': deliver all at once.",
             settings.followUpMode(),
             List.of("one-at-a-time", "all"),
             null
@@ -71,9 +71,9 @@ public final class PiSettingsSelector implements Component, Focusable {
         items.add(new SettingItem(
             "transport",
             "Transport",
-            "Preferred provider transport for new requests",
+            "Preferred transport for providers that support multiple transports",
             settings.transport(),
-            List.of("auto", "sse", "websocket"),
+            List.of("sse", "websocket", "auto"),
             null
         ));
         if (settings.reasoningAvailable()) {
@@ -107,7 +107,7 @@ public final class PiSettingsSelector implements Component, Focusable {
         items.add(new SettingItem(
             "quiet-startup",
             "Quiet startup",
-            "Hide the interactive startup header",
+            "Disable verbose printing at startup",
             settings.quietStartup() ? "true" : "false",
             List.of("true", "false"),
             null
