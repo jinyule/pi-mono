@@ -55,6 +55,7 @@ final class PiCliKeybindingsLoader {
         Map.entry("toggleThinking", PiAppAction.TOGGLE_THINKING),
         Map.entry("followUp", PiAppAction.FOLLOW_UP),
         Map.entry("dequeue", PiAppAction.DEQUEUE),
+        Map.entry("pasteImage", PiAppAction.PASTE_IMAGE),
         Map.entry("newSession", PiAppAction.NEW_SESSION),
         Map.entry("tree", PiAppAction.TREE),
         Map.entry("fork", PiAppAction.FORK),

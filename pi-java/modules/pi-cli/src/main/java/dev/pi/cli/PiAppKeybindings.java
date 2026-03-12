@@ -3,10 +3,14 @@ package dev.pi.cli;
 import dev.pi.tui.KeyMatcher;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
 final class PiAppKeybindings {
+    private static final List<String> DEFAULT_PASTE_IMAGE_KEYS = isWindows()
+        ? List.of("alt+v")
+        : List.of("ctrl+v");
     private static final Map<PiAppAction, List<String>> DEFAULTS = Map.ofEntries(
         Map.entry(PiAppAction.INTERRUPT, List.of("escape")),
         Map.entry(PiAppAction.CLEAR, List.of("ctrl+c")),
@@ -20,6 +24,7 @@ final class PiAppKeybindings {
         Map.entry(PiAppAction.TOGGLE_THINKING, List.of("ctrl+t")),
         Map.entry(PiAppAction.FOLLOW_UP, List.of("alt+enter")),
         Map.entry(PiAppAction.DEQUEUE, List.of("alt+up")),
+        Map.entry(PiAppAction.PASTE_IMAGE, DEFAULT_PASTE_IMAGE_KEYS),
         Map.entry(PiAppAction.NEW_SESSION, List.of()),
         Map.entry(PiAppAction.TREE, List.of()),
         Map.entry(PiAppAction.FORK, List.of()),
@@ -64,5 +69,11 @@ final class PiAppKeybindings {
 
     static void setGlobal(PiAppKeybindings keybindings) {
         global = keybindings == null ? new PiAppKeybindings() : keybindings;
+    }
+
+    private static boolean isWindows() {
+        return System.getProperty("os.name", "")
+            .toLowerCase(Locale.ROOT)
+            .contains("win");
     }
 }

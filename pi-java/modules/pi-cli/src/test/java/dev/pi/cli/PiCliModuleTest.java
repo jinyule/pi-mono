@@ -244,6 +244,7 @@ class PiCliModuleTest {
               "toggleThinking": "ctrl+t",
               "followUp": "alt+enter",
               "dequeue": "alt+up",
+              "pasteImage": "alt+z",
               "newSession": "alt+m",
               "tree": "alt+t",
               "fork": "alt+f",
@@ -287,6 +288,7 @@ class PiCliModuleTest {
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.TOGGLE_THINKING)).containsExactly("ctrl+t");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.FOLLOW_UP)).containsExactly("alt+enter");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.DEQUEUE)).containsExactly("alt+up");
+            assertThat(PiAppKeybindings.global().getKeys(PiAppAction.PASTE_IMAGE)).containsExactly("alt+z");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.NEW_SESSION)).containsExactly("alt+m");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.TREE)).containsExactly("alt+t");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.FORK)).containsExactly("alt+f");

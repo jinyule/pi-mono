@@ -149,6 +149,8 @@
   - interactive app keybinding exit parity first cut
 - 已完成第七十一刀：
   - interactive app keybinding expand-tools parity first cut
+- 已完成第七十二刀：
+  - interactive app keybinding paste-image parity first cut
 
 ## 本轮落地
 
@@ -804,6 +806,10 @@
 - PiAppAction / PiAppKeybindings / PiCliKeybindingsLoader 现在补了 expandTools app action、默认 ctrl+o 和 keybindings.json alias
 - PiMessageRenderer / PiInteractiveMode 现在支持按键切换 tool result details 展开，并保持默认 transcript 不变
 - PiCliModuleTest / PiInteractiveModeTest / KeyMatcherTest 现在覆盖 expandTools 的 loader alias、tool details toggle 和 ctrl+o 键位匹配
+- PiAppAction / PiAppKeybindings / PiCliKeybindingsLoader 现在补了 pasteImage app action、默认 Windows `alt+v` / 其他平台 `ctrl+v` 和 keybindings.json alias
+- PiClipboardImage / PiInteractiveMode 现在支持从系统剪贴板读取图片并附着到下一条 user message；streaming 和 queued follow-up 会明确拒绝 image attachments
+- Java 侧这次没有走 TS 的“写临时文件再插入路径”路线；因为当前 interactive submit 还没有 `@file` 解析链路，先走 in-memory `ImageContent` 更直接且已能复用现有图片消息语义
+- PiCliModuleTest / PiInteractiveModeTest / KeyMatcherTest 现在覆盖 pasteImage 的 loader alias、interactive attach/submit、streaming 拒绝和 `ctrl+v` 键位匹配
 
 最近通过：
 

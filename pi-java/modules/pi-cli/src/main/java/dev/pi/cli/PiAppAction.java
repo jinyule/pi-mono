@@ -13,6 +13,7 @@ enum PiAppAction {
     TOGGLE_THINKING,
     FOLLOW_UP,
     DEQUEUE,
+    PASTE_IMAGE,
     NEW_SESSION,
     TREE,
     FORK,

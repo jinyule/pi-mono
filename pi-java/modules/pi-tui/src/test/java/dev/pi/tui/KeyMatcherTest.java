@@ -26,6 +26,11 @@ class KeyMatcherTest {
     }
 
     @Test
+    void matchesConfiguredCtrlVSequence() {
+        assertThat(KeyMatcher.matches("\u0016", "ctrl+v")).isTrue();
+    }
+
+    @Test
     void matchesTabSequence() {
         assertThat(KeyMatcher.matches("\t", "tab")).isTrue();
     }

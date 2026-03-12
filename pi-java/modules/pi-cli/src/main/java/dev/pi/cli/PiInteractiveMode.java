@@ -2,6 +2,9 @@ package dev.pi.cli;
 
 import dev.pi.agent.runtime.AgentState;
 import dev.pi.agent.runtime.AgentMessage;
+import dev.pi.ai.model.ImageContent;
+import dev.pi.ai.model.TextContent;
+import dev.pi.ai.model.UserContent;
 import dev.pi.ai.stream.Subscription;
 import dev.pi.tui.Component;
 import dev.pi.tui.Focusable;
@@ -25,6 +28,7 @@ public final class PiInteractiveMode implements AutoCloseable {
     private final Terminal terminal;
     private final Tui tui;
     private final PiCopyCommand copyCommand;
+    private final PiClipboardImage clipboardImage;
     private final Text header = new Text("", 0, 0, null);
     private final Text transcript = new Text("", 1, 0, null);
     private final Text status = new Text("", 1, 0, null);
@@ -39,6 +43,7 @@ public final class PiInteractiveMode implements AutoCloseable {
     private Runnable onStop;
     private long lastClearTimeMillis;
     private boolean expandToolDetails;
+    private final List<ImageContent> pendingImages = new ArrayList<>();
 
     public PiInteractiveMode(PiInteractiveSession session) {
         this(session, new ProcessTerminal());
@@ -54,14 +59,25 @@ public final class PiInteractiveMode implements AutoCloseable {
                     PiClipboard.osc52(terminal),
                     PiClipboard.system()
                 )
-            )
+            ),
+            PiClipboardImage.system()
         );
     }
 
     PiInteractiveMode(PiInteractiveSession session, Terminal terminal, PiCopyCommand copyCommand) {
+        this(session, terminal, copyCommand, PiClipboardImage.system());
+    }
+
+    PiInteractiveMode(
+        PiInteractiveSession session,
+        Terminal terminal,
+        PiCopyCommand copyCommand,
+        PiClipboardImage clipboardImage
+    ) {
         this.session = Objects.requireNonNull(session, "session");
         this.terminal = Objects.requireNonNull(terminal, "terminal");
         this.copyCommand = Objects.requireNonNull(copyCommand, "copyCommand");
+        this.clipboardImage = Objects.requireNonNull(clipboardImage, "clipboardImage");
         this.tui = new Tui(terminal, true);
         this.tui.addChild(header);
         this.tui.addChild(transcript);
@@ -113,10 +129,11 @@ public final class PiInteractiveMode implements AutoCloseable {
     }
 
     private void submit(String value) {
-        if (value == null || value.isBlank()) {
+        var hasText = value != null && !value.isBlank();
+        if (!hasText && pendingImages.isEmpty()) {
             return;
         }
-        var trimmed = value.trim();
+        var trimmed = value == null ? "" : value.trim();
         if ("/copy".equals(trimmed)) {
             input.setValue("");
             handleCopyCommand();
@@ -154,6 +171,11 @@ public final class PiInteractiveMode implements AutoCloseable {
             return;
         }
         if (session.state().isStreaming()) {
+            if (!pendingImages.isEmpty()) {
+                manualStatus = "Error: Image attachments are not supported while streaming";
+                renderState(session.state());
+                return;
+            }
             handleSteerCommand(value);
             return;
         }
@@ -161,7 +183,9 @@ public final class PiInteractiveMode implements AutoCloseable {
         input.setValue("");
         tui.requestRender();
         try {
-            session.prompt(value);
+            session.prompt(buildPrompt(value));
+            pendingImages.clear();
+            renderState(session.state());
         } catch (RuntimeException exception) {
             renderState(session.state().withError(exception.getMessage()));
         }
@@ -214,6 +238,9 @@ public final class PiInteractiveMode implements AutoCloseable {
             lines.add("Streaming response...");
         } else {
             lines.add("Ready");
+        }
+        if (!pendingImages.isEmpty()) {
+            lines.add("Attached images: " + pendingImages.size());
         }
 
         var queuedSteering = session.queuedSteeringMessages();
@@ -764,6 +791,10 @@ public final class PiInteractiveMode implements AutoCloseable {
                 handleToggleToolDetailsCommand();
                 return;
             }
+            if (appKeybindings.matches(data, PiAppAction.PASTE_IMAGE)) {
+                handlePasteImageCommand();
+                return;
+            }
             if (appKeybindings.matches(data, PiAppAction.TOGGLE_THINKING)) {
                 handleToggleThinkingCommand();
                 return;
@@ -824,6 +855,7 @@ public final class PiInteractiveMode implements AutoCloseable {
             return;
         }
         input.setValue("");
+        pendingImages.clear();
         lastClearTimeMillis = now;
         tui.requestRender();
     }
@@ -878,6 +910,7 @@ public final class PiInteractiveMode implements AutoCloseable {
         try {
             session.newSession();
             input.setValue("");
+            pendingImages.clear();
             manualStatus = "Started new session";
         } catch (RuntimeException exception) {
             manualStatus = "Error: " + rootMessage(exception);
@@ -887,17 +920,39 @@ public final class PiInteractiveMode implements AutoCloseable {
 
     private void handleFollowUpCommand() {
         var text = input.getValue();
-        if (text == null || text.isBlank()) {
-            return;
-        }
         if (!session.state().isStreaming()) {
             submit(text);
+            return;
+        }
+        if (!pendingImages.isEmpty()) {
+            manualStatus = "Error: Image attachments are not supported in queued follow-ups";
+            renderState(session.state());
+            return;
+        }
+        if (text == null || text.isBlank()) {
             return;
         }
         try {
             session.followUp(text).toCompletableFuture().join();
             input.setValue("");
             manualStatus = "Queued follow-up";
+        } catch (RuntimeException exception) {
+            manualStatus = "Error: " + rootMessage(exception);
+        }
+        renderState(session.state());
+    }
+
+    private void handlePasteImageCommand() {
+        try {
+            var image = clipboardImage.read();
+            if (image == null) {
+                manualStatus = "No image in clipboard";
+            } else {
+                pendingImages.add(image);
+                manualStatus = pendingImages.size() == 1
+                    ? "Attached image from clipboard"
+                    : "Attached %d images from clipboard".formatted(pendingImages.size());
+            }
         } catch (RuntimeException exception) {
             manualStatus = "Error: " + rootMessage(exception);
         }
@@ -957,5 +1012,14 @@ public final class PiInteractiveMode implements AutoCloseable {
             return summary + " (thinking: " + result.thinkingLevel() + ")";
         }
         return summary;
+    }
+
+    private AgentMessage.UserMessage buildPrompt(String value) {
+        var content = new ArrayList<UserContent>();
+        if (value != null && !value.isBlank()) {
+            content.add(new TextContent(value, null));
+        }
+        content.addAll(pendingImages);
+        return new AgentMessage.UserMessage(List.copyOf(content), System.currentTimeMillis());
     }
 }

@@ -8,6 +8,7 @@ import dev.pi.agent.runtime.AgentMessage;
 import dev.pi.agent.runtime.AgentMessages;
 import dev.pi.agent.runtime.AgentState;
 import dev.pi.agent.runtime.AgentTool;
+import dev.pi.ai.model.ImageContent;
 import dev.pi.ai.model.Message;
 import dev.pi.ai.model.Model;
 import dev.pi.ai.model.ThinkingLevel;
@@ -697,6 +698,74 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void usesAppKeybindingForPasteImage() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(100, 16);
+        var mode = new PiInteractiveMode(
+            session,
+            terminal,
+            new PiCopyCommand(session, text -> {
+            }),
+            () -> new ImageContent("ZGF0YQ==", "image/png")
+        );
+        var previousApp = PiAppKeybindings.global();
+        try {
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(PiAppAction.PASTE_IMAGE, java.util.List.of("alt+z"))));
+
+            mode.start();
+            terminal.sendInput("\u001bz");
+
+            waitFor(() -> String.join("\n", terminal.getViewport()).contains("Attached image from clipboard"));
+            assertThat(String.join("\n", terminal.getViewport())).contains("Attached images: 1");
+            terminal.sendInput("\r");
+
+            waitFor(() -> !session.promptMessages.isEmpty());
+            assertThat(session.promptMessages.getFirst().content())
+                .singleElement()
+                .isInstanceOf(ImageContent.class);
+            assertThat(String.join("\n", terminal.getViewport()))
+                .contains("You: [image image/png]")
+                .contains("Assistant: Ack: [image image/png]")
+                .doesNotContain("Attached images: 1");
+        } finally {
+            PiAppKeybindings.setGlobal(previousApp);
+            mode.stop();
+        }
+    }
+
+    @Test
+    void rejectsPastedImagesWhileStreaming() {
+        var session = new FakeSession().withStreaming(true);
+        var terminal = new VirtualTerminal(100, 16);
+        var mode = new PiInteractiveMode(
+            session,
+            terminal,
+            new PiCopyCommand(session, text -> {
+            }),
+            () -> new ImageContent("ZGF0YQ==", "image/png")
+        );
+        var previousApp = PiAppKeybindings.global();
+        try {
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(PiAppAction.PASTE_IMAGE, java.util.List.of("alt+z"))));
+
+            mode.start();
+            terminal.sendInput("\u001bz");
+
+            waitFor(() -> String.join("\n", terminal.getViewport()).contains("Attached image from clipboard"));
+            terminal.sendInput("\r");
+
+            assertThat(session.promptMessages).isEmpty();
+            assertThat(session.steeringMessages).isEmpty();
+            assertThat(String.join("\n", terminal.getViewport()))
+                .contains("Error: Image attachments are not supported while streaming")
+                .contains("Attached images: 1");
+        } finally {
+            PiAppKeybindings.setGlobal(previousApp);
+            mode.stop();
+        }
+    }
+
+    @Test
     void usesAppKeybindingForResume() {
         var session = new FakeSession();
         var terminal = new VirtualTerminal(80, 16);
@@ -998,6 +1067,7 @@ class PiInteractiveModeTest {
 
     private static final class FakeSession implements PiInteractiveSession {
         private final List<String> prompts = new ArrayList<>();
+        private final List<AgentMessage.UserMessage> promptMessages = new ArrayList<>();
         private final CopyOnWriteArrayList<Consumer<AgentState>> stateListeners = new CopyOnWriteArrayList<>();
         private final SessionManager sessionManager = SessionManager.inMemory("/workspace");
         private int reloadCount;
@@ -1069,11 +1139,18 @@ class PiInteractiveModeTest {
 
         @Override
         public CompletionStage<Void> prompt(String text) {
-            prompts.add(text);
+            return prompt(new AgentMessage.UserMessage(List.of(new TextContent(text, null)), 1L));
+        }
+
+        @Override
+        public CompletionStage<Void> prompt(AgentMessage.UserMessage message) {
+            promptMessages.add(message);
+            var rendered = PiMessageRenderer.renderUserContent(message.content());
+            prompts.add(rendered);
             try {
-                sessionManager.appendMessage(new Message.UserMessage(List.of(new TextContent(text, null)), 1L));
+                sessionManager.appendMessage(AgentMessages.toLlmMessage(message));
                 sessionManager.appendMessage(new Message.AssistantMessage(
-                    List.of(new TextContent("Ack: " + text, null)),
+                    List.of(new TextContent("Ack: " + rendered, null)),
                     state.model().api(),
                     state.model().provider(),
                     state.model().id(),
