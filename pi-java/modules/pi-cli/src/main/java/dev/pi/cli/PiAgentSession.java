@@ -42,6 +42,7 @@ public final class PiAgentSession implements PiInteractiveSession {
     private final ReloadAction reloadAction;
     private final List<CycleModel> cycleModels;
     private final boolean scopedCycleModels;
+    private final int availableProviderCount;
 
     private PiAgentSession(
         PiSdkSession sdkSession,
@@ -52,7 +53,8 @@ public final class PiAgentSession implements PiInteractiveSession {
         String appendSystemPrompt,
         ReloadAction reloadAction,
         List<CycleModel> cycleModels,
-        boolean scopedCycleModels
+        boolean scopedCycleModels,
+        int availableProviderCount
     ) {
         this.sdkSession = Objects.requireNonNull(sdkSession, "sdkSession");
         this.settingsManager = Objects.requireNonNull(settingsManager, "settingsManager");
@@ -63,6 +65,7 @@ public final class PiAgentSession implements PiInteractiveSession {
         this.reloadAction = reloadAction;
         this.cycleModels = List.copyOf(Objects.requireNonNullElse(cycleModels, List.of()));
         this.scopedCycleModels = scopedCycleModels;
+        this.availableProviderCount = Math.max(1, availableProviderCount);
     }
 
     public static Builder builder(
@@ -166,6 +169,11 @@ public final class PiAgentSession implements PiInteractiveSession {
             contextWindow,
             latestUsage.totalTokens() * 100.0 / contextWindow
         );
+    }
+
+    @Override
+    public int availableProviderCount() {
+        return availableProviderCount;
     }
 
     @Override
@@ -426,6 +434,7 @@ public final class PiAgentSession implements PiInteractiveSession {
         private ThinkingBudgets thinkingBudgets;
         private List<CycleModel> cycleModels = List.of();
         private boolean scopedCycleModels;
+        private int availableProviderCount = 1;
 
         private Builder(
             Model model,
@@ -538,6 +547,11 @@ public final class PiAgentSession implements PiInteractiveSession {
             return this;
         }
 
+        public Builder availableProviderCount(int availableProviderCount) {
+            this.availableProviderCount = Math.max(1, availableProviderCount);
+            return this;
+        }
+
         public PiAgentSession build() {
             if (streamFunction == null) {
                 throw new IllegalStateException("PiAgentSession streamFunction must be configured");
@@ -574,7 +588,8 @@ public final class PiAgentSession implements PiInteractiveSession {
                 appendSystemPrompt,
                 reloadAction,
                 cycleModels,
-                scopedCycleModels
+                scopedCycleModels,
+                availableProviderCount
             );
         }
 

@@ -202,22 +202,29 @@ public final class PiInteractiveMode implements AutoCloseable {
             return "";
         }
         var width = Math.max(1, terminal.columns());
-        return renderFooterStatsLine(state, width, session.contextUsage(), session.autoCompactionEnabled());
+        return renderFooterStatsLine(
+            state,
+            width,
+            session.contextUsage(),
+            session.autoCompactionEnabled(),
+            session.availableProviderCount()
+        );
     }
 
     private static String renderFooterStatsLine(
         AgentState state,
         int width,
         PiInteractiveSession.ContextUsage contextUsage,
-        boolean autoCompactionEnabled
+        boolean autoCompactionEnabled,
+        int availableProviderCount
     ) {
         var footerStats = footerStats(state, contextUsage, autoCompactionEnabled);
         var plainLeft = footerStats.plain();
         if (plainLeft.isBlank()) {
-            return renderFooterModelSummary(state, width);
+            return renderFooterModelSummary(state, width, availableProviderCount);
         }
 
-        var fullRight = footerModelSummary(state, Math.max(1, width - TerminalText.visibleWidth(plainLeft) - 2));
+        var fullRight = footerModelSummary(state, Math.max(1, width - TerminalText.visibleWidth(plainLeft) - 2), availableProviderCount);
         var plainRight = fullRight.plain();
         var leftWidth = TerminalText.visibleWidth(plainLeft);
         var rightWidth = TerminalText.visibleWidth(plainRight);
@@ -226,7 +233,11 @@ public final class PiInteractiveMode implements AutoCloseable {
                 + "  "
                 + fullRight.styled();
         }
-        var narrowRight = footerModelSummary(state, Math.min(Math.max(8, width / 3), Math.max(1, width - 4)));
+        var narrowRight = footerModelSummary(
+            state,
+            Math.min(Math.max(8, width / 3), Math.max(1, width - 4)),
+            availableProviderCount
+        );
         var reservedRightWidth = TerminalText.visibleWidth(narrowRight.plain());
         var availableLeftWidth = width - reservedRightWidth - 2;
         if (availableLeftWidth >= 4) {
@@ -234,7 +245,7 @@ public final class PiInteractiveMode implements AutoCloseable {
                 + "  "
                 + narrowRight.plain();
         }
-        return renderFooterModelSummary(state, width);
+        return renderFooterModelSummary(state, width, availableProviderCount);
     }
 
     private static FooterStats footerStats(
@@ -331,17 +342,19 @@ public final class PiInteractiveMode implements AutoCloseable {
         return model.id();
     }
 
-    private static String renderFooterModelSummary(AgentState state, int width) {
-        return footerModelSummary(state, width).styled();
+    private static String renderFooterModelSummary(AgentState state, int width, int availableProviderCount) {
+        return footerModelSummary(state, width, availableProviderCount).styled();
     }
 
-    private static FooterModelSummary footerModelSummary(AgentState state, int width) {
+    private static FooterModelSummary footerModelSummary(AgentState state, int width, int availableProviderCount) {
         if (width <= 0) {
             return new FooterModelSummary("", "");
         }
-        var providerPrefix = state.model().provider() == null || state.model().provider().isBlank()
-            ? ""
-            : state.model().provider() + "/";
+        var providerPrefix = availableProviderCount > 1
+            && state.model().provider() != null
+            && !state.model().provider().isBlank()
+            ? state.model().provider() + "/"
+            : "";
         var modelLabel = state.model().id();
         var providerWidth = TerminalText.visibleWidth(providerPrefix);
         var modelWidth = TerminalText.visibleWidth(modelLabel);

@@ -222,7 +222,7 @@ class PiInteractiveModeTest {
 
     @Test
     void rendersProviderPrefixInFooterWhenWidthAllows() {
-        var session = new FakeSession();
+        var session = new FakeSession().withAvailableProviderCount(2);
         var terminal = new RecordingTerminal(100, 14);
         var mode = new PiInteractiveMode(session, terminal);
 
@@ -230,6 +230,22 @@ class PiInteractiveModeTest {
         waitFor(() -> terminal.output().contains("test-model"));
 
         assertThat(terminal.output()).contains("\u001b[90mopenai/\u001b[0m\u001b[1mtest-model\u001b[0m");
+
+        mode.stop();
+    }
+
+    @Test
+    void omitsProviderPrefixWhenOnlyOneProviderIsAvailable() {
+        var session = new FakeSession().withAvailableProviderCount(1);
+        var terminal = new RecordingTerminal(100, 14);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        waitFor(() -> terminal.output().contains("test-model"));
+
+        assertThat(terminal.output())
+            .doesNotContain("\u001b[90mopenai/\u001b[0m")
+            .contains("\u001b[1mtest-model\u001b[0m");
 
         mode.stop();
     }
@@ -523,6 +539,7 @@ class PiInteractiveModeTest {
         private int abortCount;
         private int resumeCount;
         private boolean autoCompactionEnabled = true;
+        private int availableProviderCount = 1;
         private String lastThinkingLevelChange;
         private String lastModelIdChange;
         private List<String> reloadWarnings = List.of();
@@ -639,6 +656,11 @@ class PiInteractiveModeTest {
                 contextWindow,
                 latestUsage.totalTokens() * 100.0 / contextWindow
             );
+        }
+
+        @Override
+        public int availableProviderCount() {
+            return availableProviderCount;
         }
 
         @Override
@@ -817,6 +839,12 @@ class PiInteractiveModeTest {
 
         private FakeSession withAutoCompactionEnabled(boolean autoCompactionEnabled) {
             this.autoCompactionEnabled = autoCompactionEnabled;
+            emitState();
+            return this;
+        }
+
+        private FakeSession withAvailableProviderCount(int availableProviderCount) {
+            this.availableProviderCount = availableProviderCount;
             emitState();
             return this;
         }

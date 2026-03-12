@@ -234,6 +234,7 @@ public final class PiCliModule {
             .appendSystemPrompt(args.appendSystemPrompt())
             .thinkingLevel(initialThinkingLevel)
             .apiKey(args.apiKey())
+            .availableProviderCount(aiClient.modelRegistry().getProviders().size())
             .cycleModels(cycleModels, !args.modelPatterns().isEmpty() && !scopedCycleModels.isEmpty());
         if (extensionRuntime != null) {
             builder.reloadAction(() -> extensionRuntime.reload().failures().stream().map(PiCliModule::formatExtensionFailure).toList());

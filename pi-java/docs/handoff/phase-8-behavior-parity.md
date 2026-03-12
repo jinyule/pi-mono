@@ -79,6 +79,8 @@
   - interactive footer post-compaction unknown usage first cut
 - 已完成第三十七刀：
   - interactive footer idle context baseline first cut
+- 已完成第三十八刀：
+  - interactive footer provider-count gating first cut
 
 ## 本轮落地
 
@@ -305,6 +307,10 @@
   - 左右摘要之间固定保留 `2` 个空格
   - 不再用右对齐 padding 把 ANSI/raw 长度堆到一行末尾
   - 窄宽度分支会先给右侧 model 摘要保留保底宽度，再截断左侧 usage/context
+- `PiInteractiveSession` 现在暴露 `availableProviderCount()`：
+  - `PiCliModule` 会把 `ModelRegistry.getProviders().size()` 下沉给 `PiAgentSession`
+  - `PiInteractiveMode` 只有在 provider 数量大于 `1` 时才显示 `provider/` 前缀
+  - 单 provider 场景下 footer 只显示 model id，和 TS 版语义对齐
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -381,6 +387,7 @@
 - `PiInteractiveModeTest`：auto-compaction 关闭时 footer 不显示 `(auto)` suffix
 - `PiInteractiveModeTest`：manual compaction 后 footer 会切到 `?/%window`
 - `PiInteractiveModeTest`：idle 状态 footer 会显示 `0.0%/%window`
+- `PiInteractiveModeTest`：单 provider 场景 footer 不显示 `provider/`
 
 最近通过：
 
@@ -390,6 +397,6 @@
 
 ## 下一步建议
 
-1. footer parity：继续评估 provider-count/session-name 行，以及是否补第二行 cwd/git/session name
+1. footer parity：继续补 session-name / cwd 行，再评估 git branch 第二行
 2. selector parity：继续评估 model/settings selector 是否复用同一套层级
 3. keybindings：继续评估 cycleModelBackward / selectModel / newSession / followUp / dequeue 等动作

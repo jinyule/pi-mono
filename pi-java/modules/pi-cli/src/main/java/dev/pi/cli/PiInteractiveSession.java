@@ -76,6 +76,10 @@ public interface PiInteractiveSession {
         return null;
     }
 
+    default int availableProviderCount() {
+        return 1;
+    }
+
     default ReloadResult reload() {
         throw new UnsupportedOperationException("Reload is not available");
     }
