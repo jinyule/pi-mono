@@ -68,6 +68,7 @@ public interface PiInteractiveSession {
             "one-at-a-time",
             "auto",
             false,
+            false,
             "off",
             List.of()
         );
@@ -201,6 +202,7 @@ public interface PiInteractiveSession {
         String steeringMode,
         String followUpMode,
         String transport,
+        boolean hideThinkingBlock,
         boolean reasoningAvailable,
         String thinkingLevel,
         List<String> availableThinkingLevels

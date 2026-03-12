@@ -187,11 +187,12 @@ public final class PiInteractiveMode implements AutoCloseable {
 
     private String renderTranscript(AgentState state) {
         var lines = new ArrayList<String>();
+        var hideThinking = session.settingsSelection().hideThinkingBlock();
         for (var message : state.messages()) {
-            lines.add(PiMessageRenderer.renderMessage(message));
+            lines.add(PiMessageRenderer.renderMessage(message, hideThinking));
         }
         if (state.isStreaming() && state.streamMessage() != null) {
-            lines.add(PiMessageRenderer.renderStreamingMessage(state.streamMessage()));
+            lines.add(PiMessageRenderer.renderStreamingMessage(state.streamMessage(), hideThinking));
         }
         return String.join("\n\n", lines);
     }

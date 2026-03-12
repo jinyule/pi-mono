@@ -357,6 +357,29 @@ class PiAgentSessionTest {
     }
 
     @Test
+    void restoresAndUpdatesHideThinkingSetting() {
+        var settingsManager = SettingsManager.inMemory(
+            Settings.empty().withMutations(root -> root.put("hideThinkingBlock", true)),
+            Settings.empty()
+        );
+        var session = PiAgentSession.builder(
+            testReasoningModel("anthropic", "claude-3-7-sonnet"),
+            SessionManager.inMemory("/workspace"),
+            settingsManager,
+            new InstructionResources(List.of(), "", List.of())
+        )
+            .streamFunction(fakeAssistant("Ack"))
+            .build();
+
+        assertThat(session.settingsSelection().hideThinkingBlock()).isTrue();
+
+        session.updateSetting("hide-thinking", "false");
+
+        assertThat(settingsManager.effective().getBoolean("/hideThinkingBlock", true)).isFalse();
+        assertThat(session.settingsSelection().hideThinkingBlock()).isFalse();
+    }
+
+    @Test
     void cyclesForwardThroughScopedModelsAndPersistsModelChange() {
         var sessionManager = SessionManager.inMemory("/workspace");
         var nextModel = new Model(

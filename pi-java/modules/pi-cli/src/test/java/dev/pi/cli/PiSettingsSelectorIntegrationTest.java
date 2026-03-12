@@ -91,6 +91,28 @@ class PiSettingsSelectorIntegrationTest {
     }
 
     @Test
+    void settingsSelectorTogglesHideThinking() {
+        var session = new FakeSettingsSession();
+        var terminal = new VirtualTerminal(90, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("/settings");
+        terminal.sendInput("\r");
+
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Hide thinking")));
+
+        terminal.sendInput("hide");
+        terminal.sendInput(" ");
+        terminal.sendInput("\u001b");
+
+        waitFor(() -> !String.join("\n", terminal.getViewport()).contains("Settings"));
+        assertThat(session.updatedSettings).contains("hide-thinking=true");
+
+        mode.stop();
+    }
+
+    @Test
     void settingsSelectorHintsReflectCustomKeybindings() {
         var previous = EditorKeybindings.global();
         try {
@@ -120,6 +142,7 @@ class PiSettingsSelectorIntegrationTest {
         private final CopyOnWriteArrayList<String> updatedSettings = new CopyOnWriteArrayList<>();
         private boolean autoCompactionEnabled = true;
         private String transport = "auto";
+        private boolean hideThinkingBlock;
         private AgentState state = new AgentState(
             "",
             new Model(
@@ -204,6 +227,7 @@ class PiSettingsSelectorIntegrationTest {
                 "one-at-a-time",
                 "one-at-a-time",
                 transport,
+                hideThinkingBlock,
                 state.model().reasoning(),
                 state.thinkingLevel() == null ? "off" : state.thinkingLevel().value(),
                 List.of("off", "minimal", "low", "medium", "high", "xhigh")
@@ -218,6 +242,9 @@ class PiSettingsSelectorIntegrationTest {
             }
             if ("transport".equals(settingId)) {
                 transport = value;
+            }
+            if ("hide-thinking".equals(settingId)) {
+                hideThinkingBlock = "true".equals(value);
             }
             if ("thinking".equals(settingId)) {
                 state = state.withThinkingLevel("off".equals(value) ? null : ThinkingLevel.fromValue(value));

@@ -14,9 +14,14 @@ public final class PiMessageRenderer {
     }
 
     public static String renderMessage(AgentMessage message) {
+        return renderMessage(message, false);
+    }
+
+    public static String renderMessage(AgentMessage message, boolean hideThinking) {
         return switch (message) {
             case AgentMessage.UserMessage userMessage -> "You: " + renderUserContent(userMessage.content());
-            case AgentMessage.AssistantMessage assistantMessage -> "Assistant: " + renderAssistantContent(assistantMessage.content());
+            case AgentMessage.AssistantMessage assistantMessage ->
+                "Assistant: " + renderAssistantContent(assistantMessage.content(), hideThinking);
             case AgentMessage.ToolResultMessage toolResultMessage ->
                 "Tool %s: %s".formatted(toolResultMessage.toolName(), renderUserContent(toolResultMessage.content()));
             case AgentMessage.CustomMessage customMessage ->
@@ -25,10 +30,14 @@ public final class PiMessageRenderer {
     }
 
     public static String renderStreamingMessage(AgentMessage message) {
+        return renderStreamingMessage(message, false);
+    }
+
+    public static String renderStreamingMessage(AgentMessage message, boolean hideThinking) {
         return switch (message) {
             case AgentMessage.AssistantMessage assistantMessage ->
-                "Assistant (streaming): " + renderAssistantContent(assistantMessage.content());
-            default -> renderMessage(message);
+                "Assistant (streaming): " + renderAssistantContent(assistantMessage.content(), hideThinking);
+            default -> renderMessage(message, hideThinking);
         };
     }
 
@@ -41,8 +50,12 @@ public final class PiMessageRenderer {
     }
 
     public static String renderAssistantContent(List<AssistantContent> content) {
+        return renderAssistantContent(content, false);
+    }
+
+    public static String renderAssistantContent(List<AssistantContent> content, boolean hideThinking) {
         return content.stream()
-            .map(PiMessageRenderer::renderAssistantBlock)
+            .map(block -> renderAssistantBlock(block, hideThinking))
             .filter(text -> !text.isBlank())
             .reduce((left, right) -> left + "\n" + right)
             .orElse("");
@@ -55,10 +68,10 @@ public final class PiMessageRenderer {
         };
     }
 
-    private static String renderAssistantBlock(AssistantContent block) {
+    private static String renderAssistantBlock(AssistantContent block, boolean hideThinking) {
         return switch (block) {
             case TextContent textContent -> textContent.text();
-            case ThinkingContent thinkingContent -> "Thinking: " + thinkingContent.thinking();
+            case ThinkingContent thinkingContent -> hideThinking ? "" : "Thinking: " + thinkingContent.thinking();
             case ToolCall toolCall -> "Tool call %s(%s)".formatted(toolCall.name(), toolCall.arguments());
         };
     }

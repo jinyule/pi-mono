@@ -321,6 +321,7 @@ public final class PiAgentSession implements PiInteractiveSession {
             queueModeValue(sdkSession.agent().steeringMode()),
             queueModeValue(sdkSession.agent().followUpMode()),
             transportValue(sdkSession.agent().transport()),
+            settingsManager.effective().getBoolean("/hideThinkingBlock", false),
             sdkSession.state().model().reasoning(),
             thinkingLevel,
             sdkSession.state().model().reasoning() ? AVAILABLE_THINKING_LEVELS : List.of()
@@ -336,6 +337,7 @@ public final class PiAgentSession implements PiInteractiveSession {
             case "steering-mode" -> updateQueueModeSetting(value, true);
             case "follow-up-mode" -> updateQueueModeSetting(value, false);
             case "transport" -> updateTransportSetting(value);
+            case "hide-thinking" -> updateHideThinkingSetting(value);
             case "thinking" -> updateThinkingSetting(value);
             default -> throw new IllegalArgumentException("Unknown setting: " + settingId);
         }
@@ -1040,6 +1042,11 @@ public final class PiAgentSession implements PiInteractiveSession {
         } catch (IOException exception) {
             throw new IllegalStateException("Failed to persist thinking level", exception);
         }
+    }
+
+    private void updateHideThinkingSetting(String value) {
+        var hidden = parseBooleanSetting("hide-thinking", value);
+        settingsManager.updateGlobal(settings -> settings.withMutations(root -> root.put("hideThinkingBlock", hidden)));
     }
 
     private static boolean parseBooleanSetting(String settingId, String value) {

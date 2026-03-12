@@ -70,6 +70,14 @@ public final class PiSettingsSelector implements Component, Focusable {
                 null
             ));
         }
+        items.add(new SettingItem(
+            "hide-thinking",
+            "Hide thinking",
+            "Hide thinking blocks in assistant responses",
+            settings.hideThinkingBlock() ? "true" : "false",
+            List.of("true", "false"),
+            null
+        ));
 
         this.settingsList = new SettingsList(
             items,

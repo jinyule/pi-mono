@@ -10,6 +10,7 @@ import dev.pi.agent.runtime.AgentTool;
 import dev.pi.ai.model.Message;
 import dev.pi.ai.model.Model;
 import dev.pi.ai.model.ThinkingLevel;
+import dev.pi.ai.model.ThinkingContent;
 import dev.pi.ai.model.TextContent;
 import dev.pi.ai.model.Usage;
 import dev.pi.ai.stream.Subscription;
@@ -525,6 +526,23 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void hidesThinkingBlocksWhenSettingIsEnabled() {
+        var session = new FakeSession()
+            .withAssistantThinkingMessage("Reason through options", "Final answer")
+            .withHideThinkingBlock(true);
+        var terminal = new VirtualTerminal(80, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+
+        assertThat(String.join("\n", terminal.getViewport()))
+            .contains("Assistant: Final answer")
+            .doesNotContain("Thinking: Reason through options");
+
+        mode.stop();
+    }
+
+    @Test
     void ctrlDOnEmptyInputStopsMode() throws Exception {
         var session = new FakeSession();
         var terminal = new VirtualTerminal(80, 16);
@@ -841,6 +859,7 @@ class PiInteractiveModeTest {
         private int abortCount;
         private int resumeCount;
         private boolean autoCompactionEnabled = true;
+        private boolean hideThinkingBlock;
         private int availableProviderCount = 1;
         private String cwd = "/workspace";
         private String lastThinkingLevelChange;
@@ -974,6 +993,30 @@ class PiInteractiveModeTest {
                 contextWindow,
                 latestUsage.totalTokens() * 100.0 / contextWindow
             );
+        }
+
+        @Override
+        public SettingsSelection settingsSelection() {
+            return new SettingsSelection(
+                autoCompactionEnabled,
+                "one-at-a-time",
+                "one-at-a-time",
+                "auto",
+                hideThinkingBlock,
+                state.model().reasoning(),
+                state.thinkingLevel() == null ? "off" : state.thinkingLevel().value(),
+                state.model().reasoning() ? List.of("off", "minimal", "low", "medium", "high", "xhigh") : List.of()
+            );
+        }
+
+        @Override
+        public void updateSetting(String settingId, String value) {
+            if ("hide-thinking".equals(settingId)) {
+                hideThinkingBlock = "true".equals(value);
+                emitState();
+                return;
+            }
+            throw new UnsupportedOperationException("Unsupported setting: " + settingId);
         }
 
         @Override
@@ -1273,6 +1316,12 @@ class PiInteractiveModeTest {
             return this;
         }
 
+        private FakeSession withHideThinkingBlock(boolean hideThinkingBlock) {
+            this.hideThinkingBlock = hideThinkingBlock;
+            emitState();
+            return this;
+        }
+
         private FakeSession withAvailableProviderCount(int availableProviderCount) {
             this.availableProviderCount = availableProviderCount;
             emitState();
@@ -1311,6 +1360,25 @@ class PiInteractiveModeTest {
                 ));
             }
             emitState();
+            return this;
+        }
+
+        private FakeSession withAssistantThinkingMessage(String thinking, String text) {
+            try {
+                sessionManager.appendMessage(new Message.AssistantMessage(
+                    List.of(new ThinkingContent(thinking, null, false), new TextContent(text, null)),
+                    state.model().api(),
+                    state.model().provider(),
+                    state.model().id(),
+                    new Usage(1, 1, 0, 0, 2, new Usage.Cost(0.0, 0.0, 0.0, 0.0, 0.0)),
+                    dev.pi.ai.model.StopReason.STOP,
+                    null,
+                    2L
+                ));
+            } catch (Exception exception) {
+                throw new AssertionError(exception);
+            }
+            syncState();
             return this;
         }
 
