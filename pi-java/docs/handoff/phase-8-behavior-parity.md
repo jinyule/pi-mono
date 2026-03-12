@@ -55,6 +55,8 @@
   - session selector regex parse error first cut
 - 已完成第二十五刀：
   - session selector empty/no-match/error state hierarchy first cut
+- 已完成第二十六刀：
+  - session selector empty-state hint parity first cut
 
 ## 本轮落地
 
@@ -201,6 +203,11 @@
   - query 非空但无匹配时，显示 `No matches for "..."`
   - regex 非法时，列表区显示 `Invalid regex query`
   - current/all scope 正在 loading 或 load error 时，列表区不再退回 `No matching commands`
+- `PiSessionPicker` 现在继续把 empty-state hint 往 TS 靠：
+  - current scope 为空时，显示 `No sessions in current folder. Press tab to view all.`
+  - current scope 且 named-only 为空时，显示 `Press ctrl+n to show all, or tab to view all.`
+  - all scope 且 named-only 为空时，显示 `No named sessions found. Press ctrl+n to show all.`
+  - `current/all` 同源时不会误报不可用的 scope-toggle 提示
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -255,6 +262,8 @@
 - `PiSessionPickerTest`：search no-match 状态显示 `No matches for "..."`
 - `PiSessionPickerTest`：regex error 状态和 no-match 状态分离
 - `PiSessionPickerTest`：loading / load error 状态不再渲染通用 no-match 文案
+- `PiSessionPickerTest`：current scope empty 状态显示 `tab` 恢复提示
+- `PiSessionPickerTest`：named-only 为空时显示 named filter / scope 恢复提示
 
 最近通过：
 

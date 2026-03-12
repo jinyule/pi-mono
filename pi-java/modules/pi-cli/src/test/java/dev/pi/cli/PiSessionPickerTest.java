@@ -240,10 +240,34 @@ class PiSessionPickerTest {
         ));
 
         waitFor(() -> terminal.output().contains("Resume session"));
-        waitFor(() -> terminal.output().contains("No sessions in current folder"));
+        waitFor(() -> terminal.output().contains("No sessions in current folder. Press tab to view all."));
 
         assertThat(terminal.output())
-            .contains("\u001b[90mNo sessions in current folder\u001b[0m")
+            .contains("\u001b[90mNo sessions in current folder. Press tab to view all.\u001b[0m")
+            .doesNotContain("No matching commands");
+
+        terminal.sendInput("\u001b");
+    }
+
+    @Test
+    void showsNamedFilterRecoveryHintWhenCurrentScopeHasNoNamedSessions() {
+        var terminal = new RecordingTerminal(140, 12);
+        var picker = new PiSessionPicker(terminal);
+
+        Thread.ofVirtual().start(() -> picker.pick(
+            List.of(sessionWithRawName("current.jsonl", "", "Current task", 2, Instant.now().minusSeconds(30), "/workspace/current")),
+            List.of(
+                sessionWithRawName("current.jsonl", "", "Current task", 2, Instant.now().minusSeconds(30), "/workspace/current"),
+                namedSession("global.jsonl", "Named global", "Global task", 3, Instant.now().minusSeconds(10), "/workspace/global")
+            )
+        ));
+
+        waitFor(() -> terminal.output().contains("Resume session"));
+        terminal.sendInput("\u000e");
+        waitFor(() -> terminal.output().contains("No named sessions in current folder. Press ctrl+n to show all, or tab to view all."));
+
+        assertThat(terminal.output())
+            .contains("\u001b[90mNo named sessions in current folder. Press ctrl+n to show all, or tab to view all.\u001b[0m")
             .doesNotContain("No matching commands");
 
         terminal.sendInput("\u001b");

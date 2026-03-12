@@ -1015,9 +1015,22 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
                 return styleInfoLines("No matches for \"" + query + "\"", width, PiCliAnsi::muted);
             }
             if (nameFilter == NameFilter.NAMED) {
-                return styleInfoLines(scope == Scope.CURRENT ? "No named sessions in current folder" : "No named sessions in all folders", width, PiCliAnsi::muted);
+                var toggleNamedHint = appKeyHint(PiAppAction.TOGGLE_SESSION_NAMED_FILTER);
+                if (scope == Scope.ALL) {
+                    return styleInfoLines("No named sessions found. Press " + toggleNamedHint + " to show all.", width, PiCliAnsi::muted);
+                }
+                var scopeHint = sameScopeData() ? "" : ", or " + keyHint(EditorAction.SESSION_SCOPE_TOGGLE) + " to view all";
+                return styleInfoLines(
+                    "No named sessions in current folder. Press " + toggleNamedHint + " to show all" + scopeHint + ".",
+                    width,
+                    PiCliAnsi::muted
+                );
             }
-            return styleInfoLines(scope == Scope.CURRENT ? "No sessions in current folder" : "No sessions in all folders", width, PiCliAnsi::muted);
+            if (scope == Scope.ALL) {
+                return styleInfoLines("No sessions found", width, PiCliAnsi::muted);
+            }
+            var scopeHint = sameScopeData() ? "" : ". Press " + keyHint(EditorAction.SESSION_SCOPE_TOGGLE) + " to view all.";
+            return styleInfoLines("No sessions in current folder" + scopeHint, width, PiCliAnsi::muted);
         }
 
         private boolean activeScopeLoading() {
