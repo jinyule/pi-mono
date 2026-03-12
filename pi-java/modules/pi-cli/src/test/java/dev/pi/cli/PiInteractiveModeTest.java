@@ -9,12 +9,15 @@ import dev.pi.agent.runtime.AgentState;
 import dev.pi.agent.runtime.AgentTool;
 import dev.pi.ai.model.Message;
 import dev.pi.ai.model.Model;
+import dev.pi.ai.model.ThinkingLevel;
 import dev.pi.ai.model.TextContent;
 import dev.pi.ai.model.Usage;
 import dev.pi.ai.stream.Subscription;
 import dev.pi.session.SessionEntry;
 import dev.pi.session.SessionManager;
 import dev.pi.session.SessionTreeNode;
+import dev.pi.tui.InputHandler;
+import dev.pi.tui.Terminal;
 import dev.pi.tui.VirtualTerminal;
 import java.util.ArrayList;
 import java.util.List;
@@ -87,6 +90,41 @@ class PiInteractiveModeTest {
             .contains("↓1")
             .contains("$0.000")
             .contains("test-model");
+
+        mode.stop();
+    }
+
+    @Test
+    void stylesFooterStatsAndModelSummaryWithAnsiHierarchy() {
+        var session = new FakeSession();
+        var terminal = new RecordingTerminal(80, 14);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("Hello");
+        terminal.sendInput("\r");
+
+        waitFor(() -> terminal.output().contains("test-model"));
+
+        assertThat(terminal.output())
+            .contains("\u001b[90m↑1 ↓1 $0.000\u001b[0m")
+            .contains("\u001b[1mtest-model\u001b[0m");
+
+        mode.stop();
+    }
+
+    @Test
+    void rendersReasoningThinkingLevelInFooter() {
+        var session = new FakeSession().withReasoningModel("reasoning-model", ThinkingLevel.HIGH);
+        var terminal = new RecordingTerminal(100, 14);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        waitFor(() -> terminal.output().contains("reasoning-model"));
+
+        assertThat(terminal.output())
+            .contains("\u001b[1mreasoning-model\u001b[0m")
+            .contains("\u001b[90m • high\u001b[0m");
 
         mode.stop();
     }
@@ -514,6 +552,25 @@ class PiInteractiveModeTest {
             emitState();
         }
 
+        private FakeSession withReasoningModel(String modelId, ThinkingLevel thinkingLevel) {
+            state = state.withModel(new Model(
+                modelId,
+                modelId,
+                "openai-responses",
+                "openai",
+                "https://example.com",
+                true,
+                List.of("text"),
+                new Usage.Cost(0.0, 0.0, 0.0, 0.0, 0.0),
+                128_000,
+                8_192,
+                null,
+                null
+            )).withThinkingLevel(thinkingLevel);
+            emitState();
+            return this;
+        }
+
         private static String extractUserText(SessionEntry.MessageEntry entry) {
             var parts = new ArrayList<String>();
             for (var item : entry.message().path("content")) {
@@ -525,6 +582,53 @@ class PiInteractiveModeTest {
                 }
             }
             return String.join("\n", parts);
+        }
+    }
+
+    private static final class RecordingTerminal implements Terminal {
+        private final int columns;
+        private final int rows;
+        private final List<String> writes = new CopyOnWriteArrayList<>();
+        private volatile InputHandler inputHandler;
+
+        private RecordingTerminal(int columns, int rows) {
+            this.columns = columns;
+            this.rows = rows;
+        }
+
+        @Override
+        public void start(InputHandler onInput, Runnable onResize) {
+            inputHandler = onInput;
+        }
+
+        @Override
+        public void stop() {
+            inputHandler = null;
+        }
+
+        @Override
+        public void write(String data) {
+            writes.add(data);
+        }
+
+        @Override
+        public int columns() {
+            return columns;
+        }
+
+        @Override
+        public int rows() {
+            return rows;
+        }
+
+        private void sendInput(String data) {
+            if (inputHandler != null) {
+                inputHandler.onInput(data);
+            }
+        }
+
+        private String output() {
+            return String.join("", writes);
         }
     }
 

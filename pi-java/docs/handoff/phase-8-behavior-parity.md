@@ -61,6 +61,8 @@
   - selector metadata right-aligned layout first cut
 - 已完成第二十八刀：
   - interactive footer token/cost/model first cut
+- 已完成第二十九刀：
+  - interactive footer ANSI hierarchy first cut
 
 ## 本轮落地
 
@@ -224,6 +226,11 @@
   - 宽度足够时保留左统计 / 右模型的单行布局，宽度不足时优先保留统计并安全截断模型信息
 - `PiInteractiveMode` 现在把 header top/bottom padding 收紧到 `0/0`：
   - 配合 footer 首版，避免小终端下 header/transcript 因额外空行被过早裁掉
+- `PiInteractiveMode` 现在继续把 footer 接到 ANSI 层级：
+  - usage/cost 统计整体走 muted
+  - model id 走 bold
+  - reasoning suffix（`• high` / `• thinking off`）走 muted
+  - 右侧宽度不足时会优先保留 model id，再截断 suffix，避免把最关键的 model 标识先裁掉
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -284,6 +291,8 @@
 - `SelectListTest`：短 label 时不再白白吞掉 metadata 空间
 - `SelectListTest`：长 label 截断时仍优先保住右侧 metadata
 - `PiInteractiveModeTest`：`14` 行终端下渲染 usage/cost/model footer
+- `PiInteractiveModeTest`：footer usage/model 的 ANSI 层级
+- `PiInteractiveModeTest`：reasoning model footer 会显示 thinking level
 
 最近通过：
 
@@ -293,6 +302,6 @@
 
 ## 下一步建议
 
-1. footer parity：继续补 footer 的 ANSI 层级、provider/thinking 信息与更窄宽度下的截断策略
+1. footer parity：继续评估 provider 展示、context window/auto-compact 指标，以及更窄宽度下的截断策略
 2. selector parity：继续评估 model/settings selector 是否复用同一套层级
 3. keybindings：继续评估 app 层是否要补 model/thinking 相关动作

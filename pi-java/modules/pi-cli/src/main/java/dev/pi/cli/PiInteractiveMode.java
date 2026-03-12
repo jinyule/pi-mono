@@ -206,22 +206,26 @@ public final class PiInteractiveMode implements AutoCloseable {
     }
 
     private static String renderFooterStatsLine(AgentState state, int width) {
-        var statsLeft = footerUsageSummary(state);
-        var right = footerModelSummary(state);
-        if (statsLeft.isBlank()) {
-            return TerminalText.truncateToWidth(right, width, "...");
+        var plainLeft = footerUsageSummary(state);
+        if (plainLeft.isBlank()) {
+            return renderFooterModelSummary(state, width);
         }
 
-        var leftWidth = TerminalText.visibleWidth(statsLeft);
-        var rightWidth = TerminalText.visibleWidth(right);
+        var plainRight = footerModelSummary(state);
+        var leftWidth = TerminalText.visibleWidth(plainLeft);
+        var rightWidth = TerminalText.visibleWidth(plainRight);
         if (leftWidth + 2 + rightWidth <= width) {
-            return statsLeft + " ".repeat(width - leftWidth - rightWidth) + right;
+            return PiCliAnsi.muted(plainLeft)
+                + " ".repeat(width - leftWidth - rightWidth)
+                + renderFooterModelSummary(state, rightWidth);
         }
         var availableRightWidth = width - leftWidth - 2;
         if (availableRightWidth > 3) {
-            return statsLeft + "  " + TerminalText.truncateToWidth(right, availableRightWidth, "...");
+            return PiCliAnsi.muted(plainLeft)
+                + "  "
+                + renderFooterModelSummary(state, availableRightWidth);
         }
-        return TerminalText.truncateToWidth(statsLeft, width, "...");
+        return PiCliAnsi.muted(TerminalText.truncateToWidth(plainLeft, width, "..."));
     }
 
     private static String footerUsageSummary(AgentState state) {
@@ -267,6 +271,27 @@ public final class PiInteractiveMode implements AutoCloseable {
             return model.id() + " • " + thinkingLevel;
         }
         return model.id();
+    }
+
+    private static String renderFooterModelSummary(AgentState state, int width) {
+        if (width <= 0) {
+            return "";
+        }
+        var modelLabel = state.model().id();
+        if (!state.model().reasoning()) {
+            return PiCliAnsi.bold(TerminalText.truncateToWidth(modelLabel, width, "..."));
+        }
+
+        var suffix = " • " + (state.thinkingLevel() == null ? "thinking off" : state.thinkingLevel().value());
+        var modelWidth = TerminalText.visibleWidth(modelLabel);
+        var suffixWidth = TerminalText.visibleWidth(suffix);
+        if (modelWidth + suffixWidth <= width) {
+            return PiCliAnsi.bold(modelLabel) + PiCliAnsi.muted(suffix);
+        }
+        if (modelWidth >= width) {
+            return PiCliAnsi.bold(TerminalText.truncateToWidth(modelLabel, width, "..."));
+        }
+        return PiCliAnsi.bold(modelLabel) + PiCliAnsi.muted(TerminalText.truncateToWidth(suffix, width - modelWidth, "..."));
     }
 
     private static String formatTokens(int count) {
