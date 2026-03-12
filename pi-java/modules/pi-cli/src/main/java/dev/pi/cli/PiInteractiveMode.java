@@ -33,6 +33,7 @@ public final class PiInteractiveMode implements AutoCloseable {
     private final PiExternalEditor externalEditor;
     private final Runnable suspendAction;
     private final Text header = new Text("", 0, 0, null);
+    private final Text resources = new Text("", 1, 0, null);
     private final Text transcript = new Text("", 1, 0, null);
     private final Text status = new Text("", 1, 0, null);
     private final Text footer = new Text("", 1, 0, null);
@@ -44,6 +45,7 @@ public final class PiInteractiveMode implements AutoCloseable {
     private boolean started;
     private String manualStatus;
     private String previewTheme;
+    private String reloadDiagnostics;
     private Runnable onStop;
     private long lastClearTimeMillis;
     private long lastEscapeTimeMillis;
@@ -108,6 +110,7 @@ public final class PiInteractiveMode implements AutoCloseable {
         this.externalEditor = externalEditor == null ? PiExternalEditor.system(tui) : externalEditor;
         this.suspendAction = suspendAction == null ? createSuspendAction() : suspendAction;
         this.tui.addChild(header);
+        this.tui.addChild(resources);
         this.tui.addChild(transcript);
         this.tui.addChild(status);
         this.tui.addChild(footer);
@@ -130,6 +133,7 @@ public final class PiInteractiveMode implements AutoCloseable {
         stateSubscription = session.subscribeState(this::renderState);
         gitBranchWatcher = PiGitBranchWatcher.start(session.cwd(), () -> renderState(session.state()));
         tui.start();
+        renderState(session.state());
     }
 
     public void stop() {
@@ -226,6 +230,7 @@ public final class PiInteractiveMode implements AutoCloseable {
         tui.setClearOnShrink(settings.clearOnShrink());
         input.setPaddingX(settings.editorPaddingX());
         header.setText(renderHeader(state));
+        resources.setText(renderResources());
         transcript.setText(renderTranscript(state));
         status.setText(renderStatus(state));
         footer.setText(renderFooter(state));
@@ -306,6 +311,21 @@ public final class PiInteractiveMode implements AutoCloseable {
             lines.add("↳ " + dequeueKeyDisplay() + " to edit queued messages");
         }
         return String.join("\n", lines);
+    }
+
+    private String renderResources() {
+        var sections = new ArrayList<String>();
+        var settings = session.settingsSelection();
+        if (!settings.quietStartup()) {
+            var startupResources = session.startupResources();
+            appendResourceSection(sections, "Context", startupResources.contextFiles(), true);
+            appendResourceSection(sections, "Extensions", startupResources.extensionPaths(), true);
+            appendResourceSection(sections, "Themes", startupResources.customThemes(), false);
+        }
+        if (reloadDiagnostics != null && !reloadDiagnostics.isBlank()) {
+            sections.add(reloadDiagnostics);
+        }
+        return String.join("\n\n", sections);
     }
 
     private String renderFooter(AgentState state) {
@@ -785,6 +805,7 @@ public final class PiInteractiveMode implements AutoCloseable {
     private void handleReloadCommand() {
         try {
             var result = session.reload();
+            reloadDiagnostics = formatReloadDiagnostics(result);
             var warningCount = result.settingsErrors().size()
                 + result.resourceErrors().size()
                 + result.themeWarnings().size()
@@ -1132,6 +1153,53 @@ public final class PiInteractiveMode implements AutoCloseable {
 
     private static String renderHeaderHintLine(int width, String text) {
         return PiCliAnsi.muted(TerminalText.truncateToWidth(text, Math.max(1, width), "..."));
+    }
+
+    private void appendResourceSection(
+        List<String> sections,
+        String title,
+        List<String> items,
+        boolean pathLike
+    ) {
+        var visibleItems = items.stream()
+            .filter(Objects::nonNull)
+            .map(String::trim)
+            .filter(item -> !item.isBlank())
+            .map(item -> pathLike ? shortenHomePath(item) : item)
+            .toList();
+        if (visibleItems.isEmpty()) {
+            return;
+        }
+        var lines = new ArrayList<String>();
+        lines.add(PiCliAnsi.bold("[" + title + "]"));
+        for (var item : visibleItems) {
+            lines.add(PiCliAnsi.muted("  " + item));
+        }
+        sections.add(String.join("\n", lines));
+    }
+
+    private String formatReloadDiagnostics(PiInteractiveSession.ReloadResult result) {
+        var lines = new ArrayList<String>();
+        for (var error : result.settingsErrors()) {
+            lines.add("  " + error.scope().name().toLowerCase(Locale.ROOT) + " settings: " + rootMessage(error.error()));
+        }
+        for (var error : result.resourceErrors()) {
+            lines.add("  " + shortenHomePath(error.path().toString()) + ": " + rootMessage(error.error()));
+        }
+        for (var warning : result.themeWarnings()) {
+            lines.add("  theme: " + warning);
+        }
+        for (var warning : result.extensionWarnings()) {
+            lines.add("  extension: " + warning);
+        }
+        if (lines.isEmpty()) {
+            return "";
+        }
+        lines.addFirst(PiCliAnsi.warning("[Reload warnings]"));
+        for (var index = 1; index < lines.size(); index += 1) {
+            lines.set(index, PiCliAnsi.warning(lines.get(index)));
+        }
+        return String.join("\n", lines);
     }
 
     private void replaceInputValue(String value) {

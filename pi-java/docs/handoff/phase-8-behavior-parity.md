@@ -940,6 +940,17 @@
   - `PiCliThemeLoaderTest` covers global/project/explicit discovery, `--no-themes`, and invalid-theme warnings
   - `PiCliModuleThemeTest` covers startup wiring so custom themes appear in `/settings` and drive `PiCliAnsi`
   - `PiCliModuleThemeReloadTest` covers reload-time registry refresh and warning propagation
+- `PiInteractiveSession` / `PiAgentSession` now expose a first-cut startup resource snapshot:
+  - context file paths come from `InstructionResources.contextFiles()`
+  - extension paths come from `ExtensionRuntime.sources()`
+  - custom theme names come from the loaded theme registry and are refreshed on `/reload`
+- `PiInteractiveMode` now renders a first-cut startup resource block:
+  - `[Context]`, `[Extensions]`, and `[Themes]` render when `quietStartup=false`
+  - `/reload` diagnostics render in `[Reload warnings]`
+  - when `quietStartup=true`, reload keeps the verbose resource listing suppressed and only surfaces diagnostics
+- Additional tests:
+  - `PiAgentSessionStartupResourcesTest` covers startup resource snapshots plus theme refresh on reload
+  - `PiInteractiveModeResourceListingTest` covers startup resource rendering, quiet-startup suppression, and quiet reload diagnostics
 
 ?????```bash
 .\\gradlew.bat :pi-cli:test --no-daemon
@@ -949,6 +960,6 @@ npm.cmd run check
 ## 下一步建议
 
 1. selector parity：继续评估 model selector 是否要补 all-scope warning/hint copy 的 TS 细节，或继续压空状态 copy/层级
-2. settings selector parity: theme work now covers hint/keybinding parity, hide-thinking transcript parity, quiet-startup header parity, double-escape, editor-padding, dark/light runtime ANSI theme switching, `Theme` submenu preview, `Thinking level` submenu, hardware-cursor/clear-on-shrink, TS-style copy for steering/follow-up/transport/quiet-startup, plus the first custom theme loader + hot reload slice; remaining theme gaps are startup resource listing silence, package/source theme discovery, and fuller theme token coverage
+2. settings selector parity: theme work now covers hint/keybinding parity, hide-thinking transcript parity, quiet-startup header parity, quiet-startup startup-resource silence, double-escape, editor-padding, dark/light runtime ANSI theme switching, `Theme` submenu preview, `Thinking level` submenu, hardware-cursor/clear-on-shrink, TS-style copy for steering/follow-up/transport/quiet-startup, plus the first custom theme loader + hot reload slice; remaining theme gaps are package/source theme discovery and fuller theme token coverage
 3. pending queue parity：继续补 compaction queue 合并展示与恢复；steering/follow-up runtime queue 已接上，但 Java 侧仍没有 compaction pending queue
 4. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件

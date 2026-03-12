@@ -240,10 +240,17 @@ public final class PiCliModule {
             .availableProviderCount(aiClient.modelRegistry().getProviders().size())
             .cycleModels(cycleModels, !args.modelPatterns().isEmpty() && !scopedCycleModels.isEmpty())
             .modelSelectorModels(allModels(aiClient.modelRegistry()))
+            .customThemes(loadedThemes.availableThemes())
+            .extensionPaths(extensionRuntime == null
+                ? List.of()
+                : extensionRuntime.sources().stream().map(Path::toString).toList())
             .themeReloadAction(() -> {
                 var reloadedThemes = themeLoader.load(args.themes(), args.noThemes());
                 PiCliAnsi.setRegisteredThemes(reloadedThemes.palettes());
-                return reloadedThemes.warnings();
+                return new PiAgentSession.ThemeReloadResult(
+                    reloadedThemes.availableThemes(),
+                    reloadedThemes.warnings()
+                );
             });
         if (extensionRuntime != null) {
             builder.reloadAction(() -> extensionRuntime.reload().failures().stream().map(PiCliModule::formatExtensionFailure).toList());

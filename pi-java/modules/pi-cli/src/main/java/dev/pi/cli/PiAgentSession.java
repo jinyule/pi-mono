@@ -44,11 +44,13 @@ public final class PiAgentSession implements PiInteractiveSession {
     private final String systemPrompt;
     private final String appendSystemPrompt;
     private final ReloadAction reloadAction;
-    private final ReloadAction themeReloadAction;
+    private final ThemeReloadAction themeReloadAction;
     private final List<CycleModel> cycleModels;
     private final boolean scopedCycleModels;
     private final int availableProviderCount;
     private final List<Model> modelSelectorModels;
+    private final List<String> extensionPaths;
+    private volatile List<String> customThemes;
     private volatile List<CycleModel> modelSelectionTargets = List.of();
 
     private PiAgentSession(
@@ -59,11 +61,13 @@ public final class PiAgentSession implements PiInteractiveSession {
         String systemPrompt,
         String appendSystemPrompt,
         ReloadAction reloadAction,
-        ReloadAction themeReloadAction,
+        ThemeReloadAction themeReloadAction,
         List<CycleModel> cycleModels,
         boolean scopedCycleModels,
         int availableProviderCount,
-        List<Model> modelSelectorModels
+        List<Model> modelSelectorModels,
+        List<String> extensionPaths,
+        List<String> customThemes
     ) {
         this.sdkSession = Objects.requireNonNull(sdkSession, "sdkSession");
         this.settingsManager = Objects.requireNonNull(settingsManager, "settingsManager");
@@ -77,6 +81,8 @@ public final class PiAgentSession implements PiInteractiveSession {
         this.scopedCycleModels = scopedCycleModels;
         this.availableProviderCount = Math.max(1, availableProviderCount);
         this.modelSelectorModels = List.copyOf(Objects.requireNonNullElse(modelSelectorModels, List.of()));
+        this.extensionPaths = List.copyOf(Objects.requireNonNullElse(extensionPaths, List.of()));
+        this.customThemes = List.copyOf(Objects.requireNonNullElse(customThemes, List.of()));
     }
 
     public static Builder builder(
@@ -213,6 +219,14 @@ public final class PiAgentSession implements PiInteractiveSession {
             }
         }
         return null;
+    }
+
+    @Override
+    public StartupResources startupResources() {
+        var contextFiles = instructionResources.contextFiles().stream()
+            .map(instructionFile -> instructionFile.path().toString())
+            .toList();
+        return new StartupResources(contextFiles, extensionPaths, customThemes);
     }
 
     @Override
@@ -540,7 +554,9 @@ public final class PiAgentSession implements PiInteractiveSession {
         var themeWarnings = List.<String>of();
         if (themeReloadAction != null) {
             try {
-                themeWarnings = List.copyOf(themeReloadAction.reload());
+                var result = themeReloadAction.reload();
+                customThemes = result.availableThemes();
+                themeWarnings = result.warnings();
             } catch (Exception exception) {
                 themeWarnings = List.of(rootMessage(exception));
             }
@@ -621,6 +637,21 @@ public final class PiAgentSession implements PiInteractiveSession {
         List<String> reload() throws Exception;
     }
 
+    @FunctionalInterface
+    public interface ThemeReloadAction {
+        ThemeReloadResult reload() throws Exception;
+    }
+
+    public record ThemeReloadResult(
+        List<String> availableThemes,
+        List<String> warnings
+    ) {
+        public ThemeReloadResult {
+            availableThemes = List.copyOf(Objects.requireNonNull(availableThemes, "availableThemes"));
+            warnings = List.copyOf(Objects.requireNonNull(warnings, "warnings"));
+        }
+    }
+
     public record CycleModel(
         Model model,
         ThinkingLevel thinkingLevel
@@ -640,7 +671,7 @@ public final class PiAgentSession implements PiInteractiveSession {
         private String systemPrompt;
         private String appendSystemPrompt;
         private ReloadAction reloadAction;
-        private ReloadAction themeReloadAction;
+        private ThemeReloadAction themeReloadAction;
         private ThinkingLevel thinkingLevel;
         private List<AgentTool<?>> tools = List.of();
         private AgentLoopConfig.MessageConverter convertToLlm;
@@ -657,6 +688,8 @@ public final class PiAgentSession implements PiInteractiveSession {
         private boolean scopedCycleModels;
         private int availableProviderCount = 1;
         private List<Model> modelSelectorModels = List.of();
+        private List<String> extensionPaths = List.of();
+        private List<String> customThemes = List.of();
 
         private Builder(
             Model model,
@@ -695,7 +728,7 @@ public final class PiAgentSession implements PiInteractiveSession {
             return this;
         }
 
-        public Builder themeReloadAction(ReloadAction themeReloadAction) {
+        public Builder themeReloadAction(ThemeReloadAction themeReloadAction) {
             this.themeReloadAction = themeReloadAction;
             return this;
         }
@@ -784,6 +817,16 @@ public final class PiAgentSession implements PiInteractiveSession {
             return this;
         }
 
+        public Builder extensionPaths(List<String> extensionPaths) {
+            this.extensionPaths = extensionPaths == null ? List.of() : List.copyOf(extensionPaths);
+            return this;
+        }
+
+        public Builder customThemes(List<String> customThemes) {
+            this.customThemes = customThemes == null ? List.of() : List.copyOf(customThemes);
+            return this;
+        }
+
         public PiAgentSession build() {
             if (streamFunction == null) {
                 throw new IllegalStateException("PiAgentSession streamFunction must be configured");
@@ -823,7 +866,9 @@ public final class PiAgentSession implements PiInteractiveSession {
                 cycleModels,
                 scopedCycleModels,
                 availableProviderCount,
-                modelSelectorModels
+                modelSelectorModels,
+                extensionPaths,
+                customThemes
             );
         }
 

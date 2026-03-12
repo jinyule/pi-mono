@@ -150,6 +150,10 @@ public interface PiInteractiveSession {
         return null;
     }
 
+    default StartupResources startupResources() {
+        return StartupResources.empty();
+    }
+
     default ReloadResult reload() {
         throw new UnsupportedOperationException("Reload is not available");
     }
@@ -294,6 +298,22 @@ public interface PiInteractiveSession {
             resourceErrors = List.copyOf(resourceErrors);
             themeWarnings = List.copyOf(themeWarnings);
             extensionWarnings = List.copyOf(extensionWarnings);
+        }
+    }
+
+    record StartupResources(
+        List<String> contextFiles,
+        List<String> extensionPaths,
+        List<String> customThemes
+    ) {
+        public StartupResources {
+            contextFiles = List.copyOf(contextFiles);
+            extensionPaths = List.copyOf(extensionPaths);
+            customThemes = List.copyOf(customThemes);
+        }
+
+        public static StartupResources empty() {
+            return new StartupResources(List.of(), List.of(), List.of());
         }
     }
 
