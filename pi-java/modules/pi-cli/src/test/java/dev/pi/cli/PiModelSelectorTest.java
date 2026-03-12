@@ -32,8 +32,9 @@ class PiModelSelectorTest {
         assertThat(lines).anyMatch(line -> line.contains("Only showing models with configured API keys"));
         assertThat(lines).anyMatch(line -> line.contains("gpt-5"));
         assertThat(lines).anyMatch(line -> line.contains("[openai]"));
-        assertThat(lines).anyMatch(line -> line.contains("Selected model"));
-        assertThat(lines).anyMatch(line -> line.contains("openai/gpt-5"));
+        assertThat(lines).anyMatch(line -> line.contains("\u001b[1;36mSelected model"));
+        assertThat(lines).anyMatch(line -> line.contains("\u001b[90mopenai/"));
+        assertThat(lines).anyMatch(line -> line.contains("\u001b[1mgpt-5"));
         assertThat(lines).anyMatch(line -> line.contains("Model name: GPT-5"));
         assertThat(lines).anyMatch(line -> line.contains("Thinking: minimal"));
         assertThat(lines).anyMatch(line -> line.contains("Context: 400k ctx"));
@@ -184,8 +185,9 @@ class PiModelSelectorTest {
         selector.handleInput("\u001b[B");
 
         var lines = selector.render(100);
-        assertThat(lines).anyMatch(line -> line.contains("Selected model"));
-        assertThat(lines).anyMatch(line -> line.contains("anthropic/claude-3-7-sonnet"));
+        assertThat(lines).anyMatch(line -> line.contains("\u001b[1;36mSelected model"));
+        assertThat(lines).anyMatch(line -> line.contains("\u001b[90manthropic/"));
+        assertThat(lines).anyMatch(line -> line.contains("\u001b[1mclaude-3-7-sonnet"));
         assertThat(lines).anyMatch(line -> line.contains("Model name: Claude 3.7 Sonnet"));
     }
 }

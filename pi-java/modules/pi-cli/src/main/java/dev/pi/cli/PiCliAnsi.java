@@ -16,6 +16,10 @@ final class PiCliAnsi {
         return style("1", text);
     }
 
+    static String accentBold(String text) {
+        return style("1;36", text);
+    }
+
     static String warning(String text) {
         return style("33", text);
     }

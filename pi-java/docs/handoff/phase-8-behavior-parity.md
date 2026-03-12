@@ -121,6 +121,8 @@
   - interactive model selector scope/hint copy first cut
 - 已完成第五十八刀：
   - interactive model selector current-checkmark ANSI first cut
+- 已完成第五十九刀：
+  - interactive model selector detail ANSI hierarchy first cut
 
 ## 本轮落地
 
@@ -574,6 +576,10 @@
   - row label 里的 `✓` 改成 success 样式
   - detail panel 的 `provider/model ✓` 也改成 success 样式
   - 当前模型在列表和 detail 区的层级更接近 TS 的绿色 checkmark
+- `PiModelSelector` 现在继续把 detail panel 的 ANSI 层级往 TS 靠：
+  - `Selected model` 改成 accent+bold
+  - `provider/model` 行改成 provider muted + model bold
+  - detail 区标题和模型标识的视觉层级比字段说明更清晰
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+l`
@@ -718,6 +724,7 @@
 - `PiModelSelectorTest`：selector 会渲染顶部/底部 outer border
 - `PiModelSelectorTest`：scoped selector 会渲染 `Scope:` 和 `tab scope (all/scoped)` 文案
 - `PiModelSelectorTest`：当前模型 `✓` 会渲染 success ANSI
+- `PiModelSelectorTest`：detail panel 会渲染 accent+bold 标题和 provider/model 分层 ANSI
 
 最近通过：
 
@@ -727,7 +734,7 @@
 
 ## 下一步建议
 
-1. selector parity：继续评估 model selector 是否要补 title/detail 的 ANSI 分层，或继续压 current row 的 provider badge/checkmark 细节
+1. selector parity：继续评估 model selector 是否要补列表选中行的 provider badge 分层，或继续压 warning/hint/title copy 的 TS 细节
 2. settings selector parity：继续评估 `theme` / `hide thinking` / `quiet startup`；这些键在 Java 侧还缺真实 runtime 绑定
 3. pending queue parity：继续补 compaction queue 合并展示与恢复；steering/follow-up runtime queue 已接上，但 Java 侧仍没有 compaction pending queue
 4. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件

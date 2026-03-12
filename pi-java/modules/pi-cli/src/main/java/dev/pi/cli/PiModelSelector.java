@@ -234,14 +234,21 @@ public final class PiModelSelector implements Component, Focusable {
     private static List<String> renderSelectedDetailPanel(PiInteractiveSession.SelectableModel model, int width) {
         var lines = new ArrayList<String>();
         lines.add(separatorLine(width));
-        lines.add(PiCliAnsi.bold("Selected model"));
-        var title = "  " + model.provider() + "/" + model.modelId() + (model.current() ? " " + PiCliAnsi.success("✓") : "");
-        lines.add(TerminalText.truncateToWidth(title, width, "..."));
+        lines.add(PiCliAnsi.accentBold("Selected model"));
+        lines.add(TerminalText.truncateToWidth(renderSelectedModelTitle(model), width, "..."));
         for (var detailLine : selectedDetailLines(model)) {
             lines.add(PiCliAnsi.muted(TerminalText.truncateToWidth("  " + detailLine, width, "...")));
         }
         lines.add(separatorLine(width));
         return List.copyOf(lines);
+    }
+
+    private static String renderSelectedModelTitle(PiInteractiveSession.SelectableModel model) {
+        var line = "  "
+            + PiCliAnsi.muted(model.provider() + "/")
+            + PiCliAnsi.bold(model.modelId())
+            + (model.current() ? " " + PiCliAnsi.success("✓") : "");
+        return line;
     }
 
     private static String separatorLine(int width) {
