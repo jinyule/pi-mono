@@ -884,17 +884,25 @@
   - 这让 interactive prompt 首次渲染和 `/settings` 更新后的后续重绘都能吃到新的 horizontal padding
   - 当前 Java 侧只把这项接到了单行 `Input`；`Editor` 本身之前已经有 `setPaddingX()`，但 interactive mode 仍未切到多行 editor
 - InputTest / PiAgentSessionTest / PiSettingsSelectorIntegrationTest / PiInteractiveModeTest 现在覆盖 editor-padding 的渲染、持久化、selector 切换和 interactive prompt 初始化同步
+- `PiCliAnsi` 现在补了 light/dark palette：
+  - `dark` 继续走当前的 cyan/muted-gray ANSI 组合
+  - `light` 首版切到 blue accent + dim-black muted，优先保证在浅色背景下的可读性
+  - 未识别 theme name 目前会回退到 `dark`
+- PiInteractiveMode 现在会在每次 `renderState()` 前调用 `PiCliAnsi.setTheme(session.settingsSelection().theme())`
+  - 这让 startup render、`/settings` 里的 theme 切换，以及 `/reload` 后的 settings 回放都能重新着色
+  - 当前这刀只覆盖 CLI ANSI palette；还没有接入 TS 那套 theme file/resource loader，也没有 selector 内的 preview mode
+- PiCliAnsiTest / PiInteractiveModeTest 现在覆盖 dark/light palette、unknown theme fallback，以及 interactive runtime 重绘后的 light-theme footer ANSI
 
 最近通过：
 
 ```bash
-.\gradlew.bat :pi-tui:test :pi-cli:test --no-daemon
+.\\gradlew.bat :pi-cli:test --no-daemon
 npm.cmd run check
 ```
 
 ## 下一步建议
 
 1. selector parity：继续评估 model selector 是否要补 all-scope warning/hint copy 的 TS 细节，或继续压空状态 copy/层级
-2. settings selector parity：继续评估 `theme` 等剩余项；当前已补 hint/keybinding parity、hide-thinking transcript parity、quiet-startup header parity、double-escape、editor-padding，以及 toggleThinking / clear / exit / expandTools app keybinding，但 Java 侧仍未覆盖 TS 的 startup resource listing / theme runtime
+2. settings selector parity：继续评估 `theme` 等剩余项；当前已补 hint/keybinding parity、hide-thinking transcript parity、quiet-startup header parity、double-escape、editor-padding，以及 dark/light runtime ANSI 主题切换，但 Java 侧仍未覆盖 TS 的 startup resource listing / custom theme loader / preview
 3. pending queue parity：继续补 compaction queue 合并展示与恢复；steering/follow-up runtime queue 已接上，但 Java 侧仍没有 compaction pending queue
 4. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件

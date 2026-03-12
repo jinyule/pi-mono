@@ -94,6 +94,23 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void updatesAnsiPaletteWhenThemeChanges() {
+        var session = new FakeSession().withContextWindow(16);
+        var terminal = new RecordingTerminal(80, 14);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        waitFor(() -> terminal.output().contains("\u001b[90m0.0%/16 (auto)\u001b[0m"));
+
+        session.updateSetting("theme", "light");
+
+        waitFor(() -> terminal.output().contains("\u001b[2;30m0.0%/16 (auto)\u001b[0m"));
+        assertThat(terminal.output()).contains("\u001b[2;30m0.0%/16 (auto)\u001b[0m");
+
+        mode.stop();
+    }
+
+    @Test
     void rendersHeaderKeyHintsWhenRowsAllow() {
         var session = new FakeSession();
         var terminal = new VirtualTerminal(100, 16);
@@ -1272,6 +1289,7 @@ class PiInteractiveModeTest {
         private boolean hideThinkingBlock;
         private boolean quietStartup;
         private String doubleEscapeAction = "tree";
+        private String theme = "dark";
         private int editorPaddingX;
         private int availableProviderCount = 1;
         private String cwd = "/workspace";
@@ -1425,7 +1443,7 @@ class PiInteractiveModeTest {
                 hideThinkingBlock,
                 quietStartup,
                 doubleEscapeAction,
-                "dark",
+                theme,
                 List.of("dark", "light"),
                 editorPaddingX,
                 state.model().reasoning(),
@@ -1448,6 +1466,11 @@ class PiInteractiveModeTest {
             }
             if ("editor-padding".equals(settingId)) {
                 editorPaddingX = Integer.parseInt(value);
+                emitState();
+                return;
+            }
+            if ("theme".equals(settingId)) {
+                theme = value;
                 emitState();
                 return;
             }
@@ -1771,6 +1794,12 @@ class PiInteractiveModeTest {
 
         private FakeSession withEditorPaddingX(int editorPaddingX) {
             this.editorPaddingX = editorPaddingX;
+            emitState();
+            return this;
+        }
+
+        private FakeSession withTheme(String theme) {
+            this.theme = theme;
             emitState();
             return this;
         }
