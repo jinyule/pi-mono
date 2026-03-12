@@ -49,6 +49,10 @@ public interface PiInteractiveSession {
         throw new UnsupportedOperationException("Starting a new session is not available");
     }
 
+    default CompletionStage<Void> followUp(String text) {
+        throw new UnsupportedOperationException("Follow-up queueing is not available");
+    }
+
     default String leafId() {
         return null;
     }

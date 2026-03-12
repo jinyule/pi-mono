@@ -370,6 +370,16 @@
   - 触发后调用 `session.newSession()`
   - 状态行回显 `Started new session`
   - 后续 prompt 会带着新的 session id 继续执行
+- `PiAppAction` / `PiAppKeybindings` 现在继续补了 `followUp`：
+  - 默认键位是 `alt+enter`
+  - `PiCliKeybindingsLoader` 现在支持 `followUp` alias
+- `PiAgentSession` 现在支持 `followUp(String)`：
+  - 会把文本包装成新的 user message
+  - 直接调用 `Agent.followUp(...)` 进入 runtime follow-up 队列
+- `PiInteractiveMode` 现在会在 prompt 层消费 `followUp`：
+  - editor 为空时直接忽略
+  - streaming 中触发会清空 editor，并回显 `Queued follow-up`
+  - idle 时会退化成普通 submit，和 TS 版 `Alt+Enter` 语义保持一致
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -382,7 +392,7 @@
   - cycle/default 现在已基本对齐 TS，但 loading/progress header 还只是首版
   - path show/hide 目前还是 description 级别开关，还没有 TS 版右侧布局/列宽截断渲染
   - 顶栏现在虽然合成单行了，但仍然没有 TS 那种宽度感知截断/对齐和颜色层级
-  - app 层还没扩到 TS 里的更多 action，例如 model/thinking/follow-up/dequeue/new-session
+  - app 层还没扩到 TS 里的更多 action，例如 select-model/dequeue
 - resolver 现在只在 `--session-dir` 未显式指定时提供 current/all 双 scope；显式 `--session-dir` 仍退化成单 scope
 
 ## 测试
@@ -461,6 +471,10 @@
 - `PiAgentSessionTest`：`newSession()` 后 session id 会变化，后续 prompt 会落到新 session
 - `PiInteractiveModeTest`：app keybinding 驱动 `newSession`
 - `PiCliModuleTest`：从 `keybindings.json` 加载 `newSession`
+- `PiAgentSessionTest`：streaming 中排队的 `followUp` 会在当前 turn 结束后继续执行
+- `PiInteractiveModeTest`：streaming 中 `Alt+Enter` 会走 follow-up queue
+- `PiInteractiveModeTest`：idle 中 `Alt+Enter` 会退化成普通 submit
+- `PiCliModuleTest`：从 `keybindings.json` 加载 `followUp`
 
 最近通过：
 
@@ -470,7 +484,7 @@
 
 ## 下一步建议
 
-1. keybindings parity：继续评估 `selectModel` / `followUp` / `dequeue`
+1. keybindings parity：继续评估 `selectModel` / `dequeue`
 2. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件
 2. selector parity：继续评估 model/settings selector 是否复用同一套层级
-3. keybindings：继续评估 cycleModelBackward / selectModel / newSession / followUp / dequeue 等动作
+3. keybindings：继续评估 `selectModel` / `dequeue` 与 pending follow-up 可视化

@@ -237,6 +237,16 @@ public final class PiAgentSession implements PiInteractiveSession {
     }
 
     @Override
+    public CompletionStage<Void> followUp(String text) {
+        Objects.requireNonNull(text, "text");
+        sdkSession.agent().followUp(new AgentMessage.UserMessage(
+            List.of(new dev.pi.ai.model.TextContent(text, null)),
+            System.currentTimeMillis()
+        ));
+        return java.util.concurrent.CompletableFuture.completedFuture(null);
+    }
+
+    @Override
     public String leafId() {
         return sessionManager().leafId();
     }

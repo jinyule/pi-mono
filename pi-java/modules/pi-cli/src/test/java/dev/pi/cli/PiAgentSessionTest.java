@@ -21,6 +21,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -390,6 +393,63 @@ class PiAgentSessionTest {
             .containsExactly("user", "assistant");
     }
 
+    @Test
+    void queuesFollowUpWhileStreamingAndRunsItAfterCurrentTurn() throws Exception {
+        var sessionManager = SessionManager.inMemory("/workspace");
+        var firstTurnRelease = new CountDownLatch(1);
+        var invocationCount = new AtomicInteger();
+        var session = PiAgentSession.builder(
+            testModel(),
+            sessionManager,
+            SettingsManager.inMemory(),
+            new InstructionResources(List.of(), "", List.of())
+        )
+            .streamFunction((model, context, options) -> {
+                var call = invocationCount.getAndIncrement();
+                var stream = new AssistantMessageEventStream();
+                Thread.ofVirtual().start(() -> {
+                    if (call == 0) {
+                        try {
+                            firstTurnRelease.await(2, TimeUnit.SECONDS);
+                        } catch (InterruptedException exception) {
+                            Thread.currentThread().interrupt();
+                            throw new AssertionError(exception);
+                        }
+                    }
+                    stream.push(new AssistantMessageEvent.Done(
+                        StopReason.STOP,
+                        new Message.AssistantMessage(
+                            List.of(new TextContent(call == 0 ? "Ack:first" : "Ack:follow-up", null)),
+                            model.api(),
+                            model.provider(),
+                            model.id(),
+                            new Usage(1, 1, 0, 0, 2, new Usage.Cost(0.0, 0.0, 0.0, 0.0, 0.0)),
+                            StopReason.STOP,
+                            null,
+                            200L + call
+                        )
+                    ));
+                });
+                return stream;
+            })
+            .build();
+
+        session.prompt("first").toCompletableFuture();
+        waitFor(() -> session.state().isStreaming());
+
+        session.followUp("second").toCompletableFuture().join();
+        assertThat(session.agent().hasQueuedMessages()).isTrue();
+
+        firstTurnRelease.countDown();
+        session.waitForIdle().toCompletableFuture().join();
+
+        assertThat(session.state().messages())
+            .extracting(message -> message.role())
+            .containsExactly("user", "assistant", "user", "assistant");
+        assertThat(PiMessageRenderer.renderMessage(session.state().messages().get(2))).contains("second");
+        assertThat(session.agent().hasQueuedMessages()).isFalse();
+    }
+
     private static Model testModel() {
         return new Model(
             "test-model",
@@ -448,5 +508,21 @@ class PiAgentSessionTest {
             null,
             timestamp
         );
+    }
+
+    private static void waitFor(java.util.function.BooleanSupplier condition) {
+        var deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(2);
+        while (System.nanoTime() < deadline) {
+            if (condition.getAsBoolean()) {
+                return;
+            }
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+                throw new AssertionError(exception);
+            }
+        }
+        throw new AssertionError("condition not met");
     }
 }

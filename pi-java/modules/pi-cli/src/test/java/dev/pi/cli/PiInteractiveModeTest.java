@@ -682,6 +682,55 @@ class PiInteractiveModeTest {
         }
     }
 
+    @Test
+    void usesAppKeybindingForFollowUpWhileStreaming() {
+        var session = new FakeSession().withStreaming(true);
+        var terminal = new VirtualTerminal(100, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+        var previousApp = PiAppKeybindings.global();
+        try {
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(
+                PiAppAction.FOLLOW_UP,
+                java.util.List.of("alt+enter")
+            )));
+
+            mode.start();
+            terminal.sendInput("Queued");
+            terminal.sendInput("\u001b\r");
+
+            waitFor(() -> session.followUps.contains("Queued"));
+            assertThat(String.join("\n", terminal.getViewport())).contains("Queued follow-up");
+            assertThat(session.prompts).doesNotContain("Queued");
+        } finally {
+            PiAppKeybindings.setGlobal(previousApp);
+            mode.stop();
+        }
+    }
+
+    @Test
+    void followUpActsLikeSubmitWhenIdle() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(100, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+        var previousApp = PiAppKeybindings.global();
+        try {
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(
+                PiAppAction.FOLLOW_UP,
+                java.util.List.of("alt+enter")
+            )));
+
+            mode.start();
+            terminal.sendInput("Immediate");
+            terminal.sendInput("\u001b\r");
+
+            waitFor(() -> session.prompts.contains("Immediate"));
+            assertThat(session.followUps).isEmpty();
+        } finally {
+            PiAppKeybindings.setGlobal(previousApp);
+            mode.stop();
+        }
+    }
+
     private static final class FakeSession implements PiInteractiveSession {
         private final List<String> prompts = new ArrayList<>();
         private final CopyOnWriteArrayList<Consumer<AgentState>> stateListeners = new CopyOnWriteArrayList<>();
@@ -694,7 +743,9 @@ class PiInteractiveModeTest {
         private String cwd = "/workspace";
         private String lastThinkingLevelChange;
         private String lastModelIdChange;
+        private boolean streaming;
         private List<String> reloadWarnings = List.of();
+        private final List<String> followUps = new ArrayList<>();
         private AgentState state = new AgentState(
             "",
             new Model(
@@ -907,6 +958,12 @@ class PiInteractiveModeTest {
         }
 
         @Override
+        public CompletionStage<Void> followUp(String text) {
+            followUps.add(text);
+            return CompletableFuture.completedFuture(null);
+        }
+
+        @Override
         public String leafId() {
             return sessionManager.leafId();
         }
@@ -1063,6 +1120,25 @@ class PiInteractiveModeTest {
                 sessionManager.appendSessionInfo(sessionName);
             } catch (Exception exception) {
                 throw new AssertionError(exception);
+            }
+            emitState();
+            return this;
+        }
+
+        private FakeSession withStreaming(boolean streaming) {
+            this.streaming = streaming;
+            state = state.finishStreaming(state.messages());
+            if (streaming) {
+                state = state.startStreaming(new AgentMessage.AssistantMessage(
+                    List.of(new TextContent("Streaming", null)),
+                    state.model().api(),
+                    state.model().provider(),
+                    state.model().id(),
+                    new Usage(0, 0, 0, 0, 0, new Usage.Cost(0.0, 0.0, 0.0, 0.0, 0.0)),
+                    dev.pi.ai.model.StopReason.STOP,
+                    null,
+                    1L
+                ));
             }
             emitState();
             return this;

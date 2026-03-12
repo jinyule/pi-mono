@@ -636,6 +636,10 @@ public final class PiInteractiveMode implements AutoCloseable {
                 handleCycleThinkingLevelCommand();
                 return;
             }
+            if (appKeybindings.matches(data, PiAppAction.FOLLOW_UP)) {
+                handleFollowUpCommand();
+                return;
+            }
             if (appKeybindings.matches(data, PiAppAction.NEW_SESSION)) {
                 handleNewSessionCommand();
                 return;
@@ -711,6 +715,25 @@ public final class PiInteractiveMode implements AutoCloseable {
             session.newSession();
             input.setValue("");
             manualStatus = "Started new session";
+        } catch (RuntimeException exception) {
+            manualStatus = "Error: " + rootMessage(exception);
+        }
+        renderState(session.state());
+    }
+
+    private void handleFollowUpCommand() {
+        var text = input.getValue();
+        if (text == null || text.isBlank()) {
+            return;
+        }
+        if (!session.state().isStreaming()) {
+            submit(text);
+            return;
+        }
+        try {
+            session.followUp(text).toCompletableFuture().join();
+            input.setValue("");
+            manualStatus = "Queued follow-up";
         } catch (RuntimeException exception) {
             manualStatus = "Error: " + rootMessage(exception);
         }
