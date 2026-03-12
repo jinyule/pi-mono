@@ -73,6 +73,8 @@
   - interactive footer context window indicator first cut
 - 已完成第三十四刀：
   - interactive footer narrow-width truncation first cut
+- 已完成第三十五刀：
+  - interactive footer auto-compaction suffix first cut
 
 ## 本轮落地
 
@@ -285,6 +287,10 @@
   - 会优先给右侧 model 留出最小可读宽度
   - 左侧 usage/context 统计会截断到剩余宽度
   - 极窄宽度下则直接退回只显示右侧 model
+- `PiInteractiveSession` 现在暴露 `autoCompactionEnabled()`：
+  - `PiAgentSession` 从 `settingsManager.effective().getBoolean("/compaction/enabled", true)` 读取
+  - `PiInteractiveMode` 会在 footer context indicator 后追加 `(auto)`
+  - session 级关闭时，该 suffix 会消失
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -358,6 +364,7 @@
 - `PiInteractiveModeTest`：footer 会显示 context window 占用比例
 - `PiInteractiveModeTest`：高 context 占用时 footer indicator 会切到 error 样式
 - `PiInteractiveModeTest`：窄宽度 footer 仍保留右侧 model 摘要
+- `PiInteractiveModeTest`：auto-compaction 关闭时 footer 不显示 `(auto)` suffix
 
 最近通过：
 
@@ -367,6 +374,6 @@
 
 ## 下一步建议
 
-1. footer parity：继续评估 auto-compact 指标
+1. footer parity：继续评估 compaction 后 `?/%window` 与 stale-usage 处理
 2. selector parity：继续评估 model/settings selector 是否复用同一套层级
 3. keybindings：继续评估 cycleModelBackward / selectModel / newSession / followUp / dequeue 等动作

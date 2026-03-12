@@ -68,6 +68,10 @@ public interface PiInteractiveSession {
     default void abortCompaction() {
     }
 
+    default boolean autoCompactionEnabled() {
+        return false;
+    }
+
     default ReloadResult reload() {
         throw new UnsupportedOperationException("Reload is not available");
     }

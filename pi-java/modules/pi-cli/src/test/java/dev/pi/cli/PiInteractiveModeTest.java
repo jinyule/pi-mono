@@ -89,7 +89,7 @@ class PiInteractiveModeTest {
             .contains("↑1")
             .contains("↓1")
             .contains("$0.000")
-            .contains("12.5%/16")
+            .contains("12.5%/16 (auto)")
             .contains("test-model");
 
         mode.stop();
@@ -109,7 +109,7 @@ class PiInteractiveModeTest {
 
         assertThat(terminal.output())
             .contains("\u001b[90m↑1 ↓1 $0.000\u001b[0m")
-            .contains("\u001b[90m12.5%/16\u001b[0m")
+            .contains("\u001b[90m12.5%/16 (auto)\u001b[0m")
             .contains("\u001b[1mtest-model\u001b[0m");
 
         mode.stop();
@@ -125,9 +125,9 @@ class PiInteractiveModeTest {
         terminal.sendInput("Hello");
         terminal.sendInput("\r");
 
-        waitFor(() -> terminal.output().contains("100.0%/2"));
+        waitFor(() -> terminal.output().contains("100.0%/2 (auto)"));
 
-        assertThat(terminal.output()).contains("\u001b[31m100.0%/2\u001b[0m");
+        assertThat(terminal.output()).contains("\u001b[31m100.0%/2 (auto)\u001b[0m");
 
         mode.stop();
     }
@@ -145,6 +145,23 @@ class PiInteractiveModeTest {
         assertThat(String.join("\n", terminal.getViewport()))
             .contains("↑1")
             .contains("test-...");
+
+        mode.stop();
+    }
+
+    @Test
+    void omitsAutoSuffixWhenAutoCompactionIsDisabled() {
+        var session = new FakeSession().withContextWindow(16).withAutoCompactionEnabled(false);
+        var terminal = new VirtualTerminal(80, 14);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("Hello");
+        terminal.sendInput("\r");
+
+        assertThat(String.join("\n", terminal.getViewport()))
+            .contains("12.5%/16")
+            .doesNotContain("(auto)");
 
         mode.stop();
     }
@@ -467,6 +484,7 @@ class PiInteractiveModeTest {
         private int reloadCount;
         private int abortCount;
         private int resumeCount;
+        private boolean autoCompactionEnabled = true;
         private String lastThinkingLevelChange;
         private String lastModelIdChange;
         private List<String> reloadWarnings = List.of();
@@ -554,6 +572,11 @@ class PiInteractiveModeTest {
         @Override
         public void abort() {
             abortCount += 1;
+        }
+
+        @Override
+        public boolean autoCompactionEnabled() {
+            return autoCompactionEnabled;
         }
 
         @Override
@@ -726,6 +749,12 @@ class PiInteractiveModeTest {
                 state.model().headers(),
                 state.model().compat()
             ));
+            emitState();
+            return this;
+        }
+
+        private FakeSession withAutoCompactionEnabled(boolean autoCompactionEnabled) {
+            this.autoCompactionEnabled = autoCompactionEnabled;
             emitState();
             return this;
         }

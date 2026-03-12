@@ -202,11 +202,11 @@ public final class PiInteractiveMode implements AutoCloseable {
             return "";
         }
         var width = Math.max(1, terminal.columns());
-        return renderFooterStatsLine(state, width);
+        return renderFooterStatsLine(state, width, session.autoCompactionEnabled());
     }
 
-    private static String renderFooterStatsLine(AgentState state, int width) {
-        var footerStats = footerStats(state);
+    private static String renderFooterStatsLine(AgentState state, int width, boolean autoCompactionEnabled) {
+        var footerStats = footerStats(state, autoCompactionEnabled);
         var plainLeft = footerStats.plain();
         if (plainLeft.isBlank()) {
             return renderFooterModelSummary(state, width);
@@ -230,9 +230,9 @@ public final class PiInteractiveMode implements AutoCloseable {
         return renderFooterModelSummary(state, width);
     }
 
-    private static FooterStats footerStats(AgentState state) {
+    private static FooterStats footerStats(AgentState state, boolean autoCompactionEnabled) {
         var usageSummary = footerUsageSummary(state);
-        var contextSummary = footerContextSummary(state);
+        var contextSummary = footerContextSummary(state, autoCompactionEnabled);
         if (usageSummary.isBlank()) {
             return contextSummary == null
                 ? new FooterStats("", "")
@@ -283,7 +283,7 @@ public final class PiInteractiveMode implements AutoCloseable {
         return String.join(" ", parts);
     }
 
-    private static FooterSegment footerContextSummary(AgentState state) {
+    private static FooterSegment footerContextSummary(AgentState state, boolean autoCompactionEnabled) {
         var contextWindow = state.model().contextWindow();
         if (contextWindow <= 0) {
             return null;
@@ -300,6 +300,9 @@ public final class PiInteractiveMode implements AutoCloseable {
             percent,
             formatTokens(contextWindow)
         );
+        if (autoCompactionEnabled) {
+            plain += " (auto)";
+        }
         if (percent >= 90.0) {
             return new FooterSegment(plain, PiCliAnsi.error(plain));
         }

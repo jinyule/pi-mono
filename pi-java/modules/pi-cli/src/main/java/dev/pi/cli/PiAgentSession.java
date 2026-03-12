@@ -138,6 +138,11 @@ public final class PiAgentSession implements PiInteractiveSession {
     }
 
     @Override
+    public boolean autoCompactionEnabled() {
+        return settingsManager.effective().getBoolean("/compaction/enabled", true);
+    }
+
+    @Override
     public ModelCycleResult cycleModelForward() {
         if (sdkSession.state().isStreaming()) {
             throw new IllegalStateException("Wait for the current response to finish before switching models");
