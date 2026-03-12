@@ -7,6 +7,7 @@ import dev.pi.tui.Focusable;
 import dev.pi.tui.Input;
 import dev.pi.tui.SelectItem;
 import dev.pi.tui.SelectList;
+import dev.pi.tui.SelectListTheme;
 import dev.pi.tui.TerminalText;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +17,32 @@ import java.util.function.IntConsumer;
 
 public final class PiModelSelector implements Component, Focusable {
     private static final String VALUE_DELIMITER = "\u0000";
+    private static final SelectListTheme THEME = new SelectListTheme() {
+        @Override
+        public String selectedPrefix(String text) {
+            return PiCliAnsi.accent(text);
+        }
+
+        @Override
+        public String selectedText(String text) {
+            return PiCliAnsi.accentBold(text);
+        }
+
+        @Override
+        public String description(String text) {
+            return PiCliAnsi.muted(text);
+        }
+
+        @Override
+        public String scrollInfo(String text) {
+            return PiCliAnsi.muted(text);
+        }
+
+        @Override
+        public String noMatch(String text) {
+            return PiCliAnsi.muted(text);
+        }
+    };
 
     private enum Scope {
         ALL,
@@ -121,7 +148,7 @@ public final class PiModelSelector implements Component, Focusable {
     private void rebuildList() {
         visibleModels = activeModels();
         var items = visibleModels.stream().map(PiModelSelector::toSelectItem).toList();
-        models = new SelectList(items, Math.max(6, Math.min(12, Math.max(1, items.size()))), PiSessionPicker.sessionTheme());
+        models = new SelectList(items, Math.max(6, Math.min(12, Math.max(1, items.size()))), THEME);
         models.setOnSelectionChange(ignored -> requestRender.run());
         models.setOnSelect(item -> onSelect.accept(decodeIndex(item.value())));
         models.setOnCancel(onCancel);
