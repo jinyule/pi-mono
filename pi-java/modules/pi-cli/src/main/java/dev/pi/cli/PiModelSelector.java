@@ -29,6 +29,7 @@ public final class PiModelSelector implements Component, Focusable {
     private final List<PiInteractiveSession.SelectableModel> scopedModels;
     private Scope scope;
     private SelectList models;
+    private List<PiInteractiveSession.SelectableModel> visibleModels = List.of();
     private boolean focused;
 
     public PiModelSelector(
@@ -61,7 +62,13 @@ public final class PiModelSelector implements Component, Focusable {
         lines.add("");
         lines.addAll(search.render(width));
         lines.add("");
-        lines.addAll(models.render(width));
+        if (visibleModels.isEmpty()) {
+            lines.add(PiCliAnsi.muted(search.getValue() == null || search.getValue().isBlank()
+                ? "  No models available"
+                : "  No matching models"));
+        } else {
+            lines.addAll(models.render(width));
+        }
         return List.copyOf(lines);
     }
 
@@ -85,7 +92,7 @@ public final class PiModelSelector implements Component, Focusable {
         }
 
         search.handleInput(data);
-        models.setFilter(search.getValue());
+        rebuildList();
         requestRender.run();
     }
 
@@ -101,20 +108,17 @@ public final class PiModelSelector implements Component, Focusable {
     }
 
     private void rebuildList() {
-        var activeModels = activeModels();
-        var items = activeModels.stream().map(PiModelSelector::toSelectItem).toList();
+        visibleModels = activeModels();
+        var items = visibleModels.stream().map(PiModelSelector::toSelectItem).toList();
         models = new SelectList(items, Math.max(6, Math.min(12, Math.max(1, items.size()))), PiSessionPicker.sessionTheme());
         models.setOnSelectionChange(ignored -> requestRender.run());
         models.setOnSelect(item -> onSelect.accept(decodeIndex(item.value())));
         models.setOnCancel(onCancel);
-        models.setSelectedIndex(selectedIndex(activeModels));
-        if (search.getValue() != null && !search.getValue().isBlank()) {
-            models.setFilter(search.getValue());
-        }
+        models.setSelectedIndex(selectedIndex(visibleModels));
     }
 
     private List<PiInteractiveSession.SelectableModel> activeModels() {
-        return scope == Scope.SCOPED ? scopedModels : allModels;
+        return filterAndSortModels(scope == Scope.SCOPED ? scopedModels : allModels, search.getValue());
     }
 
     private String scopeSummary() {
@@ -144,6 +148,42 @@ public final class PiModelSelector implements Component, Focusable {
             return left.modelId().compareToIgnoreCase(right.modelId());
         });
         return List.copyOf(sorted);
+    }
+
+    static List<PiInteractiveSession.SelectableModel> filterAndSortModels(
+        List<PiInteractiveSession.SelectableModel> models,
+        String query
+    ) {
+        if (query == null || query.isBlank()) {
+            return sortModels(models);
+        }
+
+        var normalizedQuery = query.trim().toLowerCase(Locale.ROOT);
+        var matches = new ArrayList<ModelSearchMatch>();
+        for (var model : models) {
+            var score = searchScore(model, normalizedQuery);
+            if (score != null) {
+                matches.add(new ModelSearchMatch(model, score));
+            }
+        }
+        matches.sort((left, right) -> {
+            var scoreCompare = Integer.compare(left.score(), right.score());
+            if (scoreCompare != 0) {
+                return scoreCompare;
+            }
+            if (left.model().current() && !right.model().current()) {
+                return -1;
+            }
+            if (!left.model().current() && right.model().current()) {
+                return 1;
+            }
+            var providerCompare = left.model().provider().compareToIgnoreCase(right.model().provider());
+            if (providerCompare != 0) {
+                return providerCompare;
+            }
+            return left.model().modelId().compareToIgnoreCase(right.model().modelId());
+        });
+        return matches.stream().map(ModelSearchMatch::model).toList();
     }
 
     private static int selectedIndex(List<PiInteractiveSession.SelectableModel> models) {
@@ -179,6 +219,93 @@ public final class PiModelSelector implements Component, Focusable {
         return String.join(" · ", parts);
     }
 
+    private static Integer searchScore(PiInteractiveSession.SelectableModel model, String query) {
+        Integer bestScore = null;
+        for (var text : searchTexts(model)) {
+            var score = searchTextScore(text, query);
+            if (score != null && (bestScore == null || score < bestScore)) {
+                bestScore = score;
+            }
+        }
+        return bestScore;
+    }
+
+    private static List<String> searchTexts(PiInteractiveSession.SelectableModel model) {
+        var texts = new ArrayList<String>();
+        texts.add(model.provider() + "/" + model.modelId());
+        texts.add(model.modelId());
+        texts.add(model.provider());
+        if (model.modelName() != null && !model.modelName().isBlank() && !model.modelName().equals(model.modelId())) {
+            texts.add(model.modelName());
+        }
+        if (model.reasoning()) {
+            texts.add("thinking " + model.thinkingLevel());
+        }
+        return texts;
+    }
+
+    private static Integer searchTextScore(String text, String query) {
+        var normalizedText = text.toLowerCase(Locale.ROOT);
+        if (normalizedText.equals(query)) {
+            return 0;
+        }
+        if (normalizedText.startsWith(query)) {
+            return 10;
+        }
+        var boundaryIndex = wordBoundaryIndex(normalizedText, query);
+        if (boundaryIndex >= 0) {
+            return 20 + boundaryIndex;
+        }
+        var containsIndex = normalizedText.indexOf(query);
+        if (containsIndex >= 0) {
+            return 40 + containsIndex;
+        }
+        var fuzzyScore = fuzzyTokenScore(query, normalizedText);
+        if (fuzzyScore >= 0) {
+            return 200 + fuzzyScore;
+        }
+        return null;
+    }
+
+    private static int wordBoundaryIndex(String text, String query) {
+        var index = text.indexOf(query);
+        while (index >= 0) {
+            if (index == 0 || !Character.isLetterOrDigit(text.charAt(index - 1))) {
+                return index;
+            }
+            index = text.indexOf(query, index + 1);
+        }
+        return -1;
+    }
+
+    private static int fuzzySubsequenceScore(String query, String text) {
+        var score = 0;
+        var previousIndex = -1;
+        for (var queryIndex = 0; queryIndex < query.length(); queryIndex += 1) {
+            var match = text.indexOf(query.charAt(queryIndex), previousIndex + 1);
+            if (match < 0) {
+                return -1;
+            }
+            score += previousIndex < 0 ? match : match - previousIndex - 1;
+            previousIndex = match;
+        }
+        return score;
+    }
+
+    private static int fuzzyTokenScore(String query, String text) {
+        var bestScore = Integer.MAX_VALUE;
+        for (var token : text.split("[^a-z0-9]+")) {
+            if (token.isBlank()) {
+                continue;
+            }
+            var score = fuzzySubsequenceScore(query, token);
+            if (score >= 0 && score < bestScore) {
+                bestScore = score;
+            }
+        }
+        return bestScore == Integer.MAX_VALUE ? -1 : bestScore;
+    }
+
     private static String formatContextWindow(int contextWindow) {
         if (contextWindow < 1_000) {
             return contextWindow + " ctx";
@@ -189,5 +316,11 @@ public final class PiModelSelector implements Component, Focusable {
             return formatted + "k ctx";
         }
         return String.format(Locale.ROOT, "%.1fM ctx", contextWindow / 1_000_000.0);
+    }
+
+    private record ModelSearchMatch(
+        PiInteractiveSession.SelectableModel model,
+        int score
+    ) {
     }
 }

@@ -103,6 +103,8 @@
   - startup model resolution saved-defaults first cut
 - 已完成第四十九刀：
   - interactive transport setting first cut
+- 已完成第五十刀：
+  - interactive model selector custom search/ranking first cut
 
 ## 本轮落地
 
@@ -499,6 +501,16 @@
   - 会把 `auto` 解释成 `null` transport
   - 会立即更新当前 agent transport
   - 同时持久化 global settings 的 `/transport`
+- `PiModelSelector` 现在不再依赖 `SelectList` 的 contains-only 过滤：
+  - 搜索字段覆盖 `provider/modelId`、`modelId`、`provider`、`modelName`、`thinking level`
+  - 排序优先级首版是 `exact -> prefix -> word-boundary contains -> contains -> token-level fuzzy`
+  - fuzzy 现在收紧到 token 级别，避免 `open` 之类 query 跨 provider/model token 误命中无关模型
+- `PiModelSelector` 现在会对当前 scope 的搜索结果先做自定义过滤/排序，再交给 list 渲染：
+  - blank query 仍保留 current-first + provider/modelId 排序
+  - query 非空时，搜索命中的模型会按相关度重排
+- `PiModelSelector` 现在补了模型专用 empty copy：
+  - 无 query 且列表为空时显示 `No models available`
+  - 有 query 但无命中时显示 `No matching models`
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+l`
@@ -627,6 +639,9 @@
 - `PiCliModuleTest`：保存的默认模型失效时会回退到原有解析逻辑
 - `PiAgentSessionTest`：startup 会从 settings 恢复 `transport`，且 `/settings` 更新后会影响后续 prompt 的 request options
 - `PiSettingsSelectorIntegrationTest`：`/settings` overlay 会显示 `Transport`，并可切换到 `sse`
+- `PiModelSelectorTest`：provider / modelName 查询会命中正确模型
+- `PiModelSelectorTest`：exact / prefix 命中会排在更宽泛匹配前面
+- `PiModelSelectorTest`：空结果时显示 `No matching models`
 
 最近通过：
 
@@ -636,7 +651,7 @@
 
 ## 下一步建议
 
-1. selector parity：继续把 model selector 的 all-scope 搜索/排序向 TS 靠（当前还是 `SelectList` 过滤，不是 TS 的自定义列表/详情布局）
-2. settings selector parity：继续扩到 `theme` / `hide thinking` / `quiet startup` 等已存在 settings 面
+1. selector parity：继续补 model selector 的详情布局 / selected detail 面，当前还只有行内 metadata
+2. settings selector parity：继续评估 `theme` / `hide thinking` / `quiet startup`；这些键在 Java 侧还缺真实 runtime 绑定
 3. pending queue parity：补 steering / compaction queue 合并展示与恢复（前提是先补 Java CLI steering 入口）
 4. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件
