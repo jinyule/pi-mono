@@ -1,6 +1,7 @@
 package dev.pi.cli;
 
 import dev.pi.agent.runtime.AgentState;
+import dev.pi.agent.runtime.AgentMessage;
 import dev.pi.ai.stream.Subscription;
 import dev.pi.tui.Component;
 import dev.pi.tui.Focusable;
@@ -10,10 +11,12 @@ import dev.pi.tui.OverlayOptions;
 import dev.pi.tui.Input;
 import dev.pi.tui.ProcessTerminal;
 import dev.pi.tui.Terminal;
+import dev.pi.tui.TerminalText;
 import dev.pi.tui.Text;
 import dev.pi.tui.Tui;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -22,9 +25,10 @@ public final class PiInteractiveMode implements AutoCloseable {
     private final Terminal terminal;
     private final Tui tui;
     private final PiCopyCommand copyCommand;
-    private final Text header = new Text("", 1, 1, null);
+    private final Text header = new Text("", 0, 0, null);
     private final Text transcript = new Text("", 1, 0, null);
     private final Text status = new Text("", 1, 0, null);
+    private final Text footer = new Text("", 1, 0, null);
     private final Input input = new Input();
     private final PromptInput promptInput = new PromptInput();
 
@@ -59,6 +63,7 @@ public final class PiInteractiveMode implements AutoCloseable {
         this.tui.addChild(header);
         this.tui.addChild(transcript);
         this.tui.addChild(status);
+        this.tui.addChild(footer);
         this.tui.addChild(promptInput);
         this.tui.setFocus(promptInput);
         this.input.setOnSubmit(this::submit);
@@ -149,6 +154,7 @@ public final class PiInteractiveMode implements AutoCloseable {
         header.setText(renderHeader(state));
         transcript.setText(renderTranscript(state));
         status.setText(renderStatus(state));
+        footer.setText(renderFooter(state));
         tui.requestRender();
     }
 
@@ -189,6 +195,94 @@ public final class PiInteractiveMode implements AutoCloseable {
             return "Streaming response...";
         }
         return "Ready";
+    }
+
+    private String renderFooter(AgentState state) {
+        if (terminal.rows() < 14) {
+            return "";
+        }
+        var width = Math.max(1, terminal.columns());
+        return renderFooterStatsLine(state, width);
+    }
+
+    private static String renderFooterStatsLine(AgentState state, int width) {
+        var statsLeft = footerUsageSummary(state);
+        var right = footerModelSummary(state);
+        if (statsLeft.isBlank()) {
+            return TerminalText.truncateToWidth(right, width, "...");
+        }
+
+        var leftWidth = TerminalText.visibleWidth(statsLeft);
+        var rightWidth = TerminalText.visibleWidth(right);
+        if (leftWidth + 2 + rightWidth <= width) {
+            return statsLeft + " ".repeat(width - leftWidth - rightWidth) + right;
+        }
+        var availableRightWidth = width - leftWidth - 2;
+        if (availableRightWidth > 3) {
+            return statsLeft + "  " + TerminalText.truncateToWidth(right, availableRightWidth, "...");
+        }
+        return TerminalText.truncateToWidth(statsLeft, width, "...");
+    }
+
+    private static String footerUsageSummary(AgentState state) {
+        var totalInput = 0;
+        var totalOutput = 0;
+        var totalCacheRead = 0;
+        var totalCacheWrite = 0;
+        var totalCost = 0.0;
+        for (var message : state.messages()) {
+            if (!(message instanceof AgentMessage.AssistantMessage assistantMessage)) {
+                continue;
+            }
+            totalInput += assistantMessage.usage().input();
+            totalOutput += assistantMessage.usage().output();
+            totalCacheRead += assistantMessage.usage().cacheRead();
+            totalCacheWrite += assistantMessage.usage().cacheWrite();
+            totalCost += assistantMessage.usage().cost().total();
+        }
+
+        var parts = new ArrayList<String>();
+        if (totalInput > 0) {
+            parts.add("↑" + formatTokens(totalInput));
+        }
+        if (totalOutput > 0) {
+            parts.add("↓" + formatTokens(totalOutput));
+        }
+        if (totalCacheRead > 0) {
+            parts.add("R" + formatTokens(totalCacheRead));
+        }
+        if (totalCacheWrite > 0) {
+            parts.add("W" + formatTokens(totalCacheWrite));
+        }
+        if (!parts.isEmpty() || totalCost > 0.0) {
+            parts.add("$" + String.format(Locale.ROOT, "%.3f", totalCost));
+        }
+        return String.join(" ", parts);
+    }
+
+    private static String footerModelSummary(AgentState state) {
+        var model = state.model();
+        if (model.reasoning()) {
+            var thinkingLevel = state.thinkingLevel() == null ? "thinking off" : state.thinkingLevel().value();
+            return model.id() + " • " + thinkingLevel;
+        }
+        return model.id();
+    }
+
+    private static String formatTokens(int count) {
+        if (count < 1_000) {
+            return Integer.toString(count);
+        }
+        if (count < 10_000) {
+            return String.format(Locale.ROOT, "%.1fk", count / 1_000.0);
+        }
+        if (count < 1_000_000) {
+            return Math.round(count / 1_000.0) + "k";
+        }
+        if (count < 10_000_000) {
+            return String.format(Locale.ROOT, "%.1fM", count / 1_000_000.0);
+        }
+        return Math.round(count / 1_000_000.0) + "M";
     }
 
     private void handleCopyCommand() {

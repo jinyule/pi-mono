@@ -59,6 +59,8 @@
   - session selector empty-state hint parity first cut
 - 已完成第二十七刀：
   - selector metadata right-aligned layout first cut
+- 已完成第二十八刀：
+  - interactive footer token/cost/model first cut
 
 ## 本轮落地
 
@@ -215,6 +217,13 @@
   - 会从实际 label 宽度回收空余列给右侧 description
   - 短 label + 长 metadata 场景下，会优先保住 `cwd/path/msg/age` 尾部信息
   - 行尾额外保留安全边距，避免 item 正好打满 terminal 宽度时被终端自动换行
+- `PiInteractiveMode` 现在补了 interactive footer 首版：
+  - footer 会在 `14` 行及以上终端显示，避免挤压 `12` 行回归测试里的 transcript/header
+  - footer 左侧按 assistant message 的 `usage` 聚合累计 `↑input ↓output RcacheRead WcacheWrite $cost`
+  - footer 右侧显示当前 `model id`，reasoning model 会继续带出 thinking level
+  - 宽度足够时保留左统计 / 右模型的单行布局，宽度不足时优先保留统计并安全截断模型信息
+- `PiInteractiveMode` 现在把 header top/bottom padding 收紧到 `0/0`：
+  - 配合 footer 首版，避免小终端下 header/transcript 因额外空行被过早裁掉
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -274,6 +283,7 @@
 - `SelectListTest`：宽终端下 description 右侧对齐
 - `SelectListTest`：短 label 时不再白白吞掉 metadata 空间
 - `SelectListTest`：长 label 截断时仍优先保住右侧 metadata
+- `PiInteractiveModeTest`：`14` 行终端下渲染 usage/cost/model footer
 
 最近通过：
 
@@ -283,6 +293,6 @@
 
 ## 下一步建议
 
-1. selector parity：继续评估 model/settings selector 是否复用同一套层级
-2. session selector：继续评估 path/cwd metadata 的颜色层级与 current/named 状态强调
+1. footer parity：继续补 footer 的 ANSI 层级、provider/thinking 信息与更窄宽度下的截断策略
+2. selector parity：继续评估 model/settings selector 是否复用同一套层级
 3. keybindings：继续评估 app 层是否要补 model/thinking 相关动作

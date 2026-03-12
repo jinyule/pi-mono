@@ -73,6 +73,25 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void rendersFooterUsageAndModelInfo() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(80, 14);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("Hello");
+        terminal.sendInput("\r");
+
+        assertThat(String.join("\n", terminal.getViewport()))
+            .contains("↑1")
+            .contains("↓1")
+            .contains("$0.000")
+            .contains("test-model");
+
+        mode.stop();
+    }
+
+    @Test
     void handlesTreeSlashCommand() {
         var session = new FakeSession();
         var terminal = new VirtualTerminal(80, 16);
