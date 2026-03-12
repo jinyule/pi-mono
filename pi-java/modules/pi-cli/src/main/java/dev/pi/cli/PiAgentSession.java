@@ -25,6 +25,7 @@ import dev.pi.session.SessionTreeNode;
 import dev.pi.session.SettingsManager;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +46,8 @@ public final class PiAgentSession implements PiInteractiveSession {
     private final List<CycleModel> cycleModels;
     private final boolean scopedCycleModels;
     private final int availableProviderCount;
+    private final List<Model> modelSelectorModels;
+    private volatile List<CycleModel> modelSelectionTargets = List.of();
 
     private PiAgentSession(
         PiSdkSession sdkSession,
@@ -56,7 +59,8 @@ public final class PiAgentSession implements PiInteractiveSession {
         ReloadAction reloadAction,
         List<CycleModel> cycleModels,
         boolean scopedCycleModels,
-        int availableProviderCount
+        int availableProviderCount,
+        List<Model> modelSelectorModels
     ) {
         this.sdkSession = Objects.requireNonNull(sdkSession, "sdkSession");
         this.settingsManager = Objects.requireNonNull(settingsManager, "settingsManager");
@@ -68,6 +72,7 @@ public final class PiAgentSession implements PiInteractiveSession {
         this.cycleModels = List.copyOf(Objects.requireNonNullElse(cycleModels, List.of()));
         this.scopedCycleModels = scopedCycleModels;
         this.availableProviderCount = Math.max(1, availableProviderCount);
+        this.modelSelectorModels = List.copyOf(Objects.requireNonNullElse(modelSelectorModels, List.of()));
     }
 
     public static Builder builder(
@@ -227,21 +232,48 @@ public final class PiAgentSession implements PiInteractiveSession {
         var availableModels = availableCycleModels();
         var selectedIndex = selectedModelIndex(availableModels);
         var currentThinkingLevel = sdkSession.state().thinkingLevel();
+        var currentModel = sdkSession.state().model();
         var models = new ArrayList<SelectableModel>(availableModels.size());
         for (var index = 0; index < availableModels.size(); index += 1) {
-            var cycleModel = availableModels.get(index);
-            models.add(new SelectableModel(
-                index,
-                cycleModel.model().provider(),
-                cycleModel.model().id(),
-                cycleModel.model().name(),
-                displayThinkingLevel(cycleModel, currentThinkingLevel),
-                index == selectedIndex,
-                cycleModel.model().reasoning(),
-                cycleModel.model().contextWindow()
+            models.add(toSelectableModel(index, availableModels.get(index), currentModel, currentThinkingLevel));
+        }
+        if (selectedIndex >= 0 && selectedIndex < models.size()) {
+            var selected = models.get(selectedIndex);
+            models.set(selectedIndex, new SelectableModel(
+                selected.index(),
+                selected.provider(),
+                selected.modelId(),
+                selected.modelName(),
+                selected.thinkingLevel(),
+                true,
+                selected.reasoning(),
+                selected.contextWindow()
             ));
         }
         return List.copyOf(models);
+    }
+
+    @Override
+    public ModelSelection modelSelection() {
+        var currentThinkingLevel = sdkSession.state().thinkingLevel();
+        var currentModel = sdkSession.state().model();
+        var allTargets = uniqueSelectorModels();
+        var scopedTargets = scopedCycleModels ? cycleModels : List.<CycleModel>of();
+        var targets = new ArrayList<CycleModel>(allTargets.size() + scopedTargets.size());
+        var allModels = new ArrayList<SelectableModel>(allTargets.size());
+        for (var target : allTargets) {
+            var targetIndex = targets.size();
+            targets.add(target);
+            allModels.add(toSelectableModel(targetIndex, target, currentModel, currentThinkingLevel));
+        }
+        var scopedModels = new ArrayList<SelectableModel>(scopedTargets.size());
+        for (var target : scopedTargets) {
+            var targetIndex = targets.size();
+            targets.add(target);
+            scopedModels.add(toSelectableModel(targetIndex, target, currentModel, currentThinkingLevel));
+        }
+        modelSelectionTargets = List.copyOf(targets);
+        return new ModelSelection(allModels, scopedModels);
     }
 
     @Override
@@ -249,12 +281,7 @@ public final class PiAgentSession implements PiInteractiveSession {
         if (sdkSession.state().isStreaming()) {
             throw new IllegalStateException("Wait for the current response to finish before switching models");
         }
-        var availableModels = availableCycleModels();
-        if (index < 0 || index >= availableModels.size()) {
-            throw new IllegalArgumentException("Unknown model selection: " + index);
-        }
-
-        var next = availableModels.get(index);
+        var next = resolveModelSelectionTarget(index);
         var currentThinkingLevel = sdkSession.state().thinkingLevel();
         var effectiveThinkingLevel = effectiveThinkingLevel(next, currentThinkingLevel);
         if (sameModel(next.model(), sdkSession.state().model()) && Objects.equals(currentThinkingLevel, effectiveThinkingLevel)) {
@@ -578,6 +605,7 @@ public final class PiAgentSession implements PiInteractiveSession {
         private List<CycleModel> cycleModels = List.of();
         private boolean scopedCycleModels;
         private int availableProviderCount = 1;
+        private List<Model> modelSelectorModels = List.of();
 
         private Builder(
             Model model,
@@ -695,6 +723,11 @@ public final class PiAgentSession implements PiInteractiveSession {
             return this;
         }
 
+        public Builder modelSelectorModels(List<Model> modelSelectorModels) {
+            this.modelSelectorModels = modelSelectorModels == null ? List.of() : List.copyOf(modelSelectorModels);
+            return this;
+        }
+
         public PiAgentSession build() {
             if (streamFunction == null) {
                 throw new IllegalStateException("PiAgentSession streamFunction must be configured");
@@ -732,7 +765,8 @@ public final class PiAgentSession implements PiInteractiveSession {
                 reloadAction,
                 cycleModels,
                 scopedCycleModels,
-                availableProviderCount
+                availableProviderCount,
+                modelSelectorModels
             );
         }
 
@@ -808,6 +842,10 @@ public final class PiAgentSession implements PiInteractiveSession {
                 sdkSession.agent().setThinkingLevel(nextThinkingLevel);
                 sessionManager().appendThinkingLevelChange(nextThinkingLevel == null ? "off" : nextThinkingLevel.value());
             }
+            settingsManager.updateGlobal(settings -> settings.withMutations(root -> {
+                root.put("defaultProvider", next.model().provider());
+                root.put("defaultModel", next.model().id());
+            }));
         } catch (IOException exception) {
             throw new IllegalStateException("Failed to persist model change", exception);
         }
@@ -820,16 +858,68 @@ public final class PiAgentSession implements PiInteractiveSession {
             : null;
     }
 
-    private static String displayThinkingLevel(CycleModel cycleModel, ThinkingLevel currentThinkingLevel) {
+    private static String displayThinkingLevel(CycleModel cycleModel, Model currentModel, ThinkingLevel currentThinkingLevel) {
         var effective = effectiveThinkingLevel(cycleModel, currentThinkingLevel);
-        if (effective != null) {
+        if (cycleModel.thinkingLevel() != null && effective != null) {
             return effective.value();
         }
-        return cycleModel.model().reasoning() ? "current" : "off";
+        if (!cycleModel.model().reasoning()) {
+            return "off";
+        }
+        if (sameModel(cycleModel.model(), currentModel)) {
+            return effective == null ? "off" : effective.value();
+        }
+        return "current";
     }
 
     private static boolean sameModel(Model left, Model right) {
         return Objects.equals(left.provider(), right.provider()) && Objects.equals(left.id(), right.id());
+    }
+
+    private CycleModel resolveModelSelectionTarget(int index) {
+        if (index >= 0 && index < modelSelectionTargets.size()) {
+            return modelSelectionTargets.get(index);
+        }
+        var availableModels = availableCycleModels();
+        if (index >= 0 && index < availableModels.size()) {
+            return availableModels.get(index);
+        }
+        throw new IllegalArgumentException("Unknown model selection: " + index);
+    }
+
+    private List<CycleModel> uniqueSelectorModels() {
+        var uniqueModels = new LinkedHashSet<Model>();
+        if (!modelSelectorModels.isEmpty()) {
+            uniqueModels.addAll(modelSelectorModels);
+        } else if (!cycleModels.isEmpty()) {
+            for (var cycleModel : cycleModels) {
+                uniqueModels.add(cycleModel.model());
+            }
+        }
+        if (uniqueModels.isEmpty()) {
+            uniqueModels.add(sdkSession.state().model());
+        }
+        return uniqueModels.stream()
+            .map(model -> new CycleModel(model, null))
+            .toList();
+    }
+
+    private SelectableModel toSelectableModel(
+        int index,
+        CycleModel cycleModel,
+        Model currentModel,
+        ThinkingLevel currentThinkingLevel
+    ) {
+        return new SelectableModel(
+            index,
+            cycleModel.model().provider(),
+            cycleModel.model().id(),
+            cycleModel.model().name(),
+            displayThinkingLevel(cycleModel, currentModel, currentThinkingLevel),
+            sameModel(cycleModel.model(), currentModel) && Objects.equals(effectiveThinkingLevel(cycleModel, currentThinkingLevel), currentThinkingLevel),
+            cycleModel.model().reasoning(),
+            cycleModel.model().contextWindow()
+        );
     }
 
     private Usage latestAssistantUsage() {

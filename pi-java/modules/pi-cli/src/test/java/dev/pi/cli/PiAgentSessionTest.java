@@ -530,10 +530,11 @@ class PiAgentSessionTest {
     void selectModelAppliesExactCycleTarget() throws Exception {
         var initialModel = testReasoningModel("openai", "gpt-5");
         var nextModel = testReasoningModel("anthropic", "claude-3-7-sonnet");
+        var settingsManager = SettingsManager.inMemory();
         var session = PiAgentSession.builder(
             initialModel,
             SessionManager.inMemory("/workspace"),
-            SettingsManager.inMemory(),
+            settingsManager,
             new InstructionResources(List.of(), "", List.of())
         )
             .thinkingLevel(ThinkingLevel.MINIMAL)
@@ -556,6 +557,8 @@ class PiAgentSessionTest {
         assertThat(session.state().model().provider()).isEqualTo("anthropic");
         assertThat(session.state().model().id()).isEqualTo("claude-3-7-sonnet");
         assertThat(session.state().thinkingLevel()).isEqualTo(ThinkingLevel.HIGH);
+        assertThat(settingsManager.effective().getString("/defaultProvider")).isEqualTo("anthropic");
+        assertThat(settingsManager.effective().getString("/defaultModel")).isEqualTo("claude-3-7-sonnet");
     }
 
     @Test
@@ -597,6 +600,45 @@ class PiAgentSessionTest {
         assertThat(selectableModels.get(1).modelName()).isEqualTo("Claude 3.7 Sonnet");
         assertThat(selectableModels.get(1).reasoning()).isTrue();
         assertThat(selectableModels.get(1).contextWindow()).isEqualTo(200_000);
+    }
+
+    @Test
+    void modelSelectionExposesAllAndScopedScopes() {
+        var initialModel = testReasoningModel("openai", "gpt-5");
+        var scopedModel = testReasoningModel("anthropic", "claude-3-7-sonnet");
+        var allModel = new Model(
+            "gemini-2.5-pro",
+            "Gemini 2.5 Pro",
+            "google-generative-ai",
+            "google",
+            "https://example.com",
+            true,
+            List.of("text"),
+            new Usage.Cost(0.0, 0.0, 0.0, 0.0, 0.0),
+            1_000_000,
+            8_192,
+            null,
+            null
+        );
+        var session = PiAgentSession.builder(
+            initialModel,
+            SessionManager.inMemory("/workspace"),
+            SettingsManager.inMemory(),
+            new InstructionResources(List.of(), "", List.of())
+        )
+            .cycleModels(List.of(new PiAgentSession.CycleModel(scopedModel, ThinkingLevel.HIGH)), true)
+            .modelSelectorModels(List.of(initialModel, scopedModel, allModel))
+            .streamFunction(fakeAssistant("ready"))
+            .build();
+
+        var selection = session.modelSelection();
+
+        assertThat(selection.allModels())
+            .extracting(model -> model.provider() + "/" + model.modelId())
+            .containsExactly("openai/gpt-5", "anthropic/claude-3-7-sonnet", "google/gemini-2.5-pro");
+        assertThat(selection.scopedModels())
+            .extracting(model -> model.provider() + "/" + model.modelId())
+            .containsExactly("anthropic/claude-3-7-sonnet");
     }
 
     @Test

@@ -558,8 +558,8 @@ public final class PiInteractiveMode implements AutoCloseable {
     }
 
     private void handleSelectModelCommand() {
-        var models = session.selectableModels();
-        if (models.size() <= 1) {
+        var selection = session.modelSelection();
+        if (selection.allModels().size() <= 1 && selection.scopedModels().size() <= 1) {
             manualStatus = "Only one model available";
             renderState(session.state());
             return;
@@ -567,7 +567,7 @@ public final class PiInteractiveMode implements AutoCloseable {
 
         var overlayRef = new AtomicReference<dev.pi.tui.OverlayHandle>();
         var selector = new PiModelSelector(
-            models,
+            selection,
             index -> selectModelEntry(index, overlayRef.get()),
             () -> {
                 var overlay = overlayRef.get();

@@ -97,6 +97,8 @@
   - interactive `/settings` selector first cut
 - 已完成第四十六刀：
   - interactive model selector richer metadata first cut
+- 已完成第四十七刀：
+  - interactive model selector all/scoped dual-scope first cut
 
 ## 本轮落地
 
@@ -453,6 +455,21 @@
   - 当前项后缀改成 `✓`
   - right metadata / selected detail 补 `provider`、`model name`、`thinking`、`context window`
   - 选择回调仍然返回原始 cycle target index，不会因为排序后错选
+- `PiInteractiveSession` 现在补了 `ModelSelection`：
+  - 把 `allModels` 和 `scopedModels` 两个 selector 视图显式分开
+  - 旧的 `selectableModels()` 仍保留原来的 cycle-scope 语义，避免已有调用点断掉
+- `PiAgentSession` 现在补了 model selector 双 scope 装配：
+  - builder 新增 `modelSelectorModels(...)`
+  - `modelSelection()` 会把 registry all-models 和 scoped cycle models 组合成稳定 selection target map
+  - `selectModel(index)` 现在能命中 all-scope target，也保留 legacy cycle index fallback
+- `PiAgentSession.applyCycleModel()` 现在会同步保存：
+  - `defaultProvider`
+  - `defaultModel`
+- `PiCliModule.createDefaultSession()` 现在把 registry all-models 下沉给 `PiAgentSession`，供 interactive model selector 切 scope
+- `PiModelSelector` 现在支持 `all/scoped` 双 scope：
+  - scoped models 存在时默认进 `Scoped`
+  - `Tab` 会在 `All` / `Scoped` 间切换
+  - 仍复用现有 search/filter/select 交互
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+l`
@@ -574,6 +591,8 @@
 - `PiAgentSessionTest`：`selectableModels()` 会暴露 `model name` / `reasoning` / `context window`
 - `PiModelSelectorTest`：selector 会把当前项排在前面并渲染 richer metadata
 - `PiModelSelectorTest`：排序后选择仍会命中原始 model index
+- `PiAgentSessionTest`：`modelSelection()` 会同时暴露 all/scoped 两个 selector 视图
+- `PiModelSelectorTest`：`Tab` 会在 all/scoped 双 scope 间切换，并命中 all-scope target
 
 最近通过：
 
@@ -583,7 +602,7 @@
 
 ## 下一步建议
 
-1. selector parity：继续把 model selector 从 cycle scope 扩到 all/scoped 双 scope，以及 default model settings 保存
+1. selector parity：继续把 model selector 的 all-scope 搜索/排序向 TS 靠（当前还是 `SelectList` 过滤，不是 TS 的自定义列表/详情布局）
 2. settings selector parity：继续扩到 `theme` / `transport` / `hide thinking` / `quiet startup` 等已存在 settings 面
 3. pending queue parity：补 steering / compaction queue 合并展示与恢复（前提是先补 Java CLI steering 入口）
 4. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件

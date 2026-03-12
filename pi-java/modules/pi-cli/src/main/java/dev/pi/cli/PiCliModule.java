@@ -235,7 +235,8 @@ public final class PiCliModule {
             .thinkingLevel(initialThinkingLevel)
             .apiKey(args.apiKey())
             .availableProviderCount(aiClient.modelRegistry().getProviders().size())
-            .cycleModels(cycleModels, !args.modelPatterns().isEmpty() && !scopedCycleModels.isEmpty());
+            .cycleModels(cycleModels, !args.modelPatterns().isEmpty() && !scopedCycleModels.isEmpty())
+            .modelSelectorModels(allModels(aiClient.modelRegistry()));
         if (extensionRuntime != null) {
             builder.reloadAction(() -> extensionRuntime.reload().failures().stream().map(PiCliModule::formatExtensionFailure).toList());
         }

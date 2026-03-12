@@ -16,37 +16,48 @@ import java.util.function.IntConsumer;
 public final class PiModelSelector implements Component, Focusable {
     private static final String VALUE_DELIMITER = "\u0000";
 
+    private enum Scope {
+        ALL,
+        SCOPED
+    }
+
     private final Input search = new Input();
-    private final SelectList models;
     private final Runnable requestRender;
+    private final IntConsumer onSelect;
+    private final Runnable onCancel;
+    private final List<PiInteractiveSession.SelectableModel> allModels;
+    private final List<PiInteractiveSession.SelectableModel> scopedModels;
+    private Scope scope;
+    private SelectList models;
     private boolean focused;
 
     public PiModelSelector(
-        List<PiInteractiveSession.SelectableModel> models,
+        PiInteractiveSession.ModelSelection selection,
         IntConsumer onSelect,
         Runnable onCancel,
         Runnable requestRender
     ) {
-        Objects.requireNonNull(models, "models");
-        Objects.requireNonNull(onSelect, "onSelect");
-        Objects.requireNonNull(onCancel, "onCancel");
+        Objects.requireNonNull(selection, "selection");
+        this.onSelect = Objects.requireNonNull(onSelect, "onSelect");
+        this.onCancel = Objects.requireNonNull(onCancel, "onCancel");
         this.requestRender = Objects.requireNonNull(requestRender, "requestRender");
-
-        var sortedModels = sortModels(models);
-        var items = sortedModels.stream().map(PiModelSelector::toSelectItem).toList();
-        this.models = new SelectList(items, Math.max(6, Math.min(12, Math.max(1, items.size()))), PiSessionPicker.sessionTheme());
+        this.allModels = sortModels(selection.allModels());
+        this.scopedModels = sortModels(selection.scopedModels());
+        this.scope = this.scopedModels.isEmpty() ? Scope.ALL : Scope.SCOPED;
         this.search.setFocused(true);
-        this.models.setOnSelectionChange(ignored -> requestRender.run());
-        this.models.setOnSelect(item -> onSelect.accept(decodeIndex(item.value())));
-        this.models.setOnCancel(onCancel);
-        this.models.setSelectedIndex(selectedIndex(sortedModels));
+        rebuildList();
     }
 
     @Override
     public List<String> render(int width) {
         var lines = new ArrayList<String>();
         lines.add(PiCliAnsi.bold("Select model"));
-        lines.add(PiCliAnsi.muted("Type to filter. Enter selects. Esc cancels."));
+        if (!scopedModels.isEmpty()) {
+            lines.add(scopeSummary());
+            lines.add(PiCliAnsi.muted("tab scope · type to filter · Enter selects · Esc cancels"));
+        } else {
+            lines.add(PiCliAnsi.muted("Type to filter. Enter selects. Esc cancels."));
+        }
         lines.add("");
         lines.addAll(search.render(width));
         lines.add("");
@@ -57,6 +68,12 @@ public final class PiModelSelector implements Component, Focusable {
     @Override
     public void handleInput(String data) {
         var keybindings = EditorKeybindings.global();
+        if (keybindings.matches(data, EditorAction.SESSION_SCOPE_TOGGLE) && !scopedModels.isEmpty()) {
+            scope = scope == Scope.ALL ? Scope.SCOPED : Scope.ALL;
+            rebuildList();
+            requestRender.run();
+            return;
+        }
         if (
             keybindings.matches(data, EditorAction.CURSOR_UP) ||
             keybindings.matches(data, EditorAction.CURSOR_DOWN) ||
@@ -83,10 +100,32 @@ public final class PiModelSelector implements Component, Focusable {
         search.setFocused(focused);
     }
 
+    private void rebuildList() {
+        var activeModels = activeModels();
+        var items = activeModels.stream().map(PiModelSelector::toSelectItem).toList();
+        models = new SelectList(items, Math.max(6, Math.min(12, Math.max(1, items.size()))), PiSessionPicker.sessionTheme());
+        models.setOnSelectionChange(ignored -> requestRender.run());
+        models.setOnSelect(item -> onSelect.accept(decodeIndex(item.value())));
+        models.setOnCancel(onCancel);
+        models.setSelectedIndex(selectedIndex(activeModels));
+        if (search.getValue() != null && !search.getValue().isBlank()) {
+            models.setFilter(search.getValue());
+        }
+    }
+
+    private List<PiInteractiveSession.SelectableModel> activeModels() {
+        return scope == Scope.SCOPED ? scopedModels : allModels;
+    }
+
+    private String scopeSummary() {
+        var all = scope == Scope.ALL ? PiCliAnsi.accent("◉ All") : PiCliAnsi.muted("○ All");
+        var scoped = scope == Scope.SCOPED ? PiCliAnsi.accent("◉ Scoped") : PiCliAnsi.muted("○ Scoped");
+        return all + PiCliAnsi.muted(" | ") + scoped;
+    }
+
     private static SelectItem toSelectItem(PiInteractiveSession.SelectableModel model) {
         var label = model.modelId() + (model.current() ? " ✓" : "");
-        var description = metadata(model);
-        return new SelectItem(encodeValue(label, model.index()), label, description);
+        return new SelectItem(encodeValue(label, model.index()), label, metadata(model));
     }
 
     private static List<PiInteractiveSession.SelectableModel> sortModels(List<PiInteractiveSession.SelectableModel> models) {

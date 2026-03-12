@@ -49,6 +49,10 @@ public interface PiInteractiveSession {
         return List.of();
     }
 
+    default ModelSelection modelSelection() {
+        return new ModelSelection(selectableModels(), List.of());
+    }
+
     default ModelCycleResult selectModel(int index) {
         throw new UnsupportedOperationException("Model selector is not available");
     }
@@ -193,6 +197,16 @@ public interface PiInteractiveSession {
     ) {
         public SettingsSelection {
             availableThinkingLevels = List.copyOf(availableThinkingLevels);
+        }
+    }
+
+    record ModelSelection(
+        List<SelectableModel> allModels,
+        List<SelectableModel> scopedModels
+    ) {
+        public ModelSelection {
+            allModels = List.copyOf(allModels);
+            scopedModels = List.copyOf(scopedModels);
         }
     }
 
