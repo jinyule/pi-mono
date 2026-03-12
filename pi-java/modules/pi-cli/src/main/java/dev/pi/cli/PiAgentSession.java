@@ -326,6 +326,7 @@ public final class PiAgentSession implements PiInteractiveSession {
             doubleEscapeAction(),
             currentTheme(),
             availableThemes(),
+            settingsManager.effective().getInt("/editorPaddingX", 0),
             sdkSession.state().model().reasoning(),
             thinkingLevel,
             sdkSession.state().model().reasoning() ? AVAILABLE_THINKING_LEVELS : List.of()
@@ -345,6 +346,7 @@ public final class PiAgentSession implements PiInteractiveSession {
             case "quiet-startup" -> updateQuietStartupSetting(value);
             case "double-escape-action" -> updateDoubleEscapeActionSetting(value);
             case "theme" -> updateThemeSetting(value);
+            case "editor-padding" -> updateEditorPaddingSetting(value);
             case "thinking" -> updateThinkingSetting(value);
             default -> throw new IllegalArgumentException("Unknown setting: " + settingId);
         }
@@ -1075,6 +1077,20 @@ public final class PiAgentSession implements PiInteractiveSession {
             throw new IllegalArgumentException("Invalid value for double-escape-action: " + value);
         }
         settingsManager.updateGlobal(settings -> settings.withMutations(root -> root.put("doubleEscapeAction", normalized)));
+    }
+
+    private void updateEditorPaddingSetting(String value) {
+        int padding;
+        try {
+            padding = Integer.parseInt(value == null ? "" : value.trim());
+        } catch (NumberFormatException exception) {
+            throw new IllegalArgumentException("Invalid value for editor-padding: " + value, exception);
+        }
+        if (padding < 0 || padding > 3) {
+            throw new IllegalArgumentException("Invalid value for editor-padding: " + value);
+        }
+        var normalized = padding;
+        settingsManager.updateGlobal(settings -> settings.withMutations(root -> root.put("editorPaddingX", normalized)));
     }
 
     private String doubleEscapeAction() {

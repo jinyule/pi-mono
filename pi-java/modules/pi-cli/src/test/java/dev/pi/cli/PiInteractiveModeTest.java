@@ -80,6 +80,20 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void rendersPromptWithConfiguredEditorPadding() {
+        var session = new FakeSession().withEditorPaddingX(2);
+        var terminal = new RecordingTerminal(60, 12);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+
+        waitFor(() -> terminal.output().contains(">   "));
+        assertThat(terminal.output()).contains(">   ");
+
+        mode.stop();
+    }
+
+    @Test
     void rendersHeaderKeyHintsWhenRowsAllow() {
         var session = new FakeSession();
         var terminal = new VirtualTerminal(100, 16);
@@ -1258,6 +1272,7 @@ class PiInteractiveModeTest {
         private boolean hideThinkingBlock;
         private boolean quietStartup;
         private String doubleEscapeAction = "tree";
+        private int editorPaddingX;
         private int availableProviderCount = 1;
         private String cwd = "/workspace";
         private String lastThinkingLevelChange;
@@ -1412,6 +1427,7 @@ class PiInteractiveModeTest {
                 doubleEscapeAction,
                 "dark",
                 List.of("dark", "light"),
+                editorPaddingX,
                 state.model().reasoning(),
                 state.thinkingLevel() == null ? "off" : state.thinkingLevel().value(),
                 state.model().reasoning() ? List.of("off", "minimal", "low", "medium", "high", "xhigh") : List.of()
@@ -1427,6 +1443,11 @@ class PiInteractiveModeTest {
             }
             if ("double-escape-action".equals(settingId)) {
                 doubleEscapeAction = value;
+                emitState();
+                return;
+            }
+            if ("editor-padding".equals(settingId)) {
+                editorPaddingX = Integer.parseInt(value);
                 emitState();
                 return;
             }
@@ -1744,6 +1765,12 @@ class PiInteractiveModeTest {
 
         private FakeSession withDoubleEscapeAction(String doubleEscapeAction) {
             this.doubleEscapeAction = doubleEscapeAction;
+            emitState();
+            return this;
+        }
+
+        private FakeSession withEditorPaddingX(int editorPaddingX) {
+            this.editorPaddingX = editorPaddingX;
             emitState();
             return this;
         }

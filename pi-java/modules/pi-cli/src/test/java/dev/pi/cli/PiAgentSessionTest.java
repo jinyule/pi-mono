@@ -403,6 +403,29 @@ class PiAgentSessionTest {
     }
 
     @Test
+    void restoresAndUpdatesEditorPaddingSetting() {
+        var settingsManager = SettingsManager.inMemory(
+            Settings.empty().withMutations(root -> root.put("editorPaddingX", 2)),
+            Settings.empty()
+        );
+        var session = PiAgentSession.builder(
+            testModel(),
+            SessionManager.inMemory("/workspace"),
+            settingsManager,
+            new InstructionResources(List.of(), "", List.of())
+        )
+            .streamFunction(fakeAssistant("Ack"))
+            .build();
+
+        assertThat(session.settingsSelection().editorPaddingX()).isEqualTo(2);
+
+        session.updateSetting("editor-padding", "3");
+
+        assertThat(settingsManager.effective().getInt("/editorPaddingX", 0)).isEqualTo(3);
+        assertThat(session.settingsSelection().editorPaddingX()).isEqualTo(3);
+    }
+
+    @Test
     void cyclesForwardThroughScopedModelsAndPersistsModelChange() {
         var sessionManager = SessionManager.inMemory("/workspace");
         var nextModel = new Model(

@@ -161,6 +161,22 @@ class PiSettingsSelectorIntegrationTest {
     }
 
     @Test
+    void settingsSelectorTogglesEditorPadding() {
+        var updates = new CopyOnWriteArrayList<String>();
+        var selector = new PiSettingsSelector(
+            new FakeSettingsSession().settingsSelection(),
+            (settingId, value) -> updates.add(settingId + "=" + value),
+            () -> {
+            }
+        );
+
+        selector.handleInput("editor");
+        selector.handleInput(" ");
+
+        assertThat(updates).contains("editor-padding=1");
+    }
+
+    @Test
     void settingsSelectorHintsReflectCustomKeybindings() {
         var previous = EditorKeybindings.global();
         try {
@@ -193,6 +209,7 @@ class PiSettingsSelectorIntegrationTest {
         private boolean hideThinkingBlock;
         private boolean quietStartup;
         private String doubleEscapeAction = "tree";
+        private int editorPaddingX;
         private AgentState state = new AgentState(
             "",
             new Model(
@@ -282,6 +299,7 @@ class PiSettingsSelectorIntegrationTest {
                 doubleEscapeAction,
                 "dark",
                 List.of("dark", "light"),
+                editorPaddingX,
                 state.model().reasoning(),
                 state.thinkingLevel() == null ? "off" : state.thinkingLevel().value(),
                 List.of("off", "minimal", "low", "medium", "high", "xhigh")
@@ -305,6 +323,9 @@ class PiSettingsSelectorIntegrationTest {
             }
             if ("double-escape-action".equals(settingId)) {
                 doubleEscapeAction = value;
+            }
+            if ("editor-padding".equals(settingId)) {
+                editorPaddingX = Integer.parseInt(value);
             }
             if ("thinking".equals(settingId)) {
                 state = state.withThinkingLevel("off".equals(value) ? null : ThinkingLevel.fromValue(value));

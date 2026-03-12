@@ -102,6 +102,14 @@ public final class PiSettingsSelector implements Component, Focusable {
             settings.availableThemes(),
             null
         ));
+        items.add(new SettingItem(
+            "editor-padding",
+            "Editor padding",
+            "Horizontal padding for input editor (0-3)",
+            Integer.toString(settings.editorPaddingX()),
+            List.of("0", "1", "2", "3"),
+            null
+        ));
 
         this.settingsList = new SettingsList(
             items,

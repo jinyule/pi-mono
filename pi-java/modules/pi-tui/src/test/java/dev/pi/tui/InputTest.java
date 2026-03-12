@@ -55,6 +55,18 @@ class InputTest {
     }
 
     @Test
+    void rendersConfiguredHorizontalPadding() {
+        var input = new Input();
+        input.setValue("abc");
+        input.setPaddingX(2);
+
+        var line = input.render(16).getFirst();
+
+        assertThat(line).startsWith(">   \u001b[7ma\u001b[27mbc");
+        assertThat(TerminalText.visibleWidth(line)).isEqualTo(16);
+    }
+
+    @Test
     void escapeTriggersCallback() {
         var input = new Input();
         var escapeCount = new AtomicInteger();

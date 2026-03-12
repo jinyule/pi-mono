@@ -9,6 +9,7 @@ public final class Input implements Component, Focusable {
     private String value = "";
     private int cursor;
     private boolean focused;
+    private int paddingX;
     private String pasteBuffer = "";
     private boolean inPaste;
     private final KillRing killRing = new KillRing();
@@ -44,6 +45,14 @@ public final class Input implements Component, Focusable {
 
     public void setKeybindings(EditorKeybindings keybindings) {
         this.keybindings = keybindings == null ? EditorKeybindings.global() : keybindings;
+    }
+
+    public void setPaddingX(int paddingX) {
+        this.paddingX = Math.max(0, paddingX);
+    }
+
+    public int getPaddingX() {
+        return paddingX;
     }
 
     @Override
@@ -180,7 +189,9 @@ public final class Input implements Component, Focusable {
     @Override
     public List<String> render(int width) {
         var prompt = "> ";
-        var availableWidth = Math.max(1, width - prompt.length());
+        var usableWidth = Math.max(1, width - prompt.length());
+        var effectivePaddingX = Math.min(paddingX, Math.max(0, Math.floorDiv(usableWidth - 1, 2)));
+        var availableWidth = Math.max(1, usableWidth - effectivePaddingX * 2);
 
         String visibleText;
         var cursorDisplay = cursor;
@@ -215,8 +226,12 @@ public final class Input implements Component, Focusable {
         var marker = focused ? Tui.CURSOR_MARKER : "";
         var cursorChar = "\u001b[7m" + atCursor + "\u001b[27m";
         var textWithCursor = beforeCursor + marker + cursorChar + afterCursor;
-        var padding = " ".repeat(Math.max(0, availableWidth - TerminalText.visibleWidth(textWithCursor)));
-        return List.of(prompt + textWithCursor + padding);
+        var line = prompt
+            + " ".repeat(effectivePaddingX)
+            + textWithCursor
+            + " ".repeat(effectivePaddingX);
+        var padding = " ".repeat(Math.max(0, width - TerminalText.visibleWidth(line)));
+        return List.of(line + padding);
     }
 
     private void insertText(String text) {

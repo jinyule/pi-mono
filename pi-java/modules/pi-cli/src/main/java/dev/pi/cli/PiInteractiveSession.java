@@ -72,6 +72,7 @@ public interface PiInteractiveSession {
             "tree",
             "dark",
             List.of("dark", "light"),
+            0,
             false,
             "off",
             List.of()
@@ -211,6 +212,7 @@ public interface PiInteractiveSession {
         String doubleEscapeAction,
         String theme,
         List<String> availableThemes,
+        int editorPaddingX,
         boolean reasoningAvailable,
         String thinkingLevel,
         List<String> availableThinkingLevels

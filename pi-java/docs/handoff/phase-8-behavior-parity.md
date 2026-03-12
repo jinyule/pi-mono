@@ -873,16 +873,28 @@
   - 非 `Escape` 的自定义 interrupt 键位仍旧保持原来的 abort 语义
   - 空编辑器下双击 `Escape` 会按设置打开 tree / fork，或在 `none` 下保持无动作
 - PiSettingsSelectorIntegrationTest / PiInteractiveModeTest 现在覆盖 `Double-escape action` 切换，以及双击 `Escape` 打开 tree/fork
+- PiInteractiveSession.SettingsSelection / PiAgentSession 现在补了 `editorPaddingX` settings contract：
+  - 默认值是 `0`
+  - 当前持久化值走 global settings 的 `/editorPaddingX`
+  - `updateSetting("editor-padding", value)` 目前接受 `0-3`
+- PiSettingsSelector 现在新增 `Editor padding` 条目：
+  - 可选值是 `0` / `1` / `2` / `3`
+  - 描述文案对齐 TS：`Horizontal padding for input editor (0-3)`
+- `Input` 现在补了 `paddingX` 支持，PiInteractiveMode 会在每次 `renderState()` 前同步 `session.settingsSelection().editorPaddingX()`
+  - 这让 interactive prompt 首次渲染和 `/settings` 更新后的后续重绘都能吃到新的 horizontal padding
+  - 当前 Java 侧只把这项接到了单行 `Input`；`Editor` 本身之前已经有 `setPaddingX()`，但 interactive mode 仍未切到多行 editor
+- InputTest / PiAgentSessionTest / PiSettingsSelectorIntegrationTest / PiInteractiveModeTest 现在覆盖 editor-padding 的渲染、持久化、selector 切换和 interactive prompt 初始化同步
 
 最近通过：
 
 ```bash
-.\gradlew.bat :pi-cli:test --no-daemon
+.\gradlew.bat :pi-tui:test :pi-cli:test --no-daemon
+npm.cmd run check
 ```
 
 ## 下一步建议
 
 1. selector parity：继续评估 model selector 是否要补 all-scope warning/hint copy 的 TS 细节，或继续压空状态 copy/层级
-2. settings selector parity：继续评估 `theme` 等剩余项；当前已补 hint/keybinding parity、hide-thinking transcript parity、quiet-startup header parity，以及 toggleThinking / clear / exit / expandTools app keybinding，但 Java 侧仍未覆盖 TS 的 startup resource listing / theme runtime
+2. settings selector parity：继续评估 `theme` 等剩余项；当前已补 hint/keybinding parity、hide-thinking transcript parity、quiet-startup header parity、double-escape、editor-padding，以及 toggleThinking / clear / exit / expandTools app keybinding，但 Java 侧仍未覆盖 TS 的 startup resource listing / theme runtime
 3. pending queue parity：继续补 compaction queue 合并展示与恢复；steering/follow-up runtime queue 已接上，但 Java 侧仍没有 compaction pending queue
 4. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件
