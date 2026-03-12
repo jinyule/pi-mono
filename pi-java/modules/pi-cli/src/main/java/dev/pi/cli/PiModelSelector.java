@@ -212,18 +212,7 @@ public final class PiModelSelector implements Component, Focusable {
     }
 
     private static String metadata(PiInteractiveSession.SelectableModel model) {
-        var parts = new ArrayList<String>();
-        parts.add("[" + model.provider() + "]");
-        if (model.modelName() != null && !model.modelName().isBlank() && !model.modelName().equals(model.modelId())) {
-            parts.add(model.modelName());
-        }
-        if (model.reasoning()) {
-            parts.add("thinking: " + model.thinkingLevel());
-        }
-        if (model.contextWindow() > 0) {
-            parts.add(formatContextWindow(model.contextWindow()));
-        }
-        return String.join(" · ", parts);
+        return "[" + model.provider() + "]";
     }
 
     private PiInteractiveSession.SelectableModel selectedModel() {
@@ -243,25 +232,24 @@ public final class PiModelSelector implements Component, Focusable {
         lines.add(PiCliAnsi.bold("Selected model"));
         var title = model.provider() + "/" + model.modelId() + (model.current() ? " ✓" : "");
         lines.add(TerminalText.truncateToWidth(title, width, "..."));
-        var detail = selectedDetail(model);
-        if (!detail.isBlank()) {
-            lines.add(PiCliAnsi.muted(TerminalText.truncateToWidth(detail, width, "...")));
+        for (var detailLine : selectedDetailLines(model)) {
+            lines.add(PiCliAnsi.muted(TerminalText.truncateToWidth(detailLine, width, "...")));
         }
         return List.copyOf(lines);
     }
 
-    private static String selectedDetail(PiInteractiveSession.SelectableModel model) {
-        var parts = new ArrayList<String>();
+    private static List<String> selectedDetailLines(PiInteractiveSession.SelectableModel model) {
+        var lines = new ArrayList<String>();
         if (model.modelName() != null && !model.modelName().isBlank() && !model.modelName().equals(model.modelId())) {
-            parts.add(model.modelName());
+            lines.add("Model name: " + model.modelName());
         }
         if (model.reasoning()) {
-            parts.add("thinking: " + model.thinkingLevel());
+            lines.add("Thinking: " + model.thinkingLevel());
         }
         if (model.contextWindow() > 0) {
-            parts.add(formatContextWindow(model.contextWindow()));
+            lines.add("Context: " + formatContextWindow(model.contextWindow()));
         }
-        return String.join(" · ", parts);
+        return List.copyOf(lines);
     }
 
     private static Integer searchScore(PiInteractiveSession.SelectableModel model, String query) {

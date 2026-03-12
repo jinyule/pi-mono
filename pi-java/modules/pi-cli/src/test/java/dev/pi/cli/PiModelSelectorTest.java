@@ -31,10 +31,11 @@ class PiModelSelectorTest {
         assertThat(lines).anyMatch(line -> line.contains("Only showing models with configured API keys"));
         assertThat(lines).anyMatch(line -> line.contains("gpt-5 ✓"));
         assertThat(lines).anyMatch(line -> line.contains("[openai]"));
-        assertThat(lines).anyMatch(line -> line.contains("GPT-5"));
-        assertThat(lines).anyMatch(line -> line.contains("400k ctx"));
         assertThat(lines).anyMatch(line -> line.contains("Selected model"));
         assertThat(lines).anyMatch(line -> line.contains("openai/gpt-5"));
+        assertThat(lines).anyMatch(line -> line.contains("Model name: GPT-5"));
+        assertThat(lines).anyMatch(line -> line.contains("Thinking: minimal"));
+        assertThat(lines).anyMatch(line -> line.contains("Context: 400k ctx"));
     }
 
     @Test
@@ -179,6 +180,6 @@ class PiModelSelectorTest {
         var lines = selector.render(100);
         assertThat(lines).anyMatch(line -> line.contains("Selected model"));
         assertThat(lines).anyMatch(line -> line.contains("anthropic/claude-3-7-sonnet"));
-        assertThat(lines).anyMatch(line -> line.contains("Claude 3.7 Sonnet"));
+        assertThat(lines).anyMatch(line -> line.contains("Model name: Claude 3.7 Sonnet"));
     }
 }
