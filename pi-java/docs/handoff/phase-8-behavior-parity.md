@@ -165,6 +165,8 @@
   - interactive settings selector theme first cut
 - 已完成第七十九刀：
   - interactive double-escape-action first cut
+- completed cut 80:
+  - interactive custom theme core tokens first cut
 
 ## 本轮落地
 
@@ -951,6 +953,19 @@
 - Additional tests:
   - `PiAgentSessionStartupResourcesTest` covers startup resource snapshots plus theme refresh on reload
   - `PiInteractiveModeResourceListingTest` covers startup resource rendering, quiet-startup suppression, and quiet reload diagnostics
+- `PiCliAnsi` now supports a first broader custom-theme core token slice:
+  - custom palettes can optionally define `dim`, `text`, `border`, and `borderMuted`
+  - built-in `dark/light` palettes now expose matching defaults for those tokens
+  - the six-field `Palette(...)` constructor still works, so existing tests and call sites keep backward compatibility
+- `PiCliThemeLoader` now resolves optional core tokens with safe fallbacks:
+  - missing `dim` and `borderMuted` fall back to `muted`
+  - missing `border` falls back to `accent`
+  - missing `text` falls back to ANSI default foreground `39`
+- `PiInteractiveMode` now renders startup header hints through `PiCliAnsi.dim(...)`, so custom themes can soften hint text without changing the main muted channel
+- `PiModelSelector` now renders separator lines through `PiCliAnsi.borderMuted(...)`, so custom themes can style selector borders independently of body text
+- New tests:
+  - `PiCliAnsiTest` now covers `dim` / `border` / `borderMuted` for built-in and custom palettes
+  - `PiCliThemeLoaderTokenTest` covers explicit optional-token loading plus fallback behavior when those tokens are omitted
 
 ?????```bash
 .\\gradlew.bat :pi-cli:test --no-daemon
@@ -960,6 +975,6 @@ npm.cmd run check
 ## 下一步建议
 
 1. selector parity：继续评估 model selector 是否要补 all-scope warning/hint copy 的 TS 细节，或继续压空状态 copy/层级
-2. settings selector parity: theme work now covers hint/keybinding parity, hide-thinking transcript parity, quiet-startup header parity, quiet-startup startup-resource silence, double-escape, editor-padding, dark/light runtime ANSI theme switching, `Theme` submenu preview, `Thinking level` submenu, hardware-cursor/clear-on-shrink, TS-style copy for steering/follow-up/transport/quiet-startup, plus the first custom theme loader + hot reload slice; remaining theme gaps are package/source theme discovery and fuller theme token coverage
+2. settings selector parity: theme work now covers hint/keybinding parity, hide-thinking transcript parity, quiet-startup header parity, quiet-startup startup-resource silence, double-escape, editor-padding, dark/light runtime ANSI theme switching, `Theme` submenu preview, `Thinking level` submenu, hardware-cursor/clear-on-shrink, TS-style copy for steering/follow-up/transport/quiet-startup, plus the first custom theme loader + hot reload slice and the first broader core-token slice; remaining theme gaps are package/source theme discovery and wider token adoption across more CLI surfaces
 3. pending queue parity：继续补 compaction queue 合并展示与恢复；steering/follow-up runtime queue 已接上，但 Java 侧仍没有 compaction pending queue
 4. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件

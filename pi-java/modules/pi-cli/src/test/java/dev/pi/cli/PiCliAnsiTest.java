@@ -19,6 +19,8 @@ class PiCliAnsiTest {
 
         assertThat(PiCliAnsi.accent("x")).isEqualTo("\u001b[36mx\u001b[0m");
         assertThat(PiCliAnsi.muted("x")).isEqualTo("\u001b[90mx\u001b[0m");
+        assertThat(PiCliAnsi.dim("x")).isEqualTo("\u001b[2;37mx\u001b[0m");
+        assertThat(PiCliAnsi.borderMuted("x")).isEqualTo("\u001b[90mx\u001b[0m");
     }
 
     @Test
@@ -28,6 +30,7 @@ class PiCliAnsiTest {
         assertThat(PiCliAnsi.accent("x")).isEqualTo("\u001b[34mx\u001b[0m");
         assertThat(PiCliAnsi.muted("x")).isEqualTo("\u001b[2;30mx\u001b[0m");
         assertThat(PiCliAnsi.accentBold("x")).isEqualTo("\u001b[1;34mx\u001b[0m");
+        assertThat(PiCliAnsi.dim("x")).isEqualTo("\u001b[2;30mx\u001b[0m");
     }
 
     @Test
@@ -48,7 +51,11 @@ class PiCliAnsiTest {
                 "1;38;2;17;34;51",
                 "38;2;255;204;0",
                 "38;5;46",
-                "38;5;196"
+                "38;5;196",
+                "38;5;239",
+                "39",
+                "38;5;111",
+                "38;5;240"
             )
         ));
 
@@ -57,5 +64,8 @@ class PiCliAnsiTest {
         assertThat(PiCliAnsi.accent("x")).isEqualTo("\u001b[38;2;17;34;51mx\u001b[0m");
         assertThat(PiCliAnsi.muted("x")).isEqualTo("\u001b[38;5;244mx\u001b[0m");
         assertThat(PiCliAnsi.accentBold("x")).isEqualTo("\u001b[1;38;2;17;34;51mx\u001b[0m");
+        assertThat(PiCliAnsi.dim("x")).isEqualTo("\u001b[38;5;239mx\u001b[0m");
+        assertThat(PiCliAnsi.border("x")).isEqualTo("\u001b[38;5;111mx\u001b[0m");
+        assertThat(PiCliAnsi.borderMuted("x")).isEqualTo("\u001b[38;5;240mx\u001b[0m");
     }
 }

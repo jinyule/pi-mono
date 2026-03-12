@@ -1152,7 +1152,7 @@ public final class PiInteractiveMode implements AutoCloseable {
     }
 
     private static String renderHeaderHintLine(int width, String text) {
-        return PiCliAnsi.muted(TerminalText.truncateToWidth(text, Math.max(1, width), "..."));
+        return PiCliAnsi.dim(TerminalText.truncateToWidth(text, Math.max(1, width), "..."));
     }
 
     private void appendResourceSection(

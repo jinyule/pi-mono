@@ -50,6 +50,14 @@ final class PiCliAnsi {
         return style(palette.muted(), text);
     }
 
+    static String dim(String text) {
+        return style(palette.dim(), text);
+    }
+
+    static String text(String text) {
+        return style(palette.text(), text);
+    }
+
     static String bold(String text) {
         return style("1", text);
     }
@@ -68,6 +76,14 @@ final class PiCliAnsi {
 
     static String error(String text) {
         return style(palette.error(), text);
+    }
+
+    static String border(String text) {
+        return style(palette.border(), text);
+    }
+
+    static String borderMuted(String text) {
+        return style(palette.borderMuted(), text);
     }
 
     private static String style(String code, String text) {
@@ -96,9 +112,17 @@ final class PiCliAnsi {
         String accentBold,
         String warning,
         String success,
-        String error
+        String error,
+        String dim,
+        String text,
+        String border,
+        String borderMuted
     ) {
-        static final Palette DARK = new Palette("36", "90", "1;36", "33", "32", "31");
-        static final Palette LIGHT = new Palette("34", "2;30", "1;34", "33", "32", "31");
+        static final Palette DARK = new Palette("36", "90", "1;36", "33", "32", "31", "2;37", "39", "36", "90");
+        static final Palette LIGHT = new Palette("34", "2;30", "1;34", "33", "32", "31", "2;30", "39", "34", "2;30");
+
+        Palette(String accent, String muted, String accentBold, String warning, String success, String error) {
+            this(accent, muted, accentBold, warning, success, error, muted, "39", accent, muted);
+        }
     }
 }

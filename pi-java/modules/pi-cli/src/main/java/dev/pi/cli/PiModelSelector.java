@@ -301,7 +301,7 @@ public final class PiModelSelector implements Component, Focusable {
     }
 
     private static String separatorLine(int width) {
-        return PiCliAnsi.muted("─".repeat(Math.max(1, width)));
+        return PiCliAnsi.borderMuted("─".repeat(Math.max(1, width)));
     }
 
     private static List<String> selectedDetailLines(PiInteractiveSession.SelectableModel model) {

@@ -18,6 +18,7 @@ import java.util.stream.Stream;
 final class PiCliThemeLoader {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Set<String> REQUIRED_COLOR_KEYS = Set.of("accent", "muted", "warning", "success", "error");
+    private static final Set<String> OPTIONAL_COLOR_KEYS = Set.of("dim", "text", "border", "borderMuted");
 
     private final Path cwd;
     private final Path agentDir;
@@ -107,6 +108,9 @@ final class PiCliThemeLoader {
         for (var key : REQUIRED_COLOR_KEYS) {
             resolved.put(key, resolveColorCode(key, colors.path(key), vars, new LinkedHashSet<>()));
         }
+        for (var key : OPTIONAL_COLOR_KEYS) {
+            resolved.put(key, resolveOptionalColorCode(key, colors.path(key), vars, resolved));
+        }
 
         return new ParsedTheme(
             themeName,
@@ -116,7 +120,11 @@ final class PiCliThemeLoader {
                 "1;" + resolved.get("accent"),
                 resolved.get("warning"),
                 resolved.get("success"),
-                resolved.get("error")
+                resolved.get("error"),
+                resolved.get("dim"),
+                resolved.get("text"),
+                resolved.get("border"),
+                resolved.get("borderMuted")
             )
         );
     }
@@ -178,6 +186,23 @@ final class PiCliThemeLoader {
         } finally {
             resolving.remove(varName);
         }
+    }
+
+    private static String resolveOptionalColorCode(
+        String token,
+        JsonNode node,
+        Map<String, JsonNode> vars,
+        Map<String, String> resolved
+    ) {
+        if (node.isMissingNode() || node.isNull()) {
+            return switch (token) {
+                case "dim", "borderMuted" -> resolved.get("muted");
+                case "border" -> resolved.get("accent");
+                case "text" -> "39";
+                default -> throw new IllegalArgumentException("Unknown optional color token: " + token);
+            };
+        }
+        return resolveColorCode(token, node, vars, new LinkedHashSet<>());
     }
 
     private static boolean isHexColor(String value) {
