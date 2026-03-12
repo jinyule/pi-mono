@@ -151,7 +151,7 @@
 
 ## 阶段 8：行为追平
 
-1. 追平 keybinding 语义与配置格式。
+1. 追平 keybinding 语义与配置格式。（已完成增量：session selector loader/app-editor layering；interactive app actions interrupt/resume/tree/fork/cycleThinkingLevel；`shift+tab` matcher）
 2. 追平 session selector、tree selector、model selector、settings selector。（已开始：session selector current/all scope toggle、sort toggle、named/path toggle、threaded/fuzzy、keybindings loader、loading/progress header、TS-style fuzzy scoring、search text scope parity、header/status/hint 文案、app/editor keybinding 分层、path/cwd metadata、single-row title/scope header、single-row 顶栏宽度感知截断、metadata 响应式列宽、顶部 info/hint 行显式换行、ANSI 样式层级、顶部 status/error/info ANSI、summary 分段着色、tree/fork selector 复用 ANSI 层级、regex parse error 状态；interactive app keybindings 已扩到 interrupt/resume/tree/fork）
 3. 追平 footer token/cost/model 信息。（已完成前三刀：single-line usage/cost/model footer；footer ANSI hierarchy + reasoning summary；provider-aware model summary first cut）
 4. 追平 changelog、share、HTML export。

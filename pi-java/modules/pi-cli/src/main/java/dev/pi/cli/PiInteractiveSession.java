@@ -3,6 +3,7 @@ package dev.pi.cli;
 import dev.pi.agent.runtime.AgentEvent;
 import dev.pi.agent.runtime.AgentMessage;
 import dev.pi.agent.runtime.AgentState;
+import dev.pi.ai.model.ThinkingLevel;
 import dev.pi.session.SettingsManager;
 import dev.pi.ai.stream.Subscription;
 import dev.pi.session.InstructionResourceLoader;
@@ -31,6 +32,10 @@ public interface PiInteractiveSession {
     CompletionStage<Void> waitForIdle();
 
     void abort();
+
+    default String cycleThinkingLevel() {
+        throw new UnsupportedOperationException("Thinking level cycling is not available");
+    }
 
     default String leafId() {
         return null;

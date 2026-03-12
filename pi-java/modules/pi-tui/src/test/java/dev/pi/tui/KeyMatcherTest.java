@@ -16,6 +16,11 @@ class KeyMatcherTest {
     }
 
     @Test
+    void matchesShiftTabSequence() {
+        assertThat(KeyMatcher.matches("\u001b[Z", "shift+tab")).isTrue();
+    }
+
+    @Test
     void matchesGenericAltLetterSequence() {
         assertThat(KeyMatcher.matches("\u001bn", "alt+n")).isTrue();
     }

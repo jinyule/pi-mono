@@ -65,6 +65,8 @@
   - interactive footer ANSI hierarchy first cut
 - 已完成第三十刀：
   - interactive footer provider-aware model summary first cut
+- 已完成第三十一刀：
+  - interactive cycleThinkingLevel app keybinding first cut
 
 ## 本轮落地
 
@@ -237,6 +239,18 @@
   - 宽度足够时显示 `provider/model`
   - provider 前缀走 muted，model id 继续走 bold
   - 宽度不足时会先退回只显示 model，再考虑截断，避免 provider 抢掉 model 的可见空间
+- `PiAppKeybindings` 现在继续补了 `cycleThinkingLevel`：
+  - 默认键位是 `shift+tab`
+  - `PiCliKeybindingsLoader` 现在支持 `cycleThinkingLevel` alias
+  - `KeyMatcher` 现在显式支持 `shift+tab` (`ESC [ Z`)
+- `PiInteractiveMode` 现在会在 prompt 层消费 `cycleThinkingLevel`：
+  - reasoning model 下触发 `session.cycleThinkingLevel()`
+  - 首版 cycle 顺序是 `off -> minimal -> low -> medium -> high -> off`
+  - 切换后会把 `Thinking level: <level>` 回显到状态行
+- `PiAgentSession` 现在会把 cycleThinkingLevel 持久化回 session：
+  - 每次切换都会调用 agent state update
+  - 并追加 `thinking_level_change`
+  - `off` 会按字符串 `off` 写入，保持和现有 session replay 兼容
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -300,6 +314,9 @@
 - `PiInteractiveModeTest`：footer usage/model 的 ANSI 层级
 - `PiInteractiveModeTest`：reasoning model footer 会显示 thinking level
 - `PiInteractiveModeTest`：宽度足够时 footer 会显示 provider 前缀
+- `KeyMatcherTest`：`shift+tab` 匹配
+- `PiInteractiveModeTest`：app keybinding 驱动 thinking level cycle
+- `PiCliModuleTest`：从 `keybindings.json` 加载 `cycleThinkingLevel`
 
 最近通过：
 
@@ -311,4 +328,4 @@
 
 1. footer parity：继续评估 context window/auto-compact 指标，以及更窄宽度下的截断策略
 2. selector parity：继续评估 model/settings selector 是否复用同一套层级
-3. keybindings：继续评估 app 层是否要补 model/thinking 相关动作
+3. keybindings：继续评估 app 层是否要补 cycleModel / newSession / followUp 等动作

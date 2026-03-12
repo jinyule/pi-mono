@@ -132,6 +132,22 @@ public final class PiAgentSession implements PiInteractiveSession {
     }
 
     @Override
+    public String cycleThinkingLevel() {
+        var model = sdkSession.state().model();
+        if (!model.reasoning()) {
+            throw new UnsupportedOperationException("Thinking level is not available for current model");
+        }
+        var next = nextThinkingLevel(sdkSession.state().thinkingLevel());
+        sdkSession.agent().setThinkingLevel(next);
+        try {
+            sessionManager().appendThinkingLevelChange(next == null ? "off" : next.value());
+        } catch (IOException exception) {
+            throw new IllegalStateException("Failed to persist thinking level", exception);
+        }
+        return next == null ? "off" : next.value();
+    }
+
+    @Override
     public String leafId() {
         return sessionManager().leafId();
     }
@@ -493,5 +509,15 @@ public final class PiAgentSession implements PiInteractiveSession {
             current = current.getCause();
         }
         return current.getMessage() == null ? current.getClass().getSimpleName() : current.getMessage();
+    }
+
+    private static ThinkingLevel nextThinkingLevel(ThinkingLevel current) {
+        return switch (current) {
+            case null -> ThinkingLevel.MINIMAL;
+            case MINIMAL -> ThinkingLevel.LOW;
+            case LOW -> ThinkingLevel.MEDIUM;
+            case MEDIUM -> ThinkingLevel.HIGH;
+            case HIGH, XHIGH -> null;
+        };
     }
 }

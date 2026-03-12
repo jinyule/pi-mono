@@ -376,6 +376,29 @@ class PiInteractiveModeTest {
         }
     }
 
+    @Test
+    void usesAppKeybindingForCycleThinkingLevel() {
+        var session = new FakeSession().withReasoningModel("reasoning-model", null);
+        var terminal = new VirtualTerminal(100, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+        var previousApp = PiAppKeybindings.global();
+        try {
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(
+                PiAppAction.CYCLE_THINKING_LEVEL,
+                java.util.List.of("shift+tab")
+            )));
+
+            mode.start();
+            terminal.sendInput("\u001b[Z");
+
+            waitFor(() -> "minimal".equals(session.lastThinkingLevelChange));
+            assertThat(String.join("\n", terminal.getViewport())).contains("Thinking level: minimal");
+        } finally {
+            PiAppKeybindings.setGlobal(previousApp);
+            mode.stop();
+        }
+    }
+
     private static final class FakeSession implements PiInteractiveSession {
         private final List<String> prompts = new ArrayList<>();
         private final CopyOnWriteArrayList<Consumer<AgentState>> stateListeners = new CopyOnWriteArrayList<>();
@@ -383,6 +406,7 @@ class PiInteractiveModeTest {
         private int reloadCount;
         private int abortCount;
         private int resumeCount;
+        private String lastThinkingLevelChange;
         private List<String> reloadWarnings = List.of();
         private AgentState state = new AgentState(
             "",
@@ -468,6 +492,24 @@ class PiInteractiveModeTest {
         @Override
         public void abort() {
             abortCount += 1;
+        }
+
+        @Override
+        public String cycleThinkingLevel() {
+            if (!state.model().reasoning()) {
+                throw new UnsupportedOperationException("Thinking level is not available for current model");
+            }
+            var next = switch (state.thinkingLevel()) {
+                case null -> ThinkingLevel.MINIMAL;
+                case MINIMAL -> ThinkingLevel.LOW;
+                case LOW -> ThinkingLevel.MEDIUM;
+                case MEDIUM -> ThinkingLevel.HIGH;
+                case HIGH, XHIGH -> null;
+            };
+            state = state.withThinkingLevel(next);
+            lastThinkingLevelChange = next == null ? "off" : next.value();
+            emitState();
+            return lastThinkingLevelChange;
         }
 
         @Override

@@ -492,6 +492,10 @@ public final class PiInteractiveMode implements AutoCloseable {
                 handleResumeCommand();
                 return;
             }
+            if (appKeybindings.matches(data, PiAppAction.CYCLE_THINKING_LEVEL)) {
+                handleCycleThinkingLevelCommand();
+                return;
+            }
             if (appKeybindings.matches(data, PiAppAction.TREE)) {
                 handleTreeCommand();
                 return;
@@ -523,6 +527,15 @@ public final class PiInteractiveMode implements AutoCloseable {
         try {
             session.resume().toCompletableFuture().join();
             manualStatus = "Resumed session";
+        } catch (RuntimeException exception) {
+            manualStatus = "Error: " + rootMessage(exception);
+        }
+        renderState(session.state());
+    }
+
+    private void handleCycleThinkingLevelCommand() {
+        try {
+            manualStatus = "Thinking level: " + session.cycleThinkingLevel();
         } catch (RuntimeException exception) {
             manualStatus = "Error: " + rootMessage(exception);
         }
