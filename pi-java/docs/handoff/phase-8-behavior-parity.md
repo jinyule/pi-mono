@@ -95,6 +95,8 @@
   - interactive app keybinding newSession first cut
 - 已完成第四十五刀：
   - interactive `/settings` selector first cut
+- 已完成第四十六刀：
+  - interactive model selector richer metadata first cut
 
 ## 本轮落地
 
@@ -440,6 +442,17 @@
   - 输入 `/settings` 会打开 settings overlay
   - 设置修改后会立即重绘 footer / status
   - 当前还没有单独的 app keybinding，也还没扩到 theme/transport/UI settings
+- `PiInteractiveSession.SelectableModel` 现在补了 richer metadata 字段：
+  - `modelName`
+  - `reasoning`
+  - `contextWindow`
+- `PiAgentSession.selectableModels()` 现在会把这些 metadata 从 `CycleModel.model()` 下沉出来
+- `PiModelSelector` 现在继续往 TS 靠了一步：
+  - 当前项优先排序
+  - row label 改成纯 `model id`
+  - 当前项后缀改成 `✓`
+  - right metadata / selected detail 补 `provider`、`model name`、`thinking`、`context window`
+  - 选择回调仍然返回原始 cycle target index，不会因为排序后错选
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+l`
@@ -558,6 +571,9 @@
 - `PiAgentSessionTest`：`updateSetting()` 会持久化 `autocompact` / queue mode / thinking level
 - `PiSettingsSelectorIntegrationTest`：`/settings` 会打开 overlay 并即时切换 auto-compact
 - `PiSettingsSelectorIntegrationTest`：reasoning model 下 settings overlay 会显示 thinking level
+- `PiAgentSessionTest`：`selectableModels()` 会暴露 `model name` / `reasoning` / `context window`
+- `PiModelSelectorTest`：selector 会把当前项排在前面并渲染 richer metadata
+- `PiModelSelectorTest`：排序后选择仍会命中原始 model index
 
 最近通过：
 
@@ -567,7 +583,7 @@
 
 ## 下一步建议
 
-1. settings selector parity：继续扩到 `theme` / `transport` / `hide thinking` / `quiet startup` 等已存在 settings 面
-2. selector parity：继续把 model selector 从 cycle scope 扩到 richer registry/provider metadata
+1. selector parity：继续把 model selector 从 cycle scope 扩到 all/scoped 双 scope，以及 default model settings 保存
+2. settings selector parity：继续扩到 `theme` / `transport` / `hide thinking` / `quiet startup` 等已存在 settings 面
 3. pending queue parity：补 steering / compaction queue 合并展示与恢复（前提是先补 Java CLI steering 入口）
 4. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件

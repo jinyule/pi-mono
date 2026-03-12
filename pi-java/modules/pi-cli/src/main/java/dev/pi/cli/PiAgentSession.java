@@ -234,8 +234,11 @@ public final class PiAgentSession implements PiInteractiveSession {
                 index,
                 cycleModel.model().provider(),
                 cycleModel.model().id(),
+                cycleModel.model().name(),
                 displayThinkingLevel(cycleModel, currentThinkingLevel),
-                index == selectedIndex
+                index == selectedIndex,
+                cycleModel.model().reasoning(),
+                cycleModel.model().contextWindow()
             ));
         }
         return List.copyOf(models);

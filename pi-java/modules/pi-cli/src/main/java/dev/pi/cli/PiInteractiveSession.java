@@ -172,9 +172,15 @@ public interface PiInteractiveSession {
         int index,
         String provider,
         String modelId,
+        String modelName,
         String thinkingLevel,
-        boolean current
+        boolean current,
+        boolean reasoning,
+        int contextWindow
     ) {
+        public SelectableModel(int index, String provider, String modelId, String thinkingLevel, boolean current) {
+            this(index, provider, modelId, modelId, thinkingLevel, current, false, 0);
+        }
     }
 
     record SettingsSelection(

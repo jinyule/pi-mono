@@ -559,6 +559,47 @@ class PiAgentSessionTest {
     }
 
     @Test
+    void selectableModelsExposeRicherModelMetadata() {
+        var initialModel = testReasoningModel("openai", "gpt-5");
+        var nextModel = new Model(
+            "claude-3-7-sonnet",
+            "Claude 3.7 Sonnet",
+            "anthropic-messages",
+            "anthropic",
+            "https://example.com",
+            true,
+            List.of("text"),
+            new Usage.Cost(0.0, 0.0, 0.0, 0.0, 0.0),
+            200_000,
+            8_192,
+            null,
+            null
+        );
+        var session = PiAgentSession.builder(
+            initialModel,
+            SessionManager.inMemory("/workspace"),
+            SettingsManager.inMemory(),
+            new InstructionResources(List.of(), "", List.of())
+        )
+            .thinkingLevel(ThinkingLevel.MINIMAL)
+            .cycleModels(List.of(
+                new PiAgentSession.CycleModel(initialModel, ThinkingLevel.MINIMAL),
+                new PiAgentSession.CycleModel(nextModel, ThinkingLevel.HIGH)
+            ), true)
+            .streamFunction(fakeAssistant("ready"))
+            .build();
+
+        var selectableModels = session.selectableModels();
+
+        assertThat(selectableModels.getFirst().modelName()).isEqualTo("gpt-5");
+        assertThat(selectableModels.getFirst().reasoning()).isTrue();
+        assertThat(selectableModels.getFirst().contextWindow()).isEqualTo(200_000);
+        assertThat(selectableModels.get(1).modelName()).isEqualTo("Claude 3.7 Sonnet");
+        assertThat(selectableModels.get(1).reasoning()).isTrue();
+        assertThat(selectableModels.get(1).contextWindow()).isEqualTo(200_000);
+    }
+
+    @Test
     void queuedFollowUpsExposeQueuedMessages() {
         var session = PiAgentSession.builder(
             testModel(),
