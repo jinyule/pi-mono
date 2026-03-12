@@ -45,6 +45,10 @@ public interface PiInteractiveSession {
         throw new UnsupportedOperationException("Thinking level cycling is not available");
     }
 
+    default String newSession() {
+        throw new UnsupportedOperationException("Starting a new session is not available");
+    }
+
     default String leafId() {
         return null;
     }

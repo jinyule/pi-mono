@@ -358,6 +358,38 @@ class PiAgentSessionTest {
             .isEqualTo("high");
     }
 
+    @Test
+    void startsNewSessionAndUsesNewSessionIdForLaterPrompts() {
+        var sessionManager = SessionManager.inMemory("/workspace");
+        var observedSessionIds = new java.util.concurrent.CopyOnWriteArrayList<String>();
+        var session = PiAgentSession.builder(
+            testModel(),
+            sessionManager,
+            SettingsManager.inMemory(),
+            new InstructionResources(List.of(), "", List.of())
+        )
+            .streamFunction(capturingAssistant("Ack after reset", observedSessionIds))
+            .build();
+
+        session.prompt("before").toCompletableFuture().join();
+        session.waitForIdle().toCompletableFuture().join();
+        var originalSessionId = session.sessionId();
+
+        var newSessionId = session.newSession();
+
+        assertThat(newSessionId).isNotEqualTo(originalSessionId);
+        assertThat(session.sessionId()).isEqualTo(newSessionId);
+        assertThat(session.state().messages()).isEmpty();
+
+        session.prompt("after").toCompletableFuture().join();
+        session.waitForIdle().toCompletableFuture().join();
+
+        assertThat(observedSessionIds).containsExactly(originalSessionId, newSessionId);
+        assertThat(session.state().messages())
+            .extracting(message -> message.role())
+            .containsExactly("user", "assistant");
+    }
+
     private static Model testModel() {
         return new Model(
             "test-model",

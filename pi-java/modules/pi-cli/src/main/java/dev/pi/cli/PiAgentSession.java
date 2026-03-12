@@ -221,6 +221,22 @@ public final class PiAgentSession implements PiInteractiveSession {
     }
 
     @Override
+    public String newSession() {
+        if (sdkSession.state().isStreaming()) {
+            throw new IllegalStateException("Wait for the current response to finish before starting a new session");
+        }
+        try {
+            sessionManager().createBranchedSession(null);
+        } catch (IOException exception) {
+            throw new IllegalStateException("Failed to create new session", exception);
+        }
+        sdkSession.agent().setSessionId(sessionManager().sessionId());
+        seedSessionMetadataIfNeeded(sdkSession.state().thinkingLevel());
+        restoreAgentMessages();
+        return sessionManager().sessionId();
+    }
+
+    @Override
     public String leafId() {
         return sessionManager().leafId();
     }

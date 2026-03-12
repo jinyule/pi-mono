@@ -235,6 +235,7 @@ class PiCliModuleTest {
               "cycleModelForward": "alt+p",
               "cycleModelBackward": "alt+o",
               "cycleThinkingLevel": "alt+i",
+              "newSession": "alt+m",
               "tree": "alt+t",
               "fork": "alt+f",
               "toggleSessionSort": "ctrl+g",
@@ -270,6 +271,7 @@ class PiCliModuleTest {
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.CYCLE_MODEL_FORWARD)).containsExactly("alt+p");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.CYCLE_MODEL_BACKWARD)).containsExactly("alt+o");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.CYCLE_THINKING_LEVEL)).containsExactly("alt+i");
+            assertThat(PiAppKeybindings.global().getKeys(PiAppAction.NEW_SESSION)).containsExactly("alt+m");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.TREE)).containsExactly("alt+t");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.FORK)).containsExactly("alt+f");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.TOGGLE_SESSION_NAMED_FILTER)).containsExactly("alt+n");

@@ -652,6 +652,36 @@ class PiInteractiveModeTest {
         }
     }
 
+    @Test
+    void usesAppKeybindingForNewSession() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(100, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+        var previousApp = PiAppKeybindings.global();
+        try {
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(
+                PiAppAction.NEW_SESSION,
+                java.util.List.of("alt+m")
+            )));
+
+            mode.start();
+            terminal.sendInput("Hello");
+            terminal.sendInput("\r");
+            var originalSessionId = session.sessionId();
+
+            terminal.sendInput("\u001bm");
+
+            waitFor(() -> !originalSessionId.equals(session.sessionId()));
+            assertThat(String.join("\n", terminal.getViewport()))
+                .contains("Started new session")
+                .contains("session: " + session.sessionId())
+                .doesNotContain("You: Hello");
+        } finally {
+            PiAppKeybindings.setGlobal(previousApp);
+            mode.stop();
+        }
+    }
+
     private static final class FakeSession implements PiInteractiveSession {
         private final List<String> prompts = new ArrayList<>();
         private final CopyOnWriteArrayList<Consumer<AgentState>> stateListeners = new CopyOnWriteArrayList<>();
@@ -863,6 +893,17 @@ class PiInteractiveModeTest {
             lastThinkingLevelChange = next == null ? "off" : next.value();
             emitState();
             return lastThinkingLevelChange;
+        }
+
+        @Override
+        public String newSession() {
+            try {
+                sessionManager.createBranchedSession(null);
+            } catch (Exception exception) {
+                throw new AssertionError(exception);
+            }
+            syncState();
+            return sessionManager.sessionId();
         }
 
         @Override

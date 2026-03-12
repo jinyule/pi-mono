@@ -91,6 +91,8 @@
   - interactive footer git-branch watcher first cut
 - 已完成第四十三刀：
   - interactive app keybinding cycleModelBackward first cut
+- 已完成第四十四刀：
+  - interactive app keybinding newSession first cut
 
 ## 本轮落地
 
@@ -357,6 +359,17 @@
 - `KeyMatcher` 现在补了 `shift+ctrl+p` / `ctrl+shift+p` 的 Kitty `CSI u` 匹配：
   - 当前首版支持 `\u001b[112;6u`
   - 并兼容简化的 `\u001b[80;6u`
+- `PiAppAction` / `PiAppKeybindings` 现在继续补了 `newSession`：
+  - 默认无快捷键，可通过 `keybindings.json` 配置
+  - `PiCliKeybindingsLoader` 现在支持 `newSession` alias
+- `PiAgentSession` 现在支持 `newSession()`：
+  - streaming 中会拒绝切换
+  - 通过 `SessionManager.createBranchedSession(null)` 创建空白新 session
+  - 会重置 agent session id、清空当前消息视图，并重新 seed model/thinking metadata
+- `PiInteractiveMode` 现在会在 prompt 层消费 `newSession`：
+  - 触发后调用 `session.newSession()`
+  - 状态行回显 `Started new session`
+  - 后续 prompt 会带着新的 session id 继续执行
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -445,6 +458,9 @@
 - `PiInteractiveModeTest`：app keybinding 驱动 backward model cycle
 - `PiCliModuleTest`：从 `keybindings.json` 加载 `cycleModelBackward`
 - `KeyMatcherTest`：匹配 `shift+ctrl+p`
+- `PiAgentSessionTest`：`newSession()` 后 session id 会变化，后续 prompt 会落到新 session
+- `PiInteractiveModeTest`：app keybinding 驱动 `newSession`
+- `PiCliModuleTest`：从 `keybindings.json` 加载 `newSession`
 
 最近通过：
 
@@ -454,7 +470,7 @@
 
 ## 下一步建议
 
-1. keybindings parity：继续评估 `selectModel` / `newSession` / `followUp` / `dequeue`
+1. keybindings parity：继续评估 `selectModel` / `followUp` / `dequeue`
 2. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件
 2. selector parity：继续评估 model/settings selector 是否复用同一套层级
 3. keybindings：继续评估 cycleModelBackward / selectModel / newSession / followUp / dequeue 等动作

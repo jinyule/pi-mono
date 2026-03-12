@@ -53,6 +53,8 @@ final class PiCliKeybindingsLoader {
         PiAppAction.CYCLE_MODEL_BACKWARD,
         "cycleThinkingLevel",
         PiAppAction.CYCLE_THINKING_LEVEL,
+        "newSession",
+        PiAppAction.NEW_SESSION,
         "tree",
         PiAppAction.TREE,
         "fork",

@@ -18,6 +18,8 @@ final class PiAppKeybindings {
         List.of("shift+ctrl+p"),
         PiAppAction.CYCLE_THINKING_LEVEL,
         List.of("shift+tab"),
+        PiAppAction.NEW_SESSION,
+        List.of(),
         PiAppAction.TREE,
         List.of(),
         PiAppAction.FORK,
