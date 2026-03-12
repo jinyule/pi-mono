@@ -155,6 +155,8 @@
   - interactive startup header keybinding hints first cut
 - 已完成第七十四刀：
   - restartable process-terminal lifecycle first cut
+- 已完成第七十五刀：
+  - interactive app keybinding suspend parity first cut
 
 ## 本轮落地
 
@@ -821,6 +823,9 @@
 - `ProcessTerminal` 现在在每次 `start()` 时都会重新创建 backend，并在 `stop()` 后释放旧 backend；这让 stop/start 生命周期重新变成可重入
 - `ProcessTerminalTest` 现在覆盖 stop 后 restart 会拿到 fresh backend，而不是继续复用已关闭的 backend
 - 这刀是后续 `suspend` / `externalEditor` 的前置底座；此前它们在 Java 侧无法可靠实现，根因就是 `ProcessTerminal.stop()` 会把底层 backend 关死
+- PiAppAction / PiAppKeybindings / PiCliKeybindingsLoader 现在补了 suspend app action、默认 `ctrl+z` 和 keybindings.json alias
+- PiInteractiveMode 现在支持 suspend app keybinding；默认实现会在 POSIX 上 stop TUI -> `kill -TSTP <pid>` -> start TUI，Windows 上则明确提示 `Suspend is not supported on Windows`
+- PiCliModuleTest / PiInteractiveModeTest / KeyMatcherTest 现在覆盖 suspend 的 loader alias、interactive dispatch、unsupported 文案和 `ctrl+z` 键位匹配
 
 最近通过：
 

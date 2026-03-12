@@ -697,6 +697,61 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void usesAppKeybindingForSuspend() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(80, 16);
+        var suspended = new java.util.concurrent.atomic.AtomicBoolean();
+        var mode = new PiInteractiveMode(
+            session,
+            terminal,
+            new PiCopyCommand(session, text -> {
+            }),
+            PiClipboardImage.system(),
+            () -> suspended.set(true)
+        );
+        var previousApp = PiAppKeybindings.global();
+        try {
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(PiAppAction.SUSPEND, java.util.List.of("alt+s"))));
+
+            mode.start();
+            terminal.sendInput("\u001bs");
+
+            waitFor(suspended::get);
+        } finally {
+            PiAppKeybindings.setGlobal(previousApp);
+            mode.stop();
+        }
+    }
+
+    @Test
+    void showsUnsupportedSuspendMessage() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(80, 16);
+        var mode = new PiInteractiveMode(
+            session,
+            terminal,
+            new PiCopyCommand(session, text -> {
+            }),
+            PiClipboardImage.system(),
+            () -> {
+                throw new UnsupportedOperationException("Suspend is not supported on Windows");
+            }
+        );
+        var previousApp = PiAppKeybindings.global();
+        try {
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(PiAppAction.SUSPEND, java.util.List.of("alt+s"))));
+
+            mode.start();
+            terminal.sendInput("\u001bs");
+
+            waitFor(() -> String.join("\n", terminal.getViewport()).contains("Suspend is not supported on Windows"));
+        } finally {
+            PiAppKeybindings.setGlobal(previousApp);
+            mode.stop();
+        }
+    }
+
+    @Test
     void usesAppKeybindingForExpandTools() {
         var details = JsonNodeFactory.instance.objectNode()
             .put("path", "README.md")

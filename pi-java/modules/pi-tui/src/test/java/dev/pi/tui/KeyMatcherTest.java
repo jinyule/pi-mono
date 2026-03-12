@@ -31,6 +31,11 @@ class KeyMatcherTest {
     }
 
     @Test
+    void matchesConfiguredCtrlZSequence() {
+        assertThat(KeyMatcher.matches("\u001a", "ctrl+z")).isTrue();
+    }
+
+    @Test
     void matchesTabSequence() {
         assertThat(KeyMatcher.matches("\t", "tab")).isTrue();
     }

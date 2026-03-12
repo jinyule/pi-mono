@@ -38,6 +38,7 @@ public final class KeyMatcher {
         Map.entry("ctrl+v", "\u0016"),
         Map.entry("ctrl+w", "\u0017"),
         Map.entry("ctrl+y", "\u0019"),
+        Map.entry("ctrl+z", "\u001a"),
         Map.entry("ctrl+-", "\u001f"),
         Map.entry("alt+b", "\u001bb"),
         Map.entry("alt+d", "\u001bd"),

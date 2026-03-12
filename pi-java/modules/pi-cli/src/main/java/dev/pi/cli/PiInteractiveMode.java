@@ -29,6 +29,7 @@ public final class PiInteractiveMode implements AutoCloseable {
     private final Tui tui;
     private final PiCopyCommand copyCommand;
     private final PiClipboardImage clipboardImage;
+    private final Runnable suspendAction;
     private final Text header = new Text("", 0, 0, null);
     private final Text transcript = new Text("", 1, 0, null);
     private final Text status = new Text("", 1, 0, null);
@@ -74,11 +75,22 @@ public final class PiInteractiveMode implements AutoCloseable {
         PiCopyCommand copyCommand,
         PiClipboardImage clipboardImage
     ) {
+        this(session, terminal, copyCommand, clipboardImage, null);
+    }
+
+    PiInteractiveMode(
+        PiInteractiveSession session,
+        Terminal terminal,
+        PiCopyCommand copyCommand,
+        PiClipboardImage clipboardImage,
+        Runnable suspendAction
+    ) {
         this.session = Objects.requireNonNull(session, "session");
         this.terminal = Objects.requireNonNull(terminal, "terminal");
         this.copyCommand = Objects.requireNonNull(copyCommand, "copyCommand");
         this.clipboardImage = Objects.requireNonNull(clipboardImage, "clipboardImage");
         this.tui = new Tui(terminal, true);
+        this.suspendAction = suspendAction == null ? createSuspendAction() : suspendAction;
         this.tui.addChild(header);
         this.tui.addChild(transcript);
         this.tui.addChild(status);
@@ -785,6 +797,10 @@ public final class PiInteractiveMode implements AutoCloseable {
                 requestExit();
                 return;
             }
+            if (appKeybindings.matches(data, PiAppAction.SUSPEND)) {
+                handleSuspendCommand();
+                return;
+            }
             if (appKeybindings.matches(data, PiAppAction.RESUME)) {
                 handleResumeCommand();
                 return;
@@ -860,6 +876,18 @@ public final class PiInteractiveMode implements AutoCloseable {
         try {
             session.resume().toCompletableFuture().join();
             manualStatus = "Resumed session";
+        } catch (RuntimeException exception) {
+            manualStatus = "Error: " + rootMessage(exception);
+        }
+        renderState(session.state());
+    }
+
+    private void handleSuspendCommand() {
+        try {
+            suspendAction.run();
+            manualStatus = null;
+        } catch (UnsupportedOperationException exception) {
+            manualStatus = exception.getMessage();
         } catch (RuntimeException exception) {
             manualStatus = "Error: " + rootMessage(exception);
         }
@@ -1041,6 +1069,33 @@ public final class PiInteractiveMode implements AutoCloseable {
         return summary;
     }
 
+    private Runnable createSuspendAction() {
+        return () -> {
+            if (isWindows()) {
+                throw new UnsupportedOperationException("Suspend is not supported on Windows");
+            }
+            tui.stop();
+            try {
+                var process = new ProcessBuilder(
+                    "kill",
+                    "-TSTP",
+                    Long.toString(ProcessHandle.current().pid())
+                ).inheritIO().start();
+                var exitCode = process.waitFor();
+                if (exitCode != 0) {
+                    throw new IllegalStateException("Failed to suspend process");
+                }
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("Failed to suspend process", exception);
+            } catch (java.io.IOException exception) {
+                throw new IllegalStateException("Failed to suspend process", exception);
+            } finally {
+                tui.start();
+            }
+        };
+    }
+
     private AgentMessage.UserMessage buildPrompt(String value) {
         var content = new ArrayList<UserContent>();
         if (value != null && !value.isBlank()) {
@@ -1048,5 +1103,11 @@ public final class PiInteractiveMode implements AutoCloseable {
         }
         content.addAll(pendingImages);
         return new AgentMessage.UserMessage(List.copyOf(content), System.currentTimeMillis());
+    }
+
+    private static boolean isWindows() {
+        return System.getProperty("os.name", "")
+            .toLowerCase(Locale.ROOT)
+            .contains("win");
     }
 }

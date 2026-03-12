@@ -15,6 +15,7 @@ final class PiAppKeybindings {
         Map.entry(PiAppAction.INTERRUPT, List.of("escape")),
         Map.entry(PiAppAction.CLEAR, List.of("ctrl+c")),
         Map.entry(PiAppAction.EXIT, List.of("ctrl+d")),
+        Map.entry(PiAppAction.SUSPEND, List.of("ctrl+z")),
         Map.entry(PiAppAction.RESUME, List.of()),
         Map.entry(PiAppAction.CYCLE_MODEL_FORWARD, List.of("ctrl+p")),
         Map.entry(PiAppAction.CYCLE_MODEL_BACKWARD, List.of("shift+ctrl+p")),

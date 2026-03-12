@@ -4,6 +4,7 @@ enum PiAppAction {
     INTERRUPT,
     CLEAR,
     EXIT,
+    SUSPEND,
     RESUME,
     CYCLE_MODEL_FORWARD,
     CYCLE_MODEL_BACKWARD,
