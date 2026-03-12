@@ -168,7 +168,7 @@ public final class PiModelSelector implements Component, Focusable {
     }
 
     private String scopeHint() {
-        return keyHint(EditorAction.SESSION_SCOPE_TOGGLE) + PiCliAnsi.muted(" scope (all/scoped)");
+        return PiCliAnsi.dim(keyLabel(EditorAction.SESSION_SCOPE_TOGGLE)) + PiCliAnsi.muted(" scope (all/scoped)");
     }
 
     private static SelectItem toSelectItem(PiInteractiveSession.SelectableModel model) {
@@ -405,7 +405,7 @@ public final class PiModelSelector implements Component, Focusable {
         return String.format(Locale.ROOT, "%.1fM ctx", contextWindow / 1_000_000.0);
     }
 
-    private static String keyHint(EditorAction action) {
+    private static String keyLabel(EditorAction action) {
         var keys = EditorKeybindings.global().getKeys(action);
         return keys.isEmpty() ? action.name() : keys.getFirst();
     }

@@ -169,6 +169,8 @@
   - interactive custom theme core tokens first cut
 - completed cut 81:
   - interactive model selector top-hint parity first cut
+- completed cut 82:
+  - interactive model selector scope-hint styling first cut
 
 ## 本轮落地
 
@@ -973,6 +975,10 @@
   - unscoped mode keeps only the configured-API-key warning
   - the extra `Type to filter / ... selects / ... cancels` copy is gone from both branches
 - `PiModelSelectorTest` now asserts that the scope hint stays keybinding-aware while the removed select/cancel hint does not come back
+- `PiModelSelector.scopeHint()` now matches the TS key-hint layering more closely:
+  - the keybinding itself is rendered through `PiCliAnsi.dim(...)`
+  - the `scope (all/scoped)` description stays on the muted channel
+- `PiModelSelectorTest` now checks the split ANSI styling for the key and the description, not just the plain text copy
 
 ?????```bash
 .\\gradlew.bat :pi-cli:test --no-daemon
@@ -981,7 +987,7 @@ npm.cmd run check
 
 ## 下一步建议
 
-1. selector parity: continue evaluating model selector detail/no-match hierarchy and scope-hint styling, or move to scoped-model footer copy parity
+1. selector parity: continue evaluating model selector detail/no-match hierarchy, or move the new core theme tokens into more CLI surfaces
 2. settings selector parity: theme work now covers hint/keybinding parity, hide-thinking transcript parity, quiet-startup header parity, quiet-startup startup-resource silence, double-escape, editor-padding, dark/light runtime ANSI theme switching, `Theme` submenu preview, `Thinking level` submenu, hardware-cursor/clear-on-shrink, TS-style copy for steering/follow-up/transport/quiet-startup, plus the first custom theme loader + hot reload slice and the first broader core-token slice; remaining theme gaps are package/source theme discovery and wider token adoption across more CLI surfaces
 3. pending queue parity：继续补 compaction queue 合并展示与恢复；steering/follow-up runtime queue 已接上，但 Java 侧仍没有 compaction pending queue
 4. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件

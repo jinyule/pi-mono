@@ -133,6 +133,8 @@ class PiModelSelectorTest {
             var lines = selector.render(100);
 
             assertThat(lines).anyMatch(line -> line.contains("shift+tab") && line.contains("scope (all/scoped)"));
+            assertThat(lines).anyMatch(line -> line.contains("\u001b[2;37mshift+tab"));
+            assertThat(lines).anyMatch(line -> line.contains("\u001b[90m scope (all/scoped)"));
             assertThat(lines).noneMatch(line -> line.contains("selects"));
             assertThat(lines).noneMatch(line -> line.contains("cancels"));
         } finally {
