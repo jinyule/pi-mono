@@ -145,6 +145,22 @@ class PiSettingsSelectorIntegrationTest {
     }
 
     @Test
+    void settingsSelectorTogglesDoubleEscapeAction() {
+        var updates = new CopyOnWriteArrayList<String>();
+        var selector = new PiSettingsSelector(
+            new FakeSettingsSession().settingsSelection(),
+            (settingId, value) -> updates.add(settingId + "=" + value),
+            () -> {
+            }
+        );
+
+        selector.handleInput("double");
+        selector.handleInput(" ");
+
+        assertThat(updates).contains("double-escape-action=fork");
+    }
+
+    @Test
     void settingsSelectorHintsReflectCustomKeybindings() {
         var previous = EditorKeybindings.global();
         try {
@@ -176,6 +192,7 @@ class PiSettingsSelectorIntegrationTest {
         private String transport = "auto";
         private boolean hideThinkingBlock;
         private boolean quietStartup;
+        private String doubleEscapeAction = "tree";
         private AgentState state = new AgentState(
             "",
             new Model(
@@ -262,6 +279,7 @@ class PiSettingsSelectorIntegrationTest {
                 transport,
                 hideThinkingBlock,
                 quietStartup,
+                doubleEscapeAction,
                 "dark",
                 List.of("dark", "light"),
                 state.model().reasoning(),
@@ -284,6 +302,9 @@ class PiSettingsSelectorIntegrationTest {
             }
             if ("quiet-startup".equals(settingId)) {
                 quietStartup = "true".equals(value);
+            }
+            if ("double-escape-action".equals(settingId)) {
+                doubleEscapeAction = value;
             }
             if ("thinking".equals(settingId)) {
                 state = state.withThinkingLevel("off".equals(value) ? null : ThinkingLevel.fromValue(value));

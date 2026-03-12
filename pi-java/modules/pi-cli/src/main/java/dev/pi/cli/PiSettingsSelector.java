@@ -87,6 +87,14 @@ public final class PiSettingsSelector implements Component, Focusable {
             null
         ));
         items.add(new SettingItem(
+            "double-escape-action",
+            "Double-escape action",
+            "Action when pressing Escape twice with empty editor",
+            settings.doubleEscapeAction(),
+            List.of("tree", "fork", "none"),
+            null
+        ));
+        items.add(new SettingItem(
             "theme",
             "Theme",
             "Color theme for the interface",

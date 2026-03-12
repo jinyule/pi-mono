@@ -323,6 +323,7 @@ public final class PiAgentSession implements PiInteractiveSession {
             transportValue(sdkSession.agent().transport()),
             settingsManager.effective().getBoolean("/hideThinkingBlock", false),
             settingsManager.effective().getBoolean("/quietStartup", false),
+            doubleEscapeAction(),
             currentTheme(),
             availableThemes(),
             sdkSession.state().model().reasoning(),
@@ -342,6 +343,7 @@ public final class PiAgentSession implements PiInteractiveSession {
             case "transport" -> updateTransportSetting(value);
             case "hide-thinking" -> updateHideThinkingSetting(value);
             case "quiet-startup" -> updateQuietStartupSetting(value);
+            case "double-escape-action" -> updateDoubleEscapeActionSetting(value);
             case "theme" -> updateThemeSetting(value);
             case "thinking" -> updateThinkingSetting(value);
             default -> throw new IllegalArgumentException("Unknown setting: " + settingId);
@@ -1065,6 +1067,19 @@ public final class PiAgentSession implements PiInteractiveSession {
             throw new IllegalArgumentException("Invalid value for theme: " + value);
         }
         settingsManager.updateGlobal(settings -> settings.withMutations(root -> root.put("theme", normalized)));
+    }
+
+    private void updateDoubleEscapeActionSetting(String value) {
+        var normalized = value == null ? "" : value.trim();
+        if (!"tree".equals(normalized) && !"fork".equals(normalized) && !"none".equals(normalized)) {
+            throw new IllegalArgumentException("Invalid value for double-escape-action: " + value);
+        }
+        settingsManager.updateGlobal(settings -> settings.withMutations(root -> root.put("doubleEscapeAction", normalized)));
+    }
+
+    private String doubleEscapeAction() {
+        var action = settingsManager.effective().getString("/doubleEscapeAction");
+        return action == null || action.isBlank() ? "tree" : action.trim();
     }
 
     private String currentTheme() {

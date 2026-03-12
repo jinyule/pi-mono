@@ -1218,6 +1218,34 @@ class PiInteractiveModeTest {
         }
     }
 
+    @Test
+    void doubleEscapeOpensTreeWhenConfigured() {
+        var session = new FakeSession().withMessageHistory("Hello").withDoubleEscapeAction("tree");
+        var terminal = new VirtualTerminal(100, 18);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("\u001b");
+        terminal.sendInput("\u001b");
+
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Navigate session tree")));
+        mode.stop();
+    }
+
+    @Test
+    void doubleEscapeOpensForkWhenConfigured() {
+        var session = new FakeSession().withMessageHistory("Hello").withDoubleEscapeAction("fork");
+        var terminal = new VirtualTerminal(100, 18);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("\u001b");
+        terminal.sendInput("\u001b");
+
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Fork from previous message")));
+        mode.stop();
+    }
+
     private static final class FakeSession implements PiInteractiveSession {
         private final List<String> prompts = new ArrayList<>();
         private final List<AgentMessage.UserMessage> promptMessages = new ArrayList<>();
@@ -1229,6 +1257,7 @@ class PiInteractiveModeTest {
         private boolean autoCompactionEnabled = true;
         private boolean hideThinkingBlock;
         private boolean quietStartup;
+        private String doubleEscapeAction = "tree";
         private int availableProviderCount = 1;
         private String cwd = "/workspace";
         private String lastThinkingLevelChange;
@@ -1380,6 +1409,7 @@ class PiInteractiveModeTest {
                 "auto",
                 hideThinkingBlock,
                 quietStartup,
+                doubleEscapeAction,
                 "dark",
                 List.of("dark", "light"),
                 state.model().reasoning(),
@@ -1392,6 +1422,11 @@ class PiInteractiveModeTest {
         public void updateSetting(String settingId, String value) {
             if ("hide-thinking".equals(settingId)) {
                 hideThinkingBlock = "true".equals(value);
+                emitState();
+                return;
+            }
+            if ("double-escape-action".equals(settingId)) {
+                doubleEscapeAction = value;
                 emitState();
                 return;
             }
@@ -1704,6 +1739,32 @@ class PiInteractiveModeTest {
         private FakeSession withQuietStartup(boolean quietStartup) {
             this.quietStartup = quietStartup;
             emitState();
+            return this;
+        }
+
+        private FakeSession withDoubleEscapeAction(String doubleEscapeAction) {
+            this.doubleEscapeAction = doubleEscapeAction;
+            emitState();
+            return this;
+        }
+
+        private FakeSession withMessageHistory(String text) {
+            try {
+                sessionManager.appendMessage(new dev.pi.ai.model.Message.UserMessage(List.of(new TextContent(text, null)), 1L));
+                sessionManager.appendMessage(new dev.pi.ai.model.Message.AssistantMessage(
+                    List.of(new TextContent("Ack: " + text, null)),
+                    state.model().api(),
+                    state.model().provider(),
+                    state.model().id(),
+                    new Usage(1, 1, 0, 0, 2, new Usage.Cost(0.0, 0.0, 0.0, 0.0, 0.0)),
+                    dev.pi.ai.model.StopReason.STOP,
+                    null,
+                    2L
+                ));
+            } catch (Exception exception) {
+                throw new AssertionError(exception);
+            }
+            syncState();
             return this;
         }
 

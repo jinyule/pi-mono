@@ -12,6 +12,7 @@ import dev.pi.tui.OverlayAnchor;
 import dev.pi.tui.OverlayMargin;
 import dev.pi.tui.OverlayOptions;
 import dev.pi.tui.Input;
+import dev.pi.tui.KeyMatcher;
 import dev.pi.tui.ProcessTerminal;
 import dev.pi.tui.Terminal;
 import dev.pi.tui.TerminalText;
@@ -44,6 +45,7 @@ public final class PiInteractiveMode implements AutoCloseable {
     private String manualStatus;
     private Runnable onStop;
     private long lastClearTimeMillis;
+    private long lastEscapeTimeMillis;
     private boolean expandToolDetails;
     private final List<ImageContent> pendingImages = new ArrayList<>();
 
@@ -799,7 +801,7 @@ public final class PiInteractiveMode implements AutoCloseable {
         public void handleInput(String data) {
             var appKeybindings = PiAppKeybindings.global();
             if (appKeybindings.matches(data, PiAppAction.INTERRUPT)) {
-                session.abort();
+                handleInterruptCommand(data);
                 return;
             }
             if (appKeybindings.matches(data, PiAppAction.CLEAR)) {
@@ -941,6 +943,34 @@ public final class PiInteractiveMode implements AutoCloseable {
         pendingImages.clear();
         lastClearTimeMillis = now;
         tui.requestRender();
+    }
+
+    private void handleInterruptCommand(String data) {
+        if (session.state().isStreaming()) {
+            session.abort();
+            return;
+        }
+        if (!KeyMatcher.matches(data, "escape") || !input.getValue().trim().isEmpty()) {
+            session.abort();
+            return;
+        }
+
+        var action = session.settingsSelection().doubleEscapeAction();
+        if ("none".equals(action)) {
+            return;
+        }
+
+        var now = System.currentTimeMillis();
+        if (now - lastEscapeTimeMillis >= 500) {
+            lastEscapeTimeMillis = now;
+            return;
+        }
+        lastEscapeTimeMillis = 0;
+        if ("tree".equals(action)) {
+            handleTreeCommand();
+            return;
+        }
+        handleForkCommand();
     }
 
     private void handleCycleModelForwardCommand() {

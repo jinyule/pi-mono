@@ -163,6 +163,8 @@
   - interactive model selector warning/hint copy parity first cut
 - 已完成第七十八刀：
   - interactive settings selector theme first cut
+- 已完成第七十九刀：
+  - interactive double-escape-action first cut
 
 ## 本轮落地
 
@@ -860,6 +862,17 @@
   - 描述文案是 `Color theme for the interface`
   - 当前首版沿用 `SettingsList` 的 cycle 交互，不做 submenu 预览
 - PiSettingsSelectorIntegrationTest 现在覆盖 `Theme` 条目切换
+- PiInteractiveSession.SettingsSelection / PiAgentSession 现在补了 `doubleEscapeAction` settings contract：
+  - 默认值是 `tree`
+  - 当前持久化值走 global settings 的 `/doubleEscapeAction`
+- PiSettingsSelector 现在新增 `Double-escape action` 条目：
+  - 可选值是 `tree` / `fork` / `none`
+  - 描述文案对齐 TS：`Action when pressing Escape twice with empty editor`
+- PiInteractiveMode 现在把真实 `Escape` 双击空编辑器接到了 settings：
+  - streaming 时仍旧优先走 abort
+  - 非 `Escape` 的自定义 interrupt 键位仍旧保持原来的 abort 语义
+  - 空编辑器下双击 `Escape` 会按设置打开 tree / fork，或在 `none` 下保持无动作
+- PiSettingsSelectorIntegrationTest / PiInteractiveModeTest 现在覆盖 `Double-escape action` 切换，以及双击 `Escape` 打开 tree/fork
 
 最近通过：
 
