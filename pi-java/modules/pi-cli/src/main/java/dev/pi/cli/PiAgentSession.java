@@ -44,6 +44,7 @@ public final class PiAgentSession implements PiInteractiveSession {
     private final String systemPrompt;
     private final String appendSystemPrompt;
     private final ReloadAction reloadAction;
+    private final ReloadAction themeReloadAction;
     private final List<CycleModel> cycleModels;
     private final boolean scopedCycleModels;
     private final int availableProviderCount;
@@ -58,6 +59,7 @@ public final class PiAgentSession implements PiInteractiveSession {
         String systemPrompt,
         String appendSystemPrompt,
         ReloadAction reloadAction,
+        ReloadAction themeReloadAction,
         List<CycleModel> cycleModels,
         boolean scopedCycleModels,
         int availableProviderCount,
@@ -70,6 +72,7 @@ public final class PiAgentSession implements PiInteractiveSession {
         this.systemPrompt = systemPrompt;
         this.appendSystemPrompt = appendSystemPrompt;
         this.reloadAction = reloadAction;
+        this.themeReloadAction = themeReloadAction;
         this.cycleModels = List.copyOf(Objects.requireNonNullElse(cycleModels, List.of()));
         this.scopedCycleModels = scopedCycleModels;
         this.availableProviderCount = Math.max(1, availableProviderCount);
@@ -534,8 +537,17 @@ public final class PiAgentSession implements PiInteractiveSession {
             }
         }
 
+        var themeWarnings = List.<String>of();
+        if (themeReloadAction != null) {
+            try {
+                themeWarnings = List.copyOf(themeReloadAction.reload());
+            } catch (Exception exception) {
+                themeWarnings = List.of(rootMessage(exception));
+            }
+        }
+
         sdkSession.updateSystemPrompt(systemPrompt, appendSystemPrompt, instructionResources);
-        return new ReloadResult(settingsErrors, resourceErrors, extensionWarnings);
+        return new ReloadResult(settingsErrors, resourceErrors, themeWarnings, extensionWarnings);
     }
 
     public List<SessionPersistenceError> drainPersistenceErrors() {
@@ -628,6 +640,7 @@ public final class PiAgentSession implements PiInteractiveSession {
         private String systemPrompt;
         private String appendSystemPrompt;
         private ReloadAction reloadAction;
+        private ReloadAction themeReloadAction;
         private ThinkingLevel thinkingLevel;
         private List<AgentTool<?>> tools = List.of();
         private AgentLoopConfig.MessageConverter convertToLlm;
@@ -679,6 +692,11 @@ public final class PiAgentSession implements PiInteractiveSession {
 
         public Builder reloadAction(ReloadAction reloadAction) {
             this.reloadAction = reloadAction;
+            return this;
+        }
+
+        public Builder themeReloadAction(ReloadAction themeReloadAction) {
+            this.themeReloadAction = themeReloadAction;
             return this;
         }
 
@@ -801,6 +819,7 @@ public final class PiAgentSession implements PiInteractiveSession {
                 systemPrompt,
                 appendSystemPrompt,
                 reloadAction,
+                themeReloadAction,
                 cycleModels,
                 scopedCycleModels,
                 availableProviderCount,

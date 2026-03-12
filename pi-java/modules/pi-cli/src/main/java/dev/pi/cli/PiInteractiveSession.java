@@ -278,11 +278,21 @@ public interface PiInteractiveSession {
     record ReloadResult(
         List<SettingsManager.SettingsError> settingsErrors,
         List<InstructionResourceLoader.ResourceLoadError> resourceErrors,
+        List<String> themeWarnings,
         List<String> extensionWarnings
     ) {
+        public ReloadResult(
+            List<SettingsManager.SettingsError> settingsErrors,
+            List<InstructionResourceLoader.ResourceLoadError> resourceErrors,
+            List<String> extensionWarnings
+        ) {
+            this(settingsErrors, resourceErrors, List.of(), extensionWarnings);
+        }
+
         public ReloadResult {
             settingsErrors = List.copyOf(settingsErrors);
             resourceErrors = List.copyOf(resourceErrors);
+            themeWarnings = List.copyOf(themeWarnings);
             extensionWarnings = List.copyOf(extensionWarnings);
         }
     }

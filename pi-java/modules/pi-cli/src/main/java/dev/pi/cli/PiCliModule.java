@@ -239,7 +239,12 @@ public final class PiCliModule {
             .apiKey(args.apiKey())
             .availableProviderCount(aiClient.modelRegistry().getProviders().size())
             .cycleModels(cycleModels, !args.modelPatterns().isEmpty() && !scopedCycleModels.isEmpty())
-            .modelSelectorModels(allModels(aiClient.modelRegistry()));
+            .modelSelectorModels(allModels(aiClient.modelRegistry()))
+            .themeReloadAction(() -> {
+                var reloadedThemes = themeLoader.load(args.themes(), args.noThemes());
+                PiCliAnsi.setRegisteredThemes(reloadedThemes.palettes());
+                return reloadedThemes.warnings();
+            });
         if (extensionRuntime != null) {
             builder.reloadAction(() -> extensionRuntime.reload().failures().stream().map(PiCliModule::formatExtensionFailure).toList());
         }

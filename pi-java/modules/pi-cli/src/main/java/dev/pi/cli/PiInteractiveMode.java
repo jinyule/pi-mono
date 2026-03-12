@@ -785,7 +785,10 @@ public final class PiInteractiveMode implements AutoCloseable {
     private void handleReloadCommand() {
         try {
             var result = session.reload();
-            var warningCount = result.settingsErrors().size() + result.resourceErrors().size() + result.extensionWarnings().size();
+            var warningCount = result.settingsErrors().size()
+                + result.resourceErrors().size()
+                + result.themeWarnings().size()
+                + result.extensionWarnings().size();
             manualStatus = warningCount == 0
                 ? "Reloaded settings, instruction resources, and extensions"
                 : "Reloaded with %d warning%s".formatted(warningCount, warningCount == 1 ? "" : "s");

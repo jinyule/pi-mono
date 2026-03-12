@@ -921,23 +921,27 @@
   - `Quiet startup` 改成 `Disable verbose printing at startup`
 - `PiSettingsSelector` 现在把 `Transport` 的可选值顺序改成 `sse -> websocket -> auto`，和 TS `/settings` selector 保持一致
 - `PiSettingsSelectorIntegrationTest` 现在覆盖 TS-style settings descriptions，避免后续 copy 回退
-- `PiCliThemeLoader` ???? custom theme loader ???
-  - ????? `~/.pi/agent/themes/*.json`
-  - ????????? `.pi/themes/*.json`
-  - CLI ????? `--theme <path>` ??????????
-  - `--no-themes` ??? global/project discovery???????? `--theme`
-- `PiCliAnsi` ?????? custom palette?
-  - ?? built-in `dark/light`??????????? custom theme
-  - ?? Java ???????? CLI ???????? token?`accent` / `muted` / `warning` / `success` / `error`
-  - ?? TS theme JSON ?? `vars` ???hex RGB?256-color index ????????
-- `PiCliModule.createDefaultSession()` ????? session ??? theme registry?`PiAgentSession.settingsSelection()` ??? custom theme ????? `/settings` ? `Theme` submenu
-- ?????
-  - `PiCliThemeLoaderTest` ?? global/project/explicit path discovery?`--no-themes`?invalid theme warning
-  - `PiCliModuleThemeTest` ?? CLI module wiring??? custom theme ???? `/settings` ???????? `PiCliAnsi`
+- `PiCliThemeLoader` now covers the first custom theme loader slice:
+  - scans `~/.pi/agent/themes/*.json`
+  - scans project `.pi/themes/*.json`
+  - loads explicit `--theme <path>` files or directories
+  - `--no-themes` disables global/project discovery but keeps explicit `--theme`
+- `PiCliAnsi` now supports custom palette registration:
+  - built-in `dark/light` plus loaded custom themes
+  - Java first cut only consumes `accent` / `muted` / `warning` / `success` / `error`
+  - supports `vars` references, hex RGB, 256-color indices, and empty-string default color
+- `PiCliModule.createDefaultSession()` now loads the theme registry before session construction, and `PiAgentSession.settingsSelection()` exposes custom theme names to `/settings`
+- `/reload` now also runs theme hot reload:
+  - `PiCliModule.createDefaultSession()` wires a theme reload action into the session builder
+  - `PiAgentSession.reload()` rescans the same theme paths and replaces the `PiCliAnsi` registry with the new palette map
+  - reload-time invalid theme / path warnings are returned via `ReloadResult.themeWarnings()`
+  - `/settings` -> `Theme` immediately reflects added or removed custom themes after reload
+- New tests:
+  - `PiCliThemeLoaderTest` covers global/project/explicit discovery, `--no-themes`, and invalid-theme warnings
+  - `PiCliModuleThemeTest` covers startup wiring so custom themes appear in `/settings` and drive `PiCliAnsi`
+  - `PiCliModuleThemeReloadTest` covers reload-time registry refresh and warning propagation
 
-最近通过：
-
-```bash
+?????```bash
 .\\gradlew.bat :pi-cli:test --no-daemon
 npm.cmd run check
 ```
@@ -945,6 +949,6 @@ npm.cmd run check
 ## 下一步建议
 
 1. selector parity：继续评估 model selector 是否要补 all-scope warning/hint copy 的 TS 细节，或继续压空状态 copy/层级
-2. settings selector parity：继续评估 `theme` 等剩余项；当前已补 hint/keybinding parity、hide-thinking transcript parity、quiet-startup header parity、double-escape、editor-padding、dark/light runtime ANSI 主题切换、`Theme` submenu preview、`Thinking level` submenu、hardware-cursor/clear-on-shrink，以及 steering/follow-up/transport/quiet-startup 的 TS-style copy，但 Java 侧仍未覆盖 TS 的 startup resource listing silence?package/source ? theme discovery????? theme token ??? hot reload
+2. settings selector parity: theme work now covers hint/keybinding parity, hide-thinking transcript parity, quiet-startup header parity, double-escape, editor-padding, dark/light runtime ANSI theme switching, `Theme` submenu preview, `Thinking level` submenu, hardware-cursor/clear-on-shrink, TS-style copy for steering/follow-up/transport/quiet-startup, plus the first custom theme loader + hot reload slice; remaining theme gaps are startup resource listing silence, package/source theme discovery, and fuller theme token coverage
 3. pending queue parity：继续补 compaction queue 合并展示与恢复；steering/follow-up runtime queue 已接上，但 Java 侧仍没有 compaction pending queue
 4. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件
