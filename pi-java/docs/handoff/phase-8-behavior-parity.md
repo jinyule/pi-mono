@@ -127,6 +127,8 @@
   - interactive selected-row metadata channel first cut
 - 已完成第六十一刀：
   - interactive model selector dedicated row theme first cut
+- 已完成第六十二刀：
+  - interactive model selector keybinding-aware hints first cut
 
 ## 本轮落地
 
@@ -592,6 +594,10 @@
   - 不再复用 session selector 的 `selectedText = bold`
   - model selector 选中行主文本改成 accent+bold
   - provider badge 继续走 muted，视觉上更接近 TS 版当前模型高亮
+- `PiModelSelector` 现在把 hints 接到可配置 keybindings：
+  - `scope/select/cancel` 提示都改成读取 `EditorKeybindings.global()`
+  - 不再把 `tab/enter/esc` 文案硬编码在 selector 里
+  - 自定义 keybindings 后，overlay 提示会同步变化
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+l`
@@ -740,6 +746,7 @@
 - `SelectListTest`：selected description 会走独立样式通道
 - `PiModelSelectorTest`：选中行 provider badge 会继续保持 muted ANSI
 - `PiModelSelectorTest`：选中行 model id 会走 accent+bold ANSI
+- `PiModelSelectorTest`：custom keybindings 会反映到 selector hint 文案
 
 最近通过：
 
@@ -749,7 +756,7 @@
 
 ## 下一步建议
 
-1. selector parity：继续评估 model selector 是否要补 all-scope warning/hint copy 的 TS 细节，或继续压 detail field label 的层级
+1. selector parity：继续评估 model selector 是否要补 all-scope warning/hint copy 的 TS 细节，或继续压 detail field label/value 的层级
 2. settings selector parity：继续评估 `theme` / `hide thinking` / `quiet startup`；这些键在 Java 侧还缺真实 runtime 绑定
 3. pending queue parity：继续补 compaction queue 合并展示与恢复；steering/follow-up runtime queue 已接上，但 Java 侧仍没有 compaction pending queue
 4. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件

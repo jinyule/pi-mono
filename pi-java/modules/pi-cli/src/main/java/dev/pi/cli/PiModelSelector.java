@@ -85,10 +85,21 @@ public final class PiModelSelector implements Component, Focusable {
         lines.add(PiCliAnsi.bold("Select model"));
         if (!scopedModels.isEmpty()) {
             lines.add(scopeSummary());
-            lines.add(PiCliAnsi.muted("tab scope (all/scoped) · type to filter · Enter selects · Esc cancels"));
+            lines.add(PiCliAnsi.muted(
+                "%s scope (all/scoped) · type to filter · %s selects · %s cancels".formatted(
+                    keyHint(EditorAction.SESSION_SCOPE_TOGGLE),
+                    keyHint(EditorAction.SUBMIT),
+                    keyHint(EditorAction.SELECT_CANCEL)
+                )
+            ));
         } else {
             lines.add(PiCliAnsi.warning("Only showing models with configured API keys (see README for details)"));
-            lines.add(PiCliAnsi.muted("Type to filter · Enter selects · Esc cancels"));
+            lines.add(PiCliAnsi.muted(
+                "Type to filter · %s selects · %s cancels".formatted(
+                    keyHint(EditorAction.SUBMIT),
+                    keyHint(EditorAction.SELECT_CANCEL)
+                )
+            ));
         }
         lines.add("");
         lines.addAll(search.render(width));
@@ -393,6 +404,11 @@ public final class PiModelSelector implements Component, Focusable {
             return formatted + "k ctx";
         }
         return String.format(Locale.ROOT, "%.1fM ctx", contextWindow / 1_000_000.0);
+    }
+
+    private static String keyHint(EditorAction action) {
+        var keys = EditorKeybindings.global().getKeys(action);
+        return keys.isEmpty() ? action.name() : keys.getFirst();
     }
 
     private record ModelSearchMatch(
