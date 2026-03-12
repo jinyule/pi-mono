@@ -30,13 +30,14 @@ class PiModelSelectorTest {
         assertThat(lines.getFirst()).contains("────");
         assertThat(lines).anyMatch(line -> line.contains("Select model"));
         assertThat(lines).anyMatch(line -> line.contains("Only showing models with configured API keys"));
-        assertThat(lines).anyMatch(line -> line.contains("gpt-5 ✓"));
+        assertThat(lines).anyMatch(line -> line.contains("gpt-5"));
         assertThat(lines).anyMatch(line -> line.contains("[openai]"));
         assertThat(lines).anyMatch(line -> line.contains("Selected model"));
         assertThat(lines).anyMatch(line -> line.contains("openai/gpt-5"));
         assertThat(lines).anyMatch(line -> line.contains("Model name: GPT-5"));
         assertThat(lines).anyMatch(line -> line.contains("Thinking: minimal"));
         assertThat(lines).anyMatch(line -> line.contains("Context: 400k ctx"));
+        assertThat(lines).anyMatch(line -> line.contains("\u001b[32m✓"));
         assertThat(lines).anyMatch(line -> line.contains("────"));
         assertThat(lines.getLast()).contains("────");
     }
@@ -89,7 +90,7 @@ class PiModelSelectorTest {
 
         selector.handleInput("\t");
 
-        assertThat(selector.render(100)).anyMatch(line -> line.contains("gpt-5 ✓"));
+        assertThat(selector.render(100)).anyMatch(line -> line.contains("gpt-5"));
         assertThat(selector.render(100)).anyMatch(line -> line.contains("gemini-2.5-pro"));
 
         selector.handleInput("\u001b[B");

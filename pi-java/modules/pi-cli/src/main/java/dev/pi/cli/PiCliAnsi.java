@@ -20,6 +20,10 @@ final class PiCliAnsi {
         return style("33", text);
     }
 
+    static String success(String text) {
+        return style("32", text);
+    }
+
     static String error(String text) {
         return style("31", text);
     }

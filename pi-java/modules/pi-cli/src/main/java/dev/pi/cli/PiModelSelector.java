@@ -139,7 +139,7 @@ public final class PiModelSelector implements Component, Focusable {
     }
 
     private static SelectItem toSelectItem(PiInteractiveSession.SelectableModel model) {
-        var label = model.modelId() + (model.current() ? " ✓" : "");
+        var label = model.modelId() + (model.current() ? " " + PiCliAnsi.success("✓") : "");
         return new SelectItem(encodeValue(label, model.index()), label, metadata(model));
     }
 
@@ -235,7 +235,7 @@ public final class PiModelSelector implements Component, Focusable {
         var lines = new ArrayList<String>();
         lines.add(separatorLine(width));
         lines.add(PiCliAnsi.bold("Selected model"));
-        var title = "  " + model.provider() + "/" + model.modelId() + (model.current() ? " ✓" : "");
+        var title = "  " + model.provider() + "/" + model.modelId() + (model.current() ? " " + PiCliAnsi.success("✓") : "");
         lines.add(TerminalText.truncateToWidth(title, width, "..."));
         for (var detailLine : selectedDetailLines(model)) {
             lines.add(PiCliAnsi.muted(TerminalText.truncateToWidth("  " + detailLine, width, "...")));
