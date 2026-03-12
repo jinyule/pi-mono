@@ -111,6 +111,21 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void rendersFooterCwdAndSessionNameWhenRowsAllow() {
+        var session = new FakeSession().withSessionName("Scratch");
+        var terminal = new VirtualTerminal(100, 15);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+
+        assertThat(String.join("\n", terminal.getViewport()))
+            .contains("/workspace • Scratch")
+            .contains("0.0%/128k (auto)");
+
+        mode.stop();
+    }
+
+    @Test
     void stylesFooterStatsAndModelSummaryWithAnsiHierarchy() {
         var session = new FakeSession().withContextWindow(16);
         var terminal = new RecordingTerminal(80, 14);
@@ -184,7 +199,7 @@ class PiInteractiveModeTest {
     @Test
     void showsUnknownContextUsageAfterCompactionUntilNextAssistantResponse() {
         var session = new FakeSession().withContextWindow(16);
-        var terminal = new VirtualTerminal(100, 20);
+        var terminal = new VirtualTerminal(100, 40);
         var mode = new PiInteractiveMode(session, terminal);
 
         mode.start();
@@ -197,7 +212,9 @@ class PiInteractiveModeTest {
 
         waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Compacted context")));
 
-        assertThat(String.join("\n", terminal.getViewport()))
+        var viewport = terminal.getViewport();
+        var footerTail = String.join("\n", viewport.subList(Math.max(0, viewport.size() - 8), viewport.size()));
+        assertThat(footerTail)
             .contains("?/16 (auto)")
             .doesNotContain("12.5%/16 (auto)");
 
@@ -664,6 +681,24 @@ class PiInteractiveModeTest {
         }
 
         @Override
+        public String cwd() {
+            return sessionManager.header().cwd();
+        }
+
+        @Override
+        public String sessionName() {
+            for (var index = sessionManager.entries().size() - 1; index >= 0; index--) {
+                var entry = sessionManager.entries().get(index);
+                if (entry instanceof SessionEntry.SessionInfoEntry sessionInfoEntry
+                    && sessionInfoEntry.name() != null
+                    && !sessionInfoEntry.name().isBlank()) {
+                    return sessionInfoEntry.name().trim();
+                }
+            }
+            return null;
+        }
+
+        @Override
         public ModelCycleResult cycleModelForward() {
             var nextModel = new Model(
                 "next-model",
@@ -845,6 +880,16 @@ class PiInteractiveModeTest {
 
         private FakeSession withAvailableProviderCount(int availableProviderCount) {
             this.availableProviderCount = availableProviderCount;
+            emitState();
+            return this;
+        }
+
+        private FakeSession withSessionName(String sessionName) {
+            try {
+                sessionManager.appendSessionInfo(sessionName);
+            } catch (Exception exception) {
+                throw new AssertionError(exception);
+            }
             emitState();
             return this;
         }

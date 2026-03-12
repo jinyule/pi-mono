@@ -177,6 +177,24 @@ public final class PiAgentSession implements PiInteractiveSession {
     }
 
     @Override
+    public String cwd() {
+        return sessionManager().header().cwd();
+    }
+
+    @Override
+    public String sessionName() {
+        for (var index = sessionManager().entries().size() - 1; index >= 0; index--) {
+            var entry = sessionManager().entries().get(index);
+            if (entry instanceof SessionEntry.SessionInfoEntry sessionInfoEntry
+                && sessionInfoEntry.name() != null
+                && !sessionInfoEntry.name().isBlank()) {
+                return sessionInfoEntry.name().trim();
+            }
+        }
+        return null;
+    }
+
+    @Override
     public ModelCycleResult cycleModelForward() {
         if (sdkSession.state().isStreaming()) {
             throw new IllegalStateException("Wait for the current response to finish before switching models");

@@ -202,13 +202,21 @@ public final class PiInteractiveMode implements AutoCloseable {
             return "";
         }
         var width = Math.max(1, terminal.columns());
-        return renderFooterStatsLine(
+        var statsLine = renderFooterStatsLine(
             state,
             width,
             session.contextUsage(),
             session.autoCompactionEnabled(),
             session.availableProviderCount()
         );
+        if (terminal.rows() < 15) {
+            return statsLine;
+        }
+        var metaLine = renderFooterMetaLine(width, session.cwd(), session.sessionName());
+        if (metaLine.isBlank()) {
+            return statsLine;
+        }
+        return statsLine + "\n" + metaLine;
     }
 
     private static String renderFooterStatsLine(
@@ -333,6 +341,21 @@ public final class PiInteractiveMode implements AutoCloseable {
         return new FooterSegment(plain, PiCliAnsi.muted(plain));
     }
 
+    private static String renderFooterMetaLine(int width, String cwd, String sessionName) {
+        var parts = new ArrayList<String>();
+        var normalizedCwd = shortenHomePath(cwd);
+        if (normalizedCwd != null && !normalizedCwd.isBlank()) {
+            parts.add(normalizedCwd);
+        }
+        if (sessionName != null && !sessionName.isBlank()) {
+            parts.add(sessionName.trim());
+        }
+        if (parts.isEmpty()) {
+            return "";
+        }
+        return PiCliAnsi.muted(TerminalText.truncateToWidth(String.join(" • ", parts), width, "..."));
+    }
+
     private static String footerModelSummary(AgentState state) {
         var model = state.model();
         if (model.reasoning()) {
@@ -408,6 +431,17 @@ public final class PiInteractiveMode implements AutoCloseable {
             return String.format(Locale.ROOT, "%.1fM", count / 1_000_000.0);
         }
         return Math.round(count / 1_000_000.0) + "M";
+    }
+
+    private static String shortenHomePath(String path) {
+        if (path == null || path.isBlank()) {
+            return "";
+        }
+        var home = System.getProperty("user.home");
+        if (home != null && !home.isBlank() && path.startsWith(home)) {
+            return "~" + path.substring(home.length());
+        }
+        return path;
     }
 
     private record FooterStats(String plain, String styled) {}

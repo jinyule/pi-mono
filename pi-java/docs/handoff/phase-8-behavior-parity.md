@@ -81,6 +81,8 @@
   - interactive footer idle context baseline first cut
 - 已完成第三十八刀：
   - interactive footer provider-count gating first cut
+- 已完成第三十九刀：
+  - interactive footer cwd/session line first cut
 
 ## 本轮落地
 
@@ -311,6 +313,12 @@
   - `PiCliModule` 会把 `ModelRegistry.getProviders().size()` 下沉给 `PiAgentSession`
   - `PiInteractiveMode` 只有在 provider 数量大于 `1` 时才显示 `provider/` 前缀
   - 单 provider 场景下 footer 只显示 model id，和 TS 版语义对齐
+- `PiInteractiveSession` 现在继续暴露 `cwd()` / `sessionName()`：
+  - `PiAgentSession` 从 `SessionHeader.cwd` 和最近一条 `SessionInfoEntry` 读取
+  - `PiInteractiveMode` 在 `15` 行及以上终端会追加第二行 footer
+  - 第二行首版显示 `cwd • session name`
+  - 第二行会走 muted 样式并按宽度安全截断
+  - 两行顺序是 `stats` 在前、`cwd/session` 在后，避免只有一行能见时把关键统计裁掉
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -388,6 +396,7 @@
 - `PiInteractiveModeTest`：manual compaction 后 footer 会切到 `?/%window`
 - `PiInteractiveModeTest`：idle 状态 footer 会显示 `0.0%/%window`
 - `PiInteractiveModeTest`：单 provider 场景 footer 不显示 `provider/`
+- `PiInteractiveModeTest`：`15` 行终端下 footer 会显示 `cwd • session name`
 
 最近通过：
 
@@ -397,6 +406,6 @@
 
 ## 下一步建议
 
-1. footer parity：继续补 session-name / cwd 行，再评估 git branch 第二行
+1. footer parity：继续评估 git branch 第二行与更长 cwd 的截断 copy
 2. selector parity：继续评估 model/settings selector 是否复用同一套层级
 3. keybindings：继续评估 cycleModelBackward / selectModel / newSession / followUp / dequeue 等动作

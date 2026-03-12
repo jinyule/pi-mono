@@ -80,6 +80,14 @@ public interface PiInteractiveSession {
         return 1;
     }
 
+    default String cwd() {
+        return "";
+    }
+
+    default String sessionName() {
+        return null;
+    }
+
     default ReloadResult reload() {
         throw new UnsupportedOperationException("Reload is not available");
     }
