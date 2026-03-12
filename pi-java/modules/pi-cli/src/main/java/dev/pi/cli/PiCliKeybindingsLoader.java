@@ -45,6 +45,7 @@ final class PiCliKeybindingsLoader {
     private static final Map<String, PiAppAction> APP_ACTION_ALIASES = Map.ofEntries(
         Map.entry("interrupt", PiAppAction.INTERRUPT),
         Map.entry("clear", PiAppAction.CLEAR),
+        Map.entry("exit", PiAppAction.EXIT),
         Map.entry("resume", PiAppAction.RESUME),
         Map.entry("cycleModelForward", PiAppAction.CYCLE_MODEL_FORWARD),
         Map.entry("cycleModelBackward", PiAppAction.CYCLE_MODEL_BACKWARD),

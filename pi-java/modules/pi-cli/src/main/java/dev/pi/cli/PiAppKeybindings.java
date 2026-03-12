@@ -10,6 +10,7 @@ final class PiAppKeybindings {
     private static final Map<PiAppAction, List<String>> DEFAULTS = Map.ofEntries(
         Map.entry(PiAppAction.INTERRUPT, List.of("escape")),
         Map.entry(PiAppAction.CLEAR, List.of("ctrl+c")),
+        Map.entry(PiAppAction.EXIT, List.of("ctrl+d")),
         Map.entry(PiAppAction.RESUME, List.of()),
         Map.entry(PiAppAction.CYCLE_MODEL_FORWARD, List.of("ctrl+p")),
         Map.entry(PiAppAction.CYCLE_MODEL_BACKWARD, List.of("shift+ctrl+p")),

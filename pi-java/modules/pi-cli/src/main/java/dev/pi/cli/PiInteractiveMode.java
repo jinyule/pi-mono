@@ -735,6 +735,10 @@ public final class PiInteractiveMode implements AutoCloseable {
                 handleClearCommand();
                 return;
             }
+            if (appKeybindings.matches(data, PiAppAction.EXIT) && input.getValue().isEmpty()) {
+                requestExit();
+                return;
+            }
             if (appKeybindings.matches(data, PiAppAction.RESUME)) {
                 handleResumeCommand();
                 return;

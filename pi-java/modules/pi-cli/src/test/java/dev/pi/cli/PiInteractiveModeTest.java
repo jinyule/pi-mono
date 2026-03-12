@@ -641,6 +641,27 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void usesAppKeybindingForExitWhenInputIsEmpty() throws Exception {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(80, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+        var stopped = new CompletableFuture<Void>();
+        var previousApp = PiAppKeybindings.global();
+        try {
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(PiAppAction.EXIT, java.util.List.of("alt+q"))));
+            mode.setOnStop(() -> stopped.complete(null));
+
+            mode.start();
+            terminal.sendInput("\u001bq");
+
+            stopped.get(2, TimeUnit.SECONDS);
+        } finally {
+            PiAppKeybindings.setGlobal(previousApp);
+            mode.stop();
+        }
+    }
+
+    @Test
     void usesAppKeybindingForResume() {
         var session = new FakeSession();
         var terminal = new VirtualTerminal(80, 16);
