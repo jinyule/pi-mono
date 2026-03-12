@@ -212,6 +212,9 @@ public final class PiCliModule {
     private PiInteractiveSession createDefaultSession(PiCliArgs args) throws Exception {
         var sessionManager = new PiCliSessionResolver(cwd).resolve(args);
         var settingsManager = SettingsManager.create(cwd);
+        var themeLoader = new PiCliThemeLoader(cwd);
+        var loadedThemes = themeLoader.load(args.themes(), args.noThemes());
+        PiCliAnsi.setRegisteredThemes(loadedThemes.palettes());
         var instructionLoader = new InstructionResourceLoader(cwd);
         instructionLoader.reload();
         var extensionRuntime = args.noExtensions() || args.extensions().isEmpty()

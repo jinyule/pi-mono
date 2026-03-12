@@ -1,13 +1,45 @@
 package dev.pi.cli;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 final class PiCliAnsi {
+    private static final Map<String, Palette> BUILTIN_PALETTES = Map.of(
+        "dark", Palette.DARK,
+        "light", Palette.LIGHT
+    );
+
+    private static volatile Map<String, Palette> registeredPalettes = Map.of();
     private static volatile Palette palette = Palette.DARK;
 
     private PiCliAnsi() {
     }
 
     static void setTheme(String themeName) {
-        palette = "light".equalsIgnoreCase(themeName) ? Palette.LIGHT : Palette.DARK;
+        palette = resolvePalette(themeName);
+    }
+
+    static void setRegisteredThemes(Map<String, Palette> palettes) {
+        registeredPalettes = palettes == null ? Map.of() : Map.copyOf(palettes);
+        palette = resolvePalette("dark");
+    }
+
+    static List<String> availableThemeNames() {
+        var names = new ArrayList<String>();
+        names.addAll(BUILTIN_PALETTES.keySet());
+        for (var name : registeredPalettes.keySet()) {
+            if (!names.contains(name)) {
+                names.add(name);
+            }
+        }
+        names.sort(String.CASE_INSENSITIVE_ORDER);
+        return List.copyOf(names);
+    }
+
+    static void resetThemes() {
+        registeredPalettes = Map.of();
+        palette = Palette.DARK;
     }
 
     static String accent(String text) {
@@ -42,7 +74,23 @@ final class PiCliAnsi {
         return "\u001b[" + code + "m" + text + "\u001b[0m";
     }
 
-    private record Palette(
+    private static Palette resolvePalette(String themeName) {
+        if (themeName != null) {
+            for (var entry : registeredPalettes.entrySet()) {
+                if (entry.getKey().equalsIgnoreCase(themeName)) {
+                    return entry.getValue();
+                }
+            }
+            for (var entry : BUILTIN_PALETTES.entrySet()) {
+                if (entry.getKey().equalsIgnoreCase(themeName)) {
+                    return entry.getValue();
+                }
+            }
+        }
+        return Palette.DARK;
+    }
+
+    static record Palette(
         String accent,
         String muted,
         String accentBold,
@@ -50,7 +98,7 @@ final class PiCliAnsi {
         String success,
         String error
     ) {
-        private static final Palette DARK = new Palette("36", "90", "1;36", "33", "32", "31");
-        private static final Palette LIGHT = new Palette("34", "2;30", "1;34", "33", "32", "31");
+        static final Palette DARK = new Palette("36", "90", "1;36", "33", "32", "31");
+        static final Palette LIGHT = new Palette("34", "2;30", "1;34", "33", "32", "31");
     }
 }

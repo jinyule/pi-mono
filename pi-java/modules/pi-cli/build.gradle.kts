@@ -7,5 +7,7 @@ dependencies {
     implementation(project(":pi-tools"))
     implementation(project(":pi-extension-spi"))
     implementation(project(":pi-tui"))
+    implementation(platform(libs.jackson.bom))
+    implementation(libs.jackson.databind)
     implementation(libs.picocli)
 }

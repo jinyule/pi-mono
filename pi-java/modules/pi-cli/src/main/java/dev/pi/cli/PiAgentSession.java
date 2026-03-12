@@ -1121,11 +1121,10 @@ public final class PiAgentSession implements PiInteractiveSession {
         var themes = new ArrayList<String>();
         var currentTheme = currentTheme();
         themes.add(currentTheme);
-        if (!"dark".equals(currentTheme)) {
-            themes.add("dark");
-        }
-        if (!"light".equals(currentTheme)) {
-            themes.add("light");
+        for (var themeName : PiCliAnsi.availableThemeNames()) {
+            if (!themeName.equals(currentTheme)) {
+                themes.add(themeName);
+            }
         }
         return List.copyOf(themes);
     }

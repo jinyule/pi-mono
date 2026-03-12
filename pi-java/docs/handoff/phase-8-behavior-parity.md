@@ -921,6 +921,19 @@
   - `Quiet startup` 改成 `Disable verbose printing at startup`
 - `PiSettingsSelector` 现在把 `Transport` 的可选值顺序改成 `sse -> websocket -> auto`，和 TS `/settings` selector 保持一致
 - `PiSettingsSelectorIntegrationTest` 现在覆盖 TS-style settings descriptions，避免后续 copy 回退
+- `PiCliThemeLoader` ???? custom theme loader ???
+  - ????? `~/.pi/agent/themes/*.json`
+  - ????????? `.pi/themes/*.json`
+  - CLI ????? `--theme <path>` ??????????
+  - `--no-themes` ??? global/project discovery???????? `--theme`
+- `PiCliAnsi` ?????? custom palette?
+  - ?? built-in `dark/light`??????????? custom theme
+  - ?? Java ???????? CLI ???????? token?`accent` / `muted` / `warning` / `success` / `error`
+  - ?? TS theme JSON ?? `vars` ???hex RGB?256-color index ????????
+- `PiCliModule.createDefaultSession()` ????? session ??? theme registry?`PiAgentSession.settingsSelection()` ??? custom theme ????? `/settings` ? `Theme` submenu
+- ?????
+  - `PiCliThemeLoaderTest` ?? global/project/explicit path discovery?`--no-themes`?invalid theme warning
+  - `PiCliModuleThemeTest` ?? CLI module wiring??? custom theme ???? `/settings` ???????? `PiCliAnsi`
 
 最近通过：
 
@@ -932,6 +945,6 @@ npm.cmd run check
 ## 下一步建议
 
 1. selector parity：继续评估 model selector 是否要补 all-scope warning/hint copy 的 TS 细节，或继续压空状态 copy/层级
-2. settings selector parity：继续评估 `theme` 等剩余项；当前已补 hint/keybinding parity、hide-thinking transcript parity、quiet-startup header parity、double-escape、editor-padding、dark/light runtime ANSI 主题切换、`Theme` submenu preview、`Thinking level` submenu、hardware-cursor/clear-on-shrink，以及 steering/follow-up/transport/quiet-startup 的 TS-style copy，但 Java 侧仍未覆盖 TS 的 startup resource listing / custom theme loader
+2. settings selector parity：继续评估 `theme` 等剩余项；当前已补 hint/keybinding parity、hide-thinking transcript parity、quiet-startup header parity、double-escape、editor-padding、dark/light runtime ANSI 主题切换、`Theme` submenu preview、`Thinking level` submenu、hardware-cursor/clear-on-shrink，以及 steering/follow-up/transport/quiet-startup 的 TS-style copy，但 Java 侧仍未覆盖 TS 的 startup resource listing silence?package/source ? theme discovery????? theme token ??? hot reload
 3. pending queue parity：继续补 compaction queue 合并展示与恢复；steering/follow-up runtime queue 已接上，但 Java 侧仍没有 compaction pending queue
 4. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件
