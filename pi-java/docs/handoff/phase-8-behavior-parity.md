@@ -151,6 +151,8 @@
   - interactive app keybinding expand-tools parity first cut
 - 已完成第七十二刀：
   - interactive app keybinding paste-image parity first cut
+- 已完成第七十三刀：
+  - interactive startup header keybinding hints first cut
 
 ## 本轮落地
 
@@ -810,6 +812,10 @@
 - PiClipboardImage / PiInteractiveMode 现在支持从系统剪贴板读取图片并附着到下一条 user message；streaming 和 queued follow-up 会明确拒绝 image attachments
 - Java 侧这次没有走 TS 的“写临时文件再插入路径”路线；因为当前 interactive submit 还没有 `@file` 解析链路，先走 in-memory `ImageContent` 更直接且已能复用现有图片消息语义
 - PiCliModuleTest / PiInteractiveModeTest / KeyMatcherTest 现在覆盖 pasteImage 的 loader alias、interactive attach/submit、streaming 拒绝和 `ctrl+v` 键位匹配
+- PiInteractiveMode 现在会在较高 terminal 上把 startup header 扩成 keybinding-aware hints，两行分别覆盖 interrupt/clear/exit 和 model/tools/thinking/paste-image
+- startup header hints 会读取 `PiAppKeybindings.global()`，因此 custom app keybindings 会同步反映到 header 文案里
+- `quietStartup=true` 仍然会整体隐藏这些 startup header hints，不会因为新增提示行把静默启动行为打破
+- PiInteractiveModeTest 现在覆盖 startup header hints 的 keybinding-aware 渲染
 
 最近通过：
 

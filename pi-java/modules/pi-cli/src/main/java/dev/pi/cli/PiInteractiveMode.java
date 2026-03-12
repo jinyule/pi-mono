@@ -203,15 +203,33 @@ public final class PiInteractiveMode implements AutoCloseable {
         if (session.settingsSelection().quietStartup()) {
             return "";
         }
-        return """
-            pi-java interactive
-            model: %s/%s
-            session: %s
-            """.formatted(
-            state.model().provider(),
-            state.model().id(),
-            session.sessionId()
-        ).trim();
+        var lines = new ArrayList<String>();
+        lines.add("pi-java interactive");
+        lines.add("model: %s/%s".formatted(state.model().provider(), state.model().id()));
+        lines.add("session: %s".formatted(session.sessionId()));
+        if (terminal.rows() >= 14) {
+            lines.add(renderHeaderHintLine(
+                terminal.columns(),
+                "%s interrupt • %s clear • %s twice exit • %s empty exit".formatted(
+                    appKeyDisplay(PiAppAction.INTERRUPT, "interrupt"),
+                    appKeyDisplay(PiAppAction.CLEAR, "clear"),
+                    appKeyDisplay(PiAppAction.CLEAR, "clear"),
+                    appKeyDisplay(PiAppAction.EXIT, "exit")
+                )
+            ));
+        }
+        if (terminal.rows() >= 16) {
+            lines.add(renderHeaderHintLine(
+                terminal.columns(),
+                "%s model • %s tools • %s thinking • %s paste image".formatted(
+                    appKeyDisplay(PiAppAction.SELECT_MODEL, "select-model"),
+                    appKeyDisplay(PiAppAction.EXPAND_TOOLS, "expand-tools"),
+                    appKeyDisplay(PiAppAction.TOGGLE_THINKING, "toggle-thinking"),
+                    appKeyDisplay(PiAppAction.PASTE_IMAGE, "paste-image")
+                )
+            ));
+        }
+        return String.join("\n", lines);
     }
 
     private String renderTranscript(AgentState state) {
@@ -996,6 +1014,15 @@ public final class PiInteractiveMode implements AutoCloseable {
     private String dequeueKeyDisplay() {
         var keys = PiAppKeybindings.global().getKeys(PiAppAction.DEQUEUE);
         return keys.isEmpty() ? "dequeue" : keys.getFirst();
+    }
+
+    private static String renderHeaderHintLine(int width, String text) {
+        return PiCliAnsi.muted(TerminalText.truncateToWidth(text, Math.max(1, width), "..."));
+    }
+
+    private static String appKeyDisplay(PiAppAction action, String fallback) {
+        var keys = PiAppKeybindings.global().getKeys(action);
+        return keys.isEmpty() ? fallback : keys.getFirst();
     }
 
     private static String formatModelCycleStatus(PiInteractiveSession.ModelCycleResult result) {

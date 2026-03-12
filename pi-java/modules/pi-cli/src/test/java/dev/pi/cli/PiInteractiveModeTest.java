@@ -80,6 +80,39 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void rendersHeaderKeyHintsWhenRowsAllow() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(100, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+        var previousApp = PiAppKeybindings.global();
+        try {
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(
+                PiAppAction.INTERRUPT, java.util.List.of("alt+x"),
+                PiAppAction.CLEAR, java.util.List.of("alt+c"),
+                PiAppAction.EXIT, java.util.List.of("alt+q"),
+                PiAppAction.SELECT_MODEL, java.util.List.of("alt+l"),
+                PiAppAction.EXPAND_TOOLS, java.util.List.of("alt+h"),
+                PiAppAction.TOGGLE_THINKING, java.util.List.of("alt+t"),
+                PiAppAction.PASTE_IMAGE, java.util.List.of("alt+z")
+            )));
+
+            mode.start();
+
+            assertThat(String.join("\n", terminal.getViewport()))
+                .contains("alt+x interrupt")
+                .contains("alt+c clear")
+                .contains("alt+q empty exit")
+                .contains("alt+l model")
+                .contains("alt+h tools")
+                .contains("alt+t thinking")
+                .contains("alt+z paste image");
+        } finally {
+            PiAppKeybindings.setGlobal(previousApp);
+            mode.stop();
+        }
+    }
+
+    @Test
     void handlesCopySlashCommand() {
         var session = new FakeSession();
         var terminal = new VirtualTerminal(60, 12);
