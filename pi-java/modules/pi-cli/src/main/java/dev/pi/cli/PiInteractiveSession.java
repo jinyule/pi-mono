@@ -72,6 +72,10 @@ public interface PiInteractiveSession {
         return false;
     }
 
+    default ContextUsage contextUsage() {
+        return null;
+    }
+
     default ReloadResult reload() {
         throw new UnsupportedOperationException("Reload is not available");
     }
@@ -119,5 +123,12 @@ public interface PiInteractiveSession {
             resourceErrors = List.copyOf(resourceErrors);
             extensionWarnings = List.copyOf(extensionWarnings);
         }
+    }
+
+    record ContextUsage(
+        Integer tokens,
+        int contextWindow,
+        Double percent
+    ) {
     }
 }

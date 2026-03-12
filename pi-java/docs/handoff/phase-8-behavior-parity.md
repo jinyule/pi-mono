@@ -75,6 +75,8 @@
   - interactive footer narrow-width truncation first cut
 - 已完成第三十五刀：
   - interactive footer auto-compaction suffix first cut
+- 已完成第三十六刀：
+  - interactive footer post-compaction unknown usage first cut
 
 ## 本轮落地
 
@@ -291,6 +293,11 @@
   - `PiAgentSession` 从 `settingsManager.effective().getBoolean("/compaction/enabled", true)` 读取
   - `PiInteractiveMode` 会在 footer context indicator 后追加 `(auto)`
   - session 级关闭时，该 suffix 会消失
+- `PiInteractiveSession` 现在继续暴露 `contextUsage()`：
+  - `PiAgentSession` 会检查 branch 上最近一次 `CompactionEntry`
+  - 若 compaction 之后还没有新的 assistant usage，则返回 `percent = null`
+  - `PiInteractiveMode` 会把这类状态渲染成 `?/%window`
+  - 这样 footer 不会再把 compaction 前的 usage 百分比错误地延续到 compaction 之后
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -365,6 +372,7 @@
 - `PiInteractiveModeTest`：高 context 占用时 footer indicator 会切到 error 样式
 - `PiInteractiveModeTest`：窄宽度 footer 仍保留右侧 model 摘要
 - `PiInteractiveModeTest`：auto-compaction 关闭时 footer 不显示 `(auto)` suffix
+- `PiInteractiveModeTest`：manual compaction 后 footer 会切到 `?/%window`
 
 最近通过：
 
@@ -374,6 +382,6 @@
 
 ## 下一步建议
 
-1. footer parity：继续评估 compaction 后 `?/%window` 与 stale-usage 处理
+1. footer parity：继续评估 `0.0%/window` idle 状态与 provider-count/session-name 行
 2. selector parity：继续评估 model/settings selector 是否复用同一套层级
 3. keybindings：继续评估 cycleModelBackward / selectModel / newSession / followUp / dequeue 等动作

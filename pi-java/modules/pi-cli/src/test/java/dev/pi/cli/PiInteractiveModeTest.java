@@ -167,6 +167,29 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void showsUnknownContextUsageAfterCompactionUntilNextAssistantResponse() {
+        var session = new FakeSession().withContextWindow(16);
+        var terminal = new VirtualTerminal(100, 20);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("Hello");
+        terminal.sendInput("\r");
+        terminal.sendInput("Second");
+        terminal.sendInput("\r");
+        terminal.sendInput("/compact");
+        terminal.sendInput("\r");
+
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Compacted context")));
+
+        assertThat(String.join("\n", terminal.getViewport()))
+            .contains("?/16 (auto)")
+            .doesNotContain("12.5%/16 (auto)");
+
+        mode.stop();
+    }
+
+    @Test
     void rendersReasoningThinkingLevelInFooter() {
         var session = new FakeSession().withReasoningModel("reasoning-model", ThinkingLevel.HIGH);
         var terminal = new RecordingTerminal(100, 14);
@@ -580,6 +603,30 @@ class PiInteractiveModeTest {
         }
 
         @Override
+        public ContextUsage contextUsage() {
+            var contextWindow = state.model().contextWindow();
+            if (contextWindow <= 0) {
+                return null;
+            }
+
+            var branchEntries = sessionManager.branch();
+            var latestCompactionIndex = latestCompactionIndex(branchEntries);
+            if (latestCompactionIndex >= 0 && !hasPostCompactionUsage(branchEntries, latestCompactionIndex)) {
+                return new ContextUsage(null, contextWindow, null);
+            }
+
+            var latestUsage = latestAssistantUsage();
+            if (latestUsage == null || latestUsage.totalTokens() <= 0) {
+                return null;
+            }
+            return new ContextUsage(
+                latestUsage.totalTokens(),
+                contextWindow,
+                latestUsage.totalTokens() * 100.0 / contextWindow
+            );
+        }
+
+        @Override
         public ModelCycleResult cycleModelForward() {
             var nextModel = new Model(
                 "next-model",
@@ -757,6 +804,46 @@ class PiInteractiveModeTest {
             this.autoCompactionEnabled = autoCompactionEnabled;
             emitState();
             return this;
+        }
+
+        private Usage latestAssistantUsage() {
+            for (var index = state.messages().size() - 1; index >= 0; index--) {
+                var message = state.messages().get(index);
+                if (message instanceof AgentMessage.AssistantMessage assistantMessage
+                    && assistantMessage.stopReason() != dev.pi.ai.model.StopReason.ERROR
+                    && assistantMessage.stopReason() != dev.pi.ai.model.StopReason.ABORTED) {
+                    return assistantMessage.usage();
+                }
+            }
+            return null;
+        }
+
+        private static int latestCompactionIndex(List<SessionEntry> branchEntries) {
+            for (var index = branchEntries.size() - 1; index >= 0; index--) {
+                if (branchEntries.get(index) instanceof SessionEntry.CompactionEntry) {
+                    return index;
+                }
+            }
+            return -1;
+        }
+
+        private static boolean hasPostCompactionUsage(List<SessionEntry> branchEntries, int compactionIndex) {
+            for (var index = branchEntries.size() - 1; index > compactionIndex; index--) {
+                var entry = branchEntries.get(index);
+                if (!(entry instanceof SessionEntry.MessageEntry messageEntry)) {
+                    continue;
+                }
+                if (!"assistant".equals(messageEntry.message().path("role").asText())) {
+                    continue;
+                }
+
+                var stopReason = messageEntry.message().path("stopReason").asText("stop");
+                if ("error".equals(stopReason) || "aborted".equals(stopReason)) {
+                    break;
+                }
+                return messageEntry.message().path("usage").path("totalTokens").asInt(0) > 0;
+            }
+            return false;
         }
 
         private static String extractUserText(SessionEntry.MessageEntry entry) {

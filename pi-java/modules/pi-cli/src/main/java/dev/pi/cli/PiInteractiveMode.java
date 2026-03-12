@@ -202,11 +202,16 @@ public final class PiInteractiveMode implements AutoCloseable {
             return "";
         }
         var width = Math.max(1, terminal.columns());
-        return renderFooterStatsLine(state, width, session.autoCompactionEnabled());
+        return renderFooterStatsLine(state, width, session.contextUsage(), session.autoCompactionEnabled());
     }
 
-    private static String renderFooterStatsLine(AgentState state, int width, boolean autoCompactionEnabled) {
-        var footerStats = footerStats(state, autoCompactionEnabled);
+    private static String renderFooterStatsLine(
+        AgentState state,
+        int width,
+        PiInteractiveSession.ContextUsage contextUsage,
+        boolean autoCompactionEnabled
+    ) {
+        var footerStats = footerStats(state, contextUsage, autoCompactionEnabled);
         var plainLeft = footerStats.plain();
         if (plainLeft.isBlank()) {
             return renderFooterModelSummary(state, width);
@@ -230,9 +235,13 @@ public final class PiInteractiveMode implements AutoCloseable {
         return renderFooterModelSummary(state, width);
     }
 
-    private static FooterStats footerStats(AgentState state, boolean autoCompactionEnabled) {
+    private static FooterStats footerStats(
+        AgentState state,
+        PiInteractiveSession.ContextUsage contextUsage,
+        boolean autoCompactionEnabled
+    ) {
         var usageSummary = footerUsageSummary(state);
-        var contextSummary = footerContextSummary(state, autoCompactionEnabled);
+        var contextSummary = footerContextSummary(contextUsage, autoCompactionEnabled);
         if (usageSummary.isBlank()) {
             return contextSummary == null
                 ? new FooterStats("", "")
@@ -283,43 +292,32 @@ public final class PiInteractiveMode implements AutoCloseable {
         return String.join(" ", parts);
     }
 
-    private static FooterSegment footerContextSummary(AgentState state, boolean autoCompactionEnabled) {
-        var contextWindow = state.model().contextWindow();
-        if (contextWindow <= 0) {
-            return null;
-        }
-        var latestUsage = latestAssistantUsage(state);
-        if (latestUsage == null || latestUsage.totalTokens() <= 0) {
+    private static FooterSegment footerContextSummary(
+        PiInteractiveSession.ContextUsage contextUsage,
+        boolean autoCompactionEnabled
+    ) {
+        if (contextUsage == null || contextUsage.contextWindow() <= 0) {
             return null;
         }
 
-        var percent = latestUsage.totalTokens() * 100.0 / contextWindow;
-        var plain = String.format(
-            Locale.ROOT,
-            "%.1f%%/%s",
-            percent,
-            formatTokens(contextWindow)
-        );
+        var plain = contextUsage.percent() == null
+            ? "?/" + formatTokens(contextUsage.contextWindow())
+            : String.format(
+                Locale.ROOT,
+                "%.1f%%/%s",
+                contextUsage.percent(),
+                formatTokens(contextUsage.contextWindow())
+            );
         if (autoCompactionEnabled) {
             plain += " (auto)";
         }
-        if (percent >= 90.0) {
+        if (contextUsage.percent() != null && contextUsage.percent() >= 90.0) {
             return new FooterSegment(plain, PiCliAnsi.error(plain));
         }
-        if (percent >= 70.0) {
+        if (contextUsage.percent() != null && contextUsage.percent() >= 70.0) {
             return new FooterSegment(plain, PiCliAnsi.warning(plain));
         }
         return new FooterSegment(plain, PiCliAnsi.muted(plain));
-    }
-
-    private static dev.pi.ai.model.Usage latestAssistantUsage(AgentState state) {
-        for (var index = state.messages().size() - 1; index >= 0; index--) {
-            var message = state.messages().get(index);
-            if (message instanceof AgentMessage.AssistantMessage assistantMessage) {
-                return assistantMessage.usage();
-            }
-        }
-        return null;
     }
 
     private static String footerModelSummary(AgentState state) {

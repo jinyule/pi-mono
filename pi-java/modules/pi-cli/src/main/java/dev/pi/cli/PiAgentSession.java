@@ -9,9 +9,11 @@ import dev.pi.agent.runtime.AgentState;
 import dev.pi.agent.runtime.AgentTool;
 import dev.pi.ai.model.CacheRetention;
 import dev.pi.ai.model.Model;
+import dev.pi.ai.model.StopReason;
 import dev.pi.ai.model.ThinkingBudgets;
 import dev.pi.ai.model.ThinkingLevel;
 import dev.pi.ai.model.Transport;
+import dev.pi.ai.model.Usage;
 import dev.pi.ai.stream.Subscription;
 import dev.pi.sdk.CreateAgentSessionOptions;
 import dev.pi.sdk.PiSdkSession;
@@ -140,6 +142,30 @@ public final class PiAgentSession implements PiInteractiveSession {
     @Override
     public boolean autoCompactionEnabled() {
         return settingsManager.effective().getBoolean("/compaction/enabled", true);
+    }
+
+    @Override
+    public ContextUsage contextUsage() {
+        var contextWindow = sdkSession.state().model().contextWindow();
+        if (contextWindow <= 0) {
+            return null;
+        }
+
+        var branchEntries = sessionManager().branch();
+        var latestCompactionIndex = latestCompactionIndex(branchEntries);
+        if (latestCompactionIndex >= 0 && !hasPostCompactionUsage(branchEntries, latestCompactionIndex)) {
+            return new ContextUsage(null, contextWindow, null);
+        }
+
+        var latestUsage = latestAssistantUsage();
+        if (latestUsage == null || latestUsage.totalTokens() <= 0) {
+            return null;
+        }
+        return new ContextUsage(
+            latestUsage.totalTokens(),
+            contextWindow,
+            latestUsage.totalTokens() * 100.0 / contextWindow
+        );
     }
 
     @Override
@@ -584,6 +610,47 @@ public final class PiAgentSession implements PiInteractiveSession {
 
     private static boolean sameModel(Model left, Model right) {
         return Objects.equals(left.provider(), right.provider()) && Objects.equals(left.id(), right.id());
+    }
+
+    private Usage latestAssistantUsage() {
+        var messages = sdkSession.state().messages();
+        for (var index = messages.size() - 1; index >= 0; index--) {
+            var message = messages.get(index);
+            if (message instanceof AgentMessage.AssistantMessage assistantMessage
+                && assistantMessage.stopReason() != StopReason.ERROR
+                && assistantMessage.stopReason() != StopReason.ABORTED) {
+                return assistantMessage.usage();
+            }
+        }
+        return null;
+    }
+
+    private static int latestCompactionIndex(List<SessionEntry> branchEntries) {
+        for (var index = branchEntries.size() - 1; index >= 0; index--) {
+            if (branchEntries.get(index) instanceof SessionEntry.CompactionEntry) {
+                return index;
+            }
+        }
+        return -1;
+    }
+
+    private static boolean hasPostCompactionUsage(List<SessionEntry> branchEntries, int compactionIndex) {
+        for (var index = branchEntries.size() - 1; index > compactionIndex; index--) {
+            var entry = branchEntries.get(index);
+            if (!(entry instanceof SessionEntry.MessageEntry messageEntry)) {
+                continue;
+            }
+            if (!"assistant".equals(messageEntry.message().path("role").asText())) {
+                continue;
+            }
+
+            var stopReason = messageEntry.message().path("stopReason").asText("stop");
+            if ("error".equals(stopReason) || "aborted".equals(stopReason)) {
+                break;
+            }
+            return messageEntry.message().path("usage").path("totalTokens").asInt(0) > 0;
+        }
+        return false;
     }
 
     private static String rootMessage(Throwable throwable) {
