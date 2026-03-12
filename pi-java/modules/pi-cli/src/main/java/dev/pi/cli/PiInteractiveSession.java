@@ -45,6 +45,14 @@ public interface PiInteractiveSession {
         throw new UnsupportedOperationException("Thinking level cycling is not available");
     }
 
+    default List<SelectableModel> selectableModels() {
+        return List.of();
+    }
+
+    default ModelCycleResult selectModel(int index) {
+        throw new UnsupportedOperationException("Model selector is not available");
+    }
+
     default String newSession() {
         throw new UnsupportedOperationException("Starting a new session is not available");
     }
@@ -138,6 +146,15 @@ public interface PiInteractiveSession {
         String modelId,
         String thinkingLevel,
         boolean scoped
+    ) {
+    }
+
+    record SelectableModel(
+        int index,
+        String provider,
+        String modelId,
+        String thinkingLevel,
+        boolean current
     ) {
     }
 

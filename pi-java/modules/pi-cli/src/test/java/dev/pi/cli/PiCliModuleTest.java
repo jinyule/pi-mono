@@ -235,6 +235,7 @@ class PiCliModuleTest {
               "cycleModelForward": "alt+p",
               "cycleModelBackward": "alt+o",
               "cycleThinkingLevel": "alt+i",
+              "selectModel": "alt+l",
               "followUp": "alt+enter",
               "dequeue": "alt+up",
               "newSession": "alt+m",
@@ -273,6 +274,7 @@ class PiCliModuleTest {
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.CYCLE_MODEL_FORWARD)).containsExactly("alt+p");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.CYCLE_MODEL_BACKWARD)).containsExactly("alt+o");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.CYCLE_THINKING_LEVEL)).containsExactly("alt+i");
+            assertThat(PiAppKeybindings.global().getKeys(PiAppAction.SELECT_MODEL)).containsExactly("alt+l");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.FOLLOW_UP)).containsExactly("alt+enter");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.DEQUEUE)).containsExactly("alt+up");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.NEW_SESSION)).containsExactly("alt+m");

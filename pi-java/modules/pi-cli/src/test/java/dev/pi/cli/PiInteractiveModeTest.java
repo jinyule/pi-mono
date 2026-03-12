@@ -780,6 +780,36 @@ class PiInteractiveModeTest {
         }
     }
 
+    @Test
+    void usesAppKeybindingForSelectModel() {
+        var session = new FakeSession().withSelectableModels(List.of(
+            new PiInteractiveSession.SelectableModel(0, "openai", "gpt-5", "minimal", true),
+            new PiInteractiveSession.SelectableModel(1, "anthropic", "claude-3-7-sonnet", "high", false)
+        ));
+        var terminal = new VirtualTerminal(100, 18);
+        var mode = new PiInteractiveMode(session, terminal);
+        var previousApp = PiAppKeybindings.global();
+        try {
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(
+                PiAppAction.SELECT_MODEL,
+                java.util.List.of("ctrl+l")
+            )));
+
+            mode.start();
+            terminal.sendInput("\u000c");
+            assertThat(String.join("\n", terminal.getViewport())).contains("Select model");
+
+            terminal.sendInput("\u001b[B");
+            terminal.sendInput("\r");
+
+            waitFor(() -> "claude-3-7-sonnet".equals(session.lastModelIdChange));
+            assertThat(String.join("\n", terminal.getViewport())).contains("Selected anthropic/claude-3-7-sonnet");
+        } finally {
+            PiAppKeybindings.setGlobal(previousApp);
+            mode.stop();
+        }
+    }
+
     private static final class FakeSession implements PiInteractiveSession {
         private final List<String> prompts = new ArrayList<>();
         private final CopyOnWriteArrayList<Consumer<AgentState>> stateListeners = new CopyOnWriteArrayList<>();
@@ -792,9 +822,11 @@ class PiInteractiveModeTest {
         private String cwd = "/workspace";
         private String lastThinkingLevelChange;
         private String lastModelIdChange;
+        private String lastModelProviderChange;
         private boolean streaming;
         private List<String> reloadWarnings = List.of();
         private final List<String> followUps = new ArrayList<>();
+        private List<SelectableModel> selectableModels = List.of();
         private DequeueResult dequeueResult = new DequeueResult("", 0);
         private AgentState state = new AgentState(
             "",
@@ -994,6 +1026,41 @@ class PiInteractiveModeTest {
             lastThinkingLevelChange = next == null ? "off" : next.value();
             emitState();
             return lastThinkingLevelChange;
+        }
+
+        @Override
+        public List<SelectableModel> selectableModels() {
+            return selectableModels;
+        }
+
+        @Override
+        public ModelCycleResult selectModel(int index) {
+            if (index < 0 || index >= selectableModels.size()) {
+                throw new IllegalArgumentException("Unknown model selection: " + index);
+            }
+            var selected = selectableModels.get(index);
+            var nextModel = new Model(
+                selected.modelId(),
+                selected.modelId(),
+                state.model().api(),
+                selected.provider(),
+                "https://example.com",
+                !"off".equals(selected.thinkingLevel()),
+                state.model().input(),
+                state.model().cost(),
+                state.model().contextWindow(),
+                state.model().maxTokens(),
+                null,
+                null
+            );
+            var nextThinkingLevel = "off".equals(selected.thinkingLevel())
+                ? null
+                : ("current".equals(selected.thinkingLevel()) ? state.thinkingLevel() : ThinkingLevel.fromValue(selected.thinkingLevel()));
+            state = state.withModel(nextModel).withThinkingLevel(nextThinkingLevel);
+            lastModelProviderChange = selected.provider();
+            lastModelIdChange = selected.modelId();
+            emitState();
+            return new ModelCycleResult(selected.provider(), selected.modelId(), selected.thinkingLevel(), true);
         }
 
         @Override
@@ -1203,6 +1270,11 @@ class PiInteractiveModeTest {
 
         private FakeSession withDequeuedMessages(String editorText, int restoredCount) {
             this.dequeueResult = new DequeueResult(editorText, restoredCount);
+            return this;
+        }
+
+        private FakeSession withSelectableModels(List<SelectableModel> selectableModels) {
+            this.selectableModels = List.copyOf(selectableModels);
             return this;
         }
 

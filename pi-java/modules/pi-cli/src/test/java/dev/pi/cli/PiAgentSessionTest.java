@@ -471,6 +471,38 @@ class PiAgentSessionTest {
         assertThat(session.agent().hasQueuedMessages()).isFalse();
     }
 
+    @Test
+    void selectModelAppliesExactCycleTarget() throws Exception {
+        var initialModel = testReasoningModel("openai", "gpt-5");
+        var nextModel = testReasoningModel("anthropic", "claude-3-7-sonnet");
+        var session = PiAgentSession.builder(
+            initialModel,
+            SessionManager.inMemory("/workspace"),
+            SettingsManager.inMemory(),
+            new InstructionResources(List.of(), "", List.of())
+        )
+            .thinkingLevel(ThinkingLevel.MINIMAL)
+            .cycleModels(List.of(
+                new PiAgentSession.CycleModel(initialModel, ThinkingLevel.MINIMAL),
+                new PiAgentSession.CycleModel(nextModel, ThinkingLevel.HIGH)
+            ), true)
+            .streamFunction(fakeAssistant("ready"))
+            .build();
+
+        var selectableModels = session.selectableModels();
+        assertThat(selectableModels).hasSize(2);
+        assertThat(selectableModels.get(0).current()).isTrue();
+
+        var result = session.selectModel(1);
+
+        assertThat(result.provider()).isEqualTo("anthropic");
+        assertThat(result.modelId()).isEqualTo("claude-3-7-sonnet");
+        assertThat(result.thinkingLevel()).isEqualTo("high");
+        assertThat(session.state().model().provider()).isEqualTo("anthropic");
+        assertThat(session.state().model().id()).isEqualTo("claude-3-7-sonnet");
+        assertThat(session.state().thinkingLevel()).isEqualTo(ThinkingLevel.HIGH);
+    }
+
     private static Model testModel() {
         return new Model(
             "test-model",
@@ -482,6 +514,23 @@ class PiAgentSessionTest {
             List.of("text"),
             new Usage.Cost(0.0, 0.0, 0.0, 0.0, 0.0),
             128_000,
+            8_192,
+            null,
+            null
+        );
+    }
+
+    private static Model testReasoningModel(String provider, String modelId) {
+        return new Model(
+            modelId,
+            modelId,
+            "anthropic-messages",
+            provider,
+            "https://example.com",
+            true,
+            List.of("text"),
+            new Usage.Cost(0.0, 0.0, 0.0, 0.0, 0.0),
+            200_000,
             8_192,
             null,
             null

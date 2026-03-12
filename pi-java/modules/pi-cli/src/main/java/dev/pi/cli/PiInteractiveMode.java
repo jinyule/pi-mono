@@ -544,6 +544,44 @@ public final class PiInteractiveMode implements AutoCloseable {
         ));
     }
 
+    private void handleSelectModelCommand() {
+        var models = session.selectableModels();
+        if (models.size() <= 1) {
+            manualStatus = "Only one model available";
+            renderState(session.state());
+            return;
+        }
+
+        var overlayRef = new AtomicReference<dev.pi.tui.OverlayHandle>();
+        var selector = new PiModelSelector(
+            models,
+            index -> selectModelEntry(index, overlayRef.get()),
+            () -> {
+                var overlay = overlayRef.get();
+                if (overlay != null) {
+                    overlay.hide();
+                }
+            },
+            tui::requestRender
+        );
+        var width = Math.max(40, Math.min(100, terminal.columns() - 2));
+        var maxHeight = Math.max(8, Math.floorDiv(terminal.rows(), 2));
+        overlayRef.set(tui.showOverlay(
+            selector,
+            new OverlayOptions(
+                width,
+                40,
+                maxHeight,
+                OverlayAnchor.CENTER,
+                0,
+                0,
+                null,
+                null,
+                OverlayMargin.uniform(1)
+            )
+        ));
+    }
+
     private void selectTreeEntry(String targetId, dev.pi.tui.OverlayHandle overlay) {
         try {
             var result = session.navigateTree(targetId);
@@ -563,6 +601,19 @@ public final class PiInteractiveMode implements AutoCloseable {
             var result = session.fork(entryId);
             input.setValue(result.selectedText() == null ? "" : result.selectedText());
             manualStatus = "Forked to new session";
+        } catch (RuntimeException exception) {
+            manualStatus = "Error: " + rootMessage(exception);
+        }
+        if (overlay != null) {
+            overlay.hide();
+        }
+        renderState(session.state());
+    }
+
+    private void selectModelEntry(int index, dev.pi.tui.OverlayHandle overlay) {
+        try {
+            var result = session.selectModel(index);
+            manualStatus = formatModelSelectionStatus(result);
         } catch (RuntimeException exception) {
             manualStatus = "Error: " + rootMessage(exception);
         }
@@ -634,6 +685,10 @@ public final class PiInteractiveMode implements AutoCloseable {
             }
             if (appKeybindings.matches(data, PiAppAction.CYCLE_THINKING_LEVEL)) {
                 handleCycleThinkingLevelCommand();
+                return;
+            }
+            if (appKeybindings.matches(data, PiAppAction.SELECT_MODEL)) {
+                handleSelectModelCommand();
                 return;
             }
             if (appKeybindings.matches(data, PiAppAction.FOLLOW_UP)) {
@@ -769,6 +824,14 @@ public final class PiInteractiveMode implements AutoCloseable {
 
     private static String formatModelCycleStatus(PiInteractiveSession.ModelCycleResult result) {
         var summary = "Switched to " + result.provider() + "/" + result.modelId();
+        if (!"off".equals(result.thinkingLevel())) {
+            return summary + " (thinking: " + result.thinkingLevel() + ")";
+        }
+        return summary;
+    }
+
+    private static String formatModelSelectionStatus(PiInteractiveSession.ModelCycleResult result) {
+        var summary = "Selected " + result.provider() + "/" + result.modelId();
         if (!"off".equals(result.thinkingLevel())) {
             return summary + " (thinking: " + result.thinkingLevel() + ")";
         }

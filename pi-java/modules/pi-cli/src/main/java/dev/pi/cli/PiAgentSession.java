@@ -221,6 +221,56 @@ public final class PiAgentSession implements PiInteractiveSession {
     }
 
     @Override
+    public List<SelectableModel> selectableModels() {
+        var availableModels = availableCycleModels();
+        var selectedIndex = selectedModelIndex(availableModels);
+        var currentThinkingLevel = sdkSession.state().thinkingLevel();
+        var models = new ArrayList<SelectableModel>(availableModels.size());
+        for (var index = 0; index < availableModels.size(); index += 1) {
+            var cycleModel = availableModels.get(index);
+            models.add(new SelectableModel(
+                index,
+                cycleModel.model().provider(),
+                cycleModel.model().id(),
+                displayThinkingLevel(cycleModel, currentThinkingLevel),
+                index == selectedIndex
+            ));
+        }
+        return List.copyOf(models);
+    }
+
+    @Override
+    public ModelCycleResult selectModel(int index) {
+        if (sdkSession.state().isStreaming()) {
+            throw new IllegalStateException("Wait for the current response to finish before switching models");
+        }
+        var availableModels = availableCycleModels();
+        if (index < 0 || index >= availableModels.size()) {
+            throw new IllegalArgumentException("Unknown model selection: " + index);
+        }
+
+        var next = availableModels.get(index);
+        var currentThinkingLevel = sdkSession.state().thinkingLevel();
+        var effectiveThinkingLevel = effectiveThinkingLevel(next, currentThinkingLevel);
+        if (sameModel(next.model(), sdkSession.state().model()) && Objects.equals(currentThinkingLevel, effectiveThinkingLevel)) {
+            return new ModelCycleResult(
+                next.model().provider(),
+                next.model().id(),
+                effectiveThinkingLevel == null ? "off" : effectiveThinkingLevel.value(),
+                scopedCycleModels
+            );
+        }
+
+        var nextThinkingLevel = applyCycleModel(next);
+        return new ModelCycleResult(
+            next.model().provider(),
+            next.model().id(),
+            nextThinkingLevel == null ? "off" : nextThinkingLevel.value(),
+            scopedCycleModels
+        );
+    }
+
+    @Override
     public String newSession() {
         if (sdkSession.state().isStreaming()) {
             throw new IllegalStateException("Wait for the current response to finish before starting a new session");
@@ -662,15 +712,16 @@ public final class PiAgentSession implements PiInteractiveSession {
         if (sdkSession.state().isStreaming()) {
             throw new IllegalStateException("Wait for the current response to finish before switching models");
         }
-        if (cycleModels.size() <= 1) {
+        var availableModels = availableCycleModels();
+        if (availableModels.size() <= 1) {
             return null;
         }
 
-        var currentIndex = indexOfModel(sdkSession.state().model());
+        var currentIndex = selectedModelIndex(availableModels);
         var nextIndex = currentIndex < 0
-            ? (step < 0 ? cycleModels.size() - 1 : 0)
-            : Math.floorMod(currentIndex + step, cycleModels.size());
-        var next = cycleModels.get(nextIndex);
+            ? (step < 0 ? availableModels.size() - 1 : 0)
+            : Math.floorMod(currentIndex + step, availableModels.size());
+        var next = availableModels.get(nextIndex);
         var nextThinkingLevel = applyCycleModel(next);
         return new ModelCycleResult(
             next.model().provider(),
@@ -680,11 +731,36 @@ public final class PiAgentSession implements PiInteractiveSession {
         );
     }
 
+    private List<CycleModel> availableCycleModels() {
+        if (!cycleModels.isEmpty()) {
+            return cycleModels;
+        }
+        return List.of(new CycleModel(sdkSession.state().model(), sdkSession.state().thinkingLevel()));
+    }
+
+    private int selectedModelIndex(List<CycleModel> availableModels) {
+        var currentModel = sdkSession.state().model();
+        var currentThinkingLevel = sdkSession.state().thinkingLevel();
+        for (var index = 0; index < availableModels.size(); index += 1) {
+            var candidate = availableModels.get(index);
+            if (!sameModel(candidate.model(), currentModel)) {
+                continue;
+            }
+            if (Objects.equals(candidate.thinkingLevel(), currentThinkingLevel)) {
+                return index;
+            }
+        }
+        for (var index = 0; index < availableModels.size(); index += 1) {
+            if (sameModel(availableModels.get(index).model(), currentModel)) {
+                return index;
+            }
+        }
+        return -1;
+    }
+
     private ThinkingLevel applyCycleModel(CycleModel next) {
         var currentThinkingLevel = sdkSession.state().thinkingLevel();
-        var nextThinkingLevel = next.model().reasoning()
-            ? (next.thinkingLevel() == null ? currentThinkingLevel : next.thinkingLevel())
-            : null;
+        var nextThinkingLevel = effectiveThinkingLevel(next, currentThinkingLevel);
 
         sdkSession.agent().setModel(next.model());
         try {
@@ -697,6 +773,20 @@ public final class PiAgentSession implements PiInteractiveSession {
             throw new IllegalStateException("Failed to persist model change", exception);
         }
         return nextThinkingLevel;
+    }
+
+    private static ThinkingLevel effectiveThinkingLevel(CycleModel next, ThinkingLevel currentThinkingLevel) {
+        return next.model().reasoning()
+            ? (next.thinkingLevel() == null ? currentThinkingLevel : next.thinkingLevel())
+            : null;
+    }
+
+    private static String displayThinkingLevel(CycleModel cycleModel, ThinkingLevel currentThinkingLevel) {
+        var effective = effectiveThinkingLevel(cycleModel, currentThinkingLevel);
+        if (effective != null) {
+            return effective.value();
+        }
+        return cycleModel.model().reasoning() ? "current" : "off";
     }
 
     private static boolean sameModel(Model left, Model right) {

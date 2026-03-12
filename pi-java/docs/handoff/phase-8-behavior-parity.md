@@ -393,8 +393,24 @@
   - 有排队消息时会把它们恢复回 editor
   - 当前 editor 已有草稿时，会把 queued messages 放前面，再接当前草稿
   - 队列为空时回显 `No queued messages`
+- `PiAppAction` / `PiAppKeybindings` 现在继续补了 `selectModel`：
+  - 默认键位是 `ctrl+l`
+  - `PiCliKeybindingsLoader` 现在支持 `selectModel` alias
+- `PiAgentSession` 现在支持 `selectableModels()` / `selectModel(index)`：
+  - 会把当前 cycle scope 暴露成可选模型列表
+  - selector 通过索引选中精确 `CycleModel`，不会被同 model 不同 thinking suffix 混淆
+  - 当前模型已命中时不会重复写 session entry，但仍会返回稳定状态摘要
+- `PiModelSelector` 现在补了 model selector overlay 首版：
+  - 复用现有 `Input + SelectList` 结构
+  - label 显示 `provider/model`，description 显示 thinking level
+  - 当前项会带 `← current`
+- `PiInteractiveMode` 现在会在 prompt 层消费 `selectModel`：
+  - 无可选替代模型时回显 `Only one model available`
+  - 有可选项时打开 model selector overlay
+  - 选中后回显 `Selected provider/model`
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
+- `KeyMatcher` 现在显式支持 `ctrl+l`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
 - `KeyMatcher` 现在显式支持 `ctrl+p`
 - `KeyMatcher` 现在显式支持 `alt+up`
@@ -406,7 +422,9 @@
   - cycle/default 现在已基本对齐 TS，但 loading/progress header 还只是首版
   - path show/hide 目前还是 description 级别开关，还没有 TS 版右侧布局/列宽截断渲染
   - 顶栏现在虽然合成单行了，但仍然没有 TS 那种宽度感知截断/对齐和颜色层级
-  - app 层还没扩到 TS 里的更多 action，例如 select-model
+- `selectModel` 还是首版：
+  - 当前只暴露 cycle scope 内的模型，不会打开完整 provider/model registry
+  - selector description 只显示 thinking level，还没有 TS 的 richer provider/model metadata
 - 当前 `dequeue` 只恢复 follow-up queue，还没有 TS 那种 steering/compaction queue 合并恢复和 pending queue 可视化
 - resolver 现在只在 `--session-dir` 未显式指定时提供 current/all 双 scope；显式 `--session-dir` 仍退化成单 scope
 
@@ -495,6 +513,10 @@
 - `PiInteractiveModeTest`：空队列下 `Alt+Up` 会回显 `No queued messages`
 - `PiCliModuleTest`：从 `keybindings.json` 加载 `dequeue`
 - `KeyMatcherTest`：匹配 `alt+up`
+- `PiAgentSessionTest`：`selectModel(index)` 会命中精确 cycle target 并更新 thinking level
+- `PiInteractiveModeTest`：`Ctrl+L` 会打开 model selector，并把选中结果写回 session
+- `PiCliModuleTest`：从 `keybindings.json` 加载 `selectModel`
+- `KeyMatcherTest`：匹配 `ctrl+l`
 
 最近通过：
 
@@ -504,7 +526,7 @@
 
 ## 下一步建议
 
-1. keybindings parity：继续评估 `selectModel`
+1. pending queue parity：补 follow-up / steering queue 可视化，再决定是否合并到 status/footer
 2. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件
 2. selector parity：继续评估 model/settings selector 是否复用同一套层级
-3. keybindings：继续评估 `selectModel` 与 pending follow-up/steering queue 可视化
+3. selector parity：继续把 model selector 从 cycle scope 扩到 richer registry/provider metadata
