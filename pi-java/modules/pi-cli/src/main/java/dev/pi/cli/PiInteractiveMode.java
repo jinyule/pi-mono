@@ -217,20 +217,22 @@ public final class PiInteractiveMode implements AutoCloseable {
             return renderFooterModelSummary(state, width);
         }
 
-        var plainRight = footerModelSummary(state);
+        var fullRight = footerModelSummary(state, Math.max(1, width - TerminalText.visibleWidth(plainLeft) - 2));
+        var plainRight = fullRight.plain();
         var leftWidth = TerminalText.visibleWidth(plainLeft);
         var rightWidth = TerminalText.visibleWidth(plainRight);
         if (leftWidth + 2 + rightWidth <= width) {
             return footerStats.styled()
-                + " ".repeat(width - leftWidth - rightWidth)
-                + renderFooterModelSummary(state, rightWidth);
+                + "  "
+                + fullRight.styled();
         }
-        var reservedRightWidth = Math.min(rightWidth, Math.max(8, width / 3));
+        var narrowRight = footerModelSummary(state, Math.min(Math.max(8, width / 3), Math.max(1, width - 4)));
+        var reservedRightWidth = TerminalText.visibleWidth(narrowRight.plain());
         var availableLeftWidth = width - reservedRightWidth - 2;
         if (availableLeftWidth >= 4) {
             return PiCliAnsi.muted(TerminalText.truncateToWidth(plainLeft, availableLeftWidth, "..."))
                 + "  "
-                + renderFooterModelSummary(state, reservedRightWidth);
+                + narrowRight.plain();
         }
         return renderFooterModelSummary(state, width);
     }
@@ -330,8 +332,12 @@ public final class PiInteractiveMode implements AutoCloseable {
     }
 
     private static String renderFooterModelSummary(AgentState state, int width) {
+        return footerModelSummary(state, width).styled();
+    }
+
+    private static FooterModelSummary footerModelSummary(AgentState state, int width) {
         if (width <= 0) {
-            return "";
+            return new FooterModelSummary("", "");
         }
         var providerPrefix = state.model().provider() == null || state.model().provider().isBlank()
             ? ""
@@ -347,22 +353,32 @@ public final class PiInteractiveMode implements AutoCloseable {
 
         if (!state.model().reasoning()) {
             if (providerWidth + modelWidth <= width) {
-                return PiCliAnsi.muted(providerPrefix) + PiCliAnsi.bold(modelLabel);
+                return new FooterModelSummary(
+                    providerPrefix + modelLabel,
+                    PiCliAnsi.muted(providerPrefix) + PiCliAnsi.bold(modelLabel)
+                );
             }
-            return PiCliAnsi.bold(TerminalText.truncateToWidth(modelLabel, width, "..."));
+            var truncated = TerminalText.truncateToWidth(modelLabel, width, "...");
+            return new FooterModelSummary(truncated, PiCliAnsi.bold(truncated));
         }
 
         var suffix = " • " + (state.thinkingLevel() == null ? "thinking off" : state.thinkingLevel().value());
         var suffixWidth = TerminalText.visibleWidth(suffix);
         if (providerWidth + modelWidth + suffixWidth <= width) {
-            return PiCliAnsi.muted(providerPrefix) + PiCliAnsi.bold(modelLabel) + PiCliAnsi.muted(suffix);
+            return new FooterModelSummary(
+                providerPrefix + modelLabel + suffix,
+                PiCliAnsi.muted(providerPrefix) + PiCliAnsi.bold(modelLabel) + PiCliAnsi.muted(suffix)
+            );
         }
         if (providerWidth + modelWidth >= width) {
-            return PiCliAnsi.bold(TerminalText.truncateToWidth(modelLabel, width, "..."));
+            var truncated = TerminalText.truncateToWidth(modelLabel, width, "...");
+            return new FooterModelSummary(truncated, PiCliAnsi.bold(truncated));
         }
-        return PiCliAnsi.muted(providerPrefix)
-            + PiCliAnsi.bold(modelLabel)
-            + PiCliAnsi.muted(TerminalText.truncateToWidth(suffix, width - providerWidth - modelWidth, "..."));
+        var truncatedSuffix = TerminalText.truncateToWidth(suffix, width - providerWidth - modelWidth, "...");
+        return new FooterModelSummary(
+            providerPrefix + modelLabel + truncatedSuffix,
+            PiCliAnsi.muted(providerPrefix) + PiCliAnsi.bold(modelLabel) + PiCliAnsi.muted(truncatedSuffix)
+        );
     }
 
     private static String formatTokens(int count) {
@@ -384,6 +400,8 @@ public final class PiInteractiveMode implements AutoCloseable {
     private record FooterStats(String plain, String styled) {}
 
     private record FooterSegment(String plain, String styled) {}
+
+    private record FooterModelSummary(String plain, String styled) {}
 
     private void handleCopyCommand() {
         try {

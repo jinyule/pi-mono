@@ -77,6 +77,8 @@
   - interactive footer auto-compaction suffix first cut
 - 已完成第三十六刀：
   - interactive footer post-compaction unknown usage first cut
+- 已完成第三十七刀：
+  - interactive footer idle context baseline first cut
 
 ## 本轮落地
 
@@ -298,6 +300,11 @@
   - 若 compaction 之后还没有新的 assistant usage，则返回 `percent = null`
   - `PiInteractiveMode` 会把这类状态渲染成 `?/%window`
   - 这样 footer 不会再把 compaction 前的 usage 百分比错误地延续到 compaction 之后
+- `PiAgentSession.contextUsage()` / `FakeSession.contextUsage()` 现在在 idle 且尚无 assistant usage 时返回 `0.0%/%window`
+- `PiInteractiveMode` 现在把 footer 改成更紧凑的单行布局：
+  - 左右摘要之间固定保留 `2` 个空格
+  - 不再用右对齐 padding 把 ANSI/raw 长度堆到一行末尾
+  - 窄宽度分支会先给右侧 model 摘要保留保底宽度，再截断左侧 usage/context
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -373,6 +380,7 @@
 - `PiInteractiveModeTest`：窄宽度 footer 仍保留右侧 model 摘要
 - `PiInteractiveModeTest`：auto-compaction 关闭时 footer 不显示 `(auto)` suffix
 - `PiInteractiveModeTest`：manual compaction 后 footer 会切到 `?/%window`
+- `PiInteractiveModeTest`：idle 状态 footer 会显示 `0.0%/%window`
 
 最近通过：
 
@@ -382,6 +390,6 @@
 
 ## 下一步建议
 
-1. footer parity：继续评估 `0.0%/window` idle 状态与 provider-count/session-name 行
+1. footer parity：继续评估 provider-count/session-name 行，以及是否补第二行 cwd/git/session name
 2. selector parity：继续评估 model/settings selector 是否复用同一套层级
 3. keybindings：继续评估 cycleModelBackward / selectModel / newSession / followUp / dequeue 等动作

@@ -96,6 +96,21 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void rendersIdleContextUsageWhenNoAssistantUsageExistsYet() {
+        var session = new FakeSession().withContextWindow(16);
+        var terminal = new VirtualTerminal(80, 14);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+
+        assertThat(String.join("\n", terminal.getViewport()))
+            .contains("0.0%/16 (auto)")
+            .contains("test-model");
+
+        mode.stop();
+    }
+
+    @Test
     void stylesFooterStatsAndModelSummaryWithAnsiHierarchy() {
         var session = new FakeSession().withContextWindow(16);
         var terminal = new RecordingTerminal(80, 14);
@@ -617,7 +632,7 @@ class PiInteractiveModeTest {
 
             var latestUsage = latestAssistantUsage();
             if (latestUsage == null || latestUsage.totalTokens() <= 0) {
-                return null;
+                return new ContextUsage(0, contextWindow, 0.0);
             }
             return new ContextUsage(
                 latestUsage.totalTokens(),

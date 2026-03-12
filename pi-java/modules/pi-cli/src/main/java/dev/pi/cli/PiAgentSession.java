@@ -159,7 +159,7 @@ public final class PiAgentSession implements PiInteractiveSession {
 
         var latestUsage = latestAssistantUsage();
         if (latestUsage == null || latestUsage.totalTokens() <= 0) {
-            return null;
+            return new ContextUsage(0, contextWindow, 0.0);
         }
         return new ContextUsage(
             latestUsage.totalTokens(),
