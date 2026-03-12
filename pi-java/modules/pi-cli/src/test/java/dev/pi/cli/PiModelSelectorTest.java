@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import dev.pi.tui.EditorAction;
 import dev.pi.tui.EditorKeybindings;
+import dev.pi.tui.TerminalText;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -137,6 +138,29 @@ class PiModelSelectorTest {
         } finally {
             EditorKeybindings.setGlobal(previous);
         }
+    }
+
+    @Test
+    void wrapsWarningAndHintsAtNarrowWidths() {
+        var selector = new PiModelSelector(
+            new PiInteractiveSession.ModelSelection(
+                List.of(new PiInteractiveSession.SelectableModel(0, "openai", "gpt-5", "GPT-5", "minimal", true, true, 400_000)),
+                List.of()
+            ),
+            ignored -> {
+            },
+            () -> {
+            },
+            () -> {
+            }
+        );
+
+        var lines = selector.render(28);
+
+        assertThat(lines).anyMatch(line -> line.contains("configured"));
+        assertThat(lines).anyMatch(line -> line.contains("README"));
+        assertThat(lines).anyMatch(line -> line.contains("selects"));
+        assertThat(lines.stream().mapToInt(TerminalText::visibleWidth)).allMatch(width -> width <= 28);
     }
 
     @Test

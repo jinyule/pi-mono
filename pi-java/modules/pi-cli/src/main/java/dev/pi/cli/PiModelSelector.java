@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.function.IntConsumer;
+import java.util.function.UnaryOperator;
 
 public final class PiModelSelector implements Component, Focusable {
     private static final String VALUE_DELIMITER = "\u0000";
@@ -85,20 +86,28 @@ public final class PiModelSelector implements Component, Focusable {
         lines.add(PiCliAnsi.bold("Select model"));
         if (!scopedModels.isEmpty()) {
             lines.add(scopeSummary());
-            lines.add(PiCliAnsi.muted(
+            lines.addAll(styleWrappedLines(
                 "%s scope (all/scoped) · type to filter · %s selects · %s cancels".formatted(
                     keyHint(EditorAction.SESSION_SCOPE_TOGGLE),
                     keyHint(EditorAction.SUBMIT),
                     keyHint(EditorAction.SELECT_CANCEL)
-                )
+                ),
+                width,
+                PiCliAnsi::muted
             ));
         } else {
-            lines.add(PiCliAnsi.warning("Only showing models with configured API keys (see README for details)"));
-            lines.add(PiCliAnsi.muted(
+            lines.addAll(styleWrappedLines(
+                "Only showing models with configured API keys (see README for details)",
+                width,
+                PiCliAnsi::warning
+            ));
+            lines.addAll(styleWrappedLines(
                 "Type to filter · %s selects · %s cancels".formatted(
                     keyHint(EditorAction.SUBMIT),
                     keyHint(EditorAction.SELECT_CANCEL)
-                )
+                ),
+                width,
+                PiCliAnsi::muted
             ));
         }
         lines.add("");
@@ -413,6 +422,12 @@ public final class PiModelSelector implements Component, Focusable {
     private static String keyHint(EditorAction action) {
         var keys = EditorKeybindings.global().getKeys(action);
         return keys.isEmpty() ? action.name() : keys.getFirst();
+    }
+
+    private static List<String> styleWrappedLines(String text, int width, UnaryOperator<String> style) {
+        return TerminalText.wrapText(text, Math.max(1, width)).stream()
+            .map(style)
+            .toList();
     }
 
     private record ModelSearchMatch(

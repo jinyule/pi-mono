@@ -131,6 +131,8 @@
   - interactive model selector keybinding-aware hints first cut
 - 已完成第六十三刀：
   - interactive model selector detail field hierarchy first cut
+- 已完成第六十四刀：
+  - interactive model selector wrapped hints/warning first cut
 
 ## 本轮落地
 
@@ -604,6 +606,10 @@
   - field label 改成 bold
   - field value 保持 muted
   - detail panel 里 `Model name/Thinking/Context` 的键值关系更清晰
+- `PiModelSelector` 现在把 warning/hint 行改成宽度感知换行：
+  - all-scope warning 会按终端宽度折行
+  - scoped/all 两种 hint 行都会按宽度折行
+  - 窄终端下 selector 顶部提示不再横向溢出
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+l`
@@ -754,6 +760,7 @@
 - `PiModelSelectorTest`：选中行 model id 会走 accent+bold ANSI
 - `PiModelSelectorTest`：custom keybindings 会反映到 selector hint 文案
 - `PiModelSelectorTest`：detail field 的 label/value 会分别渲染 bold/muted ANSI
+- `PiModelSelectorTest`：窄终端下 warning/hint 会按宽度换行且不超宽
 
 最近通过：
 
@@ -763,7 +770,7 @@
 
 ## 下一步建议
 
-1. selector parity：继续评估 model selector 是否要补 all-scope warning/hint copy 的 TS 细节，或继续压 warning 行的窄宽度换行表现
+1. selector parity：继续评估 model selector 是否要补 all-scope warning/hint copy 的 TS 细节，或继续压空状态 copy/层级
 2. settings selector parity：继续评估 `theme` / `hide thinking` / `quiet startup`；这些键在 Java 侧还缺真实 runtime 绑定
 3. pending queue parity：继续补 compaction queue 合并展示与恢复；steering/follow-up runtime queue 已接上，但 Java 侧仍没有 compaction pending queue
 4. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件
