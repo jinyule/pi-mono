@@ -24,4 +24,10 @@ class KeyMatcherTest {
     void matchesGenericAltLetterSequence() {
         assertThat(KeyMatcher.matches("\u001bn", "alt+n")).isTrue();
     }
+
+    @Test
+    void matchesCtrlShiftPSequence() {
+        assertThat(KeyMatcher.matches("\u001b[112;6u", "shift+ctrl+p")).isTrue();
+        assertThat(KeyMatcher.matches("\u001b[112;6u", "ctrl+shift+p")).isTrue();
+    }
 }

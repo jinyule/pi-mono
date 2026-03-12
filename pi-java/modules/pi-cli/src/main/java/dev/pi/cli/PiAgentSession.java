@@ -196,23 +196,12 @@ public final class PiAgentSession implements PiInteractiveSession {
 
     @Override
     public ModelCycleResult cycleModelForward() {
-        if (sdkSession.state().isStreaming()) {
-            throw new IllegalStateException("Wait for the current response to finish before switching models");
-        }
-        if (cycleModels.size() <= 1) {
-            return null;
-        }
+        return cycleModel(1);
+    }
 
-        var currentIndex = indexOfModel(sdkSession.state().model());
-        var nextIndex = currentIndex < 0 ? 0 : (currentIndex + 1) % cycleModels.size();
-        var next = cycleModels.get(nextIndex);
-        var nextThinkingLevel = applyCycleModel(next);
-        return new ModelCycleResult(
-            next.model().provider(),
-            next.model().id(),
-            nextThinkingLevel == null ? "off" : nextThinkingLevel.value(),
-            scopedCycleModels
-        );
+    @Override
+    public ModelCycleResult cycleModelBackward() {
+        return cycleModel(-1);
     }
 
     @Override
@@ -620,6 +609,28 @@ public final class PiAgentSession implements PiInteractiveSession {
             }
         }
         return -1;
+    }
+
+    private ModelCycleResult cycleModel(int step) {
+        if (sdkSession.state().isStreaming()) {
+            throw new IllegalStateException("Wait for the current response to finish before switching models");
+        }
+        if (cycleModels.size() <= 1) {
+            return null;
+        }
+
+        var currentIndex = indexOfModel(sdkSession.state().model());
+        var nextIndex = currentIndex < 0
+            ? (step < 0 ? cycleModels.size() - 1 : 0)
+            : Math.floorMod(currentIndex + step, cycleModels.size());
+        var next = cycleModels.get(nextIndex);
+        var nextThinkingLevel = applyCycleModel(next);
+        return new ModelCycleResult(
+            next.model().provider(),
+            next.model().id(),
+            nextThinkingLevel == null ? "off" : nextThinkingLevel.value(),
+            scopedCycleModels
+        );
     }
 
     private ThinkingLevel applyCycleModel(CycleModel next) {

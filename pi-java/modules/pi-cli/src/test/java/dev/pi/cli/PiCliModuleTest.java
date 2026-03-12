@@ -233,6 +233,7 @@ class PiCliModuleTest {
               "interrupt": "alt+x",
               "resume": "alt+u",
               "cycleModelForward": "alt+p",
+              "cycleModelBackward": "alt+o",
               "cycleThinkingLevel": "alt+i",
               "tree": "alt+t",
               "fork": "alt+f",
@@ -267,6 +268,7 @@ class PiCliModuleTest {
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.INTERRUPT)).containsExactly("alt+x");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.RESUME)).containsExactly("alt+u");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.CYCLE_MODEL_FORWARD)).containsExactly("alt+p");
+            assertThat(PiAppKeybindings.global().getKeys(PiAppAction.CYCLE_MODEL_BACKWARD)).containsExactly("alt+o");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.CYCLE_THINKING_LEVEL)).containsExactly("alt+i");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.TREE)).containsExactly("alt+t");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.FORK)).containsExactly("alt+f");

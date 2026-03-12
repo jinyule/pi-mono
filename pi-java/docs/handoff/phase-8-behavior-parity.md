@@ -89,6 +89,8 @@
   - interactive footer git-branch first cut
 - 已完成第四十二刀：
   - interactive footer git-branch watcher first cut
+- 已完成第四十三刀：
+  - interactive app keybinding cycleModelBackward first cut
 
 ## 本轮落地
 
@@ -342,6 +344,19 @@
   - watcher 监听 `HEAD` 的 create/delete/modify 事件
   - 事件到达后会重新跑一次 `renderState(session.state())`
   - stop 时会关闭 `WatchService`，避免后台线程悬挂
+- `PiAppAction` / `PiAppKeybindings` 现在继续补了 `cycleModelBackward`：
+  - 默认键位是 `shift+ctrl+p`
+  - `PiCliKeybindingsLoader` 现在支持 `cycleModelBackward` alias
+- `PiAgentSession` 现在支持 backward model cycle：
+  - 复用现有 scoped cycle list
+  - 从当前 model 往前一个目标回绕
+  - 同样会持久化 `model_change` / `thinking_level_change`
+- `PiInteractiveMode` 现在会在 prompt 层消费 `cycleModelBackward`：
+  - 触发后调用 `session.cycleModelBackward()`
+  - 成功时沿用现有 `Switched to provider/model` 状态文案
+- `KeyMatcher` 现在补了 `shift+ctrl+p` / `ctrl+shift+p` 的 Kitty `CSI u` 匹配：
+  - 当前首版支持 `\u001b[112;6u`
+  - 并兼容简化的 `\u001b[80;6u`
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -426,6 +441,10 @@
 - `PiInteractiveModeTest`：footer 第二行会显示 `cwd (branch) • session name`
 - `PiGitBranchWatcherTest`：修改 `HEAD` 后会收到 branch change 通知
 - `PiInteractiveModeTest`：branch 改变后 footer 会自动刷新到新 branch
+- `PiAgentSessionTest`：backward cycle 会持久化 `model_change` / `thinking_level_change`
+- `PiInteractiveModeTest`：app keybinding 驱动 backward model cycle
+- `PiCliModuleTest`：从 `keybindings.json` 加载 `cycleModelBackward`
+- `KeyMatcherTest`：匹配 `shift+ctrl+p`
 
 最近通过：
 
@@ -435,6 +454,7 @@
 
 ## 下一步建议
 
-1. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件
+1. keybindings parity：继续评估 `selectModel` / `newSession` / `followUp` / `dequeue`
+2. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件
 2. selector parity：继续评估 model/settings selector 是否复用同一套层级
 3. keybindings：继续评估 cycleModelBackward / selectModel / newSession / followUp / dequeue 等动作

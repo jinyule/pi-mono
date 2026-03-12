@@ -605,6 +605,31 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void usesAppKeybindingForCycleModelBackward() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(100, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+        var previousApp = PiAppKeybindings.global();
+        try {
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(
+                PiAppAction.CYCLE_MODEL_BACKWARD,
+                java.util.List.of("shift+ctrl+p")
+            )));
+
+            mode.start();
+            terminal.sendInput("\u001b[112;6u");
+
+            waitFor(() -> "previous-model".equals(session.lastModelIdChange));
+            assertThat(String.join("\n", terminal.getViewport()))
+                .contains("Switched to openai/previous-model")
+                .contains("model: openai/previous-model");
+        } finally {
+            PiAppKeybindings.setGlobal(previousApp);
+            mode.stop();
+        }
+    }
+
+    @Test
     void usesAppKeybindingForCycleThinkingLevel() {
         var session = new FakeSession().withReasoningModel("reasoning-model", null);
         var terminal = new VirtualTerminal(100, 16);
@@ -798,6 +823,28 @@ class PiInteractiveModeTest {
             lastModelIdChange = nextModel.id();
             emitState();
             return new ModelCycleResult(nextModel.provider(), nextModel.id(), "off", false);
+        }
+
+        @Override
+        public ModelCycleResult cycleModelBackward() {
+            var previousModel = new Model(
+                "previous-model",
+                "Previous Model",
+                state.model().api(),
+                state.model().provider(),
+                "https://example.com",
+                true,
+                List.of("text"),
+                new Usage.Cost(0.0, 0.0, 0.0, 0.0, 0.0),
+                128_000,
+                8_192,
+                null,
+                null
+            );
+            state = state.withModel(previousModel);
+            lastModelIdChange = previousModel.id();
+            emitState();
+            return new ModelCycleResult(previousModel.provider(), previousModel.id(), "off", false);
         }
 
         @Override

@@ -14,6 +14,8 @@ final class PiAppKeybindings {
         List.of(),
         PiAppAction.CYCLE_MODEL_FORWARD,
         List.of("ctrl+p"),
+        PiAppAction.CYCLE_MODEL_BACKWARD,
+        List.of("shift+ctrl+p"),
         PiAppAction.CYCLE_THINKING_LEVEL,
         List.of("shift+tab"),
         PiAppAction.TREE,

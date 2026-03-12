@@ -310,6 +310,54 @@ class PiAgentSessionTest {
             .isEqualTo("high");
     }
 
+    @Test
+    void cyclesBackwardThroughScopedModelsAndPersistsModelChange() {
+        var sessionManager = SessionManager.inMemory("/workspace");
+        var previousModel = new Model(
+            "reasoning-model",
+            "Reasoning Model",
+            "openai-responses",
+            "openai",
+            "https://example.com",
+            true,
+            List.of("text"),
+            new Usage.Cost(0.0, 0.0, 0.0, 0.0, 0.0),
+            128_000,
+            8_192,
+            null,
+            null
+        );
+
+        var session = PiAgentSession.builder(
+            testModel(),
+            sessionManager,
+            SettingsManager.inMemory(),
+            new InstructionResources(List.of(), "", List.of())
+        )
+            .streamFunction(fakeAssistant("Ack"))
+            .cycleModels(List.of(
+                new PiAgentSession.CycleModel(testModel(), null),
+                new PiAgentSession.CycleModel(previousModel, ThinkingLevel.HIGH)
+            ), true)
+            .build();
+
+        var result = session.cycleModelBackward();
+
+        assertThat(result).isNotNull();
+        assertThat(result.modelId()).isEqualTo("reasoning-model");
+        assertThat(result.thinkingLevel()).isEqualTo("high");
+        assertThat(result.scoped()).isTrue();
+        assertThat(session.state().model().id()).isEqualTo("reasoning-model");
+        assertThat(session.state().thinkingLevel()).isEqualTo(ThinkingLevel.HIGH);
+
+        var entries = sessionManager.entries();
+        assertThat(entries.get(entries.size() - 2)).isInstanceOf(dev.pi.session.SessionEntry.ModelChangeEntry.class);
+        assertThat(entries.get(entries.size() - 1)).isInstanceOf(dev.pi.session.SessionEntry.ThinkingLevelChangeEntry.class);
+        assertThat(((dev.pi.session.SessionEntry.ModelChangeEntry) entries.get(entries.size() - 2)).modelId()).isEqualTo("reasoning-model");
+        assertThat(((dev.pi.session.SessionEntry.ThinkingLevelChangeEntry) entries.get(entries.size() - 1)).thinkingLevel())
+            .isEqualTo("high");
+    }
+
     private static Model testModel() {
         return new Model(
             "test-model",

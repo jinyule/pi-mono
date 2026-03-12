@@ -27,6 +27,7 @@ public final class KeyMatcher {
         Map.entry("ctrl+k", "\u000b"),
         Map.entry("ctrl+n", "\u000e"),
         Map.entry("ctrl+p", "\u0010"),
+        Map.entry("shift+ctrl+p", "\u001b[112;6u"),
         Map.entry("ctrl+r", "\u0012"),
         Map.entry("ctrl+s", "\u0013"),
         Map.entry("ctrl+u", "\u0015"),
@@ -73,6 +74,7 @@ public final class KeyMatcher {
             case "alt+enter" -> "\u001b\r".equals(data);
             case "ctrl+left" -> "\u001b[1;5D".equals(data) || "\u001b[5D".equals(data);
             case "ctrl+right" -> "\u001b[1;5C".equals(data) || "\u001b[5C".equals(data);
+            case "shift+ctrl+p", "ctrl+shift+p" -> "\u001b[112;6u".equals(data) || "\u001b[80;6u".equals(data);
             case "alt+backspace" -> "\u001b\u007f".equals(data);
             case "alt+delete" -> "\u001b[3;3~".equals(data);
             default -> data.equals(NAMED_SEQUENCES.get(keyId));

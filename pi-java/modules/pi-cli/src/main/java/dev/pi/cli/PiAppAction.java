@@ -4,6 +4,7 @@ enum PiAppAction {
     INTERRUPT,
     RESUME,
     CYCLE_MODEL_FORWARD,
+    CYCLE_MODEL_BACKWARD,
     CYCLE_THINKING_LEVEL,
     TREE,
     FORK,

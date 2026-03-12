@@ -37,6 +37,10 @@ public interface PiInteractiveSession {
         throw new UnsupportedOperationException("Model cycling is not available");
     }
 
+    default ModelCycleResult cycleModelBackward() {
+        throw new UnsupportedOperationException("Model cycling is not available");
+    }
+
     default String cycleThinkingLevel() {
         throw new UnsupportedOperationException("Thinking level cycling is not available");
     }

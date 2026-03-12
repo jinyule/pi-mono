@@ -628,6 +628,10 @@ public final class PiInteractiveMode implements AutoCloseable {
                 handleCycleModelForwardCommand();
                 return;
             }
+            if (appKeybindings.matches(data, PiAppAction.CYCLE_MODEL_BACKWARD)) {
+                handleCycleModelBackwardCommand();
+                return;
+            }
             if (appKeybindings.matches(data, PiAppAction.CYCLE_THINKING_LEVEL)) {
                 handleCycleThinkingLevelCommand();
                 return;
@@ -672,6 +676,16 @@ public final class PiInteractiveMode implements AutoCloseable {
     private void handleCycleModelForwardCommand() {
         try {
             var result = session.cycleModelForward();
+            manualStatus = result == null ? "Only one model available" : formatModelCycleStatus(result);
+        } catch (RuntimeException exception) {
+            manualStatus = "Error: " + rootMessage(exception);
+        }
+        renderState(session.state());
+    }
+
+    private void handleCycleModelBackwardCommand() {
+        try {
+            var result = session.cycleModelBackward();
             manualStatus = result == null ? "Only one model available" : formatModelCycleStatus(result);
         } catch (RuntimeException exception) {
             manualStatus = "Error: " + rootMessage(exception);
