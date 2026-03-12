@@ -133,8 +133,8 @@ class PiModelSelectorTest {
             var lines = selector.render(100);
 
             assertThat(lines).anyMatch(line -> line.contains("shift+tab") && line.contains("scope (all/scoped)"));
-            assertThat(lines).anyMatch(line -> line.contains("ctrl+j selects"));
-            assertThat(lines).anyMatch(line -> line.contains("ctrl+x cancels"));
+            assertThat(lines).noneMatch(line -> line.contains("selects"));
+            assertThat(lines).noneMatch(line -> line.contains("cancels"));
         } finally {
             EditorKeybindings.setGlobal(previous);
         }
@@ -159,7 +159,7 @@ class PiModelSelectorTest {
 
         assertThat(lines).anyMatch(line -> line.contains("configured"));
         assertThat(lines).anyMatch(line -> line.contains("README"));
-        assertThat(lines).anyMatch(line -> line.contains("selects"));
+        assertThat(lines).noneMatch(line -> line.contains("selects"));
         assertThat(lines.stream().mapToInt(TerminalText::visibleWidth)).allMatch(width -> width <= 28);
     }
 

@@ -87,27 +87,11 @@ public final class PiModelSelector implements Component, Focusable {
         if (!scopedModels.isEmpty()) {
             lines.add(scopeSummary());
             lines.add(scopeHint());
-            lines.addAll(styleWrappedLines(
-                "Type to filter · %s selects · %s cancels".formatted(
-                    keyHint(EditorAction.SUBMIT),
-                    keyHint(EditorAction.SELECT_CANCEL)
-                ),
-                width,
-                PiCliAnsi::muted
-            ));
         } else {
             lines.addAll(styleWrappedLines(
                 "Only showing models with configured API keys (see README for details)",
                 width,
                 PiCliAnsi::warning
-            ));
-            lines.addAll(styleWrappedLines(
-                "Type to filter · %s selects · %s cancels".formatted(
-                    keyHint(EditorAction.SUBMIT),
-                    keyHint(EditorAction.SELECT_CANCEL)
-                ),
-                width,
-                PiCliAnsi::muted
             ));
         }
         lines.add("");

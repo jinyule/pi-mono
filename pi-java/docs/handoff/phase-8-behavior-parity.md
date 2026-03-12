@@ -167,6 +167,8 @@
   - interactive double-escape-action first cut
 - completed cut 80:
   - interactive custom theme core tokens first cut
+- completed cut 81:
+  - interactive model selector top-hint parity first cut
 
 ## 本轮落地
 
@@ -966,6 +968,11 @@
 - New tests:
   - `PiCliAnsiTest` now covers `dim` / `border` / `borderMuted` for built-in and custom palettes
   - `PiCliThemeLoaderTokenTest` covers explicit optional-token loading plus fallback behavior when those tokens are omitted
+- `PiModelSelector` now matches the TS top-section structure more closely:
+  - scoped mode keeps only `Scope:` plus the `tab scope (all/scoped)` hint
+  - unscoped mode keeps only the configured-API-key warning
+  - the extra `Type to filter / ... selects / ... cancels` copy is gone from both branches
+- `PiModelSelectorTest` now asserts that the scope hint stays keybinding-aware while the removed select/cancel hint does not come back
 
 ?????```bash
 .\\gradlew.bat :pi-cli:test --no-daemon
@@ -974,7 +981,7 @@ npm.cmd run check
 
 ## 下一步建议
 
-1. selector parity：继续评估 model selector 是否要补 all-scope warning/hint copy 的 TS 细节，或继续压空状态 copy/层级
+1. selector parity: continue evaluating model selector detail/no-match hierarchy and scope-hint styling, or move to scoped-model footer copy parity
 2. settings selector parity: theme work now covers hint/keybinding parity, hide-thinking transcript parity, quiet-startup header parity, quiet-startup startup-resource silence, double-escape, editor-padding, dark/light runtime ANSI theme switching, `Theme` submenu preview, `Thinking level` submenu, hardware-cursor/clear-on-shrink, TS-style copy for steering/follow-up/transport/quiet-startup, plus the first custom theme loader + hot reload slice and the first broader core-token slice; remaining theme gaps are package/source theme discovery and wider token adoption across more CLI surfaces
 3. pending queue parity：继续补 compaction queue 合并展示与恢复；steering/follow-up runtime queue 已接上，但 Java 侧仍没有 compaction pending queue
 4. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件
