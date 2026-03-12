@@ -86,9 +86,9 @@ public final class PiModelSelector implements Component, Focusable {
         lines.add(PiCliAnsi.bold("Select model"));
         if (!scopedModels.isEmpty()) {
             lines.add(scopeSummary());
+            lines.add(scopeHint());
             lines.addAll(styleWrappedLines(
-                "%s scope (all/scoped) · type to filter · %s selects · %s cancels".formatted(
-                    keyHint(EditorAction.SESSION_SCOPE_TOGGLE),
+                "Type to filter · %s selects · %s cancels".formatted(
                     keyHint(EditorAction.SUBMIT),
                     keyHint(EditorAction.SELECT_CANCEL)
                 ),
@@ -114,9 +114,7 @@ public final class PiModelSelector implements Component, Focusable {
         lines.addAll(search.render(width));
         lines.add("");
         if (visibleModels.isEmpty()) {
-            lines.add(PiCliAnsi.muted(search.getValue() == null || search.getValue().isBlank()
-                ? "  No models available"
-                : "  No matching models"));
+            lines.add(PiCliAnsi.muted("  No matching models"));
         } else {
             lines.addAll(models.render(width));
             var selectedModel = selectedModel();
@@ -183,6 +181,10 @@ public final class PiModelSelector implements Component, Focusable {
         var all = scope == Scope.ALL ? PiCliAnsi.accent("all") : PiCliAnsi.muted("all");
         var scoped = scope == Scope.SCOPED ? PiCliAnsi.accent("scoped") : PiCliAnsi.muted("scoped");
         return PiCliAnsi.muted("Scope: ") + all + PiCliAnsi.muted(" | ") + scoped;
+    }
+
+    private String scopeHint() {
+        return keyHint(EditorAction.SESSION_SCOPE_TOGGLE) + PiCliAnsi.muted(" scope (all/scoped)");
     }
 
     private static SelectItem toSelectItem(PiInteractiveSession.SelectableModel model) {
@@ -305,7 +307,7 @@ public final class PiModelSelector implements Component, Focusable {
     private static List<String> selectedDetailLines(PiInteractiveSession.SelectableModel model) {
         var lines = new ArrayList<String>();
         if (model.modelName() != null && !model.modelName().isBlank() && !model.modelName().equals(model.modelId())) {
-            lines.add(detailField("Model name", model.modelName()));
+            lines.add(detailField("Model Name", model.modelName()));
         }
         if (model.reasoning()) {
             lines.add(detailField("Thinking", model.thinkingLevel()));

@@ -159,6 +159,8 @@
   - interactive app keybinding suspend parity first cut
 - 已完成第七十六刀：
   - interactive app keybinding external-editor parity first cut
+- 已完成第七十七刀：
+  - interactive model selector warning/hint copy parity first cut
 
 ## 本轮落地
 
@@ -838,6 +840,13 @@
   - 读回内容后会去掉单个末尾换行
   - 因为当前 Java `Input` 仍是单行组件，其余换行会被压平成空格再写回 editor
 - PiCliModuleTest / PiInteractiveModeTest / KeyMatcherTest 现在覆盖 externalEditor 的 loader alias、interactive dispatch、missing-editor 文案、multiline flattening 和 `ctrl+g` 键位匹配
+- PiModelSelector 现在继续把 warning/hint copy 往 TS 靠：
+  - scoped selector 顶部保留 `Scope: all | scoped`
+  - `tab scope (all/scoped)` 重新拆成独立 hint 行
+  - `Type to filter · ...` 继续单独占一行，避免把 scope hint 和 action hint 混在一起
+- PiModelSelector 现在统一空结果文案为 `No matching models`，不再区分 blank query 的 `No models available`
+- PiModelSelector detail panel 现在把 `Model Name` label 的大小写对齐到 TS 组件
+- PiModelSelectorTest 现在覆盖 scoped hint 拆行、`Model Name:` label 和统一 no-match copy
 
 最近通过：
 

@@ -40,7 +40,7 @@ class PiModelSelectorTest {
         assertThat(lines).anyMatch(line -> line.contains("\u001b[1;36mSelected model"));
         assertThat(lines).anyMatch(line -> line.contains("\u001b[90mopenai/"));
         assertThat(lines).anyMatch(line -> line.contains("\u001b[1mgpt-5"));
-        assertThat(lines).anyMatch(line -> line.contains("\u001b[1mModel name:"));
+        assertThat(lines).anyMatch(line -> line.contains("\u001b[1mModel Name:"));
         assertThat(lines).anyMatch(line -> line.contains("\u001b[90mGPT-5"));
         assertThat(lines).anyMatch(line -> line.contains("\u001b[1mThinking:"));
         assertThat(lines).anyMatch(line -> line.contains("\u001b[90mminimal"));
@@ -93,7 +93,7 @@ class PiModelSelectorTest {
         );
 
         assertThat(selector.render(100)).anyMatch(line -> line.contains("Scope:"));
-        assertThat(selector.render(100)).anyMatch(line -> line.contains("tab scope (all/scoped)"));
+        assertThat(selector.render(100)).anyMatch(line -> line.contains("tab") && line.contains("scope (all/scoped)"));
         assertThat(selector.render(100)).anyMatch(line -> line.contains("scoped"));
         assertThat(selector.render(100)).anyMatch(line -> line.contains("claude-3-7-sonnet"));
 
@@ -132,7 +132,7 @@ class PiModelSelectorTest {
 
             var lines = selector.render(100);
 
-            assertThat(lines).anyMatch(line -> line.contains("shift+tab scope (all/scoped)"));
+            assertThat(lines).anyMatch(line -> line.contains("shift+tab") && line.contains("scope (all/scoped)"));
             assertThat(lines).anyMatch(line -> line.contains("ctrl+j selects"));
             assertThat(lines).anyMatch(line -> line.contains("ctrl+x cancels"));
         } finally {
@@ -251,7 +251,7 @@ class PiModelSelectorTest {
         assertThat(lines).anyMatch(line -> line.contains("\u001b[1;36mSelected model"));
         assertThat(lines).anyMatch(line -> line.contains("\u001b[90manthropic/"));
         assertThat(lines).anyMatch(line -> line.contains("\u001b[1mclaude-3-7-sonnet"));
-        assertThat(lines).anyMatch(line -> line.contains("\u001b[1mModel name:"));
+        assertThat(lines).anyMatch(line -> line.contains("\u001b[1mModel Name:"));
         assertThat(lines).anyMatch(line -> line.contains("\u001b[90mClaude 3.7 Sonnet"));
     }
 }
