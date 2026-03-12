@@ -112,6 +112,31 @@ public final class TerminalText {
         return takeVisibleColumns(text, width - ellipsisWidth) + ellipsis;
     }
 
+    public static String truncateMiddleToWidth(String text, int width) {
+        return truncateMiddleToWidth(text, width, "...");
+    }
+
+    public static String truncateMiddleToWidth(String text, int width, String ellipsis) {
+        Objects.requireNonNull(text, "text");
+        Objects.requireNonNull(ellipsis, "ellipsis");
+        if (width <= 0) {
+            return "";
+        }
+        if (visibleWidth(text) <= width) {
+            return text;
+        }
+        var ellipsisWidth = visibleWidth(ellipsis);
+        if (ellipsisWidth >= width) {
+            return takeVisibleColumns(ellipsis, width);
+        }
+        var availableWidth = width - ellipsisWidth;
+        var leadingWidth = Math.max(1, (availableWidth + 1) / 2);
+        var trailingWidth = Math.max(0, availableWidth - leadingWidth);
+        return takeVisibleColumns(text, leadingWidth)
+            + ellipsis
+            + takeTrailingVisibleColumns(text, trailingWidth);
+    }
+
     public static List<String> wrapText(String text, int width) {
         Objects.requireNonNull(text, "text");
         if (width <= 0) {
@@ -172,6 +197,18 @@ public final class TerminalText {
         Objects.requireNonNull(text, "text");
         Objects.requireNonNull(background, "background");
         return background.apply(padRightVisible(takeVisibleColumns(text, width), width));
+    }
+
+    private static String takeTrailingVisibleColumns(String text, int width) {
+        Objects.requireNonNull(text, "text");
+        if (width <= 0) {
+            return "";
+        }
+        var visibleWidth = visibleWidth(text);
+        if (visibleWidth <= width) {
+            return text;
+        }
+        return dropVisibleColumns(text, visibleWidth - width);
     }
 
     private static String nextToken(String text) {

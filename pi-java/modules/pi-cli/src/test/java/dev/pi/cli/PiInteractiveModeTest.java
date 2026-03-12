@@ -126,6 +126,25 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void preservesSessionNameWhenFooterMetaLineNeedsTruncation() {
+        var session = new FakeSession()
+            .withCwd("/workspace/projects/java/cli/pi-mono/very-long-directory-name")
+            .withSessionName("Scratchpad");
+        var terminal = new VirtualTerminal(32, 15);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+
+        var viewport = String.join("\n", terminal.getViewport());
+        assertThat(viewport)
+            .contains("...")
+            .contains("Scratchpad")
+            .doesNotContain("/workspace/projects/java/cli/pi-mono/very-long-directory-name");
+
+        mode.stop();
+    }
+
+    @Test
     void stylesFooterStatsAndModelSummaryWithAnsiHierarchy() {
         var session = new FakeSession().withContextWindow(16);
         var terminal = new RecordingTerminal(80, 14);
@@ -557,6 +576,7 @@ class PiInteractiveModeTest {
         private int resumeCount;
         private boolean autoCompactionEnabled = true;
         private int availableProviderCount = 1;
+        private String cwd = "/workspace";
         private String lastThinkingLevelChange;
         private String lastModelIdChange;
         private List<String> reloadWarnings = List.of();
@@ -682,7 +702,7 @@ class PiInteractiveModeTest {
 
         @Override
         public String cwd() {
-            return sessionManager.header().cwd();
+            return cwd;
         }
 
         @Override
@@ -880,6 +900,12 @@ class PiInteractiveModeTest {
 
         private FakeSession withAvailableProviderCount(int availableProviderCount) {
             this.availableProviderCount = availableProviderCount;
+            emitState();
+            return this;
+        }
+
+        private FakeSession withCwd(String cwd) {
+            this.cwd = cwd;
             emitState();
             return this;
         }

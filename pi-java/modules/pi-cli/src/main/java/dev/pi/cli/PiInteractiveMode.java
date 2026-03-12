@@ -353,7 +353,7 @@ public final class PiInteractiveMode implements AutoCloseable {
         if (parts.isEmpty()) {
             return "";
         }
-        return PiCliAnsi.muted(TerminalText.truncateToWidth(String.join(" • ", parts), width, "..."));
+        return PiCliAnsi.muted(TerminalText.truncateMiddleToWidth(String.join(" • ", parts), width, "..."));
     }
 
     private static String footerModelSummary(AgentState state) {

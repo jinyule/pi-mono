@@ -83,6 +83,8 @@
   - interactive footer provider-count gating first cut
 - 已完成第三十九刀：
   - interactive footer cwd/session line first cut
+- 已完成第四十刀：
+  - interactive footer cwd/session middle-truncation first cut
 
 ## 本轮落地
 
@@ -319,6 +321,10 @@
   - 第二行首版显示 `cwd • session name`
   - 第二行会走 muted 样式并按宽度安全截断
   - 两行顺序是 `stats` 在前、`cwd/session` 在后，避免只有一行能见时把关键统计裁掉
+- `TerminalText` 现在补了 `truncateMiddleToWidth()`：
+  - footer 第二行的 `cwd • session name` 不再只做尾部截断
+  - 长路径会改成中间截断，尽量同时保留路径前缀、路径尾部和 session name
+  - 视觉 copy 对齐 TS `FooterComponent` 的长 `pwd` 处理方式
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -397,6 +403,8 @@
 - `PiInteractiveModeTest`：idle 状态 footer 会显示 `0.0%/%window`
 - `PiInteractiveModeTest`：单 provider 场景 footer 不显示 `provider/`
 - `PiInteractiveModeTest`：`15` 行终端下 footer 会显示 `cwd • session name`
+- `TerminalTextTest`：middle truncation 会保留首尾可见片段，并兼容 ANSI 文本
+- `PiInteractiveModeTest`：长 `cwd` footer 第二行会改成中间截断，并保留 session name
 
 最近通过：
 
@@ -406,6 +414,6 @@
 
 ## 下一步建议
 
-1. footer parity：继续评估 git branch 第二行与更长 cwd 的截断 copy
+1. footer parity：继续评估 git branch 第二行数据源，以及是否补 `cwd (branch) • session` 组合 copy
 2. selector parity：继续评估 model/settings selector 是否复用同一套层级
 3. keybindings：继续评估 cycleModelBackward / selectModel / newSession / followUp / dequeue 等动作
