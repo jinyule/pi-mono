@@ -82,7 +82,9 @@ class PiModelSelectorTest {
             }
         );
 
-        assertThat(selector.render(100)).anyMatch(line -> line.contains("Scoped"));
+        assertThat(selector.render(100)).anyMatch(line -> line.contains("Scope:"));
+        assertThat(selector.render(100)).anyMatch(line -> line.contains("tab scope (all/scoped)"));
+        assertThat(selector.render(100)).anyMatch(line -> line.contains("scoped"));
         assertThat(selector.render(100)).anyMatch(line -> line.contains("claude-3-7-sonnet"));
 
         selector.handleInput("\t");

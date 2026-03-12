@@ -117,6 +117,8 @@
   - interactive model selector detail panel container first cut
 - 已完成第五十六刀：
   - interactive model selector outer border first cut
+- 已完成第五十七刀：
+  - interactive model selector scope/hint copy first cut
 
 ## 本轮落地
 
@@ -562,6 +564,10 @@
   - 整个 selector 顶部和底部都会渲染 muted separator
   - 标题/提示/搜索框/列表现在都被包进统一 outer panel
   - 外框和 detail panel 会共存，形成更接近 TS `DynamicBorder + detail area` 的容器层级
+- `PiModelSelector` 现在继续把 scope copy 往 TS 靠：
+  - scope 行改成 `Scope: all | scoped`
+  - scoped selector 的 hint 行改成 `tab scope (all/scoped)`
+  - 其余 filter/select/cancel 提示继续保留，避免 Java 版交互提示回退
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+l`
@@ -704,6 +710,7 @@
 - `PiModelSelectorTest`：detail panel 会显示 `Model name:` / `Thinking:` / `Context:` 字段行
 - `PiModelSelectorTest`：detail panel 会渲染独立 separator 容器
 - `PiModelSelectorTest`：selector 会渲染顶部/底部 outer border
+- `PiModelSelectorTest`：scoped selector 会渲染 `Scope:` 和 `tab scope (all/scoped)` 文案
 
 最近通过：
 
@@ -713,7 +720,7 @@
 
 ## 下一步建议
 
-1. selector parity：继续评估 model selector 是否要补 TS 风格 `Scope:`/`tab scope` copy，或继续压 detail/title 的 ANSI 分层
+1. selector parity：继续评估 model selector 是否要补 title/detail 的 ANSI 分层，或继续压 current checkmark / warning/hint 的 TS copy
 2. settings selector parity：继续评估 `theme` / `hide thinking` / `quiet startup`；这些键在 Java 侧还缺真实 runtime 绑定
 3. pending queue parity：继续补 compaction queue 合并展示与恢复；steering/follow-up runtime queue 已接上，但 Java 侧仍没有 compaction pending queue
 4. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件

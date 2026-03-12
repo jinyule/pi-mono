@@ -58,7 +58,7 @@ public final class PiModelSelector implements Component, Focusable {
         lines.add(PiCliAnsi.bold("Select model"));
         if (!scopedModels.isEmpty()) {
             lines.add(scopeSummary());
-            lines.add(PiCliAnsi.muted("tab scope · type to filter · Enter selects · Esc cancels"));
+            lines.add(PiCliAnsi.muted("tab scope (all/scoped) · type to filter · Enter selects · Esc cancels"));
         } else {
             lines.add(PiCliAnsi.warning("Only showing models with configured API keys (see README for details)"));
             lines.add(PiCliAnsi.muted("Type to filter · Enter selects · Esc cancels"));
@@ -133,9 +133,9 @@ public final class PiModelSelector implements Component, Focusable {
     }
 
     private String scopeSummary() {
-        var all = scope == Scope.ALL ? PiCliAnsi.accent("◉ All") : PiCliAnsi.muted("○ All");
-        var scoped = scope == Scope.SCOPED ? PiCliAnsi.accent("◉ Scoped") : PiCliAnsi.muted("○ Scoped");
-        return all + PiCliAnsi.muted(" | ") + scoped;
+        var all = scope == Scope.ALL ? PiCliAnsi.accent("all") : PiCliAnsi.muted("all");
+        var scoped = scope == Scope.SCOPED ? PiCliAnsi.accent("scoped") : PiCliAnsi.muted("scoped");
+        return PiCliAnsi.muted("Scope: ") + all + PiCliAnsi.muted(" | ") + scoped;
     }
 
     private static SelectItem toSelectItem(PiInteractiveSession.SelectableModel model) {
