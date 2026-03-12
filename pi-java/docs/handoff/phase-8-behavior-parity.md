@@ -143,6 +143,8 @@
 
 - 已完成第六十八刀：
   - interactive app keybinding toggle-thinking parity first cut
+- 已完成第六十九刀：
+  - interactive app keybinding clear parity first cut
 
 ## 本轮落地
 
@@ -789,6 +791,9 @@
 - PiInteractiveMode 现在会直接复用 hide-thinking setting 路径切换 thinking block 可见性，并立即刷新 transcript + status（Thinking blocks: hidden|visible）
 - KeyMatcher 现在补了 ctrl+t，避免默认 toggle-thinking 键位在 Java 侧失效
 - PiCliModuleTest / PiInteractiveModeTest / KeyMatcherTest 现在覆盖 toggle-thinking 的 loader alias、默认键位匹配和 interactive transcript/status 切换
+- PiAppAction / PiAppKeybindings / PiCliKeybindingsLoader 现在补了 clear app action、默认 ctrl+c 和 keybindings.json alias
+- PiInteractiveMode 现在会先 clear editor，再在 500ms 内第二次 clear 时退出，贴近 TS 的 clear once / exit twice 语义
+- PiCliModuleTest / PiInteractiveModeTest 现在覆盖 clear 的 loader alias、editor clear 和 double-clear exit
 
 最近通过：
 
@@ -799,6 +804,6 @@
 ## 下一步建议
 
 1. selector parity：继续评估 model selector 是否要补 all-scope warning/hint copy 的 TS 细节，或继续压空状态 copy/层级
-2. settings selector parity：继续评估 `theme` 等剩余项；当前已补 hint/keybinding parity、hide-thinking transcript parity、quiet-startup header parity，以及 toggleThinking app keybinding，但 Java 侧仍未覆盖 TS 的 startup resource listing / theme runtime
+2. settings selector parity：继续评估 `theme` 等剩余项；当前已补 hint/keybinding parity、hide-thinking transcript parity、quiet-startup header parity，以及 toggleThinking / clear app keybinding，但 Java 侧仍未覆盖 TS 的 startup resource listing / theme runtime
 3. pending queue parity：继续补 compaction queue 合并展示与恢复；steering/follow-up runtime queue 已接上，但 Java 侧仍没有 compaction pending queue
 4. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件

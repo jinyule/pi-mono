@@ -595,6 +595,52 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void usesAppKeybindingForClear() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(80, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+        var previousApp = PiAppKeybindings.global();
+        try {
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(PiAppAction.CLEAR, java.util.List.of("alt+c"))));
+
+            mode.start();
+            terminal.sendInput("draft");
+            terminal.sendInput("\u001bc");
+            terminal.sendInput("next");
+            terminal.sendInput("\r");
+
+            assertThat(session.prompts).containsExactly("next");
+            assertThat(String.join("\n", terminal.getViewport())).contains("Assistant: Ack: next");
+        } finally {
+            PiAppKeybindings.setGlobal(previousApp);
+            mode.stop();
+        }
+    }
+
+    @Test
+    void clearTwiceRequestsExit() throws Exception {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(80, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+        var stopped = new CompletableFuture<Void>();
+        var previousApp = PiAppKeybindings.global();
+        try {
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(PiAppAction.CLEAR, java.util.List.of("alt+c"))));
+            mode.setOnStop(() -> stopped.complete(null));
+
+            mode.start();
+            terminal.sendInput("draft");
+            terminal.sendInput("\u001bc");
+            terminal.sendInput("\u001bc");
+
+            stopped.get(2, TimeUnit.SECONDS);
+        } finally {
+            PiAppKeybindings.setGlobal(previousApp);
+            mode.stop();
+        }
+    }
+
+    @Test
     void usesAppKeybindingForResume() {
         var session = new FakeSession();
         var terminal = new VirtualTerminal(80, 16);

@@ -37,6 +37,7 @@ public final class PiInteractiveMode implements AutoCloseable {
     private boolean started;
     private String manualStatus;
     private Runnable onStop;
+    private long lastClearTimeMillis;
 
     public PiInteractiveMode(PiInteractiveSession session) {
         this(session, new ProcessTerminal());
@@ -730,6 +731,10 @@ public final class PiInteractiveMode implements AutoCloseable {
                 session.abort();
                 return;
             }
+            if (appKeybindings.matches(data, PiAppAction.CLEAR)) {
+                handleClearCommand();
+                return;
+            }
             if (appKeybindings.matches(data, PiAppAction.RESUME)) {
                 handleResumeCommand();
                 return;
@@ -801,6 +806,17 @@ public final class PiInteractiveMode implements AutoCloseable {
             manualStatus = "Error: " + rootMessage(exception);
         }
         renderState(session.state());
+    }
+
+    private void handleClearCommand() {
+        var now = System.currentTimeMillis();
+        if (now - lastClearTimeMillis < 500) {
+            requestExit();
+            return;
+        }
+        input.setValue("");
+        lastClearTimeMillis = now;
+        tui.requestRender();
     }
 
     private void handleCycleModelForwardCommand() {

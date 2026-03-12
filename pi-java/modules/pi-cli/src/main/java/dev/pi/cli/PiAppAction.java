@@ -2,6 +2,7 @@ package dev.pi.cli;
 
 enum PiAppAction {
     INTERRUPT,
+    CLEAR,
     RESUME,
     CYCLE_MODEL_FORWARD,
     CYCLE_MODEL_BACKWARD,
