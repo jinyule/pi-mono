@@ -7,6 +7,7 @@ import dev.pi.agent.runtime.AgentMessages;
 import dev.pi.agent.runtime.AgentState;
 import dev.pi.ai.model.Message;
 import dev.pi.ai.model.ThinkingLevel;
+import dev.pi.ai.model.Transport;
 import dev.pi.ai.stream.Subscription;
 import dev.pi.session.InstructionResources;
 import dev.pi.session.SessionManager;
@@ -43,6 +44,9 @@ public final class PiSdkSession {
         if (resolvedThinkingLevel == null) {
             resolvedThinkingLevel = toThinkingLevel(options.settingsManager().effective().getString("/defaultThinkingLevel"));
         }
+        var resolvedTransport = options.transport() != null
+            ? options.transport()
+            : toTransport(options.settingsManager().effective().getString("/transport"));
         var builder = Agent.builder(options.model())
             .systemPrompt(SessionPromptComposer.compose(
                 options.systemPrompt(),
@@ -70,8 +74,8 @@ public final class PiSdkSession {
         if (options.apiKey() != null) {
             builder.apiKey(options.apiKey());
         }
-        if (options.transport() != null) {
-            builder.transport(options.transport());
+        if (resolvedTransport != null) {
+            builder.transport(resolvedTransport);
         }
         if (options.cacheRetention() != null) {
             builder.cacheRetention(options.cacheRetention());
@@ -190,6 +194,13 @@ public final class PiSdkSession {
             return Agent.QueueMode.ALL;
         }
         return Agent.QueueMode.ONE_AT_A_TIME;
+    }
+
+    private static Transport toTransport(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return Transport.fromValue(value);
     }
 
     public record SessionPersistenceError(

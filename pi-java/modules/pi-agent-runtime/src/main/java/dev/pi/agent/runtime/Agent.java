@@ -39,7 +39,7 @@ public final class Agent {
     private final AgentLoopConfig.AssistantStreamFunction streamFunction;
     private final AgentLoopConfig.ApiKeyProvider apiKeyProvider;
     private final String apiKey;
-    private final Transport transport;
+    private volatile Transport transport;
     private final CacheRetention cacheRetention;
     private volatile String sessionId;
     private final Map<String, String> headers;
@@ -112,6 +112,14 @@ public final class Agent {
 
     public void setThinkingLevel(ThinkingLevel thinkingLevel) {
         emitState(updateState(current -> current.withThinkingLevel(thinkingLevel)));
+    }
+
+    public void setTransport(Transport transport) {
+        this.transport = transport;
+    }
+
+    public Transport transport() {
+        return transport;
     }
 
     public void setSessionId(String sessionId) {

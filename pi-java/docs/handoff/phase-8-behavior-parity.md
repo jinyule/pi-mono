@@ -101,6 +101,8 @@
   - interactive model selector all/scoped dual-scope first cut
 - 已完成第四十八刀：
   - startup model resolution saved-defaults first cut
+- 已完成第四十九刀：
+  - interactive transport setting first cut
 
 ## 本轮落地
 
@@ -480,6 +482,23 @@
   - `defaultProvider + defaultModel` 同时存在时走精确 provider/model 命中
   - 只有 `defaultModel` 时，会在 registry 里做唯一 model id 命中
   - 保存的默认模型失效或变得不唯一时，会回退到原有启动解析逻辑，不会把 CLI 启动卡死
+- `PiInteractiveSession.SettingsSelection` 现在补了 `transport` 字段：
+  - `/settings` overlay 可以显示当前 transport
+  - 默认值统一规范成 `auto`
+- `PiSettingsSelector` 现在补了 `Transport` 项：
+  - 当前首版提供 `auto` / `sse` / `websocket`
+  - 修改后会立即回调 session `updateSetting("transport", ...)`
+- `PiSdkSession.create()` 现在会从 settings 恢复 transport：
+  - `CreateAgentSessionOptions.transport()` 显式传入时优先
+  - 否则回读 settings 里的 `/transport`
+  - 恢复后会写进 `AgentLoopConfig -> SimpleStreamOptions.transport`
+- `Agent` 现在补了可变 transport：
+  - 新增 `setTransport()` / `transport()`
+  - session 内修改 transport 后，后续 prompt 会使用新 transport，不用重建 session
+- `PiAgentSession.updateSetting()` 现在补了 `transport` 分支：
+  - 会把 `auto` 解释成 `null` transport
+  - 会立即更新当前 agent transport
+  - 同时持久化 global settings 的 `/transport`
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+l`
@@ -606,6 +625,8 @@
 - `PiCliModuleTest`：startup model resolution 会优先使用保存的 `defaultProvider/defaultModel`
 - `PiCliModuleTest`：只有 `defaultModel` 且唯一命中时，也会恢复保存的默认模型
 - `PiCliModuleTest`：保存的默认模型失效时会回退到原有解析逻辑
+- `PiAgentSessionTest`：startup 会从 settings 恢复 `transport`，且 `/settings` 更新后会影响后续 prompt 的 request options
+- `PiSettingsSelectorIntegrationTest`：`/settings` overlay 会显示 `Transport`，并可切换到 `sse`
 
 最近通过：
 
@@ -616,6 +637,6 @@
 ## 下一步建议
 
 1. selector parity：继续把 model selector 的 all-scope 搜索/排序向 TS 靠（当前还是 `SelectList` 过滤，不是 TS 的自定义列表/详情布局）
-2. settings selector parity：继续扩到 `theme` / `transport` / `hide thinking` / `quiet startup` 等已存在 settings 面
+2. settings selector parity：继续扩到 `theme` / `hide thinking` / `quiet startup` 等已存在 settings 面
 3. pending queue parity：补 steering / compaction queue 合并展示与恢复（前提是先补 Java CLI steering 入口）
 4. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件

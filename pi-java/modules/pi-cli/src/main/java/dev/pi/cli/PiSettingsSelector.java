@@ -49,6 +49,14 @@ public final class PiSettingsSelector implements Component, Focusable {
             List.of("one-at-a-time", "all"),
             null
         ));
+        items.add(new SettingItem(
+            "transport",
+            "Transport",
+            "Preferred provider transport for new requests",
+            settings.transport(),
+            List.of("auto", "sse", "websocket"),
+            null
+        ));
         if (settings.reasoningAvailable()) {
             items.add(new SettingItem(
                 "thinking",

@@ -309,6 +309,7 @@ public final class PiAgentSession implements PiInteractiveSession {
             settingsManager.effective().getBoolean("/compaction/enabled", true),
             queueModeValue(sdkSession.agent().steeringMode()),
             queueModeValue(sdkSession.agent().followUpMode()),
+            transportValue(sdkSession.agent().transport()),
             sdkSession.state().model().reasoning(),
             thinkingLevel,
             sdkSession.state().model().reasoning() ? AVAILABLE_THINKING_LEVELS : List.of()
@@ -323,6 +324,7 @@ public final class PiAgentSession implements PiInteractiveSession {
             case "autocompact" -> updateAutoCompaction(value);
             case "steering-mode" -> updateQueueModeSetting(value, true);
             case "follow-up-mode" -> updateQueueModeSetting(value, false);
+            case "transport" -> updateTransportSetting(value);
             case "thinking" -> updateThinkingSetting(value);
             default -> throw new IllegalArgumentException("Unknown setting: " + settingId);
         }
@@ -1039,10 +1041,20 @@ public final class PiAgentSession implements PiInteractiveSession {
         return queueMode == Agent.QueueMode.ALL ? "all" : "one-at-a-time";
     }
 
+    private static String transportValue(Transport transport) {
+        return transport == null ? "auto" : transport.value();
+    }
+
     private static String normalizeThinkingLevel(String value) {
         if ("off".equals(value)) {
             return value;
         }
         return ThinkingLevel.fromValue(value).value();
+    }
+
+    private void updateTransportSetting(String value) {
+        var transport = "auto".equals(value) ? null : Transport.fromValue(value);
+        sdkSession.agent().setTransport(transport);
+        settingsManager.updateGlobal(settings -> settings.withMutations(root -> root.put("transport", value)));
     }
 }

@@ -65,10 +65,33 @@ class PiSettingsSelectorIntegrationTest {
         mode.stop();
     }
 
+    @Test
+    void settingsSelectorTogglesTransport() {
+        var session = new FakeSettingsSession();
+        var terminal = new VirtualTerminal(90, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("/settings");
+        terminal.sendInput("\r");
+
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Transport")));
+
+        terminal.sendInput("trans");
+        terminal.sendInput(" ");
+        terminal.sendInput("\u001b");
+
+        waitFor(() -> !String.join("\n", terminal.getViewport()).contains("Settings"));
+        assertThat(session.updatedSettings).contains("transport=sse");
+
+        mode.stop();
+    }
+
     private static final class FakeSettingsSession implements PiInteractiveSession {
         private final CopyOnWriteArrayList<Consumer<AgentState>> stateListeners = new CopyOnWriteArrayList<>();
         private final CopyOnWriteArrayList<String> updatedSettings = new CopyOnWriteArrayList<>();
         private boolean autoCompactionEnabled = true;
+        private String transport = "auto";
         private AgentState state = new AgentState(
             "",
             new Model(
@@ -152,6 +175,7 @@ class PiSettingsSelectorIntegrationTest {
                 autoCompactionEnabled,
                 "one-at-a-time",
                 "one-at-a-time",
+                transport,
                 state.model().reasoning(),
                 state.thinkingLevel() == null ? "off" : state.thinkingLevel().value(),
                 List.of("off", "minimal", "low", "medium", "high", "xhigh")
@@ -163,6 +187,9 @@ class PiSettingsSelectorIntegrationTest {
             updatedSettings.add(settingId + "=" + value);
             if ("autocompact".equals(settingId)) {
                 autoCompactionEnabled = "true".equals(value);
+            }
+            if ("transport".equals(settingId)) {
+                transport = value;
             }
             if ("thinking".equals(settingId)) {
                 state = state.withThinkingLevel("off".equals(value) ? null : ThinkingLevel.fromValue(value));

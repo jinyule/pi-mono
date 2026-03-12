@@ -11,6 +11,7 @@ import dev.pi.ai.model.Model;
 import dev.pi.ai.model.StopReason;
 import dev.pi.ai.model.TextContent;
 import dev.pi.ai.model.ThinkingLevel;
+import dev.pi.ai.model.Transport;
 import dev.pi.ai.model.Usage;
 import dev.pi.ai.stream.AssistantMessageEventStream;
 import dev.pi.session.InstructionResourceLoader;
@@ -318,6 +319,41 @@ class PiAgentSessionTest {
         assertThat(sessionManager.entries().getLast()).isInstanceOf(dev.pi.session.SessionEntry.ThinkingLevelChangeEntry.class);
         assertThat(((dev.pi.session.SessionEntry.ThinkingLevelChangeEntry) sessionManager.entries().getLast()).thinkingLevel())
             .isEqualTo("high");
+    }
+
+    @Test
+    void restoresAndUpdatesTransportSettingForFuturePrompts() {
+        var observedTransports = new java.util.concurrent.CopyOnWriteArrayList<Transport>();
+        var settingsManager = SettingsManager.inMemory(
+            Settings.empty().withMutations(root -> root.put("transport", "websocket")),
+            Settings.empty()
+        );
+        var session = PiAgentSession.builder(
+            testModel(),
+            SessionManager.inMemory("/workspace"),
+            settingsManager,
+            new InstructionResources(List.of(), "", List.of())
+        )
+            .streamFunction((model, context, options) -> {
+                observedTransports.add(options.transport());
+                return fakeAssistant("Ack").stream(model, context, options);
+            })
+            .build();
+
+        assertThat(session.settingsSelection().transport()).isEqualTo("websocket");
+
+        session.prompt("before").toCompletableFuture().join();
+        session.waitForIdle().toCompletableFuture().join();
+
+        session.updateSetting("transport", "sse");
+
+        assertThat(settingsManager.effective().getString("/transport")).isEqualTo("sse");
+        assertThat(session.settingsSelection().transport()).isEqualTo("sse");
+
+        session.prompt("after").toCompletableFuture().join();
+        session.waitForIdle().toCompletableFuture().join();
+
+        assertThat(observedTransports).containsExactly(Transport.WEBSOCKET, Transport.SSE);
     }
 
     @Test
