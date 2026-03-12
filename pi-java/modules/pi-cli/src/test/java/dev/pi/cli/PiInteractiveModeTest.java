@@ -133,6 +133,23 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void preservesModelSummaryInNarrowFooter() {
+        var session = new FakeSession().withContextWindow(16);
+        var terminal = new VirtualTerminal(24, 14);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("Hello");
+        terminal.sendInput("\r");
+
+        assertThat(String.join("\n", terminal.getViewport()))
+            .contains("↑1")
+            .contains("test-...");
+
+        mode.stop();
+    }
+
+    @Test
     void rendersReasoningThinkingLevelInFooter() {
         var session = new FakeSession().withReasoningModel("reasoning-model", ThinkingLevel.HIGH);
         var terminal = new RecordingTerminal(100, 14);

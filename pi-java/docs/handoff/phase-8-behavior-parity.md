@@ -71,6 +71,8 @@
   - interactive cycleModelForward app keybinding first cut
 - 已完成第三十三刀：
   - interactive footer context window indicator first cut
+- 已完成第三十四刀：
+  - interactive footer narrow-width truncation first cut
 
 ## 本轮落地
 
@@ -278,6 +280,11 @@
   - 默认走 muted 样式
   - 占用达到 `70%` 时切到 warning，达到 `90%` 时切到 error
   - 没有 assistant usage 或 model 未声明 context window 时，不显示该指标
+- `PiInteractiveMode` 现在继续把 footer 的窄宽度策略往 TS 靠：
+  - 单行放不下时，不再直接丢掉右侧 model 摘要
+  - 会优先给右侧 model 留出最小可读宽度
+  - 左侧 usage/context 统计会截断到剩余宽度
+  - 极窄宽度下则直接退回只显示右侧 model
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -350,6 +357,7 @@
 - `PiCliModuleTest`：`--models` pattern 会解析成 scoped cycle models
 - `PiInteractiveModeTest`：footer 会显示 context window 占用比例
 - `PiInteractiveModeTest`：高 context 占用时 footer indicator 会切到 error 样式
+- `PiInteractiveModeTest`：窄宽度 footer 仍保留右侧 model 摘要
 
 最近通过：
 
@@ -359,6 +367,6 @@
 
 ## 下一步建议
 
-1. footer parity：继续评估 auto-compact 指标，以及更窄宽度下的截断策略
+1. footer parity：继续评估 auto-compact 指标
 2. selector parity：继续评估 model/settings selector 是否复用同一套层级
 3. keybindings：继续评估 cycleModelBackward / selectModel / newSession / followUp / dequeue 等动作

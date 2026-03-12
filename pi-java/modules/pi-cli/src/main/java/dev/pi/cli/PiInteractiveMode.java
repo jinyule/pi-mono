@@ -220,13 +220,14 @@ public final class PiInteractiveMode implements AutoCloseable {
                 + " ".repeat(width - leftWidth - rightWidth)
                 + renderFooterModelSummary(state, rightWidth);
         }
-        var availableRightWidth = width - leftWidth - 2;
-        if (availableRightWidth > 3) {
-            return footerStats.styled()
+        var reservedRightWidth = Math.min(rightWidth, Math.max(8, width / 3));
+        var availableLeftWidth = width - reservedRightWidth - 2;
+        if (availableLeftWidth >= 4) {
+            return PiCliAnsi.muted(TerminalText.truncateToWidth(plainLeft, availableLeftWidth, "..."))
                 + "  "
-                + renderFooterModelSummary(state, availableRightWidth);
+                + renderFooterModelSummary(state, reservedRightWidth);
         }
-        return PiCliAnsi.muted(TerminalText.truncateToWidth(plainLeft, width, "..."));
+        return renderFooterModelSummary(state, width);
     }
 
     private static FooterStats footerStats(AgentState state) {
