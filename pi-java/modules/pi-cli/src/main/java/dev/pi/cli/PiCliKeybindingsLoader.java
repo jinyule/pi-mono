@@ -47,6 +47,7 @@ final class PiCliKeybindingsLoader {
         Map.entry("clear", PiAppAction.CLEAR),
         Map.entry("exit", PiAppAction.EXIT),
         Map.entry("suspend", PiAppAction.SUSPEND),
+        Map.entry("externalEditor", PiAppAction.EXTERNAL_EDITOR),
         Map.entry("resume", PiAppAction.RESUME),
         Map.entry("cycleModelForward", PiAppAction.CYCLE_MODEL_FORWARD),
         Map.entry("cycleModelBackward", PiAppAction.CYCLE_MODEL_BACKWARD),

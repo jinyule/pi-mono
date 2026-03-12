@@ -29,6 +29,7 @@ public final class PiInteractiveMode implements AutoCloseable {
     private final Tui tui;
     private final PiCopyCommand copyCommand;
     private final PiClipboardImage clipboardImage;
+    private final PiExternalEditor externalEditor;
     private final Runnable suspendAction;
     private final Text header = new Text("", 0, 0, null);
     private final Text transcript = new Text("", 1, 0, null);
@@ -75,7 +76,7 @@ public final class PiInteractiveMode implements AutoCloseable {
         PiCopyCommand copyCommand,
         PiClipboardImage clipboardImage
     ) {
-        this(session, terminal, copyCommand, clipboardImage, null);
+        this(session, terminal, copyCommand, clipboardImage, null, null);
     }
 
     PiInteractiveMode(
@@ -85,11 +86,23 @@ public final class PiInteractiveMode implements AutoCloseable {
         PiClipboardImage clipboardImage,
         Runnable suspendAction
     ) {
+        this(session, terminal, copyCommand, clipboardImage, null, suspendAction);
+    }
+
+    PiInteractiveMode(
+        PiInteractiveSession session,
+        Terminal terminal,
+        PiCopyCommand copyCommand,
+        PiClipboardImage clipboardImage,
+        PiExternalEditor externalEditor,
+        Runnable suspendAction
+    ) {
         this.session = Objects.requireNonNull(session, "session");
         this.terminal = Objects.requireNonNull(terminal, "terminal");
         this.copyCommand = Objects.requireNonNull(copyCommand, "copyCommand");
         this.clipboardImage = Objects.requireNonNull(clipboardImage, "clipboardImage");
         this.tui = new Tui(terminal, true);
+        this.externalEditor = externalEditor == null ? PiExternalEditor.system(tui) : externalEditor;
         this.suspendAction = suspendAction == null ? createSuspendAction() : suspendAction;
         this.tui.addChild(header);
         this.tui.addChild(transcript);
@@ -801,6 +814,10 @@ public final class PiInteractiveMode implements AutoCloseable {
                 handleSuspendCommand();
                 return;
             }
+            if (appKeybindings.matches(data, PiAppAction.EXTERNAL_EDITOR)) {
+                handleExternalEditorCommand();
+                return;
+            }
             if (appKeybindings.matches(data, PiAppAction.RESUME)) {
                 handleResumeCommand();
                 return;
@@ -886,6 +903,26 @@ public final class PiInteractiveMode implements AutoCloseable {
         try {
             suspendAction.run();
             manualStatus = null;
+        } catch (UnsupportedOperationException exception) {
+            manualStatus = exception.getMessage();
+        } catch (RuntimeException exception) {
+            manualStatus = "Error: " + rootMessage(exception);
+        }
+        renderState(session.state());
+    }
+
+    private void handleExternalEditorCommand() {
+        try {
+            var editedText = externalEditor.edit(input.getValue());
+            if (editedText != null) {
+                var normalizedText = normalizeExternalEditorText(editedText);
+                replaceInputValue(normalizedText);
+                manualStatus = normalizedText.equals(stripTrailingSingleLineBreak(editedText))
+                    ? "Loaded text from external editor"
+                    : "Loaded text from external editor (flattened to single line)";
+            } else {
+                manualStatus = null;
+            }
         } catch (UnsupportedOperationException exception) {
             manualStatus = exception.getMessage();
         } catch (RuntimeException exception) {
@@ -1048,6 +1085,13 @@ public final class PiInteractiveMode implements AutoCloseable {
         return PiCliAnsi.muted(TerminalText.truncateToWidth(text, Math.max(1, width), "..."));
     }
 
+    private void replaceInputValue(String value) {
+        input.setValue("");
+        if (value != null && !value.isEmpty()) {
+            input.handleInput(value);
+        }
+    }
+
     private static String appKeyDisplay(PiAppAction action, String fallback) {
         var keys = PiAppKeybindings.global().getKeys(action);
         return keys.isEmpty() ? fallback : keys.getFirst();
@@ -1109,5 +1153,25 @@ public final class PiInteractiveMode implements AutoCloseable {
         return System.getProperty("os.name", "")
             .toLowerCase(Locale.ROOT)
             .contains("win");
+    }
+
+    private static String normalizeExternalEditorText(String text) {
+        return stripTrailingSingleLineBreak(text)
+            .replace("\r\n", "\n")
+            .replace('\r', '\n')
+            .replace('\n', ' ');
+    }
+
+    private static String stripTrailingSingleLineBreak(String text) {
+        if (text == null || text.isEmpty()) {
+            return "";
+        }
+        if (text.endsWith("\r\n")) {
+            return text.substring(0, text.length() - 2);
+        }
+        if (text.endsWith("\n") || text.endsWith("\r")) {
+            return text.substring(0, text.length() - 1);
+        }
+        return text;
     }
 }

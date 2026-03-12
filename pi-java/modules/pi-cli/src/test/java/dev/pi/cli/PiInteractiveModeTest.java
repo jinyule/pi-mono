@@ -752,6 +752,71 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void usesAppKeybindingForExternalEditor() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(80, 16);
+        var mode = new PiInteractiveMode(
+            session,
+            terminal,
+            new PiCopyCommand(session, text -> {
+            }),
+            PiClipboardImage.system(),
+            currentText -> currentText + "\nnext line",
+            () -> {
+            }
+        );
+        var previousApp = PiAppKeybindings.global();
+        try {
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(PiAppAction.EXTERNAL_EDITOR, java.util.List.of("alt+g"))));
+
+            mode.start();
+            terminal.sendInput("draft");
+            terminal.sendInput("\u001bg");
+
+            assertThat(String.join("\n", terminal.getViewport()))
+                .contains("Loaded text from external editor (flattened to single line)")
+                .contains("> draft next line");
+
+            terminal.sendInput("\r");
+
+            assertThat(session.prompts).containsExactly("draft next line");
+        } finally {
+            PiAppKeybindings.setGlobal(previousApp);
+            mode.stop();
+        }
+    }
+
+    @Test
+    void showsExternalEditorConfigurationError() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(80, 16);
+        var mode = new PiInteractiveMode(
+            session,
+            terminal,
+            new PiCopyCommand(session, text -> {
+            }),
+            PiClipboardImage.system(),
+            currentText -> {
+                throw new UnsupportedOperationException("No editor configured. Set $VISUAL or $EDITOR environment variable.");
+            },
+            () -> {
+            }
+        );
+        var previousApp = PiAppKeybindings.global();
+        try {
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(PiAppAction.EXTERNAL_EDITOR, java.util.List.of("alt+g"))));
+
+            mode.start();
+            terminal.sendInput("\u001bg");
+
+            waitFor(() -> String.join("\n", terminal.getViewport()).contains("No editor configured. Set $VISUAL or $EDITOR environment variable."));
+        } finally {
+            PiAppKeybindings.setGlobal(previousApp);
+            mode.stop();
+        }
+    }
+
+    @Test
     void usesAppKeybindingForExpandTools() {
         var details = JsonNodeFactory.instance.objectNode()
             .put("path", "README.md")

@@ -236,6 +236,7 @@ class PiCliModuleTest {
               "clear": "alt+c",
               "exit": "alt+q",
               "suspend": "alt+s",
+              "externalEditor": "alt+g",
               "resume": "alt+u",
               "cycleModelForward": "alt+p",
               "cycleModelBackward": "alt+o",
@@ -281,6 +282,7 @@ class PiCliModuleTest {
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.CLEAR)).containsExactly("alt+c");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.EXIT)).containsExactly("alt+q");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.SUSPEND)).containsExactly("alt+s");
+            assertThat(PiAppKeybindings.global().getKeys(PiAppAction.EXTERNAL_EDITOR)).containsExactly("alt+g");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.RESUME)).containsExactly("alt+u");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.CYCLE_MODEL_FORWARD)).containsExactly("alt+p");
             assertThat(PiAppKeybindings.global().getKeys(PiAppAction.CYCLE_MODEL_BACKWARD)).containsExactly("alt+o");

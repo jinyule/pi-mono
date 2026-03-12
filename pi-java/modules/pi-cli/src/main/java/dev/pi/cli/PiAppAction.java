@@ -5,6 +5,7 @@ enum PiAppAction {
     CLEAR,
     EXIT,
     SUSPEND,
+    EXTERNAL_EDITOR,
     RESUME,
     CYCLE_MODEL_FORWARD,
     CYCLE_MODEL_BACKWARD,

@@ -26,6 +26,11 @@ class KeyMatcherTest {
     }
 
     @Test
+    void matchesConfiguredCtrlGSequence() {
+        assertThat(KeyMatcher.matches("\u0007", "ctrl+g")).isTrue();
+    }
+
+    @Test
     void matchesConfiguredCtrlVSequence() {
         assertThat(KeyMatcher.matches("\u0016", "ctrl+v")).isTrue();
     }

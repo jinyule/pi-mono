@@ -157,6 +157,8 @@
   - restartable process-terminal lifecycle first cut
 - 已完成第七十五刀：
   - interactive app keybinding suspend parity first cut
+- 已完成第七十六刀：
+  - interactive app keybinding external-editor parity first cut
 
 ## 本轮落地
 
@@ -826,6 +828,16 @@
 - PiAppAction / PiAppKeybindings / PiCliKeybindingsLoader 现在补了 suspend app action、默认 `ctrl+z` 和 keybindings.json alias
 - PiInteractiveMode 现在支持 suspend app keybinding；默认实现会在 POSIX 上 stop TUI -> `kill -TSTP <pid>` -> start TUI，Windows 上则明确提示 `Suspend is not supported on Windows`
 - PiCliModuleTest / PiInteractiveModeTest / KeyMatcherTest 现在覆盖 suspend 的 loader alias、interactive dispatch、unsupported 文案和 `ctrl+z` 键位匹配
+- PiAppAction / PiAppKeybindings / PiCliKeybindingsLoader 现在补了 externalEditor app action、默认 `ctrl+g` 和 keybindings.json alias
+- `PiExternalEditor` 现在提供 system 首版：
+  - 读取 `$VISUAL` / `$EDITOR`
+  - 写临时文件、stop TUI、以 inherited stdio 同步启动外部编辑器、退出后再 start TUI
+  - 非零退出码时保留原 editor 文本不变
+- PiInteractiveMode 现在支持 external editor app keybinding：
+  - 触发后会把当前 editor 文本交给外部编辑器
+  - 读回内容后会去掉单个末尾换行
+  - 因为当前 Java `Input` 仍是单行组件，其余换行会被压平成空格再写回 editor
+- PiCliModuleTest / PiInteractiveModeTest / KeyMatcherTest 现在覆盖 externalEditor 的 loader alias、interactive dispatch、missing-editor 文案、multiline flattening 和 `ctrl+g` 键位匹配
 
 最近通过：
 
