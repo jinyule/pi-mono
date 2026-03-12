@@ -69,6 +69,8 @@
   - interactive cycleThinkingLevel app keybinding first cut
 - 已完成第三十二刀：
   - interactive cycleModelForward app keybinding first cut
+- 已完成第三十三刀：
+  - interactive footer context window indicator first cut
 
 ## 本轮落地
 
@@ -270,6 +272,12 @@
   - 触发后调用 `session.cycleModelForward()`
   - 成功时状态行回显 `Switched to provider/model`
   - 若目标 thinking 非 `off`，会追加 `(thinking: level)`
+- `PiInteractiveMode` 现在继续把 footer context 指标接上：
+  - 基于最近一条 assistant message 的 `usage.totalTokens`
+  - 结合当前 model 的 `contextWindow`，在 footer 左侧追加 `x%/window`
+  - 默认走 muted 样式
+  - 占用达到 `70%` 时切到 warning，达到 `90%` 时切到 error
+  - 没有 assistant usage 或 model 未声明 context window 时，不显示该指标
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -340,6 +348,8 @@
 - `PiInteractiveModeTest`：app keybinding 驱动 model forward cycle
 - `PiCliModuleTest`：从 `keybindings.json` 加载 `cycleModelForward`
 - `PiCliModuleTest`：`--models` pattern 会解析成 scoped cycle models
+- `PiInteractiveModeTest`：footer 会显示 context window 占用比例
+- `PiInteractiveModeTest`：高 context 占用时 footer indicator 会切到 error 样式
 
 最近通过：
 
@@ -349,6 +359,6 @@
 
 ## 下一步建议
 
-1. footer parity：继续评估 context window/auto-compact 指标，以及更窄宽度下的截断策略
+1. footer parity：继续评估 auto-compact 指标，以及更窄宽度下的截断策略
 2. selector parity：继续评估 model/settings selector 是否复用同一套层级
 3. keybindings：继续评估 cycleModelBackward / selectModel / newSession / followUp / dequeue 等动作

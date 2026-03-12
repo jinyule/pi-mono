@@ -206,7 +206,8 @@ public final class PiInteractiveMode implements AutoCloseable {
     }
 
     private static String renderFooterStatsLine(AgentState state, int width) {
-        var plainLeft = footerUsageSummary(state);
+        var footerStats = footerStats(state);
+        var plainLeft = footerStats.plain();
         if (plainLeft.isBlank()) {
             return renderFooterModelSummary(state, width);
         }
@@ -215,17 +216,34 @@ public final class PiInteractiveMode implements AutoCloseable {
         var leftWidth = TerminalText.visibleWidth(plainLeft);
         var rightWidth = TerminalText.visibleWidth(plainRight);
         if (leftWidth + 2 + rightWidth <= width) {
-            return PiCliAnsi.muted(plainLeft)
+            return footerStats.styled()
                 + " ".repeat(width - leftWidth - rightWidth)
                 + renderFooterModelSummary(state, rightWidth);
         }
         var availableRightWidth = width - leftWidth - 2;
         if (availableRightWidth > 3) {
-            return PiCliAnsi.muted(plainLeft)
+            return footerStats.styled()
                 + "  "
                 + renderFooterModelSummary(state, availableRightWidth);
         }
         return PiCliAnsi.muted(TerminalText.truncateToWidth(plainLeft, width, "..."));
+    }
+
+    private static FooterStats footerStats(AgentState state) {
+        var usageSummary = footerUsageSummary(state);
+        var contextSummary = footerContextSummary(state);
+        if (usageSummary.isBlank()) {
+            return contextSummary == null
+                ? new FooterStats("", "")
+                : new FooterStats(contextSummary.plain(), contextSummary.styled());
+        }
+        if (contextSummary == null) {
+            return new FooterStats(usageSummary, PiCliAnsi.muted(usageSummary));
+        }
+        return new FooterStats(
+            usageSummary + " " + contextSummary.plain(),
+            PiCliAnsi.muted(usageSummary) + " " + contextSummary.styled()
+        );
     }
 
     private static String footerUsageSummary(AgentState state) {
@@ -262,6 +280,42 @@ public final class PiInteractiveMode implements AutoCloseable {
             parts.add("$" + String.format(Locale.ROOT, "%.3f", totalCost));
         }
         return String.join(" ", parts);
+    }
+
+    private static FooterSegment footerContextSummary(AgentState state) {
+        var contextWindow = state.model().contextWindow();
+        if (contextWindow <= 0) {
+            return null;
+        }
+        var latestUsage = latestAssistantUsage(state);
+        if (latestUsage == null || latestUsage.totalTokens() <= 0) {
+            return null;
+        }
+
+        var percent = latestUsage.totalTokens() * 100.0 / contextWindow;
+        var plain = String.format(
+            Locale.ROOT,
+            "%.1f%%/%s",
+            percent,
+            formatTokens(contextWindow)
+        );
+        if (percent >= 90.0) {
+            return new FooterSegment(plain, PiCliAnsi.error(plain));
+        }
+        if (percent >= 70.0) {
+            return new FooterSegment(plain, PiCliAnsi.warning(plain));
+        }
+        return new FooterSegment(plain, PiCliAnsi.muted(plain));
+    }
+
+    private static dev.pi.ai.model.Usage latestAssistantUsage(AgentState state) {
+        for (var index = state.messages().size() - 1; index >= 0; index--) {
+            var message = state.messages().get(index);
+            if (message instanceof AgentMessage.AssistantMessage assistantMessage) {
+                return assistantMessage.usage();
+            }
+        }
+        return null;
     }
 
     private static String footerModelSummary(AgentState state) {
@@ -324,6 +378,10 @@ public final class PiInteractiveMode implements AutoCloseable {
         }
         return Math.round(count / 1_000_000.0) + "M";
     }
+
+    private record FooterStats(String plain, String styled) {}
+
+    private record FooterSegment(String plain, String styled) {}
 
     private void handleCopyCommand() {
         try {

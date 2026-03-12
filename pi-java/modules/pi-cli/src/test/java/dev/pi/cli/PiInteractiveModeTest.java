@@ -77,7 +77,7 @@ class PiInteractiveModeTest {
 
     @Test
     void rendersFooterUsageAndModelInfo() {
-        var session = new FakeSession();
+        var session = new FakeSession().withContextWindow(16);
         var terminal = new VirtualTerminal(80, 14);
         var mode = new PiInteractiveMode(session, terminal);
 
@@ -89,6 +89,7 @@ class PiInteractiveModeTest {
             .contains("↑1")
             .contains("↓1")
             .contains("$0.000")
+            .contains("12.5%/16")
             .contains("test-model");
 
         mode.stop();
@@ -96,7 +97,7 @@ class PiInteractiveModeTest {
 
     @Test
     void stylesFooterStatsAndModelSummaryWithAnsiHierarchy() {
-        var session = new FakeSession();
+        var session = new FakeSession().withContextWindow(16);
         var terminal = new RecordingTerminal(80, 14);
         var mode = new PiInteractiveMode(session, terminal);
 
@@ -108,7 +109,25 @@ class PiInteractiveModeTest {
 
         assertThat(terminal.output())
             .contains("\u001b[90m↑1 ↓1 $0.000\u001b[0m")
+            .contains("\u001b[90m12.5%/16\u001b[0m")
             .contains("\u001b[1mtest-model\u001b[0m");
+
+        mode.stop();
+    }
+
+    @Test
+    void highlightsFooterContextUsageWhenNearWindowLimit() {
+        var session = new FakeSession().withContextWindow(2);
+        var terminal = new RecordingTerminal(100, 14);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("Hello");
+        terminal.sendInput("\r");
+
+        waitFor(() -> terminal.output().contains("100.0%/2"));
+
+        assertThat(terminal.output()).contains("\u001b[31m100.0%/2\u001b[0m");
 
         mode.stop();
     }
@@ -671,6 +690,25 @@ class PiInteractiveModeTest {
                 null,
                 null
             )).withThinkingLevel(thinkingLevel);
+            emitState();
+            return this;
+        }
+
+        private FakeSession withContextWindow(int contextWindow) {
+            state = state.withModel(new Model(
+                state.model().id(),
+                state.model().name(),
+                state.model().api(),
+                state.model().provider(),
+                state.model().baseUrl(),
+                state.model().reasoning(),
+                state.model().input(),
+                state.model().cost(),
+                contextWindow,
+                state.model().maxTokens(),
+                state.model().headers(),
+                state.model().compat()
+            ));
             emitState();
             return this;
         }
