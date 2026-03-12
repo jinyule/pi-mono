@@ -275,7 +275,7 @@ public final class PiModelSelector implements Component, Focusable {
         lines.add(PiCliAnsi.accentBold("Selected model"));
         lines.add(TerminalText.truncateToWidth(renderSelectedModelTitle(model), width, "..."));
         for (var detailLine : selectedDetailLines(model)) {
-            lines.add(PiCliAnsi.muted(TerminalText.truncateToWidth("  " + detailLine, width, "...")));
+            lines.add(TerminalText.truncateToWidth(detailLine, width, "..."));
         }
         lines.add(separatorLine(width));
         return List.copyOf(lines);
@@ -296,15 +296,19 @@ public final class PiModelSelector implements Component, Focusable {
     private static List<String> selectedDetailLines(PiInteractiveSession.SelectableModel model) {
         var lines = new ArrayList<String>();
         if (model.modelName() != null && !model.modelName().isBlank() && !model.modelName().equals(model.modelId())) {
-            lines.add("Model name: " + model.modelName());
+            lines.add(detailField("Model name", model.modelName()));
         }
         if (model.reasoning()) {
-            lines.add("Thinking: " + model.thinkingLevel());
+            lines.add(detailField("Thinking", model.thinkingLevel()));
         }
         if (model.contextWindow() > 0) {
-            lines.add("Context: " + formatContextWindow(model.contextWindow()));
+            lines.add(detailField("Context", formatContextWindow(model.contextWindow())));
         }
         return List.copyOf(lines);
+    }
+
+    private static String detailField(String label, String value) {
+        return "  " + PiCliAnsi.bold(label + ":") + " " + PiCliAnsi.muted(value);
     }
 
     private static Integer searchScore(PiInteractiveSession.SelectableModel model, String query) {

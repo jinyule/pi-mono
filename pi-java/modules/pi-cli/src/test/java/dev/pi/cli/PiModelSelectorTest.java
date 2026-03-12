@@ -39,9 +39,12 @@ class PiModelSelectorTest {
         assertThat(lines).anyMatch(line -> line.contains("\u001b[1;36mSelected model"));
         assertThat(lines).anyMatch(line -> line.contains("\u001b[90mopenai/"));
         assertThat(lines).anyMatch(line -> line.contains("\u001b[1mgpt-5"));
-        assertThat(lines).anyMatch(line -> line.contains("Model name: GPT-5"));
-        assertThat(lines).anyMatch(line -> line.contains("Thinking: minimal"));
-        assertThat(lines).anyMatch(line -> line.contains("Context: 400k ctx"));
+        assertThat(lines).anyMatch(line -> line.contains("\u001b[1mModel name:"));
+        assertThat(lines).anyMatch(line -> line.contains("\u001b[90mGPT-5"));
+        assertThat(lines).anyMatch(line -> line.contains("\u001b[1mThinking:"));
+        assertThat(lines).anyMatch(line -> line.contains("\u001b[90mminimal"));
+        assertThat(lines).anyMatch(line -> line.contains("\u001b[1mContext:"));
+        assertThat(lines).anyMatch(line -> line.contains("\u001b[90m400k ctx"));
         assertThat(lines).anyMatch(line -> line.contains("\u001b[32m✓"));
         assertThat(lines).anyMatch(line -> line.contains("────"));
         assertThat(lines.getLast()).contains("────");
@@ -224,6 +227,7 @@ class PiModelSelectorTest {
         assertThat(lines).anyMatch(line -> line.contains("\u001b[1;36mSelected model"));
         assertThat(lines).anyMatch(line -> line.contains("\u001b[90manthropic/"));
         assertThat(lines).anyMatch(line -> line.contains("\u001b[1mclaude-3-7-sonnet"));
-        assertThat(lines).anyMatch(line -> line.contains("Model name: Claude 3.7 Sonnet"));
+        assertThat(lines).anyMatch(line -> line.contains("\u001b[1mModel name:"));
+        assertThat(lines).anyMatch(line -> line.contains("\u001b[90mClaude 3.7 Sonnet"));
     }
 }
