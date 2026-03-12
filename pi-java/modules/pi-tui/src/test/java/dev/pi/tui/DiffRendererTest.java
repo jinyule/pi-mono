@@ -56,6 +56,19 @@ class DiffRendererTest {
     }
 
     @Test
+    void shrinkDoesNotClearWhenDisabled() {
+        var terminal = new FakeTerminal(80, 24);
+        var renderer = new DiffRenderer(terminal);
+        renderer.setClearOnShrink(false);
+
+        renderer.render(List.of("alpha", "beta", "gamma"));
+        renderer.render(List.of("alpha"));
+
+        assertThat(terminal.writes()).hasSize(1);
+        assertThat(renderer.fullRedrawCount()).isEqualTo(1);
+    }
+
+    @Test
     void changeAboveViewportFallsBackToFullRedraw() {
         var terminal = new FakeTerminal(80, 2);
         var renderer = new DiffRenderer(terminal);

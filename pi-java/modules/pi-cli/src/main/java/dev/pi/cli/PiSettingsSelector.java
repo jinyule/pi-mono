@@ -146,11 +146,27 @@ public final class PiSettingsSelector implements Component, Focusable {
             )
         ));
         items.add(new SettingItem(
+            "show-hardware-cursor",
+            "Show hardware cursor",
+            "Show the terminal cursor while still positioning it for IME support",
+            settings.showHardwareCursor() ? "true" : "false",
+            List.of("true", "false"),
+            null
+        ));
+        items.add(new SettingItem(
             "editor-padding",
             "Editor padding",
             "Horizontal padding for input editor (0-3)",
             Integer.toString(settings.editorPaddingX()),
             List.of("0", "1", "2", "3"),
+            null
+        ));
+        items.add(new SettingItem(
+            "clear-on-shrink",
+            "Clear on shrink",
+            "Clear empty rows when content shrinks (may cause flicker)",
+            settings.clearOnShrink() ? "true" : "false",
+            List.of("true", "false"),
             null
         ));
 

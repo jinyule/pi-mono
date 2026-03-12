@@ -194,6 +194,22 @@ class PiSettingsSelectorIntegrationTest {
     }
 
     @Test
+    void settingsSelectorTogglesShowHardwareCursor() {
+        var updates = new CopyOnWriteArrayList<String>();
+        var selector = new PiSettingsSelector(
+            new FakeSettingsSession().settingsSelection(),
+            (settingId, value) -> updates.add(settingId + "=" + value),
+            () -> {
+            }
+        );
+
+        selector.handleInput("hardware");
+        selector.handleInput(" ");
+
+        assertThat(updates).contains("show-hardware-cursor=false");
+    }
+
+    @Test
     void settingsSelectorTogglesDoubleEscapeAction() {
         var updates = new CopyOnWriteArrayList<String>();
         var selector = new PiSettingsSelector(
@@ -223,6 +239,22 @@ class PiSettingsSelectorIntegrationTest {
         selector.handleInput(" ");
 
         assertThat(updates).contains("editor-padding=1");
+    }
+
+    @Test
+    void settingsSelectorTogglesClearOnShrink() {
+        var updates = new CopyOnWriteArrayList<String>();
+        var selector = new PiSettingsSelector(
+            new FakeSettingsSession().settingsSelection(),
+            (settingId, value) -> updates.add(settingId + "=" + value),
+            () -> {
+            }
+        );
+
+        selector.handleInput("clear");
+        selector.handleInput(" ");
+
+        assertThat(updates).contains("clear-on-shrink=false");
     }
 
     @Test
@@ -259,6 +291,8 @@ class PiSettingsSelectorIntegrationTest {
         private boolean quietStartup;
         private String doubleEscapeAction = "tree";
         private String theme = "dark";
+        private boolean showHardwareCursor = true;
+        private boolean clearOnShrink = true;
         private int editorPaddingX;
         private AgentState state = new AgentState(
             "",
@@ -352,7 +386,9 @@ class PiSettingsSelectorIntegrationTest {
                 editorPaddingX,
                 state.model().reasoning(),
                 state.thinkingLevel() == null ? "off" : state.thinkingLevel().value(),
-                List.of("off", "minimal", "low", "medium", "high", "xhigh")
+                List.of("off", "minimal", "low", "medium", "high", "xhigh"),
+                showHardwareCursor,
+                clearOnShrink
             );
         }
 
@@ -377,8 +413,14 @@ class PiSettingsSelectorIntegrationTest {
             if ("theme".equals(settingId)) {
                 theme = value;
             }
+            if ("show-hardware-cursor".equals(settingId)) {
+                showHardwareCursor = "true".equals(value);
+            }
             if ("editor-padding".equals(settingId)) {
                 editorPaddingX = Integer.parseInt(value);
+            }
+            if ("clear-on-shrink".equals(settingId)) {
+                clearOnShrink = "true".equals(value);
             }
             if ("thinking".equals(settingId)) {
                 state = state.withThinkingLevel("off".equals(value) ? null : ThinkingLevel.fromValue(value));

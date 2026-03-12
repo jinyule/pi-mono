@@ -329,7 +329,9 @@ public final class PiAgentSession implements PiInteractiveSession {
             settingsManager.effective().getInt("/editorPaddingX", 0),
             sdkSession.state().model().reasoning(),
             thinkingLevel,
-            sdkSession.state().model().reasoning() ? AVAILABLE_THINKING_LEVELS : List.of()
+            sdkSession.state().model().reasoning() ? AVAILABLE_THINKING_LEVELS : List.of(),
+            settingsManager.effective().getBoolean("/showHardwareCursor", true),
+            settingsManager.effective().getBoolean("/clearOnShrink", true)
         );
     }
 
@@ -346,7 +348,9 @@ public final class PiAgentSession implements PiInteractiveSession {
             case "quiet-startup" -> updateQuietStartupSetting(value);
             case "double-escape-action" -> updateDoubleEscapeActionSetting(value);
             case "theme" -> updateThemeSetting(value);
+            case "show-hardware-cursor" -> updateShowHardwareCursorSetting(value);
             case "editor-padding" -> updateEditorPaddingSetting(value);
+            case "clear-on-shrink" -> updateClearOnShrinkSetting(value);
             case "thinking" -> updateThinkingSetting(value);
             default -> throw new IllegalArgumentException("Unknown setting: " + settingId);
         }
@@ -1091,6 +1095,16 @@ public final class PiAgentSession implements PiInteractiveSession {
         }
         var normalized = padding;
         settingsManager.updateGlobal(settings -> settings.withMutations(root -> root.put("editorPaddingX", normalized)));
+    }
+
+    private void updateShowHardwareCursorSetting(String value) {
+        var enabled = parseBooleanSetting("show-hardware-cursor", value);
+        settingsManager.updateGlobal(settings -> settings.withMutations(root -> root.put("showHardwareCursor", enabled)));
+    }
+
+    private void updateClearOnShrinkSetting(String value) {
+        var enabled = parseBooleanSetting("clear-on-shrink", value);
+        settingsManager.updateGlobal(settings -> settings.withMutations(root -> root.put("clearOnShrink", enabled)));
     }
 
     private String doubleEscapeAction() {

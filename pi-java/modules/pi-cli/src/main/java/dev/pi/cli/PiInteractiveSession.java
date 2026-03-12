@@ -215,8 +215,44 @@ public interface PiInteractiveSession {
         int editorPaddingX,
         boolean reasoningAvailable,
         String thinkingLevel,
-        List<String> availableThinkingLevels
+        List<String> availableThinkingLevels,
+        boolean showHardwareCursor,
+        boolean clearOnShrink
     ) {
+        public SettingsSelection(
+            boolean autoCompact,
+            String steeringMode,
+            String followUpMode,
+            String transport,
+            boolean hideThinkingBlock,
+            boolean quietStartup,
+            String doubleEscapeAction,
+            String theme,
+            List<String> availableThemes,
+            int editorPaddingX,
+            boolean reasoningAvailable,
+            String thinkingLevel,
+            List<String> availableThinkingLevels
+        ) {
+            this(
+                autoCompact,
+                steeringMode,
+                followUpMode,
+                transport,
+                hideThinkingBlock,
+                quietStartup,
+                doubleEscapeAction,
+                theme,
+                availableThemes,
+                editorPaddingX,
+                reasoningAvailable,
+                thinkingLevel,
+                availableThinkingLevels,
+                true,
+                true
+            );
+        }
+
         public SettingsSelection {
             availableThemes = List.copyOf(availableThemes);
             availableThinkingLevels = List.copyOf(availableThinkingLevels);

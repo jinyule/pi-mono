@@ -222,6 +222,8 @@ public final class PiInteractiveMode implements AutoCloseable {
     private void renderState(AgentState state) {
         var settings = session.settingsSelection();
         PiCliAnsi.setTheme(previewTheme == null || previewTheme.isBlank() ? settings.theme() : previewTheme);
+        tui.setShowHardwareCursor(settings.showHardwareCursor());
+        tui.setClearOnShrink(settings.clearOnShrink());
         input.setPaddingX(settings.editorPaddingX());
         header.setText(renderHeader(state));
         transcript.setText(renderTranscript(state));

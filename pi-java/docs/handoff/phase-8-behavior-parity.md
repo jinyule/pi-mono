@@ -905,6 +905,15 @@
   - 每个 level 都带 reasoning 深度说明，例如 `Very brief reasoning (~1k tokens)` / `Deep reasoning (~16k tokens)`
   - `Enter` 提交，`Esc` 返回主 settings list，不会立刻改写当前值
 - PiSettingsSelectorIntegrationTest 现在覆盖 `Thinking level` submenu 的打开、说明文案和选择提交
+- PiInteractiveSession.SettingsSelection / PiAgentSession 现在补了 `showHardwareCursor` / `clearOnShrink` settings contract
+  - 默认值都保持 `true`，不改变当前 Java interactive 的既有渲染行为
+  - `updateSetting()` 会把两项分别持久化到 global settings 的 `/showHardwareCursor` 和 `/clearOnShrink`
+- PiSettingsSelector 现在新增 `Show hardware cursor` / `Clear on shrink` 两个条目
+  - `Show hardware cursor` 会切 TUI 是否显示真实终端光标，同时继续保留 Java 侧的定位逻辑
+  - `Clear on shrink` 会切 `DiffRenderer` 在内容收缩时是否强制 clear redraw
+- `Tui` 现在暴露 runtime setter，PiInteractiveMode 每次 `renderState()` 都会把 `showHardwareCursor` / `clearOnShrink` 同步到当前 TUI
+- `DiffRenderer` 现在在 `clearOnShrink=false` 且尾部整段收缩时不再强制 full redraw，避免这个 setting 变成空开关
+- DiffRendererTest / TuiTest / PiSettingsSelectorIntegrationTest 现在覆盖 `clear-on-shrink`、hardware cursor runtime toggle 和 settings selector 切换
 
 最近通过：
 
@@ -916,6 +925,6 @@ npm.cmd run check
 ## 下一步建议
 
 1. selector parity：继续评估 model selector 是否要补 all-scope warning/hint copy 的 TS 细节，或继续压空状态 copy/层级
-2. settings selector parity：继续评估 `theme` 等剩余项；当前已补 hint/keybinding parity、hide-thinking transcript parity、quiet-startup header parity、double-escape、editor-padding、dark/light runtime ANSI 主题切换、`Theme` submenu preview，以及 `Thinking level` submenu，但 Java 侧仍未覆盖 TS 的 startup resource listing / custom theme loader
+2. settings selector parity：继续评估 `theme` 等剩余项；当前已补 hint/keybinding parity、hide-thinking transcript parity、quiet-startup header parity、double-escape、editor-padding、dark/light runtime ANSI 主题切换、`Theme` submenu preview、`Thinking level` submenu，以及 hardware-cursor/clear-on-shrink，但 Java 侧仍未覆盖 TS 的 startup resource listing / custom theme loader
 3. pending queue parity：继续补 compaction queue 合并展示与恢复；steering/follow-up runtime queue 已接上，但 Java 侧仍没有 compaction pending queue
 4. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件

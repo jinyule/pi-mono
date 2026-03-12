@@ -75,6 +75,22 @@ public final class Tui {
         return showOverlay(component, OverlayOptions.defaults());
     }
 
+    public boolean showHardwareCursor() {
+        return showHardwareCursor;
+    }
+
+    public void setShowHardwareCursor(boolean showHardwareCursor) {
+        this.showHardwareCursor = showHardwareCursor;
+    }
+
+    public boolean clearOnShrink() {
+        return diffRenderer.clearOnShrink();
+    }
+
+    public void setClearOnShrink(boolean clearOnShrink) {
+        diffRenderer.setClearOnShrink(clearOnShrink);
+    }
+
     public void hideOverlay() {
         if (overlayStack.isEmpty()) {
             return;

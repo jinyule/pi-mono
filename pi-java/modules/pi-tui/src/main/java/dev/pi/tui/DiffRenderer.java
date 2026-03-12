@@ -88,6 +88,15 @@ public final class DiffRenderer {
         }
 
         if (firstChanged >= newLines.size()) {
+            if (!clearOnShrinkActive) {
+                cursorRow = Math.max(0, newLines.size() - 1);
+                hardwareCursorRow = cursorRow;
+                previousViewportTop = Math.max(0, maxLinesRendered - height);
+                previousLines = newLines;
+                previousWidth = width;
+                positionHardwareCursor(cursorPosition, newLines.size(), showHardwareCursor);
+                return;
+            }
             fullRender(newLines, width, height, true, cursorPosition, showHardwareCursor);
             return;
         }

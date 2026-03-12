@@ -24,6 +24,24 @@ class TuiTest {
     }
 
     @Test
+    void hardwareCursorSettingCanBeChangedAtRuntime() {
+        var terminal = new FakeTerminal(20, 6);
+        var tui = new Tui(terminal, false);
+        var input = new FakeInput("> " + Tui.CURSOR_MARKER + "x");
+
+        tui.addChild(input);
+        tui.setFocus(input);
+        tui.requestRender();
+        assertThat(terminal.showCursorCalls()).isZero();
+
+        tui.setShowHardwareCursor(true);
+        tui.requestRender();
+
+        assertThat(tui.showHardwareCursor()).isTrue();
+        assertThat(terminal.showCursorCalls()).isEqualTo(1);
+    }
+
+    @Test
     void showOverlayFocusesTopmostOverlayAndSupportsHideLifecycle() {
         var terminal = new FakeTerminal(20, 6);
         var tui = new Tui(terminal);
