@@ -900,6 +900,11 @@
   - theme submenu preview 时会覆盖 `renderState()` 使用的 palette
   - submenu cancel 和 overlay close 都会清掉 preview，避免把未提交的 theme 留在主界面
 - PiSettingsSelectorIntegrationTest 现在覆盖 theme submenu 的 `preview -> cancel restore` 和 submenu submit
+- PiSettingsSelector 现在把 `Thinking level` 也切成 submenu：
+  - option 文案对齐 TS：`off/minimal/low/medium/high/xhigh`
+  - 每个 level 都带 reasoning 深度说明，例如 `Very brief reasoning (~1k tokens)` / `Deep reasoning (~16k tokens)`
+  - `Enter` 提交，`Esc` 返回主 settings list，不会立刻改写当前值
+- PiSettingsSelectorIntegrationTest 现在覆盖 `Thinking level` submenu 的打开、说明文案和选择提交
 
 最近通过：
 
@@ -911,6 +916,6 @@ npm.cmd run check
 ## 下一步建议
 
 1. selector parity：继续评估 model selector 是否要补 all-scope warning/hint copy 的 TS 细节，或继续压空状态 copy/层级
-2. settings selector parity：继续评估 `theme` 等剩余项；当前已补 hint/keybinding parity、hide-thinking transcript parity、quiet-startup header parity、double-escape、editor-padding、dark/light runtime ANSI 主题切换，以及 `Theme` submenu preview，但 Java 侧仍未覆盖 TS 的 startup resource listing / custom theme loader
+2. settings selector parity：继续评估 `theme` 等剩余项；当前已补 hint/keybinding parity、hide-thinking transcript parity、quiet-startup header parity、double-escape、editor-padding、dark/light runtime ANSI 主题切换、`Theme` submenu preview，以及 `Thinking level` submenu，但 Java 侧仍未覆盖 TS 的 startup resource listing / custom theme loader
 3. pending queue parity：继续补 compaction queue 合并展示与恢复；steering/follow-up runtime queue 已接上，但 Java 侧仍没有 compaction pending queue
 4. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件

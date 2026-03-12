@@ -82,8 +82,18 @@ public final class PiSettingsSelector implements Component, Focusable {
                 "Thinking level",
                 "Reasoning depth for the current model",
                 settings.thinkingLevel(),
-                settings.availableThinkingLevels(),
-                null
+                List.of(),
+                (currentValue, done) -> new SelectSubmenu(
+                    "Thinking Level",
+                    "Select reasoning depth for thinking-capable models",
+                    settings.availableThinkingLevels().stream()
+                        .map(level -> new SelectItem(level, level, thinkingDescription(level)))
+                        .toList(),
+                    currentValue,
+                    done::accept,
+                    () -> done.accept(null),
+                    null
+                )
             ));
         }
         items.add(new SettingItem(
@@ -255,6 +265,18 @@ public final class PiSettingsSelector implements Component, Focusable {
     private static String keyHint(EditorAction action) {
         var keys = EditorKeybindings.global().getKeys(action);
         return keys.isEmpty() ? action.name().toLowerCase(Locale.ROOT) : keys.getFirst();
+    }
+
+    private static String thinkingDescription(String level) {
+        return switch (level) {
+            case "off" -> "No reasoning";
+            case "minimal" -> "Very brief reasoning (~1k tokens)";
+            case "low" -> "Light reasoning (~2k tokens)";
+            case "medium" -> "Moderate reasoning (~8k tokens)";
+            case "high" -> "Deep reasoning (~16k tokens)";
+            case "xhigh" -> "Maximum reasoning (~32k tokens)";
+            default -> null;
+        };
     }
 
     private static final class SelectSubmenu implements Component {

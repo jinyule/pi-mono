@@ -68,6 +68,29 @@ class PiSettingsSelectorIntegrationTest {
     }
 
     @Test
+    void settingsSelectorSelectsThinkingLevelFromSubmenu() {
+        var updates = new CopyOnWriteArrayList<String>();
+        var selector = new PiSettingsSelector(
+            new FakeSettingsSession().withReasoningModel().settingsSelection(),
+            (settingId, value) -> updates.add(settingId + "=" + value),
+            () -> {
+            }
+        );
+
+        selector.handleInput("thinking");
+        selector.handleInput(" ");
+
+        assertThat(String.join("\n", selector.render(90)))
+            .contains("Thinking Level")
+            .contains("Very brief reasoning (~1k tokens)");
+
+        selector.handleInput("\u001b[B");
+        selector.handleInput("\r");
+
+        assertThat(updates).contains("thinking=low");
+    }
+
+    @Test
     void settingsSelectorTogglesTransport() {
         var session = new FakeSettingsSession();
         var terminal = new VirtualTerminal(90, 16);
@@ -170,6 +193,7 @@ class PiSettingsSelectorIntegrationTest {
         assertThat(previews).containsExactly("theme=light", "theme=dark");
     }
 
+    @Test
     void settingsSelectorTogglesDoubleEscapeAction() {
         var updates = new CopyOnWriteArrayList<String>();
         var selector = new PiSettingsSelector(
