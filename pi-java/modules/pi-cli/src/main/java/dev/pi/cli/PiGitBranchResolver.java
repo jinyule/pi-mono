@@ -17,7 +17,7 @@ final class PiGitBranchResolver {
             return null;
         }
         try {
-            var headPath = findHeadPath(Path.of(cwd));
+            var headPath = headPath(cwd);
             if (headPath == null || !Files.isRegularFile(headPath)) {
                 return null;
             }
@@ -29,6 +29,13 @@ final class PiGitBranchResolver {
         } catch (IOException | RuntimeException exception) {
             return null;
         }
+    }
+
+    static Path headPath(String cwd) throws IOException {
+        if (cwd == null || cwd.isBlank()) {
+            return null;
+        }
+        return findHeadPath(Path.of(cwd));
     }
 
     private static Path findHeadPath(Path start) throws IOException {

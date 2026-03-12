@@ -87,6 +87,8 @@
   - interactive footer cwd/session middle-truncation first cut
 - 已完成第四十一刀：
   - interactive footer git-branch first cut
+- 已完成第四十二刀：
+  - interactive footer git-branch watcher first cut
 
 ## 本轮落地
 
@@ -335,6 +337,11 @@
   - branch 存在时插入 `(<branch>)`
   - 仍然复用 middle truncation，避免 branch 抢掉 session name 的可见空间
   - 当前首版是按 render 时静态读取 `.git/HEAD`，还没有 watcher/cached invalidation
+- `PiGitBranchWatcher` 现在补了 branch change watcher 首版：
+  - interactive mode 启动时会根据 session cwd 解析 HEAD 所在目录
+  - watcher 监听 `HEAD` 的 create/delete/modify 事件
+  - 事件到达后会重新跑一次 `renderState(session.state())`
+  - stop 时会关闭 `WatchService`，避免后台线程悬挂
 - `KeyMatcher` 现在显式支持 `tab`
 - `KeyMatcher` 现在显式支持 `ctrl+s`
 - `KeyMatcher` 现在显式支持 `ctrl+n`
@@ -417,6 +424,8 @@
 - `PiInteractiveModeTest`：长 `cwd` footer 第二行会改成中间截断，并保留 session name
 - `PiGitBranchResolverTest`：普通 repo、detached HEAD、worktree `gitdir:` 三种分支解析
 - `PiInteractiveModeTest`：footer 第二行会显示 `cwd (branch) • session name`
+- `PiGitBranchWatcherTest`：修改 `HEAD` 后会收到 branch change 通知
+- `PiInteractiveModeTest`：branch 改变后 footer 会自动刷新到新 branch
 
 最近通过：
 
@@ -426,6 +435,6 @@
 
 ## 下一步建议
 
-1. footer parity：继续评估 git branch watcher/cached invalidation，以及 extension status 第三行
+1. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件
 2. selector parity：继续评估 model/settings selector 是否复用同一套层级
 3. keybindings：继续评估 cycleModelBackward / selectModel / newSession / followUp / dequeue 等动作

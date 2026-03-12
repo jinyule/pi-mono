@@ -33,6 +33,7 @@ public final class PiInteractiveMode implements AutoCloseable {
     private final PromptInput promptInput = new PromptInput();
 
     private Subscription stateSubscription;
+    private PiGitBranchWatcher gitBranchWatcher;
     private boolean started;
     private String manualStatus;
     private Runnable onStop;
@@ -81,6 +82,7 @@ public final class PiInteractiveMode implements AutoCloseable {
         started = true;
         terminal.setTitle("pi-java interactive");
         stateSubscription = session.subscribeState(this::renderState);
+        gitBranchWatcher = PiGitBranchWatcher.start(session.cwd(), () -> renderState(session.state()));
         tui.start();
     }
 
@@ -92,6 +94,10 @@ public final class PiInteractiveMode implements AutoCloseable {
         if (stateSubscription != null) {
             stateSubscription.unsubscribe();
             stateSubscription = null;
+        }
+        if (gitBranchWatcher != null) {
+            gitBranchWatcher.close();
+            gitBranchWatcher = null;
         }
         tui.stop();
         if (onStop != null) {

@@ -175,6 +175,36 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void refreshesFooterWhenGitBranchChanges() throws Exception {
+        var project = tempDir.resolve("project");
+        var gitDir = project.resolve(".git");
+        java.nio.file.Files.createDirectories(gitDir);
+        var headPath = gitDir.resolve("HEAD");
+        java.nio.file.Files.writeString(
+            headPath,
+            "ref: refs/heads/feature/one\n",
+            java.nio.charset.StandardCharsets.UTF_8
+        );
+
+        var session = new FakeSession().withCwd(project.toString());
+        var terminal = new VirtualTerminal(120, 15);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        assertThat(String.join("\n", terminal.getViewport())).contains("(feature/one)");
+
+        java.nio.file.Files.writeString(
+            headPath,
+            "ref: refs/heads/feature/two\n",
+            java.nio.charset.StandardCharsets.UTF_8
+        );
+
+        waitFor(() -> String.join("\n", terminal.getViewport()).contains("(feature/two)"));
+
+        mode.stop();
+    }
+
+    @Test
     void stylesFooterStatsAndModelSummaryWithAnsiHierarchy() {
         var session = new FakeSession().withContextWindow(16);
         var terminal = new RecordingTerminal(80, 14);
