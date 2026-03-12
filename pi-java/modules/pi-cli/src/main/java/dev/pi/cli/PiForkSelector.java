@@ -48,7 +48,12 @@ public final class PiForkSelector implements Component, Focusable {
     public List<String> render(int width) {
         var lines = new ArrayList<String>();
         lines.add(PiCliAnsi.bold("Fork from previous message"));
-        lines.add(PiCliAnsi.muted("Type to filter. Enter forks. Esc cancels."));
+        lines.add(
+            PiCliAnsi.muted("Type to filter. ")
+                + PiCliKeyHints.editorHint(EditorAction.SUBMIT, "forks.")
+                + PiCliAnsi.muted(" ")
+                + PiCliKeyHints.editorHint(EditorAction.SELECT_CANCEL, "cancels.")
+        );
         lines.add("");
         lines.addAll(search.render(width));
         lines.add("");

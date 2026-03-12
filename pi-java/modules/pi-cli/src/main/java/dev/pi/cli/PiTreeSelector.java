@@ -51,7 +51,12 @@ public final class PiTreeSelector implements Component, Focusable {
     public List<String> render(int width) {
         var lines = new ArrayList<String>();
         lines.add(PiCliAnsi.bold("Navigate session tree"));
-        lines.add(PiCliAnsi.muted("Type to filter. Enter selects. Esc cancels."));
+        lines.add(
+            PiCliAnsi.muted("Type to filter. ")
+                + PiCliKeyHints.editorHint(EditorAction.SUBMIT, "selects.")
+                + PiCliAnsi.muted(" ")
+                + PiCliKeyHints.editorHint(EditorAction.SELECT_CANCEL, "cancels.")
+        );
         lines.add("");
         lines.addAll(search.render(width));
         lines.add("");
