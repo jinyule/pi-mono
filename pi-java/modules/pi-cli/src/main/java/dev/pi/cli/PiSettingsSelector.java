@@ -4,15 +4,20 @@ import dev.pi.tui.Component;
 import dev.pi.tui.EditorAction;
 import dev.pi.tui.EditorKeybindings;
 import dev.pi.tui.Focusable;
+import dev.pi.tui.SelectItem;
+import dev.pi.tui.SelectList;
+import dev.pi.tui.SelectListTheme;
 import dev.pi.tui.SettingItem;
 import dev.pi.tui.SettingsList;
 import dev.pi.tui.SettingsListOptions;
 import dev.pi.tui.SettingsListTheme;
+import dev.pi.tui.TerminalText;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public final class PiSettingsSelector implements Component, Focusable {
     private final SettingsList settingsList;
@@ -23,9 +28,20 @@ public final class PiSettingsSelector implements Component, Focusable {
         BiConsumer<String, String> onChange,
         Runnable onCancel
     ) {
+        this(settings, onChange, onCancel, (settingId, value) -> {
+        });
+    }
+
+    public PiSettingsSelector(
+        PiInteractiveSession.SettingsSelection settings,
+        BiConsumer<String, String> onChange,
+        Runnable onCancel,
+        BiConsumer<String, String> onPreview
+    ) {
         Objects.requireNonNull(settings, "settings");
         Objects.requireNonNull(onChange, "onChange");
         Objects.requireNonNull(onCancel, "onCancel");
+        Objects.requireNonNull(onPreview, "onPreview");
 
         var items = new ArrayList<SettingItem>();
         items.add(new SettingItem(
@@ -99,8 +115,25 @@ public final class PiSettingsSelector implements Component, Focusable {
             "Theme",
             "Color theme for the interface",
             settings.theme(),
-            settings.availableThemes(),
-            null
+            List.of(),
+            (currentValue, done) -> new SelectSubmenu(
+                "Theme",
+                "Select color theme",
+                settings.availableThemes().stream()
+                    .map(themeName -> new SelectItem(
+                        themeName,
+                        themeName,
+                        themeName.equals(currentValue) ? "(current)" : null
+                    ))
+                    .toList(),
+                currentValue,
+                done::accept,
+                () -> {
+                    onPreview.accept("theme", currentValue);
+                    done.accept(null);
+                },
+                value -> onPreview.accept("theme", value)
+            )
         ));
         items.add(new SettingItem(
             "editor-padding",
@@ -185,8 +218,108 @@ public final class PiSettingsSelector implements Component, Focusable {
         };
     }
 
+    private static SelectListTheme selectTheme() {
+        return new SelectListTheme() {
+            @Override
+            public String selectedPrefix(String text) {
+                return PiCliAnsi.accent(text);
+            }
+
+            @Override
+            public String selectedText(String text) {
+                return PiCliAnsi.accentBold(text);
+            }
+
+            @Override
+            public String selectedDescription(String text) {
+                return PiCliAnsi.muted(text);
+            }
+
+            @Override
+            public String description(String text) {
+                return PiCliAnsi.muted(text);
+            }
+
+            @Override
+            public String scrollInfo(String text) {
+                return PiCliAnsi.muted(text);
+            }
+
+            @Override
+            public String noMatch(String text) {
+                return PiCliAnsi.muted(text);
+            }
+        };
+    }
+
     private static String keyHint(EditorAction action) {
         var keys = EditorKeybindings.global().getKeys(action);
         return keys.isEmpty() ? action.name().toLowerCase(Locale.ROOT) : keys.getFirst();
+    }
+
+    private static final class SelectSubmenu implements Component {
+        private final String title;
+        private final String description;
+        private final SelectList selectList;
+
+        private SelectSubmenu(
+            String title,
+            String description,
+            List<SelectItem> options,
+            String currentValue,
+            Consumer<String> onSelect,
+            Runnable onCancel,
+            Consumer<String> onSelectionChange
+        ) {
+            this.title = title == null ? "" : title;
+            this.description = description;
+            this.selectList = new SelectList(
+                options == null ? List.of() : options,
+                Math.max(1, Math.min(10, options == null ? 0 : options.size())),
+                selectTheme()
+            );
+
+            if (options != null) {
+                for (var index = 0; index < options.size(); index += 1) {
+                    if (Objects.equals(options.get(index).value(), currentValue)) {
+                        selectList.setSelectedIndex(index);
+                        break;
+                    }
+                }
+            }
+
+            selectList.setOnSelect(item -> onSelect.accept(item.value()));
+            selectList.setOnCancel(onCancel);
+            if (onSelectionChange != null) {
+                selectList.setOnSelectionChange(item -> onSelectionChange.accept(item.value()));
+            }
+        }
+
+        @Override
+        public List<String> render(int width) {
+            var lines = new ArrayList<String>();
+            lines.add(PiCliAnsi.accentBold(title));
+            if (description != null && !description.isBlank()) {
+                lines.add("");
+                for (var line : TerminalText.wrapText(description, Math.max(1, width))) {
+                    lines.add(PiCliAnsi.muted(line));
+                }
+            }
+            lines.add("");
+            lines.addAll(selectList.render(width));
+            lines.add("");
+            lines.add(PiCliAnsi.muted(
+                "  %s to select · %s to go back".formatted(
+                    keyHint(EditorAction.SUBMIT),
+                    keyHint(EditorAction.SELECT_CANCEL)
+                )
+            ));
+            return List.copyOf(lines);
+        }
+
+        @Override
+        public void handleInput(String data) {
+            selectList.handleInput(data);
+        }
     }
 }

@@ -890,8 +890,16 @@
   - 未识别 theme name 目前会回退到 `dark`
 - PiInteractiveMode 现在会在每次 `renderState()` 前调用 `PiCliAnsi.setTheme(session.settingsSelection().theme())`
   - 这让 startup render、`/settings` 里的 theme 切换，以及 `/reload` 后的 settings 回放都能重新着色
-  - 当前这刀只覆盖 CLI ANSI palette；还没有接入 TS 那套 theme file/resource loader，也没有 selector 内的 preview mode
+  - 当前这刀只覆盖 CLI ANSI palette；还没有接入 TS 那套 theme file/resource loader
 - PiCliAnsiTest / PiInteractiveModeTest 现在覆盖 dark/light palette、unknown theme fallback，以及 interactive runtime 重绘后的 light-theme footer ANSI
+- PiSettingsSelector 现在把 `Theme` 条目从 cycle 改成 submenu：
+  - `Enter`/`space` 打开 theme list，方向键移动时只做 preview，不会立刻持久化
+  - `Enter` 提交选中的 theme，`Esc` 会恢复打开 submenu 前的 theme
+  - 列表会给当前 theme 打 `(current)` 标记，和 TS 的 theme selector 交互保持一致
+- PiInteractiveMode 现在在 settings overlay 生命周期里维护瞬时 `previewTheme`
+  - theme submenu preview 时会覆盖 `renderState()` 使用的 palette
+  - submenu cancel 和 overlay close 都会清掉 preview，避免把未提交的 theme 留在主界面
+- PiSettingsSelectorIntegrationTest 现在覆盖 theme submenu 的 `preview -> cancel restore` 和 submenu submit
 
 最近通过：
 
@@ -903,6 +911,6 @@ npm.cmd run check
 ## 下一步建议
 
 1. selector parity：继续评估 model selector 是否要补 all-scope warning/hint copy 的 TS 细节，或继续压空状态 copy/层级
-2. settings selector parity：继续评估 `theme` 等剩余项；当前已补 hint/keybinding parity、hide-thinking transcript parity、quiet-startup header parity、double-escape、editor-padding，以及 dark/light runtime ANSI 主题切换，但 Java 侧仍未覆盖 TS 的 startup resource listing / custom theme loader / preview
+2. settings selector parity：继续评估 `theme` 等剩余项；当前已补 hint/keybinding parity、hide-thinking transcript parity、quiet-startup header parity、double-escape、editor-padding、dark/light runtime ANSI 主题切换，以及 `Theme` submenu preview，但 Java 侧仍未覆盖 TS 的 startup resource listing / custom theme loader
 3. pending queue parity：继续补 compaction queue 合并展示与恢复；steering/follow-up runtime queue 已接上，但 Java 侧仍没有 compaction pending queue
 4. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件

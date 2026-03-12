@@ -43,6 +43,7 @@ public final class PiInteractiveMode implements AutoCloseable {
     private PiGitBranchWatcher gitBranchWatcher;
     private boolean started;
     private String manualStatus;
+    private String previewTheme;
     private Runnable onStop;
     private long lastClearTimeMillis;
     private long lastEscapeTimeMillis;
@@ -220,7 +221,7 @@ public final class PiInteractiveMode implements AutoCloseable {
 
     private void renderState(AgentState state) {
         var settings = session.settingsSelection();
-        PiCliAnsi.setTheme(settings.theme());
+        PiCliAnsi.setTheme(previewTheme == null || previewTheme.isBlank() ? settings.theme() : previewTheme);
         input.setPaddingX(settings.editorPaddingX());
         header.setText(renderHeader(state));
         transcript.setText(renderTranscript(state));
@@ -689,15 +690,25 @@ public final class PiInteractiveMode implements AutoCloseable {
         var selector = new PiSettingsSelector(
             session.settingsSelection(),
             (settingId, value) -> {
+                previewTheme = null;
                 session.updateSetting(settingId, value);
                 manualStatus = null;
                 renderState(session.state());
             },
             () -> {
+                previewTheme = null;
                 var overlay = overlayRef.get();
                 if (overlay != null) {
                     overlay.hide();
                 }
+                renderState(session.state());
+            },
+            (settingId, value) -> {
+                if (!"theme".equals(settingId)) {
+                    return;
+                }
+                previewTheme = value;
+                renderState(session.state());
             }
         );
         var width = Math.max(48, Math.min(96, terminal.columns() - 2));

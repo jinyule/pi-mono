@@ -11,7 +11,6 @@ import dev.pi.ai.model.Usage;
 import dev.pi.ai.stream.Subscription;
 import dev.pi.tui.EditorAction;
 import dev.pi.tui.EditorKeybindings;
-import dev.pi.tui.Terminal;
 import dev.pi.tui.VirtualTerminal;
 import java.util.List;
 import java.util.Map;
@@ -140,11 +139,37 @@ class PiSettingsSelectorIntegrationTest {
 
         selector.handleInput("theme");
         selector.handleInput(" ");
+        selector.handleInput("\u001b[B");
+        selector.handleInput("\r");
 
         assertThat(updates).contains("theme=light");
     }
 
     @Test
+    void settingsSelectorPreviewsThemeAndRestoresItOnCancel() {
+        var previews = new CopyOnWriteArrayList<String>();
+        var selector = new PiSettingsSelector(
+            new FakeSettingsSession().settingsSelection(),
+            (settingId, value) -> {
+            },
+            () -> {
+            },
+            (settingId, value) -> previews.add(settingId + "=" + value)
+        );
+
+        selector.handleInput("theme");
+        selector.handleInput(" ");
+        assertThat(String.join("\n", selector.render(90)))
+            .contains("Theme")
+            .contains("Select color theme")
+            .contains("(current)");
+
+        selector.handleInput("\u001b[B");
+        selector.handleInput("\u001b");
+
+        assertThat(previews).containsExactly("theme=light", "theme=dark");
+    }
+
     void settingsSelectorTogglesDoubleEscapeAction() {
         var updates = new CopyOnWriteArrayList<String>();
         var selector = new PiSettingsSelector(
@@ -209,6 +234,7 @@ class PiSettingsSelectorIntegrationTest {
         private boolean hideThinkingBlock;
         private boolean quietStartup;
         private String doubleEscapeAction = "tree";
+        private String theme = "dark";
         private int editorPaddingX;
         private AgentState state = new AgentState(
             "",
@@ -297,7 +323,7 @@ class PiSettingsSelectorIntegrationTest {
                 hideThinkingBlock,
                 quietStartup,
                 doubleEscapeAction,
-                "dark",
+                theme,
                 List.of("dark", "light"),
                 editorPaddingX,
                 state.model().reasoning(),
@@ -324,13 +350,18 @@ class PiSettingsSelectorIntegrationTest {
             if ("double-escape-action".equals(settingId)) {
                 doubleEscapeAction = value;
             }
+            if ("theme".equals(settingId)) {
+                theme = value;
+            }
             if ("editor-padding".equals(settingId)) {
                 editorPaddingX = Integer.parseInt(value);
             }
             if ("thinking".equals(settingId)) {
                 state = state.withThinkingLevel("off".equals(value) ? null : ThinkingLevel.fromValue(value));
                 emitState();
+                return;
             }
+            emitState();
         }
 
         private FakeSettingsSession withReasoningModel() {
