@@ -314,8 +314,47 @@ class PiSettingsSelectorIntegrationTest {
             );
 
             assertThat(String.join("\n", selector.render(90)))
-                .contains("Type to search. ctrl+j or space changes. alt+x cancels.")
-                .contains("Type to search · ctrl+j/space to change · alt+x to cancel");
+                .contains("\u001b[90mType to search. \u001b[0m")
+                .contains("\u001b[2;37mctrl+j\u001b[0m")
+                .contains("\u001b[90m changes\u001b[0m")
+                .contains("\u001b[2;37mspace\u001b[0m")
+                .contains("\u001b[90m changes.\u001b[0m")
+                .contains("\u001b[2;37malt+x\u001b[0m")
+                .contains("\u001b[90m cancels.\u001b[0m")
+                .contains("ctrl+j/space")
+                .contains("to change")
+                .contains("alt+x")
+                .contains("to cancel");
+        } finally {
+            EditorKeybindings.setGlobal(previous);
+        }
+    }
+
+    @Test
+    void settingsSelectorSubmenuHintsReflectCustomKeybindings() {
+        var previous = EditorKeybindings.global();
+        try {
+            EditorKeybindings.setGlobal(new EditorKeybindings(Map.of(
+                EditorAction.SUBMIT, List.of("ctrl+j"),
+                EditorAction.SELECT_CANCEL, List.of("alt+x")
+            )));
+
+            var selector = new PiSettingsSelector(
+                new FakeSettingsSession().withReasoningModel().settingsSelection(),
+                (settingId, value) -> {
+                },
+                () -> {
+                }
+            );
+
+            selector.handleInput("thinking");
+            selector.handleInput(" ");
+
+            assertThat(String.join("\n", selector.render(90)))
+                .contains("\u001b[2;37mctrl+j\u001b[0m")
+                .contains("\u001b[90m to select\u001b[0m")
+                .contains("\u001b[2;37malt+x\u001b[0m")
+                .contains("\u001b[90m to go back\u001b[0m");
         } finally {
             EditorKeybindings.setGlobal(previous);
         }

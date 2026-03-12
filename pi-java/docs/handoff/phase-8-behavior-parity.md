@@ -173,6 +173,8 @@
   - interactive model selector scope-hint styling first cut
 - completed cut 83:
   - interactive tree/fork selector key-hint styling first cut
+- completed cut 84:
+  - interactive settings selector key-hint styling first cut
 
 ## 本轮落地
 
@@ -987,6 +989,10 @@
   - the cancel key comes from `EditorKeybindings.global()`
   - both selectors now render `Type to filter.` on muted text, then dim key labels plus muted action descriptions
 - `PiSelectorThemeTest` now overrides submit/cancel keybindings and checks the resulting ANSI hint styling in both overlays
+- `PiSettingsSelector` now uses `PiCliKeyHints` in two places:
+  - the top `Type to search.` hint now splits dim key labels from muted descriptions
+  - the submenu footer now renders `submit` / `cancel` with the same dim/muted layering
+- `PiSettingsSelectorIntegrationTest` now checks both the styled top hint and the styled submenu footer under custom keybindings
 
 ?????```bash
 .\\gradlew.bat :pi-cli:test --no-daemon
@@ -995,7 +1001,7 @@ npm.cmd run check
 
 ## 下一步建议
 
-1. selector parity: continue evaluating model selector detail/no-match hierarchy, or extend PiCliKeyHints into more overlays and settings surfaces
+1. selector parity: continue evaluating model selector detail/no-match hierarchy, or extend PiCliKeyHints into session picker and SettingsList footer surfaces
 2. settings selector parity: theme work now covers hint/keybinding parity, hide-thinking transcript parity, quiet-startup header parity, quiet-startup startup-resource silence, double-escape, editor-padding, dark/light runtime ANSI theme switching, `Theme` submenu preview, `Thinking level` submenu, hardware-cursor/clear-on-shrink, TS-style copy for steering/follow-up/transport/quiet-startup, plus the first custom theme loader + hot reload slice and the first broader core-token slice; remaining theme gaps are package/source theme discovery and wider token adoption across more CLI surfaces
 3. pending queue parity：继续补 compaction queue 合并展示与恢复；steering/follow-up runtime queue 已接上，但 Java 侧仍没有 compaction pending queue
 4. footer parity：继续评估 extension status 第三行，或把 git branch 解析缓存下沉成 provider 风格组件

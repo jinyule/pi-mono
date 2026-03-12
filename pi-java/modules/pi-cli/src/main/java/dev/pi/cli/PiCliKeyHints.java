@@ -15,4 +15,8 @@ final class PiCliKeyHints {
     static String editorHint(EditorAction action, String description) {
         return PiCliAnsi.dim(editorKey(action)) + PiCliAnsi.muted(" " + description);
     }
+
+    static String rawHint(String key, String description) {
+        return PiCliAnsi.dim(key) + PiCliAnsi.muted(" " + description);
+    }
 }

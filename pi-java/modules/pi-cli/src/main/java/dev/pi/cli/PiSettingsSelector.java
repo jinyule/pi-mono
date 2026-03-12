@@ -2,7 +2,6 @@ package dev.pi.cli;
 
 import dev.pi.tui.Component;
 import dev.pi.tui.EditorAction;
-import dev.pi.tui.EditorKeybindings;
 import dev.pi.tui.Focusable;
 import dev.pi.tui.SelectItem;
 import dev.pi.tui.SelectList;
@@ -14,7 +13,6 @@ import dev.pi.tui.SettingsListTheme;
 import dev.pi.tui.TerminalText;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -185,10 +183,14 @@ public final class PiSettingsSelector implements Component, Focusable {
     public List<String> render(int width) {
         var lines = new ArrayList<String>();
         lines.add(PiCliAnsi.bold("Settings"));
-        lines.add(PiCliAnsi.muted(
-            "Type to search. %s or space changes. %s cancels."
-                .formatted(keyHint(EditorAction.SUBMIT), keyHint(EditorAction.SELECT_CANCEL))
-        ));
+        lines.add(
+            PiCliAnsi.muted("Type to search. ")
+                + PiCliKeyHints.editorHint(EditorAction.SUBMIT, "changes")
+                + PiCliAnsi.muted(" or ")
+                + PiCliKeyHints.rawHint("space", "changes.")
+                + PiCliAnsi.muted(" ")
+                + PiCliKeyHints.editorHint(EditorAction.SELECT_CANCEL, "cancels.")
+        );
         lines.add("");
         lines.addAll(settingsList.render(width));
         return List.copyOf(lines);
@@ -278,11 +280,6 @@ public final class PiSettingsSelector implements Component, Focusable {
         };
     }
 
-    private static String keyHint(EditorAction action) {
-        var keys = EditorKeybindings.global().getKeys(action);
-        return keys.isEmpty() ? action.name().toLowerCase(Locale.ROOT) : keys.getFirst();
-    }
-
     private static String thinkingDescription(String level) {
         return switch (level) {
             case "off" -> "No reasoning";
@@ -346,12 +343,12 @@ public final class PiSettingsSelector implements Component, Focusable {
             lines.add("");
             lines.addAll(selectList.render(width));
             lines.add("");
-            lines.add(PiCliAnsi.muted(
-                "  %s to select · %s to go back".formatted(
-                    keyHint(EditorAction.SUBMIT),
-                    keyHint(EditorAction.SELECT_CANCEL)
-                )
-            ));
+            lines.add(
+                PiCliAnsi.muted("  ")
+                    + PiCliKeyHints.editorHint(EditorAction.SUBMIT, "to select")
+                    + PiCliAnsi.muted(" · ")
+                    + PiCliKeyHints.editorHint(EditorAction.SELECT_CANCEL, "to go back")
+            );
             return List.copyOf(lines);
         }
 
