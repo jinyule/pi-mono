@@ -257,9 +257,17 @@ public final class SettingsList implements Component, Focusable {
         var submitKey = keyHint(EditorAction.SUBMIT);
         var cancelKey = keyHint(EditorAction.SELECT_CANCEL);
         var hint = searchEnabled
-            ? "  Type to search · %s/space to change · %s to cancel".formatted(submitKey, cancelKey)
-            : "  %s/space to change · %s to cancel".formatted(submitKey, cancelKey);
-        lines.add(TerminalText.truncateToWidth(theme.hint(hint), width));
+            ? theme.hintDescription("  Type to search \u00b7 ")
+                + theme.hintKey(submitKey + "/space")
+                + theme.hintDescription(" to change \u00b7 ")
+                + theme.hintKey(cancelKey)
+                + theme.hintDescription(" to cancel")
+            : theme.hintDescription("  ")
+                + theme.hintKey(submitKey + "/space")
+                + theme.hintDescription(" to change \u00b7 ")
+                + theme.hintKey(cancelKey)
+                + theme.hintDescription(" to cancel");
+        lines.add(TerminalText.truncateToWidth(hint, width));
     }
 
     private static boolean fuzzyMatch(String text, String query) {
@@ -277,3 +285,5 @@ public final class SettingsList implements Component, Focusable {
         return keys.isEmpty() ? action.name().toLowerCase(Locale.ROOT) : keys.getFirst();
     }
 }
+
+

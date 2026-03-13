@@ -10,4 +10,12 @@ public interface SettingsListTheme {
     String cursor();
 
     String hint(String text);
+
+    default String hintKey(String text) {
+        return hint(text);
+    }
+
+    default String hintDescription(String text) {
+        return hint(text);
+    }
 }

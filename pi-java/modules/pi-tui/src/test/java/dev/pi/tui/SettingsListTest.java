@@ -25,7 +25,7 @@ class SettingsListTest {
 
         @Override
         public String cursor() {
-            return "→ ";
+            return "鈫?";
         }
 
         @Override
@@ -118,4 +118,64 @@ class SettingsListTest {
 
         assertThat(settings.render(60)).anyMatch(line -> line.contains("No matching settings"));
     }
+
+    @Test
+    void stylesHintKeysAndDescriptionsIndependently() {
+        var theme = new SettingsListTheme() {
+            @Override
+            public String label(String text, boolean selected) {
+                return text;
+            }
+
+            @Override
+            public String value(String text, boolean selected) {
+                return text;
+            }
+
+            @Override
+            public String description(String text) {
+                return text;
+            }
+
+            @Override
+            public String cursor() {
+                return "->";
+            }
+
+            @Override
+            public String hint(String text) {
+                return "[hint]" + text + "[/hint]";
+            }
+
+            @Override
+            public String hintKey(String text) {
+                return "[key]" + text + "[/key]";
+            }
+
+            @Override
+            public String hintDescription(String text) {
+                return "[desc]" + text + "[/desc]";
+            }
+        };
+        var settings = new SettingsList(
+            List.of(new SettingItem("theme", "Theme", null, "dark", List.of("dark", "light"), null)),
+            5,
+            theme,
+            (id, value) -> {
+            },
+            () -> {
+            },
+            new SettingsListOptions(true)
+        );
+
+        var rendered = String.join("\n", settings.render(200));
+
+        assertThat(rendered)
+            .contains("[desc]  Type to search \u00b7 [/desc]")
+            .contains("[key]")
+            .contains("[/key]")
+            .contains("[desc] to change \u00b7 [/desc]")
+            .contains("[desc] to cancel[/desc]");
+    }
 }
+

@@ -321,10 +321,11 @@ class PiSettingsSelectorIntegrationTest {
                 .contains("\u001b[90m changes.\u001b[0m")
                 .contains("\u001b[2;37malt+x\u001b[0m")
                 .contains("\u001b[90m cancels.\u001b[0m")
-                .contains("ctrl+j/space")
-                .contains("to change")
-                .contains("alt+x")
-                .contains("to cancel");
+                .contains("\u001b[90m  Type to search \u00b7 \u001b[0m")
+                .contains("\u001b[2;37mctrl+j/space\u001b[0m")
+                .contains("\u001b[90m to change \u00b7 \u001b[0m")
+                .contains("\u001b[2;37malt+x\u001b[0m")
+                .contains("\u001b[90m to cancel\u001b[0m");
         } finally {
             EditorKeybindings.setGlobal(previous);
         }
@@ -550,3 +551,4 @@ class PiSettingsSelectorIntegrationTest {
         throw new AssertionError("condition not met");
     }
 }
+

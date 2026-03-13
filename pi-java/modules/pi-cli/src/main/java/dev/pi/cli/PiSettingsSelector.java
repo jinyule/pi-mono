@@ -243,6 +243,16 @@ public final class PiSettingsSelector implements Component, Focusable {
             public String hint(String text) {
                 return PiCliAnsi.muted(text);
             }
+
+            @Override
+            public String hintKey(String text) {
+                return PiCliAnsi.dim(text);
+            }
+
+            @Override
+            public String hintDescription(String text) {
+                return PiCliAnsi.muted(text);
+            }
         };
     }
 
