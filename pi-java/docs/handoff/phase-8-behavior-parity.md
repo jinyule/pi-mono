@@ -1,88 +1,88 @@
-# 闃舵 8 浜ゆ帴锛氳涓鸿拷骞?
-鏇存柊鏃堕棿锛?026-03-12
+# 闂冭埖顔?8 娴溿倖甯撮敍姘愁攽娑撻缚鎷烽獮?
+閺囧瓨鏌婇弮鍫曟？閿?026-03-12
 
-## 褰撳墠鐘舵€?
-- 闃舵 8 宸插紑濮嬨€?- 宸插畬鎴愮涓€鍒€锛?  - session selector current/all scope toggle first cut
-- 宸插畬鎴愮浜屽垁锛?  - session selector sort toggle first cut
-- 宸插畬鎴愮涓夊垁锛?  - session selector named-only filter first cut
-- 宸插畬鎴愮鍥涘垁锛?  - session selector path show/hide toggle first cut
-- 宸插畬鎴愮浜斿垁锛?  - session selector threaded sort first cut
-- 宸插畬鎴愮鍏垁锛?  - session selector fuzzy parser/search first cut
-- 宸插畬鎴愮涓冨垁锛?  - keybindings.json loader first cut
-- 宸插畬鎴愮鍏垁锛?  - session selector loading/progress header first cut
-- 宸插畬鎴愮涔濆垁锛?  - session selector TS-style fuzzy scoring first cut
-- 宸插畬鎴愮鍗佸垁锛?  - session selector search text scope parity first cut
-- 宸插畬鎴愮鍗佷竴鍒€锛?  - session selector header/status/hint copy first cut
-- 宸插畬鎴愮鍗佷簩鍒€锛?  - session selector app/editor keybinding layering first cut
-- 宸插畬鎴愮鍗佷笁鍒€锛?  - session selector path/cwd metadata layout first cut
-- 宸插畬鎴愮鍗佸洓鍒€锛?  - session selector single-row title/scope header first cut
-- 宸插畬鎴愮鍗佷簲鍒€锛?  - interactive app keybindings 鎵╁埌 interrupt/tree/fork
-- 宸插畬鎴愮鍗佸叚鍒€锛?  - interactive app keybindings 琛?resume
-- 宸插畬鎴愮鍗佷竷鍒€锛?  - session selector 鍗曡椤舵爮瀹藉害鎰熺煡鎴柇 first cut
-- 宸插畬鎴愮鍗佸叓鍒€锛?  - session selector metadata 鍝嶅簲寮忓垪瀹?first cut
-- 宸插畬鎴愮鍗佷節鍒€锛?  - session selector 椤堕儴 info/hint 琛屾樉寮忔崲琛?first cut
-- 宸插畬鎴愮浜屽崄鍒€锛?  - session selector ANSI 鏍峰紡灞傜骇 first cut
-- 宸插畬鎴愮浜屽崄涓€鍒€锛?  - session selector 椤堕儴 status/error/info ANSI first cut
-- 宸插畬鎴愮浜屽崄浜屽垁锛?  - session selector summary 鍒嗘鐫€鑹?first cut
-- 宸插畬鎴愮浜屽崄涓夊垁锛?  - tree/fork selector 澶嶇敤 ANSI 灞傜骇 first cut
-- 宸插畬鎴愮浜屽崄鍥涘垁锛?  - session selector regex parse error first cut
-- 宸插畬鎴愮浜屽崄浜斿垁锛?  - session selector empty/no-match/error state hierarchy first cut
-- 宸插畬鎴愮浜屽崄鍏垁锛?  - session selector empty-state hint parity first cut
-- 宸插畬鎴愮浜屽崄涓冨垁锛?  - selector metadata right-aligned layout first cut
-- 宸插畬鎴愮浜屽崄鍏垁锛?  - interactive footer token/cost/model first cut
-- 宸插畬鎴愮浜屽崄涔濆垁锛?  - interactive footer ANSI hierarchy first cut
-- 宸插畬鎴愮涓夊崄鍒€锛?  - interactive footer provider-aware model summary first cut
-- 宸插畬鎴愮涓夊崄涓€鍒€锛?  - interactive cycleThinkingLevel app keybinding first cut
-- 宸插畬鎴愮涓夊崄浜屽垁锛?  - interactive cycleModelForward app keybinding first cut
-- 宸插畬鎴愮涓夊崄涓夊垁锛?  - interactive footer context window indicator first cut
-- 宸插畬鎴愮涓夊崄鍥涘垁锛?  - interactive footer narrow-width truncation first cut
-- 宸插畬鎴愮涓夊崄浜斿垁锛?  - interactive footer auto-compaction suffix first cut
-- 宸插畬鎴愮涓夊崄鍏垁锛?  - interactive footer post-compaction unknown usage first cut
-- 宸插畬鎴愮涓夊崄涓冨垁锛?  - interactive footer idle context baseline first cut
-- 宸插畬鎴愮涓夊崄鍏垁锛?  - interactive footer provider-count gating first cut
-- 宸插畬鎴愮涓夊崄涔濆垁锛?  - interactive footer cwd/session line first cut
-- 宸插畬鎴愮鍥涘崄鍒€锛?  - interactive footer cwd/session middle-truncation first cut
-- 宸插畬鎴愮鍥涘崄涓€鍒€锛?  - interactive footer git-branch first cut
-- 宸插畬鎴愮鍥涘崄浜屽垁锛?  - interactive footer git-branch watcher first cut
-- 宸插畬鎴愮鍥涘崄涓夊垁锛?  - interactive app keybinding cycleModelBackward first cut
-- 宸插畬鎴愮鍥涘崄鍥涘垁锛?  - interactive app keybinding newSession first cut
-- 宸插畬鎴愮鍥涘崄浜斿垁锛?  - interactive `/settings` selector first cut
-- 宸插畬鎴愮鍥涘崄鍏垁锛?  - interactive model selector richer metadata first cut
-- 宸插畬鎴愮鍥涘崄涓冨垁锛?  - interactive model selector all/scoped dual-scope first cut
-- 宸插畬鎴愮鍥涘崄鍏垁锛?  - startup model resolution saved-defaults first cut
-- 宸插畬鎴愮鍥涘崄涔濆垁锛?  - interactive transport setting first cut
-- 宸插畬鎴愮浜斿崄鍒€锛?  - interactive model selector custom search/ranking first cut
-- 宸插畬鎴愮浜斿崄涓€鍒€锛?  - interactive model selector selected-detail first cut
-- 宸插畬鎴愮浜斿崄浜屽垁锛?  - interactive pending queue steering parity first cut
-- 宸插畬鎴愮浜斿崄涓夊垁锛?  - interactive model selector bottom detail panel first cut
-- 宸插畬鎴愮浜斿崄鍥涘垁锛?  - interactive model selector provider/detail split first cut
-- 宸插畬鎴愮浜斿崄浜斿垁锛?  - interactive model selector detail panel container first cut
-- 宸插畬鎴愮浜斿崄鍏垁锛?  - interactive model selector outer border first cut
-- 宸插畬鎴愮浜斿崄涓冨垁锛?  - interactive model selector scope/hint copy first cut
-- 宸插畬鎴愮浜斿崄鍏垁锛?  - interactive model selector current-checkmark ANSI first cut
-- 宸插畬鎴愮浜斿崄涔濆垁锛?  - interactive model selector detail ANSI hierarchy first cut
-- 宸插畬鎴愮鍏崄鍒€锛?  - interactive selected-row metadata channel first cut
-- 宸插畬鎴愮鍏崄涓€鍒€锛?  - interactive model selector dedicated row theme first cut
-- 宸插畬鎴愮鍏崄浜屽垁锛?  - interactive model selector keybinding-aware hints first cut
-- 宸插畬鎴愮鍏崄涓夊垁锛?  - interactive model selector detail field hierarchy first cut
-- 宸插畬鎴愮鍏崄鍥涘垁锛?
-- 宸插畬鎴愮鍏崄浜斿垁锛?
-- 宸插畬鎴愮鍏崄鍏垁锛?  - interactive settings selector hide-thinking parity first cut
+## 瑜版挸澧犻悩鑸碘偓?
+- 闂冭埖顔?8 瀹告彃绱戞慨瀣ㄢ偓?- 瀹告彃鐣幋鎰儑娑撯偓閸掆偓閿?  - session selector current/all scope toggle first cut
+- 瀹告彃鐣幋鎰儑娴滃苯鍨侀敍?  - session selector sort toggle first cut
+- 瀹告彃鐣幋鎰儑娑撳鍨侀敍?  - session selector named-only filter first cut
+- 瀹告彃鐣幋鎰儑閸ユ稑鍨侀敍?  - session selector path show/hide toggle first cut
+- 瀹告彃鐣幋鎰儑娴滄柨鍨侀敍?  - session selector threaded sort first cut
+- 瀹告彃鐣幋鎰儑閸忣厼鍨侀敍?  - session selector fuzzy parser/search first cut
+- 瀹告彃鐣幋鎰儑娑撳啫鍨侀敍?  - keybindings.json loader first cut
+- 瀹告彃鐣幋鎰儑閸忣偄鍨侀敍?  - session selector loading/progress header first cut
+- 瀹告彃鐣幋鎰儑娑旀繂鍨侀敍?  - session selector TS-style fuzzy scoring first cut
+- 瀹告彃鐣幋鎰儑閸椾礁鍨侀敍?  - session selector search text scope parity first cut
+- 瀹告彃鐣幋鎰儑閸椾椒绔撮崚鈧敍?  - session selector header/status/hint copy first cut
+- 瀹告彃鐣幋鎰儑閸椾椒绨╅崚鈧敍?  - session selector app/editor keybinding layering first cut
+- 瀹告彃鐣幋鎰儑閸椾椒绗侀崚鈧敍?  - session selector path/cwd metadata layout first cut
+- 瀹告彃鐣幋鎰儑閸椾礁娲撻崚鈧敍?  - session selector single-row title/scope header first cut
+- 瀹告彃鐣幋鎰儑閸椾椒绨查崚鈧敍?  - interactive app keybindings 閹碘晛鍩?interrupt/tree/fork
+- 瀹告彃鐣幋鎰儑閸椾礁鍙氶崚鈧敍?  - interactive app keybindings 鐞?resume
+- 瀹告彃鐣幋鎰儑閸椾椒绔烽崚鈧敍?  - session selector 閸楁洝顢戞い鑸电埉鐎硅棄瀹抽幇鐔虹叀閹搭亝鏌?first cut
+- 瀹告彃鐣幋鎰儑閸椾礁鍙撻崚鈧敍?  - session selector metadata 閸濆秴绨插蹇撳灙鐎?first cut
+- 瀹告彃鐣幋鎰儑閸椾椒绡€閸掆偓閿?  - session selector 妞ゅ爼鍎?info/hint 鐞涘本妯夊蹇斿床鐞?first cut
+- 瀹告彃鐣幋鎰儑娴滃苯宕勯崚鈧敍?  - session selector ANSI 閺嶅嘲绱＄仦鍌滈獓 first cut
+- 瀹告彃鐣幋鎰儑娴滃苯宕勬稉鈧崚鈧敍?  - session selector 妞ゅ爼鍎?status/error/info ANSI first cut
+- 瀹告彃鐣幋鎰儑娴滃苯宕勬禍灞藉瀬閿?  - session selector summary 閸掑棙顔岄惈鈧懝?first cut
+- 瀹告彃鐣幋鎰儑娴滃苯宕勬稉澶婂瀬閿?  - tree/fork selector 婢跺秶鏁?ANSI 鐏炲倻楠?first cut
+- 瀹告彃鐣幋鎰儑娴滃苯宕勯崶娑樺瀬閿?  - session selector regex parse error first cut
+- 瀹告彃鐣幋鎰儑娴滃苯宕勬禍鏂垮瀬閿?  - session selector empty/no-match/error state hierarchy first cut
+- 瀹告彃鐣幋鎰儑娴滃苯宕勯崗顓炲瀬閿?  - session selector empty-state hint parity first cut
+- 瀹告彃鐣幋鎰儑娴滃苯宕勬稉鍐ㄥ瀬閿?  - selector metadata right-aligned layout first cut
+- 瀹告彃鐣幋鎰儑娴滃苯宕勯崗顐㈠瀬閿?  - interactive footer token/cost/model first cut
+- 瀹告彃鐣幋鎰儑娴滃苯宕勬稊婵嗗瀬閿?  - interactive footer ANSI hierarchy first cut
+- 瀹告彃鐣幋鎰儑娑撳宕勯崚鈧敍?  - interactive footer provider-aware model summary first cut
+- 瀹告彃鐣幋鎰儑娑撳宕勬稉鈧崚鈧敍?  - interactive cycleThinkingLevel app keybinding first cut
+- 瀹告彃鐣幋鎰儑娑撳宕勬禍灞藉瀬閿?  - interactive cycleModelForward app keybinding first cut
+- 瀹告彃鐣幋鎰儑娑撳宕勬稉澶婂瀬閿?  - interactive footer context window indicator first cut
+- 瀹告彃鐣幋鎰儑娑撳宕勯崶娑樺瀬閿?  - interactive footer narrow-width truncation first cut
+- 瀹告彃鐣幋鎰儑娑撳宕勬禍鏂垮瀬閿?  - interactive footer auto-compaction suffix first cut
+- 瀹告彃鐣幋鎰儑娑撳宕勯崗顓炲瀬閿?  - interactive footer post-compaction unknown usage first cut
+- 瀹告彃鐣幋鎰儑娑撳宕勬稉鍐ㄥ瀬閿?  - interactive footer idle context baseline first cut
+- 瀹告彃鐣幋鎰儑娑撳宕勯崗顐㈠瀬閿?  - interactive footer provider-count gating first cut
+- 瀹告彃鐣幋鎰儑娑撳宕勬稊婵嗗瀬閿?  - interactive footer cwd/session line first cut
+- 瀹告彃鐣幋鎰儑閸ユ稑宕勯崚鈧敍?  - interactive footer cwd/session middle-truncation first cut
+- 瀹告彃鐣幋鎰儑閸ユ稑宕勬稉鈧崚鈧敍?  - interactive footer git-branch first cut
+- 瀹告彃鐣幋鎰儑閸ユ稑宕勬禍灞藉瀬閿?  - interactive footer git-branch watcher first cut
+- 瀹告彃鐣幋鎰儑閸ユ稑宕勬稉澶婂瀬閿?  - interactive app keybinding cycleModelBackward first cut
+- 瀹告彃鐣幋鎰儑閸ユ稑宕勯崶娑樺瀬閿?  - interactive app keybinding newSession first cut
+- 瀹告彃鐣幋鎰儑閸ユ稑宕勬禍鏂垮瀬閿?  - interactive `/settings` selector first cut
+- 瀹告彃鐣幋鎰儑閸ユ稑宕勯崗顓炲瀬閿?  - interactive model selector richer metadata first cut
+- 瀹告彃鐣幋鎰儑閸ユ稑宕勬稉鍐ㄥ瀬閿?  - interactive model selector all/scoped dual-scope first cut
+- 瀹告彃鐣幋鎰儑閸ユ稑宕勯崗顐㈠瀬閿?  - startup model resolution saved-defaults first cut
+- 瀹告彃鐣幋鎰儑閸ユ稑宕勬稊婵嗗瀬閿?  - interactive transport setting first cut
+- 瀹告彃鐣幋鎰儑娴滄柨宕勯崚鈧敍?  - interactive model selector custom search/ranking first cut
+- 瀹告彃鐣幋鎰儑娴滄柨宕勬稉鈧崚鈧敍?  - interactive model selector selected-detail first cut
+- 瀹告彃鐣幋鎰儑娴滄柨宕勬禍灞藉瀬閿?  - interactive pending queue steering parity first cut
+- 瀹告彃鐣幋鎰儑娴滄柨宕勬稉澶婂瀬閿?  - interactive model selector bottom detail panel first cut
+- 瀹告彃鐣幋鎰儑娴滄柨宕勯崶娑樺瀬閿?  - interactive model selector provider/detail split first cut
+- 瀹告彃鐣幋鎰儑娴滄柨宕勬禍鏂垮瀬閿?  - interactive model selector detail panel container first cut
+- 瀹告彃鐣幋鎰儑娴滄柨宕勯崗顓炲瀬閿?  - interactive model selector outer border first cut
+- 瀹告彃鐣幋鎰儑娴滄柨宕勬稉鍐ㄥ瀬閿?  - interactive model selector scope/hint copy first cut
+- 瀹告彃鐣幋鎰儑娴滄柨宕勯崗顐㈠瀬閿?  - interactive model selector current-checkmark ANSI first cut
+- 瀹告彃鐣幋鎰儑娴滄柨宕勬稊婵嗗瀬閿?  - interactive model selector detail ANSI hierarchy first cut
+- 瀹告彃鐣幋鎰儑閸忣厼宕勯崚鈧敍?  - interactive selected-row metadata channel first cut
+- 瀹告彃鐣幋鎰儑閸忣厼宕勬稉鈧崚鈧敍?  - interactive model selector dedicated row theme first cut
+- 瀹告彃鐣幋鎰儑閸忣厼宕勬禍灞藉瀬閿?  - interactive model selector keybinding-aware hints first cut
+- 瀹告彃鐣幋鎰儑閸忣厼宕勬稉澶婂瀬閿?  - interactive model selector detail field hierarchy first cut
+- 瀹告彃鐣幋鎰儑閸忣厼宕勯崶娑樺瀬閿?
+- 瀹告彃鐣幋鎰儑閸忣厼宕勬禍鏂垮瀬閿?
+- 瀹告彃鐣幋鎰儑閸忣厼宕勯崗顓炲瀬閿?  - interactive settings selector hide-thinking parity first cut
 
-- 宸插畬鎴愮鍏崄涓冨垁锛?  - interactive settings selector quiet-startup parity first cut
+- 瀹告彃鐣幋鎰儑閸忣厼宕勬稉鍐ㄥ瀬閿?  - interactive settings selector quiet-startup parity first cut
 
-- 宸插畬鎴愮鍏崄鍏垁锛?  - interactive app keybinding toggle-thinking parity first cut
-- 宸插畬鎴愮鍏崄涔濆垁锛?  - interactive app keybinding clear parity first cut
-- 宸插畬鎴愮涓冨崄鍒€锛?  - interactive app keybinding exit parity first cut
-- 宸插畬鎴愮涓冨崄涓€鍒€锛?  - interactive app keybinding expand-tools parity first cut
-- 宸插畬鎴愮涓冨崄浜屽垁锛?  - interactive app keybinding paste-image parity first cut
-- 宸插畬鎴愮涓冨崄涓夊垁锛?  - interactive startup header keybinding hints first cut
-- 宸插畬鎴愮涓冨崄鍥涘垁锛?  - restartable process-terminal lifecycle first cut
-- 宸插畬鎴愮涓冨崄浜斿垁锛?  - interactive app keybinding suspend parity first cut
-- 宸插畬鎴愮涓冨崄鍏垁锛?  - interactive app keybinding external-editor parity first cut
-- 宸插畬鎴愮涓冨崄涓冨垁锛?  - interactive model selector warning/hint copy parity first cut
-- 宸插畬鎴愮涓冨崄鍏垁锛?  - interactive settings selector theme first cut
-- 宸插畬鎴愮涓冨崄涔濆垁锛?  - interactive double-escape-action first cut
+- 瀹告彃鐣幋鎰儑閸忣厼宕勯崗顐㈠瀬閿?  - interactive app keybinding toggle-thinking parity first cut
+- 瀹告彃鐣幋鎰儑閸忣厼宕勬稊婵嗗瀬閿?  - interactive app keybinding clear parity first cut
+- 瀹告彃鐣幋鎰儑娑撳啫宕勯崚鈧敍?  - interactive app keybinding exit parity first cut
+- 瀹告彃鐣幋鎰儑娑撳啫宕勬稉鈧崚鈧敍?  - interactive app keybinding expand-tools parity first cut
+- 瀹告彃鐣幋鎰儑娑撳啫宕勬禍灞藉瀬閿?  - interactive app keybinding paste-image parity first cut
+- 瀹告彃鐣幋鎰儑娑撳啫宕勬稉澶婂瀬閿?  - interactive startup header keybinding hints first cut
+- 瀹告彃鐣幋鎰儑娑撳啫宕勯崶娑樺瀬閿?  - restartable process-terminal lifecycle first cut
+- 瀹告彃鐣幋鎰儑娑撳啫宕勬禍鏂垮瀬閿?  - interactive app keybinding suspend parity first cut
+- 瀹告彃鐣幋鎰儑娑撳啫宕勯崗顓炲瀬閿?  - interactive app keybinding external-editor parity first cut
+- 瀹告彃鐣幋鎰儑娑撳啫宕勬稉鍐ㄥ瀬閿?  - interactive model selector warning/hint copy parity first cut
+- 瀹告彃鐣幋鎰儑娑撳啫宕勯崗顐㈠瀬閿?  - interactive settings selector theme first cut
+- 瀹告彃鐣幋鎰儑娑撳啫宕勬稊婵嗗瀬閿?  - interactive double-escape-action first cut
 - completed cut 80:
   - interactive custom theme core tokens first cut
 - completed cut 81:
@@ -94,571 +94,571 @@
 - completed cut 84:
   - interactive settings selector key-hint styling first cut
 
-## 鏈疆钀藉湴
+## 閺堫剝鐤嗛拃钘夋勾
 
-- `PiCliSessionResolver` 鐜板湪鍦?`--resume` 璺緞涓嬩細鍚屾椂鍑嗗锛?  - current scope锛氬綋鍓嶉」鐩殑榛樿 session 鐩綍
-  - all scope锛氬叏灞€ `~/.pi/agent/sessions/*` 鑱氬悎缁撴灉
-- `PiSessionPicker` 鐜板湪鏀寔鍙?scope锛?  - 榛樿浠?current scope 鍚姩
-  - `Tab` 鍒囧埌 all scope
-  - all scope 涓嬩細鏄剧ず `cwd`
-  - current/all 鍚屾簮鏃朵繚鎸佹棫鐨?`cwd` 灞曠ず锛岄伩鍏?UI 鍥為€€
-- `pi-tui` 灞傛柊澧?`SESSION_SCOPE_TOGGLE` action锛岄粯璁ら敭浣嶆槸 `tab`
-- `PiSessionPicker` 鐜板湪鏀寔 sort toggle锛?  - 榛樿 `recent`
-  - `Ctrl+S` 鍒囧埌 `relevance`
-  - relevance 鍙湪鏈夋悳绱?query 鏃剁敓鏁?  - relevance 鐩墠鎸?`label -> fileName -> cwd -> path` 鐨?token 鍛戒腑浣嶇疆鎵撳垎
-- `pi-tui` 灞傛柊澧?`SESSION_SORT_TOGGLE` action锛岄粯璁ら敭浣嶆槸 `ctrl+s`
-- `PiSessionPicker` 鐜板湪鏀寔 named-only filter锛?  - 榛樿 `all`
-  - `Ctrl+N` 鍒囧埌 `named`
-  - blank / whitespace-only `name` 浼氳瑙嗕负 unnamed
-- `pi-tui` 灞傛柊澧?`SESSION_NAMED_FILTER_TOGGLE` action锛岄粯璁ら敭浣嶆槸 `ctrl+n`
-- `PiSessionPicker` 鐜板湪鏀寔 path show/hide锛?  - 榛樿 `off`
-  - `Ctrl+P` 鍒囧埌 `on`
-  - path 浼氳拷鍔犲埌 session description锛屼究浜庡尯鍒嗗悓鍚?session 鏂囦欢
-- `pi-tui` 灞傛柊澧?`SESSION_PATH_TOGGLE` action锛岄粯璁ら敭浣嶆槸 `ctrl+p`
-- `PiSessionPicker` 鐜板湪鏀寔 threaded sort锛?  - 褰撳墠榛樿浠?`threaded` 璧锋
-  - 褰撳墠 cycle 椤哄簭鏄?`threaded -> recent -> fuzzy -> threaded`
-  - `threaded` 鍙湪绌?query 鏃跺惎鐢ㄦ爲鐘跺竷灞€
-  - 闈炵┖ query 鏃讹紝`threaded` 浼氬厛閫€鍖栧埌褰撳墠鐨?`relevance` 棣栫増
-  - 鏍戠姸灞曞紑鎸?`parentSessionPath` 寤烘爲锛屾牴/瀛愯妭鐐规寜 `modified desc` 鎺掑簭
-- `PiSessionPicker` 鐜板湪鏀寔 fuzzy parser/search锛?  - `recent` / `fuzzy` 閮戒細璧?picker 鑷繁鐨?parser锛屼笉鍐嶄緷璧?`SelectList` 鐨?contains-only 杩囨护
-  - 鏀寔 quoted phrase锛堝甫绌虹櫧褰掍竴鍖栵級
-  - 鏀寔 `re:` case-insensitive regex
-  - 鏀寔绠€鍗?subsequence fuzzy
-  - 鎼滅储鏂囨湰瑕嗙洊 `id/name/allMessagesText/cwd/path`
-- `PiCliModule` 鐜板湪浼氬湪鍚姩鍓嶅姞杞?`~/.pi/agent/keybindings.json`
-  - 褰撳墠棣栫増鏀寔 session selector 鐩稿叧 alias锛歚toggleSessionSort`銆乣toggleSessionNamedFilter`銆乣toggleSessionPath`銆乣renameSession`銆乣deleteSession`銆乣tab`
-  - 涔熸帴鍙?`EditorAction` 鏋氫妇鍚嶇洿鎺ヨ鐩?  - 鍔犺浇澶辫触浼氶潤榛樺洖閫€鍒伴粯璁ら敭浣?- `PiCliSessionResolver` 鐜板湪鎶?`--resume` 鐨?current/all scope 鏀规垚 loader锛?  - current scope 鍚姩鏃剁珛鍗冲姞杞?  - all scope 鍙湪鍒?scope 鏃惰Е鍙戝姞杞?  - all scope 鑱氬悎鏃朵細鎸?project 鐩綍鍥炴姤 `loaded/total` 杩涘害
-- `PiSessionPicker` 鐜板湪鏀寔 TS 椋庢牸 loading/progress header 棣栫増锛?  - 鍒濇杩涘叆鏃讹紝current scope 鏈繑鍥炲墠浼氭樉绀?`Loading current ...`
-  - 鍒囧埌 all scope 涓斾粛鍦ㄥ姞杞芥椂锛屼細鏄剧ず `Loading x/y`
-  - loader 寮傚父浼氭樉绀?`Load error: ...`
-  - direct `pick(List, List)` 璋冪敤浼氳蛋棰勫姞杞借矾寰勶紝淇濇寔鍘熸湁鍚屾娓叉煋鍜岄€夋嫨璇箟锛屼笉鎶婃棫璋冪敤鐐规剰澶栧彉鎴愬紓姝?- `PiSessionPicker` 鐜板湪鎶?fuzzy scoring 瀵归綈鍒?TS `packages/tui/src/fuzzy.ts` 棣栫増锛?  - 杩炵画鍛戒腑浼氬緱鍒版洿濂界殑鍒嗘暟
-  - 鍗曡瘝杈圭晫鍛戒腑浼氬緱鍒版洿濂界殑鍒嗘暟
-  - gap 浼氭寜璺濈鍔犵綒鍒?  - 鏅氬嚭鐜扮殑鍛戒腑浼氭寜浣嶇疆杞诲井鍔犵綒鍒?  - `letters+digits` / `digits+letters` query 鐜板湪鏀寔涓€娆?alpha-numeric swapped fallback锛屼緥濡?`codex52 -> 52codex`
-- `PiSessionPicker` 鐜板湪鎶?session selector search text 鑼冨洿鏀舵暃鍒板拰 TS 涓€鑷寸殑瀛楁锛?  - 鎼滅储鍙鐩?`id/name/allMessagesText/cwd`
-  - `path` 浠嶅彲鏄剧ず鍦?UI description 閲岋紝浣嗕笉鍐嶅弬涓庡尮閰?鎺掑簭
-- `PiSessionPicker` 鐜板湪鎶?header/status/hint 鏂囨缁х画寰€ TS 闈狅細
-  - delete confirm 鏂囨鏀规垚 `Delete session? [Enter] confirm 路 [Esc] cancel`
-  - load error 鏂囨鏀规垚 `Failed to load sessions: ...`
-  - 鏂板鎼滅储鎻愮ず琛岋細`tab scope 路 re:<pattern> regex 路 "phrase" exact 路 ...`
-  - 淇濈暀鐜版湁 `sort(named/path)` 鐘舵€佽锛岄伩鍏?Java 鐗堝綋鍓?selector 甯冨眬鍥為€€
-- `PiCliKeybindingsLoader` 鐜板湪鎶?keybindings 鍒嗘垚 editor/app 涓ゅ眰锛?  - editor 灞傜户缁啓鍏?`EditorKeybindings.global()`
-  - app 灞傛柊澧?`PiAppKeybindings.global()`
-  - `toggleSessionNamedFilter` 鐜板湪褰掑埌 app 灞傦紝鑰屼笉鏄杩?editor action map
-- `PiSessionPicker` 鐜板湪鎸?TS 鐨勮亴璐ｅ垎灞傛秷璐?keybindings锛?  - `scope/sort/path/delete/rename` 缁х画璧?editor keybindings
-  - `named filter` 鏀硅蛋 app keybindings
-  - hint 鏂囨閲?`named(...)` 涔熸敼浠?app keybindings 鍙栨寜閿?- `KeyMatcher` 鐜板湪鏀寔 generic `alt+<char>`锛屼緥濡?`alt+n`
-- `PiSessionPicker` 鐜板湪鎶?session metadata description 鍐嶅線 TS 闈犱簡涓€姝ワ細
-  - 榛樿 metadata 涓嶅啀鏄剧ず session file name
-  - 椤哄簭鏀规垚 `path 路 cwd 路 N msg 路 age` 鐨勫瓙闆?  - `path` 鍙湪 `path(on)` 鏃舵樉绀?  - `cwd` 鍙湪 all-scope / same-scope 鍏煎鍦烘櫙鏄剧ず
-  - home 鐩綍鍓嶇紑浼氭姌鍙犳垚 `~`
-- `PiSessionPicker` 鐜板湪鎶?title 鍜?scope summary 鍚堝埌鍚屼竴琛岋細
-  - current scope 浼氭樉绀?`Resume session (Current folder) ... 鈼?Current Folder | 鈼?All`
-  - all scope / loading scope 涔熷鐢ㄥ悓涓€琛岀粨鏋?  - 杩欒椤舵爮缁撴瀯鏇存帴杩?TS 鐨?left-title / right-status
-- `PiAppKeybindings` 鐜板湪浠?session selector 鎵╁埌 interactive mode锛?  - 鏂板 `interrupt`锛堥粯璁?`escape`锛?  - 鏂板 `tree`锛堥粯璁ゆ棤蹇嵎閿紝鍙厤缃級
-  - 鏂板 `fork`锛堥粯璁ゆ棤蹇嵎閿紝鍙厤缃級
-- `PiAppKeybindings` 鐜板湪缁х画琛ヤ簡 `resume`锛堥粯璁ゆ棤蹇嵎閿紝鍙厤缃級
-- `PiCliKeybindingsLoader` 鐜板湪鏀寔浠?`keybindings.json` 璇诲彇 `interrupt` / `tree` / `fork`
-- `PiCliKeybindingsLoader` 鐜板湪涔熸敮鎸佽鍙?`resume`
-- `PiInteractiveMode` 鐜板湪鍦?prompt 灞傚厛娑堣垂 app keybindings锛?  - app `interrupt` 浼氳皟鐢?`session.abort()`
-  - app `resume` 浼氳皟鐢?`session.resume()`
-  - app `tree` 浼氭墦寮€ tree overlay
-  - app `fork` 浼氭墦寮€ fork overlay
-  - 鍏朵綑杈撳叆鍐嶇户缁惤鍒?`Input`
-- `PiSessionPicker` 鐜板湪浼氬湪绐勭粓绔笅瀵瑰崟琛岄《鏍忓仛瀹藉害鎰熺煡鎴柇锛?  - 瀹藉害瓒冲鏃朵粛淇濇寔宸?title / 鍙?scope summary 鐨勫崟琛屽竷灞€
-  - 瀹藉害涓嶈冻鏃朵紭鍏堜繚鐣欏彸渚?scope summary
-  - title 涓嶅鏀句笅鏃朵細鐢?`...` 瀹夊叏鎴柇锛岄伩鍏嶉《鏍忔孩鍑?viewport
-  - scope summary 鑷韩杩囧鏃朵篃浼氳瀹夊叏鎴柇锛岃€屼笉鏄洿鎺ユ拺鐮翠竴琛?- `SelectList` 鐜板湪鎶?label/description 鐨勫垪瀹藉垎閰嶆敼鎴愬搷搴斿紡锛?  - 涓嶅啀鐢ㄥ浐瀹?`32` 鍒楄捣濮嬩綅鍐冲畾 description 鏄惁鍑虹幇
-  - 涓瓑瀹藉害涓嬩細浼樺厛涓?description 淇濈暀鏈€灏忓彲璇荤┖闂?  - label 鍒椾細鎸夊彲鐢ㄥ搴﹀姩鎬佹敹缂╋紝description 鍒楀湪澶熺敤鏃剁户缁樉绀?  - 杩欒 session selector 鍦?`36~40` 鍒楅檮杩戜粛鑳戒繚鐣?`msg/age` 绛?metadata
-- `PiSessionPicker` 鐜板湪鎶婇《閮?info/hint 琛屾敼鎴愭樉寮忔寜璇嶆崲琛岋細
-  - `sort/named/path` 鐘舵€佽浼氭寜绌虹櫧杈圭晫鎶樿
-  - `scope/regex/phrase/delete/rename` 鎻愮ず琛屼篃浼氭寜璇嶆姌琛?  - rename / delete 绛夐《閮ㄨ鏄庤鍚屾牱澶嶇敤杩欏鎹㈣閫昏緫
-  - 杩欓伩鍏嶇獎缁堢鐩存帴鎸夊垪鏁扮‖鎴柇锛屾妸 `sort(Threaded)` 涔嬬被 token 鍒囩
-- `PiSessionPicker` 鐜板湪琛ヤ簡 session selector 鐨?ANSI 鏍峰紡灞傜骇锛?  - selected prefix 鐢?accent
-  - selected row 鏂囨湰鐢?bold
-  - metadata / scroll info / no-match 鏂囨湰鐢?muted
-  - 鍏堟妸灞傜骇钀藉湪 session list 鏈韩锛屽悗缁啀寰€椤堕儴 status/info 鍖烘墿
-- `PiSessionPicker` 鐜板湪鎶婇《閮ㄥ尯鍩熶篃鎺ュ埌 ANSI 灞傜骇锛?  - header title 鐢?bold
-  - scope summary 鐢?muted
-  - sort/named/path 鐘舵€佽涓庢悳绱?hint 琛岀敤 muted
-  - delete confirm 鐢?warning
-  - load error 鐢?error
-  - rename title 涔熸敼鎴?bold锛宺ename 鎻愮ず鏀规垚 muted
-- `PiSessionPicker` 鐜板湪鎶?header summary 鍐嶇粏鍒嗘垚鍒嗘鐫€鑹诧細
-  - active scope 鏍囪锛坄鈼?Current Folder` / `鈼?All`锛夌敤 accent
-  - all-scope loading 鐨?`Loading x/y` 涔熺敤 accent
-  - inactive scope 涓庡垎闅旂淇濇寔 muted
-  - current 鍒濇 loading 涔熺敤 accent锛岃€屼笉鏄暣娈?muted
-- `PiTreeSelector` / `PiForkSelector` 鐜板湪澶嶇敤鍚屼竴濂?selector theme锛?  - overlay title 鐢?bold
-  - overlay hint 鐢?muted
-  - list selected row / metadata / no-match / scroll info 鐩存帴澶嶇敤 session selector 鐨?ANSI 灞傜骇
-  - 閬垮厤 tree/fork overlay 鍦ㄨ瑙変笂鍥為€€鎴愮函鏂囨湰鍒楄〃
-- `PiSessionPicker` 鐜板湪浼氭妸 regex parse error 鏄庣‘鏄剧ず鍦?search 鍖轰笂鏂癸細
-  - query 瑙ｆ瀽澶辫触鏃舵樉绀?`Invalid regex: ...`
-  - 璇ョ姸鎬佽璧?error 鏍峰紡
-  - 杩欐牱涓嶄細鍐嶅拰鏅€?`no match` 绌虹粨鏋滄贩鍦ㄤ竴璧?- `PiSessionPicker` 鐜板湪鎶?empty/no-match/error 涓夌鍒楄〃鐘舵€佹媶寮€浜嗭細
-  - current/all scope 涓虹┖涓?query 涓虹┖鏃讹紝鏄剧ず `No sessions in ...`
-  - named-only 鎵撳紑涓斿彲瑙佺粨鏋滀负绌烘椂锛屾樉绀?`No named sessions in ...`
-  - query 闈炵┖浣嗘棤鍖归厤鏃讹紝鏄剧ず `No matches for "..."`
-  - regex 闈炴硶鏃讹紝鍒楄〃鍖烘樉绀?`Invalid regex query`
-  - current/all scope 姝ｅ湪 loading 鎴?load error 鏃讹紝鍒楄〃鍖轰笉鍐嶉€€鍥?`No matching commands`
-- `PiSessionPicker` 鐜板湪缁х画鎶?empty-state hint 寰€ TS 闈狅細
-  - current scope 涓虹┖鏃讹紝鏄剧ず `No sessions in current folder. Press tab to view all.`
-  - current scope 涓?named-only 涓虹┖鏃讹紝鏄剧ず `Press ctrl+n to show all, or tab to view all.`
-  - all scope 涓?named-only 涓虹┖鏃讹紝鏄剧ず `No named sessions found. Press ctrl+n to show all.`
-  - `current/all` 鍚屾簮鏃朵笉浼氳鎶ヤ笉鍙敤鐨?scope-toggle 鎻愮ず
-- `SelectList` 鐜板湪鎶?description 甯冨眬缁х画寰€ TS selector 闈狅細
-  - 涓嶅啀缁?label 棰勭暀鍥哄畾绌哄垪
-  - 浼氫粠瀹為檯 label 瀹藉害鍥炴敹绌轰綑鍒楃粰鍙充晶 description
-  - 鐭?label + 闀?metadata 鍦烘櫙涓嬶紝浼氫紭鍏堜繚浣?`cwd/path/msg/age` 灏鹃儴淇℃伅
-  - 琛屽熬棰濆淇濈暀瀹夊叏杈硅窛锛岄伩鍏?item 姝ｅソ鎵撴弧 terminal 瀹藉害鏃惰缁堢鑷姩鎹㈣
-- `PiInteractiveMode` 鐜板湪琛ヤ簡 interactive footer 棣栫増锛?  - footer 浼氬湪 `14` 琛屽強浠ヤ笂缁堢鏄剧ず锛岄伩鍏嶆尋鍘?`12` 琛屽洖褰掓祴璇曢噷鐨?transcript/header
-  - footer 宸︿晶鎸?assistant message 鐨?`usage` 鑱氬悎绱 `鈫慽nput 鈫搊utput RcacheRead WcacheWrite $cost`
-  - footer 鍙充晶鏄剧ず褰撳墠 `model id`锛宺easoning model 浼氱户缁甫鍑?thinking level
-  - 瀹藉害瓒冲鏃朵繚鐣欏乏缁熻 / 鍙虫ā鍨嬬殑鍗曡甯冨眬锛屽搴︿笉瓒虫椂浼樺厛淇濈暀缁熻骞跺畨鍏ㄦ埅鏂ā鍨嬩俊鎭?- `PiInteractiveMode` 鐜板湪鎶?header top/bottom padding 鏀剁揣鍒?`0/0`锛?  - 閰嶅悎 footer 棣栫増锛岄伩鍏嶅皬缁堢涓?header/transcript 鍥犻澶栫┖琛岃杩囨棭瑁佹帀
-- `PiInteractiveMode` 鐜板湪缁х画鎶?footer 鎺ュ埌 ANSI 灞傜骇锛?  - usage/cost 缁熻鏁翠綋璧?muted
-  - model id 璧?bold
-  - reasoning suffix锛坄鈥?high` / `鈥?thinking off`锛夎蛋 muted
-  - 鍙充晶瀹藉害涓嶈冻鏃朵細浼樺厛淇濈暀 model id锛屽啀鎴柇 suffix锛岄伩鍏嶆妸鏈€鍏抽敭鐨?model 鏍囪瘑鍏堣鎺?- `PiInteractiveMode` 鐜板湪缁х画鎶?provider 淇℃伅鎺ュ埌 footer 鍙充晶鎽樿锛?  - 瀹藉害瓒冲鏃舵樉绀?`provider/model`
-  - provider 鍓嶇紑璧?muted锛宮odel id 缁х画璧?bold
-  - 瀹藉害涓嶈冻鏃朵細鍏堥€€鍥炲彧鏄剧ず model锛屽啀鑰冭檻鎴柇锛岄伩鍏?provider 鎶㈡帀 model 鐨勫彲瑙佺┖闂?- `PiAppKeybindings` 鐜板湪缁х画琛ヤ簡 `cycleThinkingLevel`锛?  - 榛樿閿綅鏄?`shift+tab`
-  - `PiCliKeybindingsLoader` 鐜板湪鏀寔 `cycleThinkingLevel` alias
-  - `KeyMatcher` 鐜板湪鏄惧紡鏀寔 `shift+tab` (`ESC [ Z`)
-- `PiInteractiveMode` 鐜板湪浼氬湪 prompt 灞傛秷璐?`cycleThinkingLevel`锛?  - reasoning model 涓嬭Е鍙?`session.cycleThinkingLevel()`
-  - 棣栫増 cycle 椤哄簭鏄?`off -> minimal -> low -> medium -> high -> off`
-  - 鍒囨崲鍚庝細鎶?`Thinking level: <level>` 鍥炴樉鍒扮姸鎬佽
-- `PiAgentSession` 鐜板湪浼氭妸 cycleThinkingLevel 鎸佷箙鍖栧洖 session锛?  - 姣忔鍒囨崲閮戒細璋冪敤 agent state update
-  - 骞惰拷鍔?`thinking_level_change`
-  - `off` 浼氭寜瀛楃涓?`off` 鍐欏叆锛屼繚鎸佸拰鐜版湁 session replay 鍏煎
-- `PiAppKeybindings` 鐜板湪缁х画琛ヤ簡 `cycleModelForward`锛?  - 榛樿閿綅鏄?`ctrl+p`
-  - `PiCliKeybindingsLoader` 鐜板湪鏀寔 `cycleModelForward` alias
-- `PiCliModule` 鐜板湪鎶?`--models` 鎺ュ埌浜?interactive model cycle 棣栫増锛?  - 娌℃湁鏄惧紡 `--provider/--model` 鏃讹紝浼氫紭鍏堜粠 `--models` scope 閲岄€夌涓€涓?model 浣滀负鍚姩 model
-  - scope 瑙ｆ瀽棣栫増鏀寔 `provider/modelId`銆佺函 `modelId`銆乧ontains fallback锛屼互鍙?`*` / `?` / `[]` 椋庢牸 glob
-  - scope pattern 棣栫増涔熸敮鎸?`:high` / `:low` 杩欑被 thinking suffix锛屽苟鎶婂畠甯﹁繘 cycle target
-  - 濡傛灉 `--models` 娌¤В鏋愬嚭浠讳綍鍛戒腑锛屼細閫€鍥?registry 鍏ㄩ噺 models锛岄伩鍏嶆妸 cycle 鐩存帴鍋氭
-- `PiAgentSession` 鐜板湪鏀寔 forward model cycle锛?  - cycle 鍒楄〃浼樺厛浣跨敤 `--models` 瑙ｆ瀽鍑虹殑 scope锛涘惁鍒欓€€鍥炲綋鍓?registry 鍏ㄩ噺 models
-  - 姣忔鍒囨崲閮戒細鏇存柊 agent state锛屽苟杩藉姞 `model_change`
-  - 鑻ョ洰鏍?model 涓嶆敮鎸?reasoning锛屼細鎶?thinking level 娓呮垚 `off` 骞惰拷鍔?`thinking_level_change`
-  - 鑻ョ洰鏍?scoped model 鑷甫 thinking suffix锛屼細鍦ㄥ垏鎹㈡椂涓€骞跺簲鐢?- `PiInteractiveMode` 鐜板湪浼氬湪 prompt 灞傛秷璐?`cycleModelForward`锛?  - 瑙﹀彂鍚庤皟鐢?`session.cycleModelForward()`
-  - 鎴愬姛鏃剁姸鎬佽鍥炴樉 `Switched to provider/model`
-  - 鑻ョ洰鏍?thinking 闈?`off`锛屼細杩藉姞 `(thinking: level)`
-- `PiInteractiveMode` 鐜板湪缁х画鎶?footer context 鎸囨爣鎺ヤ笂锛?  - 鍩轰簬鏈€杩戜竴鏉?assistant message 鐨?`usage.totalTokens`
-  - 缁撳悎褰撳墠 model 鐨?`contextWindow`锛屽湪 footer 宸︿晶杩藉姞 `x%/window`
-  - 榛樿璧?muted 鏍峰紡
-  - 鍗犵敤杈惧埌 `70%` 鏃跺垏鍒?warning锛岃揪鍒?`90%` 鏃跺垏鍒?error
-  - 娌℃湁 assistant usage 鎴?model 鏈０鏄?context window 鏃讹紝涓嶆樉绀鸿鎸囨爣
-- `PiInteractiveMode` 鐜板湪缁х画鎶?footer 鐨勭獎瀹藉害绛栫暐寰€ TS 闈狅細
-  - 鍗曡鏀句笉涓嬫椂锛屼笉鍐嶇洿鎺ヤ涪鎺夊彸渚?model 鎽樿
-  - 浼氫紭鍏堢粰鍙充晶 model 鐣欏嚭鏈€灏忓彲璇诲搴?  - 宸︿晶 usage/context 缁熻浼氭埅鏂埌鍓╀綑瀹藉害
-  - 鏋佺獎瀹藉害涓嬪垯鐩存帴閫€鍥炲彧鏄剧ず鍙充晶 model
-- `PiInteractiveSession` 鐜板湪鏆撮湶 `autoCompactionEnabled()`锛?  - `PiAgentSession` 浠?`settingsManager.effective().getBoolean("/compaction/enabled", true)` 璇诲彇
-  - `PiInteractiveMode` 浼氬湪 footer context indicator 鍚庤拷鍔?`(auto)`
-  - session 绾у叧闂椂锛岃 suffix 浼氭秷澶?- `PiInteractiveSession` 鐜板湪缁х画鏆撮湶 `contextUsage()`锛?  - `PiAgentSession` 浼氭鏌?branch 涓婃渶杩戜竴娆?`CompactionEntry`
-  - 鑻?compaction 涔嬪悗杩樻病鏈夋柊鐨?assistant usage锛屽垯杩斿洖 `percent = null`
-  - `PiInteractiveMode` 浼氭妸杩欑被鐘舵€佹覆鏌撴垚 `?/%window`
-  - 杩欐牱 footer 涓嶄細鍐嶆妸 compaction 鍓嶇殑 usage 鐧惧垎姣旈敊璇湴寤剁画鍒?compaction 涔嬪悗
-- `PiAgentSession.contextUsage()` / `FakeSession.contextUsage()` 鐜板湪鍦?idle 涓斿皻鏃?assistant usage 鏃惰繑鍥?`0.0%/%window`
-- `PiInteractiveMode` 鐜板湪鎶?footer 鏀规垚鏇寸揣鍑戠殑鍗曡甯冨眬锛?  - 宸﹀彸鎽樿涔嬮棿鍥哄畾淇濈暀 `2` 涓┖鏍?  - 涓嶅啀鐢ㄥ彸瀵归綈 padding 鎶?ANSI/raw 闀垮害鍫嗗埌涓€琛屾湯灏?  - 绐勫搴﹀垎鏀細鍏堢粰鍙充晶 model 鎽樿淇濈暀淇濆簳瀹藉害锛屽啀鎴柇宸︿晶 usage/context
-- `PiInteractiveSession` 鐜板湪鏆撮湶 `availableProviderCount()`锛?  - `PiCliModule` 浼氭妸 `ModelRegistry.getProviders().size()` 涓嬫矇缁?`PiAgentSession`
-  - `PiInteractiveMode` 鍙湁鍦?provider 鏁伴噺澶т簬 `1` 鏃舵墠鏄剧ず `provider/` 鍓嶇紑
-  - 鍗?provider 鍦烘櫙涓?footer 鍙樉绀?model id锛屽拰 TS 鐗堣涔夊榻?- `PiInteractiveSession` 鐜板湪缁х画鏆撮湶 `cwd()` / `sessionName()`锛?  - `PiAgentSession` 浠?`SessionHeader.cwd` 鍜屾渶杩戜竴鏉?`SessionInfoEntry` 璇诲彇
-  - `PiInteractiveMode` 鍦?`15` 琛屽強浠ヤ笂缁堢浼氳拷鍔犵浜岃 footer
-  - 绗簩琛岄鐗堟樉绀?`cwd 鈥?session name`
-  - 绗簩琛屼細璧?muted 鏍峰紡骞舵寜瀹藉害瀹夊叏鎴柇
-  - 涓よ椤哄簭鏄?`stats` 鍦ㄥ墠銆乣cwd/session` 鍦ㄥ悗锛岄伩鍏嶅彧鏈変竴琛岃兘瑙佹椂鎶婂叧閿粺璁¤鎺?- `TerminalText` 鐜板湪琛ヤ簡 `truncateMiddleToWidth()`锛?  - footer 绗簩琛岀殑 `cwd 鈥?session name` 涓嶅啀鍙仛灏鹃儴鎴柇
-  - 闀胯矾寰勪細鏀规垚涓棿鎴柇锛屽敖閲忓悓鏃朵繚鐣欒矾寰勫墠缂€銆佽矾寰勫熬閮ㄥ拰 session name
-  - 瑙嗚 copy 瀵归綈 TS `FooterComponent` 鐨勯暱 `pwd` 澶勭悊鏂瑰紡
-- `PiGitBranchResolver` 鐜板湪琛ヤ簡 `.git/HEAD` 瑙ｆ瀽棣栫増锛?  - 浼氫粠 session cwd 鍚戜笂鏌ユ壘 `.git`
-  - 鍏煎 `.git/HEAD` 鐩綍浠撳簱鍜?`gitdir:` worktree 褰㈠紡
-  - detached HEAD 浼氭樉绀烘垚 `detached`
-- `PiInteractiveMode` 鐜板湪浼氭妸 footer 绗簩琛屾墿鎴?`cwd (branch) 鈥?session name`锛?  - branch 瀛樺湪鏃舵彃鍏?`(<branch>)`
-  - 浠嶇劧澶嶇敤 middle truncation锛岄伩鍏?branch 鎶㈡帀 session name 鐨勫彲瑙佺┖闂?  - 褰撳墠棣栫増鏄寜 render 鏃堕潤鎬佽鍙?`.git/HEAD`锛岃繕娌℃湁 watcher/cached invalidation
-- `PiGitBranchWatcher` 鐜板湪琛ヤ簡 branch change watcher 棣栫増锛?  - interactive mode 鍚姩鏃朵細鏍规嵁 session cwd 瑙ｆ瀽 HEAD 鎵€鍦ㄧ洰褰?  - watcher 鐩戝惉 `HEAD` 鐨?create/delete/modify 浜嬩欢
-  - 浜嬩欢鍒拌揪鍚庝細閲嶆柊璺戜竴娆?`renderState(session.state())`
-  - stop 鏃朵細鍏抽棴 `WatchService`锛岄伩鍏嶅悗鍙扮嚎绋嬫偓鎸?- `PiAppAction` / `PiAppKeybindings` 鐜板湪缁х画琛ヤ簡 `cycleModelBackward`锛?  - 榛樿閿綅鏄?`shift+ctrl+p`
-  - `PiCliKeybindingsLoader` 鐜板湪鏀寔 `cycleModelBackward` alias
-- `PiAgentSession` 鐜板湪鏀寔 backward model cycle锛?  - 澶嶇敤鐜版湁 scoped cycle list
-  - 浠庡綋鍓?model 寰€鍓嶄竴涓洰鏍囧洖缁?  - 鍚屾牱浼氭寔涔呭寲 `model_change` / `thinking_level_change`
-- `PiInteractiveMode` 鐜板湪浼氬湪 prompt 灞傛秷璐?`cycleModelBackward`锛?  - 瑙﹀彂鍚庤皟鐢?`session.cycleModelBackward()`
-  - 鎴愬姛鏃舵部鐢ㄧ幇鏈?`Switched to provider/model` 鐘舵€佹枃妗?- `KeyMatcher` 鐜板湪琛ヤ簡 `shift+ctrl+p` / `ctrl+shift+p` 鐨?Kitty `CSI u` 鍖归厤锛?  - 褰撳墠棣栫増鏀寔 `\u001b[112;6u`
-  - 骞跺吋瀹圭畝鍖栫殑 `\u001b[80;6u`
-- `PiAppAction` / `PiAppKeybindings` 鐜板湪缁х画琛ヤ簡 `newSession`锛?  - 榛樿鏃犲揩鎹烽敭锛屽彲閫氳繃 `keybindings.json` 閰嶇疆
-  - `PiCliKeybindingsLoader` 鐜板湪鏀寔 `newSession` alias
-- `PiAgentSession` 鐜板湪鏀寔 `newSession()`锛?  - streaming 涓細鎷掔粷鍒囨崲
-  - 閫氳繃 `SessionManager.createBranchedSession(null)` 鍒涘缓绌虹櫧鏂?session
-  - 浼氶噸缃?agent session id銆佹竻绌哄綋鍓嶆秷鎭鍥撅紝骞堕噸鏂?seed model/thinking metadata
-- `PiInteractiveMode` 鐜板湪浼氬湪 prompt 灞傛秷璐?`newSession`锛?  - 瑙﹀彂鍚庤皟鐢?`session.newSession()`
-  - 鐘舵€佽鍥炴樉 `Started new session`
-  - 鍚庣画 prompt 浼氬甫鐫€鏂扮殑 session id 缁х画鎵ц
-- `PiAppAction` / `PiAppKeybindings` 鐜板湪缁х画琛ヤ簡 `followUp`锛?  - 榛樿閿綅鏄?`alt+enter`
-  - `PiCliKeybindingsLoader` 鐜板湪鏀寔 `followUp` alias
-- `PiAgentSession` 鐜板湪鏀寔 `followUp(String)`锛?  - 浼氭妸鏂囨湰鍖呰鎴愭柊鐨?user message
-  - 鐩存帴璋冪敤 `Agent.followUp(...)` 杩涘叆 runtime follow-up 闃熷垪
-- `PiInteractiveMode` 鐜板湪浼氬湪 prompt 灞傛秷璐?`followUp`锛?  - editor 涓虹┖鏃剁洿鎺ュ拷鐣?  - streaming 涓Е鍙戜細娓呯┖ editor锛屽苟鍥炴樉 `Queued follow-up`
-  - idle 鏃朵細閫€鍖栨垚鏅€?submit锛屽拰 TS 鐗?`Alt+Enter` 璇箟淇濇寔涓€鑷?- `PiAppAction` / `PiAppKeybindings` 鐜板湪缁х画琛ヤ簡 `dequeue`锛?  - 榛樿閿綅鏄?`alt+up`
-  - `PiCliKeybindingsLoader` 鐜板湪鏀寔 `dequeue` alias
-- `Agent` 鐜板湪琛ヤ簡 `drainFollowUpQueue()`锛?  - 浼氳繑鍥炲綋鍓?follow-up 闃熷垪鍐呭
-  - 鍚屾椂鍘熷瓙娓呯┖ runtime queue锛屼緵 interactive mode 鎭㈠ editor 浣跨敤
-- `PiAgentSession` 鐜板湪鏀寔 `dequeue()`锛?  - 浼氭妸 follow-up queue 閲岀殑 user message 閲嶆柊鎷煎洖 editor 鏂囨湰
-  - 澶氭潯娑堟伅涔嬮棿鐢ㄧ┖琛屽垎闅旓紝鍜?TS 鐗?restore queue 鐨勬枃妗堢粨鏋勪繚鎸佷竴鑷?- `PiInteractiveMode` 鐜板湪浼氬湪 prompt 灞傛秷璐?`dequeue`锛?  - 鏈夋帓闃熸秷鎭椂浼氭妸瀹冧滑鎭㈠鍥?editor
-  - 褰撳墠 editor 宸叉湁鑽夌鏃讹紝浼氭妸 queued messages 鏀惧墠闈紝鍐嶆帴褰撳墠鑽夌
-  - 闃熷垪涓虹┖鏃跺洖鏄?`No queued messages`
-- `PiAppAction` / `PiAppKeybindings` 鐜板湪缁х画琛ヤ簡 `selectModel`锛?  - 榛樿閿綅鏄?`ctrl+l`
-  - `PiCliKeybindingsLoader` 鐜板湪鏀寔 `selectModel` alias
-- `PiAgentSession` 鐜板湪鏀寔 `selectableModels()` / `selectModel(index)`锛?  - 浼氭妸褰撳墠 cycle scope 鏆撮湶鎴愬彲閫夋ā鍨嬪垪琛?  - selector 閫氳繃绱㈠紩閫変腑绮剧‘ `CycleModel`锛屼笉浼氳鍚?model 涓嶅悓 thinking suffix 娣锋穯
-  - 褰撳墠妯″瀷宸插懡涓椂涓嶄細閲嶅鍐?session entry锛屼絾浠嶄細杩斿洖绋冲畾鐘舵€佹憳瑕?- `PiModelSelector` 鐜板湪琛ヤ簡 model selector overlay 棣栫増锛?  - 澶嶇敤鐜版湁 `Input + SelectList` 缁撴瀯
-  - label 鏄剧ず `provider/model`锛宒escription 鏄剧ず thinking level
-  - 褰撳墠椤逛細甯?`鈫?current`
-- `PiInteractiveMode` 鐜板湪浼氬湪 prompt 灞傛秷璐?`selectModel`锛?  - 鏃犲彲閫夋浛浠ｆā鍨嬫椂鍥炴樉 `Only one model available`
-  - 鏈夊彲閫夐」鏃舵墦寮€ model selector overlay
-  - 閫変腑鍚庡洖鏄?`Selected provider/model`
-- `Agent` 鐜板湪琛ヤ簡 `followUpMessages()` snapshot锛?  - interactive mode 鍙互璇诲彇褰撳墠 runtime follow-up queue
-  - 涓嶄細鍍?`drainFollowUpQueue()` 閭ｆ牱娑堣垂闃熷垪
-- `PiAgentSession` 鐜板湪鏆撮湶 `queuedFollowUps()`锛?  - 浼氭妸 runtime follow-up queue 娓叉煋鎴?editor-friendly 鏂囨湰鍒楄〃
-  - 渚?interactive mode 鍦ㄧ姸鎬佸尯鏄剧ず pending message 棰勮
-- `PiInteractiveMode` 鐜板湪琛ヤ簡 pending follow-up queue status 棣栫増锛?  - status 涓昏鍚庝細杩藉姞 `Follow-up: ...` 鍒楄〃
-  - 搴曢儴浼氳拷鍔?`鈫?alt+up to edit queued messages` 鎻愮ず
-  - 褰撳墠棣栫増鍙樉绀?follow-up queue锛岃繕娌℃妸 steering/compaction queue 鍚堝苟杩涙潵
-- `PiInteractiveSession` 鐜板湪琛ヤ簡 settings selector contract锛?  - 鏆撮湶 `settingsSelection()` 褰撳墠蹇収
-  - 鏆撮湶 `updateSetting(id, value)` 渚?interactive overlay 鍥炲啓
-- `PiAgentSession` 鐜板湪琛ヤ簡 settings selector first cut锛?  - `autocompact` 浼氱洿鎺ュ啓鍥?global settings
-  - `steering-mode` / `follow-up-mode` 浼氬悓鏃舵洿鏂?runtime queue mode 鍜?global settings
-  - `thinking` 浼氬悓鏃舵洿鏂?agent thinking level銆乻ession `thinking_level_change`銆乬lobal `defaultThinkingLevel`
-- `PiSdkSession` 鐜板湪鍦ㄥ惎鍔ㄦ椂浼氫粠 settings 鎭㈠锛?  - `defaultThinkingLevel`
+- `PiCliSessionResolver` 閻滄澘婀崷?`--resume` 鐠侯垰绶炴稉瀣╃窗閸氬本妞傞崙鍡楊槵閿?  - current scope閿涙艾缍嬮崜宥夈€嶉惄顔炬畱姒涙顓?session 閻╊喖缍?
+  - all scope閿涙艾鍙忕仦鈧?`~/.pi/agent/sessions/*` 閼辨艾鎮庣紒鎾寸亯
+- `PiSessionPicker` 閻滄澘婀弨顖涘瘮閸?scope閿?  - 姒涙顓绘禒?current scope 閸氼垰濮?
+  - `Tab` 閸掑洤鍩?all scope
+  - all scope 娑撳绱伴弰鍓с仛 `cwd`
+  - current/all 閸氬本绨弮鏈电箽閹镐焦妫惃?`cwd` 鐏炴洜銇氶敍宀勪缉閸?UI 閸ョ偤鈧偓
+- `pi-tui` 鐏炲倹鏌婃晶?`SESSION_SCOPE_TOGGLE` action閿涘矂绮拋銈夋暛娴ｅ秵妲?`tab`
+- `PiSessionPicker` 閻滄澘婀弨顖涘瘮 sort toggle閿?  - 姒涙顓?`recent`
+  - `Ctrl+S` 閸掑洤鍩?`relevance`
+  - relevance 閸欘亜婀張澶嬫偝缁?query 閺冨墎鏁撻弫?  - relevance 閻╊喖澧犻幐?`label -> fileName -> cwd -> path` 閻?token 閸涙垝鑵戞担宥囩枂閹垫挸鍨?
+- `pi-tui` 鐏炲倹鏌婃晶?`SESSION_SORT_TOGGLE` action閿涘矂绮拋銈夋暛娴ｅ秵妲?`ctrl+s`
+- `PiSessionPicker` 閻滄澘婀弨顖涘瘮 named-only filter閿?  - 姒涙顓?`all`
+  - `Ctrl+N` 閸掑洤鍩?`named`
+  - blank / whitespace-only `name` 娴兼俺顫︾憴鍡曡礋 unnamed
+- `pi-tui` 鐏炲倹鏌婃晶?`SESSION_NAMED_FILTER_TOGGLE` action閿涘矂绮拋銈夋暛娴ｅ秵妲?`ctrl+n`
+- `PiSessionPicker` 閻滄澘婀弨顖涘瘮 path show/hide閿?  - 姒涙顓?`off`
+  - `Ctrl+P` 閸掑洤鍩?`on`
+  - path 娴兼俺鎷烽崝鐘插煂 session description閿涘奔绌舵禍搴″隘閸掑棗鎮撻崥?session 閺傚洣娆?
+- `pi-tui` 鐏炲倹鏌婃晶?`SESSION_PATH_TOGGLE` action閿涘矂绮拋銈夋暛娴ｅ秵妲?`ctrl+p`
+- `PiSessionPicker` 閻滄澘婀弨顖涘瘮 threaded sort閿?  - 瑜版挸澧犳妯款吇娴?`threaded` 鐠ч攱顒?
+  - 瑜版挸澧?cycle 妞ゅ搫绨弰?`threaded -> recent -> fuzzy -> threaded`
+  - `threaded` 閸欘亜婀粚?query 閺冭泛鎯庨悽銊︾埐閻樿泛绔风仦鈧?
+  - 闂堢偟鈹?query 閺冭绱漙threaded` 娴兼艾鍘涢柅鈧崠鏍у煂瑜版挸澧犻惃?`relevance` 妫ｆ牜澧?
+  - 閺嶆垹濮哥仦鏇炵磻閹?`parentSessionPath` 瀵ょ儤鐖查敍灞剧壌/鐎涙劘濡悙瑙勫瘻 `modified desc` 閹烘帒绨?
+- `PiSessionPicker` 閻滄澘婀弨顖涘瘮 fuzzy parser/search閿?  - `recent` / `fuzzy` 闁垝绱扮挧?picker 閼奉亜绻侀惃?parser閿涘奔绗夐崘宥勭贩鐠?`SelectList` 閻?contains-only 鏉╁洦鎶?
+  - 閺€顖涘瘮 quoted phrase閿涘牆鐢粚铏规瑜版帊绔撮崠鏍电礆
+  - 閺€顖涘瘮 `re:` case-insensitive regex
+  - 閺€顖涘瘮缁犫偓閸?subsequence fuzzy
+  - 閹兼粎鍌ㄩ弬鍥ㄦ拱鐟曞棛娲?`id/name/allMessagesText/cwd/path`
+- `PiCliModule` 閻滄澘婀导姘躬閸氼垰濮╅崜宥呭鏉?`~/.pi/agent/keybindings.json`
+  - 瑜版挸澧犳＃鏍閺€顖涘瘮 session selector 閻╃鍙?alias閿涙瓪toggleSessionSort`閵嗕梗toggleSessionNamedFilter`閵嗕梗toggleSessionPath`閵嗕梗renameSession`閵嗕梗deleteSession`閵嗕梗tab`
+  - 娑旂喐甯撮崣?`EditorAction` 閺嬫矮濡囬崥宥囨纯閹恒儴顩惄?  - 閸旂姾娴囨径杈Е娴兼岸娼ゆ妯烘礀闁偓閸掍即绮拋銈夋暛娴?- `PiCliSessionResolver` 閻滄澘婀幎?`--resume` 閻?current/all scope 閺€瑙勫灇 loader閿?  - current scope 閸氼垰濮╅弮鍓佺彌閸楀啿濮炴潪?  - all scope 閸欘亜婀崚?scope 閺冩儼袝閸欐垵濮炴潪?  - all scope 閼辨艾鎮庨弮鏈电窗閹?project 閻╊喖缍嶉崶鐐村Г `loaded/total` 鏉╂稑瀹?
+- `PiSessionPicker` 閻滄澘婀弨顖涘瘮 TS 妞嬪孩鐗?loading/progress header 妫ｆ牜澧楅敍?  - 閸掓繃顐兼潻娑樺弳閺冭绱漜urrent scope 閺堫亣绻戦崶鐐插娴兼碍妯夌粈?`Loading current ...`
+  - 閸掑洤鍩?all scope 娑撴柧绮涢崷銊ュ鏉炶姤妞傞敍灞肩窗閺勫墽銇?`Loading x/y`
+  - loader 瀵倸鐖舵导姘▔缁€?`Load error: ...`
+  - direct `pick(List, List)` 鐠嬪啰鏁ゆ导姘宠泲妫板嫬濮炴潪鍊熺熅瀵板嫸绱濇穱婵囧瘮閸樼喐婀侀崥灞绢劄濞撳弶鐓嬮崪宀勨偓澶嬪鐠囶厺绠熼敍灞肩瑝閹跺﹥妫拫鍐暏閻愯鍓版径鏍у綁閹存劕绱撳?- `PiSessionPicker` 閻滄澘婀幎?fuzzy scoring 鐎靛綊缍堥崚?TS `packages/tui/src/fuzzy.ts` 妫ｆ牜澧楅敍?  - 鏉╃偟鐢婚崨鎴掕厬娴兼艾绶遍崚鐗堟纯婵傜晫娈戦崚鍡樻殶
+  - 閸楁洝鐦濇潏鍦櫕閸涙垝鑵戞导姘繁閸掔増娲挎總鐣屾畱閸掑棙鏆?
+  - gap 娴兼碍瀵滅捄婵堫瀲閸旂姷缍掗崚?  - 閺呮艾鍤悳鎵畱閸涙垝鑵戞导姘瘻娴ｅ秶鐤嗘潪璇蹭簳閸旂姷缍掗崚?  - `letters+digits` / `digits+letters` query 閻滄澘婀弨顖涘瘮娑撯偓濞?alpha-numeric swapped fallback閿涘奔绶ユ俊?`codex52 -> 52codex`
+- `PiSessionPicker` 閻滄澘婀幎?session selector search text 閼煎啫娲块弨鑸垫殐閸掓澘鎷?TS 娑撯偓閼峰娈戠€涙顔岄敍?  - 閹兼粎鍌ㄩ崣顏囶洬閻?`id/name/allMessagesText/cwd`
+  - `path` 娴犲秴褰查弰鍓с仛閸?UI description 闁插矉绱濇担鍡曠瑝閸愬秴寮稉搴″爱闁?閹烘帒绨?
+- `PiSessionPicker` 閻滄澘婀幎?header/status/hint 閺傚洦顢嶇紒褏鐢诲鈧?TS 闂堢媴绱?
+  - delete confirm 閺傚洦顢嶉弨瑙勫灇 `Delete session? [Enter] confirm 璺?[Esc] cancel`
+  - load error 閺傚洦顢嶉弨瑙勫灇 `Failed to load sessions: ...`
+  - 閺傛澘顤冮幖婊呭偍閹绘劗銇氱悰宀嬬窗`tab scope 璺?re:<pattern> regex 璺?"phrase" exact 璺?...`
+  - 娣囨繄鏆€閻滅増婀?`sort(named/path)` 閻樿埖鈧浇顢戦敍宀勪缉閸?Java 閻楀牆缍嬮崜?selector 鐢啫鐪崶鐐衡偓鈧?
+- `PiCliKeybindingsLoader` 閻滄澘婀幎?keybindings 閸掑棙鍨?editor/app 娑撱倕鐪伴敍?  - editor 鐏炲倻鎴风紒顓炲晸閸?`EditorKeybindings.global()`
+  - app 鐏炲倹鏌婃晶?`PiAppKeybindings.global()`
+  - `toggleSessionNamedFilter` 閻滄澘婀ぐ鎺戝煂 app 鐏炲偊绱濋懓灞肩瑝閺勵垰顢ｆ潻?editor action map
+- `PiSessionPicker` 閻滄澘婀幐?TS 閻ㄥ嫯浜寸拹锝呭瀻鐏炲倹绉风拹?keybindings閿?  - `scope/sort/path/delete/rename` 缂佈呯敾鐠?editor keybindings
+  - `named filter` 閺€纭呰泲 app keybindings
+  - hint 閺傚洦顢嶉柌?`named(...)` 娑旂喐鏁兼禒?app keybindings 閸欐牗瀵滈柨?- `KeyMatcher` 閻滄澘婀弨顖涘瘮 generic `alt+<char>`閿涘奔绶ユ俊?`alt+n`
+- `PiSessionPicker` 閻滄澘婀幎?session metadata description 閸愬秴绶?TS 闂堢姳绨℃稉鈧銉窗
+  - 姒涙顓?metadata 娑撳秴鍟€閺勫墽銇?session file name
+  - 妞ゅ搫绨弨瑙勫灇 `path 璺?cwd 璺?N msg 璺?age` 閻ㄥ嫬鐡欓梿?  - `path` 閸欘亜婀?`path(on)` 閺冭埖妯夌粈?  - `cwd` 閸欘亜婀?all-scope / same-scope 閸忕厧顔愰崷鐑樻珯閺勫墽銇?
+  - home 閻╊喖缍嶉崜宥囩磻娴兼碍濮岄崣鐘冲灇 `~`
+- `PiSessionPicker` 閻滄澘婀幎?title 閸?scope summary 閸氬牆鍩岄崥灞肩鐞涘矉绱?
+  - current scope 娴兼碍妯夌粈?`Resume session (Current folder) ... 閳?Current Folder | 閳?All`
+  - all scope / loading scope 娑旂喎顦查悽銊ユ倱娑撯偓鐞涘瞼绮ㄩ弸?  - 鏉╂瑨顔€妞よ埖鐖紒鎾寸€弴瀛樺复鏉?TS 閻?left-title / right-status
+- `PiAppKeybindings` 閻滄澘婀禒?session selector 閹碘晛鍩?interactive mode閿?  - 閺傛澘顤?`interrupt`閿涘牓绮拋?`escape`閿?  - 閺傛澘顤?`tree`閿涘牓绮拋銈嗘￥韫囶偅宓庨柨顕嗙礉閸欘垶鍘ょ純顕嗙礆
+  - 閺傛澘顤?`fork`閿涘牓绮拋銈嗘￥韫囶偅宓庨柨顕嗙礉閸欘垶鍘ょ純顕嗙礆
+- `PiAppKeybindings` 閻滄澘婀紒褏鐢荤悰銉ょ啊 `resume`閿涘牓绮拋銈嗘￥韫囶偅宓庨柨顕嗙礉閸欘垶鍘ょ純顕嗙礆
+- `PiCliKeybindingsLoader` 閻滄澘婀弨顖涘瘮娴?`keybindings.json` 鐠囪褰?`interrupt` / `tree` / `fork`
+- `PiCliKeybindingsLoader` 閻滄澘婀稊鐔告暜閹镐浇顕伴崣?`resume`
+- `PiInteractiveMode` 閻滄澘婀崷?prompt 鐏炲倸鍘涘☉鍫ｅ瀭 app keybindings閿?  - app `interrupt` 娴兼俺鐨熼悽?`session.abort()`
+  - app `resume` 娴兼俺鐨熼悽?`session.resume()`
+  - app `tree` 娴兼碍澧﹀鈧?tree overlay
+  - app `fork` 娴兼碍澧﹀鈧?fork overlay
+  - 閸忔湹缍戞潏鎾冲弳閸愬秶鎴风紒顓℃儰閸?`Input`
+- `PiSessionPicker` 閻滄澘婀导姘躬缁愬嫮绮撶粩顖欑瑓鐎电懓宕熺悰宀勩€婇弽蹇撲粵鐎硅棄瀹抽幇鐔虹叀閹搭亝鏌囬敍?  - 鐎硅棄瀹崇搾鍐差檮閺冩湹绮涙穱婵囧瘮瀹?title / 閸?scope summary 閻ㄥ嫬宕熺悰灞界鐏炩偓
+  - 鐎硅棄瀹虫稉宥堝喕閺冩湹绱崗鍫滅箽閻ｆ瑥褰告笟?scope summary
+  - title 娑撳秴顧勯弨鍙ョ瑓閺冩湹绱伴悽?`...` 鐎瑰鍙忛幋顏呮焽閿涘矂浼╅崗宥夈€婇弽蹇斿閸?viewport
+  - scope summary 閼奉亣闊╂潻鍥ь啍閺冩湹绡冩导姘愁潶鐎瑰鍙忛幋顏呮焽閿涘矁鈧奔绗夐弰顖滄纯閹恒儲鎷洪惍缈犵鐞?- `SelectList` 閻滄澘婀幎?label/description 閻ㄥ嫬鍨€硅棄鍨庨柊宥嗘暭閹存劕鎼锋惔鏂跨础閿?  - 娑撳秴鍟€閻劌娴愮€?`32` 閸掓鎹ｆ慨瀣╃秴閸愬啿鐣?description 閺勵垰鎯侀崙铏瑰箛
+  - 娑擃厾鐡戠€硅棄瀹虫稉瀣╃窗娴兼ê鍘涙稉?description 娣囨繄鏆€閺堚偓鐏忓繐褰茬拠鑽も敄闂?  - label 閸掓ぞ绱伴幐澶婂讲閻劌顔旀惔锕€濮╅幀浣规暪缂傗晪绱漝escription 閸掓婀径鐔烘暏閺冨墎鎴风紒顓熸▔缁€?  - 鏉╂瑨顔€ session selector 閸?`36~40` 閸掓妾潻鎴滅矝閼虫垝绻氶悾?`msg/age` 缁?metadata
+- `PiSessionPicker` 閻滄澘婀幎濠囥€婇柈?info/hint 鐞涘本鏁奸幋鎰▔瀵繑瀵滅拠宥嗗床鐞涘矉绱?
+  - `sort/named/path` 閻樿埖鈧浇顢戞导姘瘻缁岃櫣娅ф潏鍦櫕閹舵顢?
+  - `scope/regex/phrase/delete/rename` 閹绘劗銇氱悰灞肩瘍娴兼碍瀵滅拠宥嗗鐞?  - rename / delete 缁涘銆婇柈銊嚛閺勫氦顢戦崥灞剧壉婢跺秶鏁ゆ潻娆忣殰閹广垼顢戦柅鏄忕帆
+  - 鏉╂瑩浼╅崗宥囩崕缂佸牏顏惄瀛樺复閹稿鍨弫鎵€栭幋顏呮焽閿涘本濡?`sort(Threaded)` 娑斿琚?token 閸掑洨顣?
+- `PiSessionPicker` 閻滄澘婀悰銉ょ啊 session selector 閻?ANSI 閺嶅嘲绱＄仦鍌滈獓閿?  - selected prefix 閻?accent
+  - selected row 閺傚洦婀伴悽?bold
+  - metadata / scroll info / no-match 閺傚洦婀伴悽?muted
+  - 閸忓牊濡哥仦鍌滈獓閽€钘夋躬 session list 閺堫剝闊╅敍灞芥倵缂侇厼鍟€瀵扳偓妞ゅ爼鍎?status/info 閸栫儤澧?
+- `PiSessionPicker` 閻滄澘婀幎濠囥€婇柈銊ュ隘閸╃喍绡冮幒銉ュ煂 ANSI 鐏炲倻楠囬敍?  - header title 閻?bold
+  - scope summary 閻?muted
+  - sort/named/path 閻樿埖鈧浇顢戞稉搴㈡偝缁?hint 鐞涘瞼鏁?muted
+  - delete confirm 閻?warning
+  - load error 閻?error
+  - rename title 娑旂喐鏁奸幋?bold閿涘ename 閹绘劗銇氶弨瑙勫灇 muted
+- `PiSessionPicker` 閻滄澘婀幎?header summary 閸愬秶绮忛崚鍡樺灇閸掑棙顔岄惈鈧懝璇х窗
+  - active scope 閺嶅洩顔囬敍鍧勯埣?Current Folder` / `閳?All`閿涘鏁?accent
+  - all-scope loading 閻?`Loading x/y` 娑旂喓鏁?accent
+  - inactive scope 娑撳骸鍨庨梾鏃傤儊娣囨繃瀵?muted
+  - current 閸掓繃顐?loading 娑旂喓鏁?accent閿涘矁鈧奔绗夐弰顖涙殻濞?muted
+- `PiTreeSelector` / `PiForkSelector` 閻滄澘婀径宥囨暏閸氬奔绔存總?selector theme閿?  - overlay title 閻?bold
+  - overlay hint 閻?muted
+  - list selected row / metadata / no-match / scroll info 閻╁瓨甯存径宥囨暏 session selector 閻?ANSI 鐏炲倻楠?
+  - 闁灝鍘?tree/fork overlay 閸︺劏顫嬬憴澶夌瑐閸ョ偤鈧偓閹存劗鍑介弬鍥ㄦ拱閸掓銆?
+- `PiSessionPicker` 閻滄澘婀导姘Ω regex parse error 閺勫海鈥橀弰鍓с仛閸?search 閸栬桨绗傞弬鐧哥窗
+  - query 鐟欙絾鐎芥径杈Е閺冭埖妯夌粈?`Invalid regex: ...`
+  - 鐠囥儳濮搁幀浣筋攽鐠?error 閺嶅嘲绱?
+  - 鏉╂瑦鐗辨稉宥勭窗閸愬秴鎷伴弲顕€鈧?`no match` 缁岃櫣绮ㄩ弸婊勮穿閸︺劋绔寸挧?- `PiSessionPicker` 閻滄澘婀幎?empty/no-match/error 娑撳顫掗崚妤勩€冮悩鑸碘偓浣瑰瀵偓娴滃棴绱?
+  - current/all scope 娑撹櫣鈹栨稉?query 娑撹櫣鈹栭弮璁圭礉閺勫墽銇?`No sessions in ...`
+  - named-only 閹垫挸绱戞稉鏂垮讲鐟欎胶绮ㄩ弸婊€璐熺粚鐑樻閿涘本妯夌粈?`No named sessions in ...`
+  - query 闂堢偟鈹栨担鍡樻￥閸栧綊鍘ら弮璁圭礉閺勫墽銇?`No matches for "..."`
+  - regex 闂堢偞纭堕弮璁圭礉閸掓銆冮崠鐑樻▔缁€?`Invalid regex query`
+  - current/all scope 濮濓絽婀?loading 閹?load error 閺冭绱濋崚妤勩€冮崠杞扮瑝閸愬秹鈧偓閸?`No matching commands`
+- `PiSessionPicker` 閻滄澘婀紒褏鐢婚幎?empty-state hint 瀵扳偓 TS 闂堢媴绱?
+  - current scope 娑撹櫣鈹栭弮璁圭礉閺勫墽銇?`No sessions in current folder. Press tab to view all.`
+  - current scope 娑?named-only 娑撹櫣鈹栭弮璁圭礉閺勫墽銇?`Press ctrl+n to show all, or tab to view all.`
+  - all scope 娑?named-only 娑撹櫣鈹栭弮璁圭礉閺勫墽銇?`No named sessions found. Press ctrl+n to show all.`
+  - `current/all` 閸氬本绨弮鏈电瑝娴兼俺顕ら幎銉ょ瑝閸欘垳鏁ら惃?scope-toggle 閹绘劗銇?
+- `SelectList` 閻滄澘婀幎?description 鐢啫鐪紒褏鐢诲鈧?TS selector 闂堢媴绱?
+  - 娑撳秴鍟€缂?label 妫板嫮鏆€閸ュ搫鐣剧粚鍝勫灙
+  - 娴兼矮绮犵€圭偤妾?label 鐎硅棄瀹抽崶鐐存暪缁岃桨缍戦崚妤冪舶閸欏厖鏅?description
+  - 閻?label + 闂€?metadata 閸︾儤娅欐稉瀣剁礉娴兼矮绱崗鍫滅箽娴?`cwd/path/msg/age` 鐏忛箖鍎存穱鈩冧紖
+  - 鐞涘苯鐔０婵嗩樆娣囨繄鏆€鐎瑰鍙忔潏纭呯獩閿涘矂浼╅崗?item 濮濓絽銈介幍鎾村姬 terminal 鐎硅棄瀹抽弮鎯邦潶缂佸牏顏懛顏勫З閹广垼顢?
+- `PiInteractiveMode` 閻滄澘婀悰銉ょ啊 interactive footer 妫ｆ牜澧楅敍?  - footer 娴兼艾婀?`14` 鐞涘苯寮锋禒銉ょ瑐缂佸牏顏弰鍓с仛閿涘矂浼╅崗宥嗗皨閸?`12` 鐞涘苯娲栬ぐ鎺撶ゴ鐠囨洟鍣烽惃?transcript/header
+  - footer 瀹革缚鏅堕幐?assistant message 閻?`usage` 閼辨艾鎮庣槐顖濐吀 `閳吔nput 閳悐utput RcacheRead WcacheWrite $cost`
+  - footer 閸欏厖鏅堕弰鍓с仛瑜版挸澧?`model id`閿涘easoning model 娴兼氨鎴风紒顓炵敨閸?thinking level
+  - 鐎硅棄瀹崇搾鍐差檮閺冩湹绻氶悾娆忎箯缂佺喕顓?/ 閸欒櫕膩閸ㄥ娈戦崡鏇☆攽鐢啫鐪敍灞筋啍鎼达缚绗夌搾铏娴兼ê鍘涙穱婵堟殌缂佺喕顓搁獮璺虹暔閸忋劍鍩呴弬顓熌侀崹瀣╀繆閹?- `PiInteractiveMode` 閻滄澘婀幎?header top/bottom padding 閺€鍓佹彛閸?`0/0`閿?  - 闁板秴鎮?footer 妫ｆ牜澧楅敍宀勪缉閸忓秴鐨紒鍫㈩伂娑?header/transcript 閸ョ娀顤傛径鏍敄鐞涘矁顫︽潻鍥ㄦ－鐟佷焦甯€
+- `PiInteractiveMode` 閻滄澘婀紒褏鐢婚幎?footer 閹恒儱鍩?ANSI 鐏炲倻楠囬敍?  - usage/cost 缂佺喕顓搁弫缈犵秼鐠?muted
+  - model id 鐠?bold
+  - reasoning suffix閿涘潉閳?high` / `閳?thinking off`閿涘铔?muted
+  - 閸欏厖鏅剁€硅棄瀹虫稉宥堝喕閺冩湹绱版导妯哄帥娣囨繄鏆€ model id閿涘苯鍟€閹搭亝鏌?suffix閿涘矂浼╅崗宥嗗Ω閺堚偓閸忔娊鏁惃?model 閺嶅洩鐦戦崗鍫ｎ梿閹?- `PiInteractiveMode` 閻滄澘婀紒褏鐢婚幎?provider 娣団剝浼呴幒銉ュ煂 footer 閸欏厖鏅堕幗妯款洣閿?  - 鐎硅棄瀹崇搾鍐差檮閺冭埖妯夌粈?`provider/model`
+  - provider 閸撳秶绱戠挧?muted閿涘odel id 缂佈呯敾鐠?bold
+  - 鐎硅棄瀹虫稉宥堝喕閺冩湹绱伴崗鍫モ偓鈧崶鐐插涧閺勫墽銇?model閿涘苯鍟€閼板啳妾婚幋顏呮焽閿涘矂浼╅崗?provider 閹躲垺甯€ model 閻ㄥ嫬褰茬憴浣衡敄闂?- `PiAppKeybindings` 閻滄澘婀紒褏鐢荤悰銉ょ啊 `cycleThinkingLevel`閿?  - 姒涙顓婚柨顔荤秴閺?`shift+tab`
+  - `PiCliKeybindingsLoader` 閻滄澘婀弨顖涘瘮 `cycleThinkingLevel` alias
+  - `KeyMatcher` 閻滄澘婀弰鎯х础閺€顖涘瘮 `shift+tab` (`ESC [ Z`)
+- `PiInteractiveMode` 閻滄澘婀导姘躬 prompt 鐏炲倹绉风拹?`cycleThinkingLevel`閿?  - reasoning model 娑撳袝閸?`session.cycleThinkingLevel()`
+  - 妫ｆ牜澧?cycle 妞ゅ搫绨弰?`off -> minimal -> low -> medium -> high -> off`
+  - 閸掑洦宕查崥搴濈窗閹?`Thinking level: <level>` 閸ョ偞妯夐崚鎵Ц閹浇顢?
+- `PiAgentSession` 閻滄澘婀导姘Ω cycleThinkingLevel 閹镐椒绠欓崠鏍ф礀 session閿?  - 濮ｅ繑顐奸崚鍥ㄥ床闁垝绱扮拫鍐暏 agent state update
+  - 楠炴儼鎷烽崝?`thinking_level_change`
+  - `off` 娴兼碍瀵滅€涙顑佹稉?`off` 閸愭瑥鍙嗛敍灞肩箽閹镐礁鎷伴悳鐗堟箒 session replay 閸忕厧顔?
+- `PiAppKeybindings` 閻滄澘婀紒褏鐢荤悰銉ょ啊 `cycleModelForward`閿?  - 姒涙顓婚柨顔荤秴閺?`ctrl+p`
+  - `PiCliKeybindingsLoader` 閻滄澘婀弨顖涘瘮 `cycleModelForward` alias
+- `PiCliModule` 閻滄澘婀幎?`--models` 閹恒儱鍩屾禍?interactive model cycle 妫ｆ牜澧楅敍?  - 濞屸剝婀侀弰鎯х础 `--provider/--model` 閺冭绱濇导姘喘閸忓牅绮?`--models` scope 闁插矂鈧顑囨稉鈧稉?model 娴ｆ粈璐熼崥顖氬З model
+  - scope 鐟欙絾鐎芥＃鏍閺€顖涘瘮 `provider/modelId`閵嗕胶鍑?`modelId`閵嗕恭ontains fallback閿涘奔浜掗崣?`*` / `?` / `[]` 妞嬪孩鐗?glob
+  - scope pattern 妫ｆ牜澧楁稊鐔告暜閹?`:high` / `:low` 鏉╂瑧琚?thinking suffix閿涘苯鑻熼幎濠傜暊鐢箒绻?cycle target
+  - 婵″倹鐏?`--models` 濞屄ば掗弸鎰毉娴犺缍嶉崨鎴掕厬閿涘奔绱伴柅鈧崶?registry 閸忋劑鍣?models閿涘矂浼╅崗宥嗗Ω cycle 閻╁瓨甯撮崑姘劥
+- `PiAgentSession` 閻滄澘婀弨顖涘瘮 forward model cycle閿?  - cycle 閸掓銆冩导妯哄帥娴ｈ法鏁?`--models` 鐟欙絾鐎介崙铏规畱 scope閿涙稑鎯侀崚娆撯偓鈧崶鐐茬秼閸?registry 閸忋劑鍣?models
+  - 濮ｅ繑顐奸崚鍥ㄥ床闁垝绱伴弴瀛樻煀 agent state閿涘苯鑻熸潻钘夊 `model_change`
+  - 閼汇儳娲伴弽?model 娑撳秵鏁幐?reasoning閿涘奔绱伴幎?thinking level 濞撳懏鍨?`off` 楠炴儼鎷烽崝?`thinking_level_change`
+  - 閼汇儳娲伴弽?scoped model 閼奉亜鐢?thinking suffix閿涘奔绱伴崷銊ュ瀼閹广垺妞傛稉鈧獮璺虹安閻?- `PiInteractiveMode` 閻滄澘婀导姘躬 prompt 鐏炲倹绉风拹?`cycleModelForward`閿?  - 鐟欙箑褰傞崥搴ょ殶閻?`session.cycleModelForward()`
+  - 閹存劕濮涢弮鍓佸Ц閹浇顢戦崶鐐存▔ `Switched to provider/model`
+  - 閼汇儳娲伴弽?thinking 闂?`off`閿涘奔绱版潻钘夊 `(thinking: level)`
+- `PiInteractiveMode` 閻滄澘婀紒褏鐢婚幎?footer context 閹稿洦鐖ｉ幒銉ょ瑐閿?  - 閸╄桨绨張鈧潻鎴滅閺?assistant message 閻?`usage.totalTokens`
+  - 缂佹挸鎮庤ぐ鎾冲 model 閻?`contextWindow`閿涘苯婀?footer 瀹革缚鏅舵潻钘夊 `x%/window`
+  - 姒涙顓荤挧?muted 閺嶅嘲绱?
+  - 閸楃姷鏁ゆ潏鎯у煂 `70%` 閺冭泛鍨忛崚?warning閿涘矁鎻崚?`90%` 閺冭泛鍨忛崚?error
+  - 濞屸剝婀?assistant usage 閹?model 閺堫亜锛愰弰?context window 閺冭绱濇稉宥嗘▔缁€楦款嚉閹稿洦鐖?
+- `PiInteractiveMode` 閻滄澘婀紒褏鐢婚幎?footer 閻ㄥ嫮鐛庣€硅棄瀹崇粵鏍殣瀵扳偓 TS 闂堢媴绱?
+  - 閸楁洝顢戦弨鍙ョ瑝娑撳妞傞敍灞肩瑝閸愬秶娲块幒銉ゆ丢閹哄褰告笟?model 閹芥顩?
+  - 娴兼矮绱崗鍫㈢舶閸欏厖鏅?model 閻ｆ瑥鍤張鈧亸蹇撳讲鐠囪顔旀惔?  - 瀹革缚鏅?usage/context 缂佺喕顓告导姘焻閺傤厼鍩岄崜鈺€缍戠€硅棄瀹?
+  - 閺嬩胶鐛庣€硅棄瀹虫稉瀣灟閻╁瓨甯撮柅鈧崶鐐插涧閺勫墽銇氶崣鍏呮櫠 model
+- `PiInteractiveSession` 閻滄澘婀弳鎾苟 `autoCompactionEnabled()`閿?  - `PiAgentSession` 娴?`settingsManager.effective().getBoolean("/compaction/enabled", true)` 鐠囪褰?
+  - `PiInteractiveMode` 娴兼艾婀?footer context indicator 閸氬氦鎷烽崝?`(auto)`
+  - session 缁狙冨彠闂傤厽妞傞敍宀冾嚉 suffix 娴兼碍绉锋径?- `PiInteractiveSession` 閻滄澘婀紒褏鐢婚弳鎾苟 `contextUsage()`閿?  - `PiAgentSession` 娴兼碍顥呴弻?branch 娑撳﹥娓舵潻鎴滅濞?`CompactionEntry`
+  - 閼?compaction 娑斿鎮楁潻妯荤梾閺堝鏌婇惃?assistant usage閿涘苯鍨潻鏂挎礀 `percent = null`
+  - `PiInteractiveMode` 娴兼碍濡告潻娆戣閻樿埖鈧焦瑕嗛弻鎾村灇 `?/%window`
+  - 鏉╂瑦鐗?footer 娑撳秳绱伴崘宥嗗Ω compaction 閸撳秶娈?usage 閻ф儳鍨庡В鏃堟晩鐠囶垰婀村鍓佺敾閸?compaction 娑斿鎮?
+- `PiAgentSession.contextUsage()` / `FakeSession.contextUsage()` 閻滄澘婀崷?idle 娑撴柨鐨婚弮?assistant usage 閺冩儼绻戦崶?`0.0%/%window`
+- `PiInteractiveMode` 閻滄澘婀幎?footer 閺€瑙勫灇閺囧鎻ｉ崙鎴犳畱閸楁洝顢戠敮鍐ㄧ湰閿?  - 瀹革箑褰搁幗妯款洣娑斿妫块崶鍝勭暰娣囨繄鏆€ `2` 娑擃亞鈹栭弽?  - 娑撳秴鍟€閻劌褰哥€靛綊缍?padding 閹?ANSI/raw 闂€鍨閸棗鍩屾稉鈧悰灞炬汞鐏?  - 缁愬嫬顔旀惔锕€鍨庨弨顖欑窗閸忓牏绮伴崣鍏呮櫠 model 閹芥顩︽穱婵堟殌娣囨繂绨崇€硅棄瀹抽敍灞藉晙閹搭亝鏌囧锔挎櫠 usage/context
+- `PiInteractiveSession` 閻滄澘婀弳鎾苟 `availableProviderCount()`閿?  - `PiCliModule` 娴兼碍濡?`ModelRegistry.getProviders().size()` 娑撳鐭囩紒?`PiAgentSession`
+  - `PiInteractiveMode` 閸欘亝婀侀崷?provider 閺佷即鍣烘径褌绨?`1` 閺冭埖澧犻弰鍓с仛 `provider/` 閸撳秶绱?
+  - 閸?provider 閸︾儤娅欐稉?footer 閸欘亝妯夌粈?model id閿涘苯鎷?TS 閻楀牐顕㈡稊澶婎嚠姒?- `PiInteractiveSession` 閻滄澘婀紒褏鐢婚弳鎾苟 `cwd()` / `sessionName()`閿?  - `PiAgentSession` 娴?`SessionHeader.cwd` 閸滃本娓舵潻鎴滅閺?`SessionInfoEntry` 鐠囪褰?
+  - `PiInteractiveMode` 閸?`15` 鐞涘苯寮锋禒銉ょ瑐缂佸牏顏导姘虫嫹閸旂姷顑囨禍宀冾攽 footer
+  - 缁楊兛绨╃悰宀勵浕閻楀牊妯夌粈?`cwd 閳?session name`
+  - 缁楊兛绨╃悰灞肩窗鐠?muted 閺嶅嘲绱￠獮鑸靛瘻鐎硅棄瀹崇€瑰鍙忛幋顏呮焽
+  - 娑撱倛顢戞い鍝勭碍閺?`stats` 閸︺劌澧犻妴涔wd/session` 閸︺劌鎮楅敍宀勪缉閸忓秴褰ч張澶夌鐞涘矁鍏樼憴浣规閹跺﹤鍙ч柨顔剧埠鐠伮ゎ梿閹?- `TerminalText` 閻滄澘婀悰銉ょ啊 `truncateMiddleToWidth()`閿?  - footer 缁楊兛绨╃悰宀€娈?`cwd 閳?session name` 娑撳秴鍟€閸欘亜浠涚亸楣冨劥閹搭亝鏌?
+  - 闂€鑳熅瀵板嫪绱伴弨瑙勫灇娑擃參妫块幋顏呮焽閿涘苯鏁栭柌蹇撴倱閺冩湹绻氶悾娆掔熅瀵板嫬澧犵紓鈧妴浣界熅瀵板嫬鐔柈銊ユ嫲 session name
+  - 鐟欏棜顫?copy 鐎靛綊缍?TS `FooterComponent` 閻ㄥ嫰鏆?`pwd` 婢跺嫮鎮婇弬鐟扮础
+- `PiGitBranchResolver` 閻滄澘婀悰銉ょ啊 `.git/HEAD` 鐟欙絾鐎芥＃鏍閿?  - 娴兼矮绮?session cwd 閸氭垳绗傞弻銉﹀ `.git`
+  - 閸忕厧顔?`.git/HEAD` 閻╊喖缍嶆禒鎾崇氨閸?`gitdir:` worktree 瑜般垹绱?
+  - detached HEAD 娴兼碍妯夌粈鐑樺灇 `detached`
+- `PiInteractiveMode` 閻滄澘婀导姘Ω footer 缁楊兛绨╃悰灞惧⒖閹?`cwd (branch) 閳?session name`閿?  - branch 鐎涙ê婀弮鑸靛絻閸?`(<branch>)`
+  - 娴犲秶鍔ф径宥囨暏 middle truncation閿涘矂浼╅崗?branch 閹躲垺甯€ session name 閻ㄥ嫬褰茬憴浣衡敄闂?  - 瑜版挸澧犳＃鏍閺勵垱瀵?render 閺冨爼娼ら幀浣筋嚢閸?`.git/HEAD`閿涘矁绻曞▽鈩冩箒 watcher/cached invalidation
+- `PiGitBranchWatcher` 閻滄澘婀悰銉ょ啊 branch change watcher 妫ｆ牜澧楅敍?  - interactive mode 閸氼垰濮╅弮鏈电窗閺嶈宓?session cwd 鐟欙絾鐎?HEAD 閹碘偓閸︺劎娲拌ぐ?  - watcher 閻╂垵鎯?`HEAD` 閻?create/delete/modify 娴滃娆?
+  - 娴滃娆㈤崚鎷屾彧閸氬簼绱伴柌宥嗘煀鐠烘垳绔村▎?`renderState(session.state())`
+  - stop 閺冩湹绱伴崗鎶芥４ `WatchService`閿涘矂浼╅崗宥呮倵閸欐壆鍤庣粙瀣亾閹?- `PiAppAction` / `PiAppKeybindings` 閻滄澘婀紒褏鐢荤悰銉ょ啊 `cycleModelBackward`閿?  - 姒涙顓婚柨顔荤秴閺?`shift+ctrl+p`
+  - `PiCliKeybindingsLoader` 閻滄澘婀弨顖涘瘮 `cycleModelBackward` alias
+- `PiAgentSession` 閻滄澘婀弨顖涘瘮 backward model cycle閿?  - 婢跺秶鏁ら悳鐗堟箒 scoped cycle list
+  - 娴犲骸缍嬮崜?model 瀵扳偓閸撳秳绔存稉顏嗘窗閺嶅洤娲栫紒?  - 閸氬本鐗辨导姘瘮娑斿懎瀵?`model_change` / `thinking_level_change`
+- `PiInteractiveMode` 閻滄澘婀导姘躬 prompt 鐏炲倹绉风拹?`cycleModelBackward`閿?  - 鐟欙箑褰傞崥搴ょ殶閻?`session.cycleModelBackward()`
+  - 閹存劕濮涢弮鑸甸儴閻劎骞囬張?`Switched to provider/model` 閻樿埖鈧焦鏋冨?- `KeyMatcher` 閻滄澘婀悰銉ょ啊 `shift+ctrl+p` / `ctrl+shift+p` 閻?Kitty `CSI u` 閸栧綊鍘ら敍?  - 瑜版挸澧犳＃鏍閺€顖涘瘮 `\u001b[112;6u`
+  - 楠炶泛鍚嬬€瑰湱鐣濋崠鏍畱 `\u001b[80;6u`
+- `PiAppAction` / `PiAppKeybindings` 閻滄澘婀紒褏鐢荤悰銉ょ啊 `newSession`閿?  - 姒涙顓婚弮鐘叉彥閹圭兘鏁敍灞藉讲闁俺绻?`keybindings.json` 闁板秶鐤?
+  - `PiCliKeybindingsLoader` 閻滄澘婀弨顖涘瘮 `newSession` alias
+- `PiAgentSession` 閻滄澘婀弨顖涘瘮 `newSession()`閿?  - streaming 娑擃厺绱伴幏鎺旂卜閸掑洦宕?
+  - 闁俺绻?`SessionManager.createBranchedSession(null)` 閸掓稑缂撶粚铏规閺?session
+  - 娴兼岸鍣哥純?agent session id閵嗕焦绔荤粚鍝勭秼閸撳秵绉烽幁顖濐潒閸ユ拝绱濋獮鍫曞櫢閺?seed model/thinking metadata
+- `PiInteractiveMode` 閻滄澘婀导姘躬 prompt 鐏炲倹绉风拹?`newSession`閿?  - 鐟欙箑褰傞崥搴ょ殶閻?`session.newSession()`
+  - 閻樿埖鈧浇顢戦崶鐐存▔ `Started new session`
+  - 閸氬海鐢?prompt 娴兼艾鐢惈鈧弬鎵畱 session id 缂佈呯敾閹笛嗩攽
+- `PiAppAction` / `PiAppKeybindings` 閻滄澘婀紒褏鐢荤悰銉ょ啊 `followUp`閿?  - 姒涙顓婚柨顔荤秴閺?`alt+enter`
+  - `PiCliKeybindingsLoader` 閻滄澘婀弨顖涘瘮 `followUp` alias
+- `PiAgentSession` 閻滄澘婀弨顖涘瘮 `followUp(String)`閿?  - 娴兼碍濡搁弬鍥ㄦ拱閸栧懓顥婇幋鎰煀閻?user message
+  - 閻╁瓨甯寸拫鍐暏 `Agent.followUp(...)` 鏉╂稑鍙?runtime follow-up 闂冪喎鍨?
+- `PiInteractiveMode` 閻滄澘婀导姘躬 prompt 鐏炲倹绉风拹?`followUp`閿?  - editor 娑撹櫣鈹栭弮鍓佹纯閹恒儱鎷烽悾?  - streaming 娑擃叀袝閸欐垳绱板〒鍛敄 editor閿涘苯鑻熼崶鐐存▔ `Queued follow-up`
+  - idle 閺冩湹绱伴柅鈧崠鏍ㄥ灇閺咁噣鈧?submit閿涘苯鎷?TS 閻?`Alt+Enter` 鐠囶厺绠熸穱婵囧瘮娑撯偓閼?- `PiAppAction` / `PiAppKeybindings` 閻滄澘婀紒褏鐢荤悰銉ょ啊 `dequeue`閿?  - 姒涙顓婚柨顔荤秴閺?`alt+up`
+  - `PiCliKeybindingsLoader` 閻滄澘婀弨顖涘瘮 `dequeue` alias
+- `Agent` 閻滄澘婀悰銉ょ啊 `drainFollowUpQueue()`閿?  - 娴兼俺绻戦崶鐐茬秼閸?follow-up 闂冪喎鍨崘鍛啇
+  - 閸氬本妞傞崢鐔风摍濞撳懐鈹?runtime queue閿涘奔绶?interactive mode 閹垹顦?editor 娴ｈ法鏁?
+- `PiAgentSession` 閻滄澘婀弨顖涘瘮 `dequeue()`閿?  - 娴兼碍濡?follow-up queue 闁插瞼娈?user message 闁插秵鏌婇幏鐓庢礀 editor 閺傚洦婀?
+  - 婢舵碍娼☉鍫熶紖娑斿妫块悽銊р敄鐞涘苯鍨庨梾鏃撶礉閸?TS 閻?restore queue 閻ㄥ嫭鏋冨鍫㈢波閺嬪嫪绻氶幐浣风閼?- `PiInteractiveMode` 閻滄澘婀导姘躬 prompt 鐏炲倹绉风拹?`dequeue`閿?  - 閺堝甯撻梼鐔哥Х閹垱妞傛导姘Ω鐎瑰啩婊戦幁銏狀槻閸?editor
+  - 瑜版挸澧?editor 瀹稿弶婀侀懡澶岊焾閺冭绱濇导姘Ω queued messages 閺€鎯у闂堫澁绱濋崘宥嗗复瑜版挸澧犻懡澶岊焾
+  - 闂冪喎鍨稉铏光敄閺冭泛娲栭弰?`No queued messages`
+- `PiAppAction` / `PiAppKeybindings` 閻滄澘婀紒褏鐢荤悰銉ょ啊 `selectModel`閿?  - 姒涙顓婚柨顔荤秴閺?`ctrl+l`
+  - `PiCliKeybindingsLoader` 閻滄澘婀弨顖涘瘮 `selectModel` alias
+- `PiAgentSession` 閻滄澘婀弨顖涘瘮 `selectableModels()` / `selectModel(index)`閿?  - 娴兼碍濡歌ぐ鎾冲 cycle scope 閺嗘挳婀堕幋鎰讲闁膩閸ㄥ鍨悰?  - selector 闁俺绻冪槐銏犵穿闁鑵戠划鍓р€?`CycleModel`閿涘奔绗夋导姘愁潶閸?model 娑撳秴鎮?thinking suffix 濞ｉ攱绌?
+  - 瑜版挸澧犲Ο鈥崇€峰鎻掓嚒娑擃厽妞傛稉宥勭窗闁插秴顦查崘?session entry閿涘奔绲炬禒宥勭窗鏉╂柨娲栫粙鍐茬暰閻樿埖鈧焦鎲崇憰?- `PiModelSelector` 閻滄澘婀悰銉ょ啊 model selector overlay 妫ｆ牜澧楅敍?  - 婢跺秶鏁ら悳鐗堟箒 `Input + SelectList` 缂佹挻鐎?
+  - label 閺勫墽銇?`provider/model`閿涘畳escription 閺勫墽銇?thinking level
+  - 瑜版挸澧犳い閫涚窗鐢?`閳?current`
+- `PiInteractiveMode` 閻滄澘婀导姘躬 prompt 鐏炲倹绉风拹?`selectModel`閿?  - 閺冪姴褰查柅澶嬫禌娴狅絾膩閸ㄥ妞傞崶鐐存▔ `Only one model available`
+  - 閺堝褰查柅澶愩€嶉弮鑸靛ⅵ瀵偓 model selector overlay
+  - 闁鑵戦崥搴℃礀閺?`Selected provider/model`
+- `Agent` 閻滄澘婀悰銉ょ啊 `followUpMessages()` snapshot閿?  - interactive mode 閸欘垯浜掔拠璇插絿瑜版挸澧?runtime follow-up queue
+  - 娑撳秳绱伴崓?`drainFollowUpQueue()` 闁絾鐗卞☉鍫ｅ瀭闂冪喎鍨?
+- `PiAgentSession` 閻滄澘婀弳鎾苟 `queuedFollowUps()`閿?  - 娴兼碍濡?runtime follow-up queue 濞撳弶鐓嬮幋?editor-friendly 閺傚洦婀伴崚妤勩€?
+  - 娓?interactive mode 閸︺劎濮搁幀浣稿隘閺勫墽銇?pending message 妫板嫯顫?
+- `PiInteractiveMode` 閻滄澘婀悰銉ょ啊 pending follow-up queue status 妫ｆ牜澧楅敍?  - status 娑撴槒顢戦崥搴濈窗鏉╄棄濮?`Follow-up: ...` 閸掓銆?
+  - 鎼存洟鍎存导姘虫嫹閸?`閳?alt+up to edit queued messages` 閹绘劗銇?
+  - 瑜版挸澧犳＃鏍閸欘亝妯夌粈?follow-up queue閿涘矁绻曞▽鈩冨Ω steering/compaction queue 閸氬牆鑻熸潻娑欐降
+- `PiInteractiveSession` 閻滄澘婀悰銉ょ啊 settings selector contract閿?  - 閺嗘挳婀?`settingsSelection()` 瑜版挸澧犺箛顐ゅ弾
+  - 閺嗘挳婀?`updateSetting(id, value)` 娓?interactive overlay 閸ョ偛鍟?
+- `PiAgentSession` 閻滄澘婀悰銉ょ啊 settings selector first cut閿?  - `autocompact` 娴兼氨娲块幒銉ュ晸閸?global settings
+  - `steering-mode` / `follow-up-mode` 娴兼艾鎮撻弮鑸垫纯閺?runtime queue mode 閸?global settings
+  - `thinking` 娴兼艾鎮撻弮鑸垫纯閺?agent thinking level閵嗕够ession `thinking_level_change`閵嗕宫lobal `defaultThinkingLevel`
+- `PiSdkSession` 閻滄澘婀崷銊ユ儙閸斻劍妞傛导姘矤 settings 閹垹顦查敍?  - `defaultThinkingLevel`
   - `steeringMode`
   - `followUpMode`
-- `PiSettingsSelector` 鐜板湪琛ヤ簡 settings overlay 棣栫増锛?  - 鏍囬/鎻愮ず琛屽鐢ㄥ綋鍓?ANSI 灞傜骇
-  - 鍐呴儴澶嶇敤 `SettingsList` 鐨?search + cycle 浜や簰
-  - 褰撳墠棣栫増瑕嗙洊 `Auto-compact`銆乣Steering mode`銆乣Follow-up mode`
-  - reasoning model 涓嬩細棰濆鏄剧ず `Thinking level`
-- `PiInteractiveMode` 鐜板湪鏀寔 `/settings`锛?  - 杈撳叆 `/settings` 浼氭墦寮€ settings overlay
-  - 璁剧疆淇敼鍚庝細绔嬪嵆閲嶇粯 footer / status
-  - 褰撳墠杩樻病鏈夊崟鐙殑 app keybinding锛屼篃杩樻病鎵╁埌 theme/transport/UI settings
-- `PiInteractiveSession.SelectableModel` 鐜板湪琛ヤ簡 richer metadata 瀛楁锛?  - `modelName`
+- `PiSettingsSelector` 閻滄澘婀悰銉ょ啊 settings overlay 妫ｆ牜澧楅敍?  - 閺嶅洭顣?閹绘劗銇氱悰灞筋槻閻劌缍嬮崜?ANSI 鐏炲倻楠?
+  - 閸愬懘鍎存径宥囨暏 `SettingsList` 閻?search + cycle 娴溿倓绨?
+  - 瑜版挸澧犳＃鏍鐟曞棛娲?`Auto-compact`閵嗕梗Steering mode`閵嗕梗Follow-up mode`
+  - reasoning model 娑撳绱版０婵嗩樆閺勫墽銇?`Thinking level`
+- `PiInteractiveMode` 閻滄澘婀弨顖涘瘮 `/settings`閿?  - 鏉堟挸鍙?`/settings` 娴兼碍澧﹀鈧?settings overlay
+  - 鐠佸墽鐤嗘穱顔芥暭閸氬簼绱扮粩瀣祮闁插秶绮?footer / status
+  - 瑜版挸澧犳潻妯荤梾閺堝宕熼悪顒傛畱 app keybinding閿涘奔绡冩潻妯荤梾閹碘晛鍩?theme/transport/UI settings
+- `PiInteractiveSession.SelectableModel` 閻滄澘婀悰銉ょ啊 richer metadata 鐎涙顔岄敍?  - `modelName`
   - `reasoning`
   - `contextWindow`
-- `PiAgentSession.selectableModels()` 鐜板湪浼氭妸杩欎簺 metadata 浠?`CycleModel.model()` 涓嬫矇鍑烘潵
-- `PiModelSelector` 鐜板湪缁х画寰€ TS 闈犱簡涓€姝ワ細
-  - 褰撳墠椤逛紭鍏堟帓搴?  - row label 鏀规垚绾?`model id`
-  - 褰撳墠椤瑰悗缂€鏀规垚 `鉁揱
-  - right metadata / selected detail 琛?`provider`銆乣model name`銆乣thinking`銆乣context window`
-  - 閫夋嫨鍥炶皟浠嶇劧杩斿洖鍘熷 cycle target index锛屼笉浼氬洜涓烘帓搴忓悗閿欓€?- `PiInteractiveSession` 鐜板湪琛ヤ簡 `ModelSelection`锛?  - 鎶?`allModels` 鍜?`scopedModels` 涓や釜 selector 瑙嗗浘鏄惧紡鍒嗗紑
-  - 鏃х殑 `selectableModels()` 浠嶄繚鐣欏師鏉ョ殑 cycle-scope 璇箟锛岄伩鍏嶅凡鏈夎皟鐢ㄧ偣鏂帀
-- `PiAgentSession` 鐜板湪琛ヤ簡 model selector 鍙?scope 瑁呴厤锛?  - builder 鏂板 `modelSelectorModels(...)`
-  - `modelSelection()` 浼氭妸 registry all-models 鍜?scoped cycle models 缁勫悎鎴愮ǔ瀹?selection target map
-  - `selectModel(index)` 鐜板湪鑳藉懡涓?all-scope target锛屼篃淇濈暀 legacy cycle index fallback
-- `PiAgentSession.applyCycleModel()` 鐜板湪浼氬悓姝ヤ繚瀛橈細
+- `PiAgentSession.selectableModels()` 閻滄澘婀导姘Ω鏉╂瑤绨?metadata 娴?`CycleModel.model()` 娑撳鐭囬崙鐑樻降
+- `PiModelSelector` 閻滄澘婀紒褏鐢诲鈧?TS 闂堢姳绨℃稉鈧銉窗
+  - 瑜版挸澧犳い閫涚喘閸忓牊甯撴惔?  - row label 閺€瑙勫灇缁?`model id`
+  - 瑜版挸澧犳い鐟版倵缂傗偓閺€瑙勫灇 `閴佹彵
+  - right metadata / selected detail 鐞?`provider`閵嗕梗model name`閵嗕梗thinking`閵嗕梗context window`
+  - 闁瀚ㄩ崶鐐剁殶娴犲秶鍔ф潻鏂挎礀閸樼喎顫?cycle target index閿涘奔绗夋导姘礈娑撶儤甯撴惔蹇撴倵闁挎瑩鈧?- `PiInteractiveSession` 閻滄澘婀悰銉ょ啊 `ModelSelection`閿?  - 閹?`allModels` 閸?`scopedModels` 娑撱倓閲?selector 鐟欏棗娴橀弰鎯х础閸掑棗绱?
+  - 閺冄呮畱 `selectableModels()` 娴犲秳绻氶悾娆忓斧閺夈儳娈?cycle-scope 鐠囶厺绠熼敍宀勪缉閸忓秴鍑￠張澶庣殶閻劎鍋ｉ弬顓熷竴
+- `PiAgentSession` 閻滄澘婀悰銉ょ啊 model selector 閸?scope 鐟佸懘鍘ら敍?  - builder 閺傛澘顤?`modelSelectorModels(...)`
+  - `modelSelection()` 娴兼碍濡?registry all-models 閸?scoped cycle models 缂佸嫬鎮庨幋鎰旂€?selection target map
+  - `selectModel(index)` 閻滄澘婀懗钘夋嚒娑?all-scope target閿涘奔绡冩穱婵堟殌 legacy cycle index fallback
+- `PiAgentSession.applyCycleModel()` 閻滄澘婀导姘倱濮濄儰绻氱€涙﹫绱?
   - `defaultProvider`
   - `defaultModel`
-- `PiCliModule.createDefaultSession()` 鐜板湪鎶?registry all-models 涓嬫矇缁?`PiAgentSession`锛屼緵 interactive model selector 鍒?scope
-- `PiModelSelector` 鐜板湪鏀寔 `all/scoped` 鍙?scope锛?  - scoped models 瀛樺湪鏃堕粯璁よ繘 `Scoped`
-  - `Tab` 浼氬湪 `All` / `Scoped` 闂村垏鎹?  - 浠嶅鐢ㄧ幇鏈?search/filter/select 浜や簰
-- `PiCliModule.createDefaultSession()` 鐜板湪浼氭妸 `SettingsManager` 浼犺繘 startup model resolution锛?  - 娌℃湁鏄惧紡 `--provider/--model` 涓旀病鏈夊懡涓?`--models` scoped target 鏃?  - 浼氫紭鍏堝皾璇?`defaultProvider/defaultModel`
-  - 鎭㈠涓婃 interactive model selector / cycle 鎸佷箙鍖栫殑榛樿妯″瀷
-- `PiCliModule.resolveModel()` 鐜板湪琛ヤ簡 saved-defaults fallback锛?  - `defaultProvider + defaultModel` 鍚屾椂瀛樺湪鏃惰蛋绮剧‘ provider/model 鍛戒腑
-  - 鍙湁 `defaultModel` 鏃讹紝浼氬湪 registry 閲屽仛鍞竴 model id 鍛戒腑
-  - 淇濆瓨鐨勯粯璁ゆā鍨嬪け鏁堟垨鍙樺緱涓嶅敮涓€鏃讹紝浼氬洖閫€鍒板師鏈夊惎鍔ㄨВ鏋愰€昏緫锛屼笉浼氭妸 CLI 鍚姩鍗℃
-- `PiInteractiveSession.SettingsSelection` 鐜板湪琛ヤ簡 `transport` 瀛楁锛?  - `/settings` overlay 鍙互鏄剧ず褰撳墠 transport
-  - 榛樿鍊肩粺涓€瑙勮寖鎴?`auto`
-- `PiSettingsSelector` 鐜板湪琛ヤ簡 `Transport` 椤癸細
-  - 褰撳墠棣栫増鎻愪緵 `auto` / `sse` / `websocket`
-  - 淇敼鍚庝細绔嬪嵆鍥炶皟 session `updateSetting("transport", ...)`
-- `PiSdkSession.create()` 鐜板湪浼氫粠 settings 鎭㈠ transport锛?  - `CreateAgentSessionOptions.transport()` 鏄惧紡浼犲叆鏃朵紭鍏?  - 鍚﹀垯鍥炶 settings 閲岀殑 `/transport`
-  - 鎭㈠鍚庝細鍐欒繘 `AgentLoopConfig -> SimpleStreamOptions.transport`
-- `Agent` 鐜板湪琛ヤ簡鍙彉 transport锛?  - 鏂板 `setTransport()` / `transport()`
-  - session 鍐呬慨鏀?transport 鍚庯紝鍚庣画 prompt 浼氫娇鐢ㄦ柊 transport锛屼笉鐢ㄩ噸寤?session
-- `PiAgentSession.updateSetting()` 鐜板湪琛ヤ簡 `transport` 鍒嗘敮锛?  - 浼氭妸 `auto` 瑙ｉ噴鎴?`null` transport
-  - 浼氱珛鍗虫洿鏂板綋鍓?agent transport
-  - 鍚屾椂鎸佷箙鍖?global settings 鐨?`/transport`
-- `PiModelSelector` 鐜板湪涓嶅啀渚濊禆 `SelectList` 鐨?contains-only 杩囨护锛?  - 鎼滅储瀛楁瑕嗙洊 `provider/modelId`銆乣modelId`銆乣provider`銆乣modelName`銆乣thinking level`
-  - 鎺掑簭浼樺厛绾ч鐗堟槸 `exact -> prefix -> word-boundary contains -> contains -> token-level fuzzy`
-  - fuzzy 鐜板湪鏀剁揣鍒?token 绾у埆锛岄伩鍏?`open` 涔嬬被 query 璺?provider/model token 璇懡涓棤鍏虫ā鍨?- `PiModelSelector` 鐜板湪浼氬褰撳墠 scope 鐨勬悳绱㈢粨鏋滃厛鍋氳嚜瀹氫箟杩囨护/鎺掑簭锛屽啀浜ょ粰 list 娓叉煋锛?  - blank query 浠嶄繚鐣?current-first + provider/modelId 鎺掑簭
-  - query 闈炵┖鏃讹紝鎼滅储鍛戒腑鐨勬ā鍨嬩細鎸夌浉鍏冲害閲嶆帓
-- `PiModelSelector` 鐜板湪琛ヤ簡妯″瀷涓撶敤 empty copy锛?  - 鏃?query 涓斿垪琛ㄤ负绌烘椂鏄剧ず `No models available`
-  - 鏈?query 浣嗘棤鍛戒腑鏃舵樉绀?`No matching models`
-- `PiModelSelector` 鐜板湪琛ヤ簡 selected-detail 闈細
-  - 鎼滅储妗嗕笅鏂逛細鏄剧ず `Selected: provider/model`
-  - 绗簩琛屼細鏄剧ず `model name` / `thinking` / `context window` 鎽樿
-  - 鍒楄〃涓婁笅绉诲姩鏃讹紝detail 浼氳窡鐫€褰撳墠閫変腑椤瑰悓姝ュ埛鏂?- `Agent` 鐜板湪琛ヤ簡 steering queue snapshot/drain锛?  - 鏆撮湶 `steeringMessages()`
-  - 鏆撮湶 `drainSteeringQueue()`
-  - CLI/session 灞傜幇鍦ㄥ彲浠ュ儚 follow-up 涓€鏍疯鍙栧拰鎭㈠ steering queue
-- `PiInteractiveSession` 鐜板湪琛ヤ簡 steering queue contract锛?  - 鏆撮湶 `steer(String)`
-  - 鏆撮湶 `queuedSteeringMessages()`
-- `PiAgentSession` 鐜板湪琛ヤ簡 steering queue 鎺ョ嚎锛?  - streaming 涓櫘閫氬洖杞﹁蛋 `Agent.steer(...)`
-  - `queuedSteeringMessages()` 浼氭妸 runtime steering queue 娓叉煋鎴?editor-friendly 鏂囨湰
-  - `dequeue()` 鐜板湪浼氭寜 `steering -> follow-up` 椤哄簭鍚堝苟鎭㈠鎵€鏈?runtime queued messages
-- `PiInteractiveMode` 鐜板湪琛ヤ簡 pending queue steering parity 棣栫増锛?  - streaming 涓櫘閫氬洖杞︿笉鍐嶇洿鎺ユ姤 `Agent is already processing`
-  - 浼氭敼鎴?queue steering message锛屽苟鍥炴樉 `Queued steering message`
-  - status 鍖虹幇鍦ㄤ細鍏堟樉绀?`Steering: ...`锛屽啀鏄剧ず `Follow-up: ...`
-  - `alt+up` 鐨勬仮澶嶉『搴忎篃鍜?TS 涓€鑷达細鍏?steering锛屽啀 follow-up
-- `PiModelSelector` 鐜板湪鎶?selected detail 鏀规垚鐙珛搴曢儴闈㈡澘锛?  - detail 涓嶅啀鎻掑湪 search 杈撳叆鍜屽垪琛ㄤ箣闂?  - 鍒楄〃娓叉煋鍚庝細鍦ㄥ簳閮ㄨ拷鍔?`Selected model`
-  - 涓嬮潰鍐嶆樉绀?`provider/model` 鍜屼竴琛?metadata 鎽樿
-- `PiModelSelector` 鐜板湪鍦?all-scope 涓嬭ˉ浜?TS 椋庢牸 warning锛?  - 椤堕儴浼氭樉绀?`Only showing models with configured API keys (see README for details)`
-  - 浠嶄繚鐣?Java 鐗堢幇鏈?`type/filter/select/cancel` hint锛屼笉鍥為€€浜や簰鎻愮ず
-- `PiModelSelector` 鐜板湪缁х画鎶?row/detail 鍒嗗伐寰€ TS 闈狅細
-  - 鍒楄〃 description 鐜板湪鍙繚鐣?provider badge锛坄[provider]`锛?  - `model name` / `thinking` / `context` 鍏ㄩ儴涓嬫矇鍒板簳閮?detail panel
-  - detail panel 鏀规垚鏄惧紡瀛楁琛岋細`Model name:`銆乣Thinking:`銆乣Context:`
-- `PiModelSelector` 鐜板湪缁х画鎶?detail panel 瀹瑰櫒灞傜骇寰€ TS 闈狅細
-  - selected detail panel 椤堕儴鍜屽簳閮ㄩ兘浼氭覆鏌?muted separator
-  - `Selected model`銆乣provider/model`銆乨etail 瀛楁浼氳鍖呰繘鐙珛 panel 鍖?  - 绐勭粓绔笅 separator 鍜?detail 琛岄兘缁х画璧板畨鍏ㄦ埅鏂紝涓嶄細鎶?panel 鎾戠牬 viewport
-- `PiModelSelector` 鐜板湪缁х画鎶?selector 澶栨寰€ TS 闈狅細
-  - 鏁翠釜 selector 椤堕儴鍜屽簳閮ㄩ兘浼氭覆鏌?muted separator
-  - 鏍囬/鎻愮ず/鎼滅储妗?鍒楄〃鐜板湪閮借鍖呰繘缁熶竴 outer panel
-  - 澶栨鍜?detail panel 浼氬叡瀛橈紝褰㈡垚鏇存帴杩?TS `DynamicBorder + detail area` 鐨勫鍣ㄥ眰绾?- `PiModelSelector` 鐜板湪缁х画鎶?scope copy 寰€ TS 闈狅細
-  - scope 琛屾敼鎴?`Scope: all | scoped`
-  - scoped selector 鐨?hint 琛屾敼鎴?`tab scope (all/scoped)`
-  - 鍏朵綑 filter/select/cancel 鎻愮ず缁х画淇濈暀锛岄伩鍏?Java 鐗堜氦浜掓彁绀哄洖閫€
-- `PiModelSelector` 鐜板湪缁х画鎶婂綋鍓嶆ā鍨嬫爣璁板線 TS 闈狅細
-  - row label 閲岀殑 `鉁揱 鏀规垚 success 鏍峰紡
-  - detail panel 鐨?`provider/model 鉁揱 涔熸敼鎴?success 鏍峰紡
-  - 褰撳墠妯″瀷鍦ㄥ垪琛ㄥ拰 detail 鍖虹殑灞傜骇鏇存帴杩?TS 鐨勭豢鑹?checkmark
-- `PiModelSelector` 鐜板湪缁х画鎶?detail panel 鐨?ANSI 灞傜骇寰€ TS 闈狅細
-  - `Selected model` 鏀规垚 accent+bold
-  - `provider/model` 琛屾敼鎴?provider muted + model bold
-  - detail 鍖烘爣棰樺拰妯″瀷鏍囪瘑鐨勮瑙夊眰绾ф瘮瀛楁璇存槑鏇存竻鏅?- `SelectListTheme` / `SelectList` 鐜板湪琛ヤ簡閫変腑琛?description 鐨勭嫭绔嬫牱寮忛€氶亾锛?  - `SelectListTheme` 鏂板 `selectedDescription()`
-  - 閫変腑琛屼笉鍐嶆妸 `display + spacing + description` 鏁存纭寘杩?`selectedText()`
-  - 杩欒 model selector 鐨?provider badge 鑳界ǔ瀹氫繚鎸?muted锛岃€屼笉浼氳閫変腑琛岀殑涓绘枃鏈牱寮忚鐩?- `PiModelSelector` 鐜板湪鍒囧埌涓撶敤 row theme锛?  - 涓嶅啀澶嶇敤 session selector 鐨?`selectedText = bold`
-  - model selector 閫変腑琛屼富鏂囨湰鏀规垚 accent+bold
-  - provider badge 缁х画璧?muted锛岃瑙変笂鏇存帴杩?TS 鐗堝綋鍓嶆ā鍨嬮珮浜?- `PiModelSelector` 鐜板湪鎶?hints 鎺ュ埌鍙厤缃?keybindings锛?  - `scope/select/cancel` 鎻愮ず閮芥敼鎴愯鍙?`EditorKeybindings.global()`
-  - 涓嶅啀鎶?`tab/enter/esc` 鏂囨纭紪鐮佸湪 selector 閲?  - 鑷畾涔?keybindings 鍚庯紝overlay 鎻愮ず浼氬悓姝ュ彉鍖?- `PiModelSelector` 鐜板湪缁х画鎶?detail field 灞傜骇寰€ TS 闈狅細
-  - field label 鏀规垚 bold
-  - field value 淇濇寔 muted
-  - detail panel 閲?`Model name/Thinking/Context` 鐨勯敭鍊煎叧绯绘洿娓呮櫚
-- `PiModelSelector` 鐜板湪鎶?warning/hint 琛屾敼鎴愬搴︽劅鐭ユ崲琛岋細
-  - all-scope warning 浼氭寜缁堢瀹藉害鎶樿
-  - scoped/all 涓ょ hint 琛岄兘浼氭寜瀹藉害鎶樿
-  - 绐勭粓绔笅 selector 椤堕儴鎻愮ず涓嶅啀妯悜婧㈠嚭
-- `KeyMatcher` 鐜板湪鏄惧紡鏀寔 `tab`
-- `KeyMatcher` 鐜板湪鏄惧紡鏀寔 `ctrl+s`
-- `KeyMatcher` 鐜板湪鏄惧紡鏀寔 `ctrl+l`
-- `KeyMatcher` 鐜板湪鏄惧紡鏀寔 `ctrl+n`
-- `KeyMatcher` 鐜板湪鏄惧紡鏀寔 `ctrl+p`
-- `KeyMatcher` 鐜板湪鏄惧紡鏀寔 `alt+up`
-- `PiSessionPicker.filterAndSortSessions()` 鐜板湪鎶芥垚鍖呭唴闈欐€佽緟鍔╂柟娉曪紝鐩存帴鐢ㄥ崟鍏冩祴璇曞厹浣?`recent/relevance` 鎺掑簭璇箟
+- `PiCliModule.createDefaultSession()` 閻滄澘婀幎?registry all-models 娑撳鐭囩紒?`PiAgentSession`閿涘奔绶?interactive model selector 閸?scope
+- `PiModelSelector` 閻滄澘婀弨顖涘瘮 `all/scoped` 閸?scope閿?  - scoped models 鐎涙ê婀弮鍫曠帛鐠併倛绻?`Scoped`
+  - `Tab` 娴兼艾婀?`All` / `Scoped` 闂傛潙鍨忛幑?  - 娴犲秴顦查悽銊у箛閺?search/filter/select 娴溿倓绨?
+- `PiCliModule.createDefaultSession()` 閻滄澘婀导姘Ω `SettingsManager` 娴肩姾绻?startup model resolution閿?  - 濞屸剝婀侀弰鎯х础 `--provider/--model` 娑撴梹鐥呴張澶婃嚒娑?`--models` scoped target 閺?  - 娴兼矮绱崗鍫濈毦鐠?`defaultProvider/defaultModel`
+  - 閹垹顦叉稉濠冾偧 interactive model selector / cycle 閹镐椒绠欓崠鏍畱姒涙顓诲Ο鈥崇€?
+- `PiCliModule.resolveModel()` 閻滄澘婀悰銉ょ啊 saved-defaults fallback閿?  - `defaultProvider + defaultModel` 閸氬本妞傜€涙ê婀弮鎯拌泲缁墽鈥?provider/model 閸涙垝鑵?
+  - 閸欘亝婀?`defaultModel` 閺冭绱濇导姘躬 registry 闁插苯浠涢崬顖欑 model id 閸涙垝鑵?
+  - 娣囨繂鐡ㄩ惃鍕帛鐠併倖膩閸ㄥ銇戦弫鍫熷灗閸欐ê绶辨稉宥呮暜娑撯偓閺冭绱濇导姘礀闁偓閸掓澘甯張澶婃儙閸斻劏袙閺嬫劙鈧槒绶敍灞肩瑝娴兼碍濡?CLI 閸氼垰濮╅崡鈩冾劥
+- `PiInteractiveSession.SettingsSelection` 閻滄澘婀悰銉ょ啊 `transport` 鐎涙顔岄敍?  - `/settings` overlay 閸欘垯浜掗弰鍓с仛瑜版挸澧?transport
+  - 姒涙顓婚崐鑲╃埠娑撯偓鐟欏嫯瀵栭幋?`auto`
+- `PiSettingsSelector` 閻滄澘婀悰銉ょ啊 `Transport` 妞ょ櫢绱?
+  - 瑜版挸澧犳＃鏍閹绘劒绶?`auto` / `sse` / `websocket`
+  - 娣囶喗鏁奸崥搴濈窗缁斿宓嗛崶鐐剁殶 session `updateSetting("transport", ...)`
+- `PiSdkSession.create()` 閻滄澘婀导姘矤 settings 閹垹顦?transport閿?  - `CreateAgentSessionOptions.transport()` 閺勬儳绱℃导鐘插弳閺冩湹绱崗?  - 閸氾箑鍨崶鐐额嚢 settings 闁插瞼娈?`/transport`
+  - 閹垹顦查崥搴濈窗閸愭瑨绻?`AgentLoopConfig -> SimpleStreamOptions.transport`
+- `Agent` 閻滄澘婀悰銉ょ啊閸欘垰褰?transport閿?  - 閺傛澘顤?`setTransport()` / `transport()`
+  - session 閸愬懍鎱ㄩ弨?transport 閸氬函绱濋崥搴ｇ敾 prompt 娴兼矮濞囬悽銊︽煀 transport閿涘奔绗夐悽銊╁櫢瀵?session
+- `PiAgentSession.updateSetting()` 閻滄澘婀悰銉ょ啊 `transport` 閸掑棙鏁敍?  - 娴兼碍濡?`auto` 鐟欙綁鍣撮幋?`null` transport
+  - 娴兼氨鐝涢崡铏纯閺傛澘缍嬮崜?agent transport
+  - 閸氬本妞傞幐浣风畽閸?global settings 閻?`/transport`
+- `PiModelSelector` 閻滄澘婀稉宥呭晙娓氭繆绂?`SelectList` 閻?contains-only 鏉╁洦鎶ら敍?  - 閹兼粎鍌ㄧ€涙顔岀憰鍡欐磰 `provider/modelId`閵嗕梗modelId`閵嗕梗provider`閵嗕梗modelName`閵嗕梗thinking level`
+  - 閹烘帒绨导妯哄帥缁狙囶浕閻楀牊妲?`exact -> prefix -> word-boundary contains -> contains -> token-level fuzzy`
+  - fuzzy 閻滄澘婀弨鍓佹彛閸?token 缁狙冨焼閿涘矂浼╅崗?`open` 娑斿琚?query 鐠?provider/model token 鐠囶垰鎳℃稉顓熸￥閸忚櫕膩閸?- `PiModelSelector` 閻滄澘婀导姘嚠瑜版挸澧?scope 閻ㄥ嫭鎮崇槐銏㈢波閺嬫粌鍘涢崑姘冲殰鐎规矮绠熸潻鍥ㄦ姢/閹烘帒绨敍灞藉晙娴溿倗绮?list 濞撳弶鐓嬮敍?  - blank query 娴犲秳绻氶悾?current-first + provider/modelId 閹烘帒绨?
+  - query 闂堢偟鈹栭弮璁圭礉閹兼粎鍌ㄩ崨鎴掕厬閻ㄥ嫭膩閸ㄥ绱伴幐澶屾祲閸忓啿瀹抽柌宥嗗笓
+- `PiModelSelector` 閻滄澘婀悰銉ょ啊濡€崇€锋稉鎾舵暏 empty copy閿?  - 閺?query 娑撴柨鍨悰銊よ礋缁岀儤妞傞弰鍓с仛 `No models available`
+  - 閺?query 娴ｅ棙妫ら崨鎴掕厬閺冭埖妯夌粈?`No matching models`
+- `PiModelSelector` 閻滄澘婀悰銉ょ啊 selected-detail 闂堫澁绱?
+  - 閹兼粎鍌ㄥ鍡曠瑓閺傞€涚窗閺勫墽銇?`Selected: provider/model`
+  - 缁楊兛绨╃悰灞肩窗閺勫墽銇?`model name` / `thinking` / `context window` 閹芥顩?
+  - 閸掓銆冩稉濠佺瑓缁夎濮╅弮璁圭礉detail 娴兼俺绐￠惈鈧ぐ鎾冲闁鑵戞い鐟版倱濮濄儱鍩涢弬?- `Agent` 閻滄澘婀悰銉ょ啊 steering queue snapshot/drain閿?  - 閺嗘挳婀?`steeringMessages()`
+  - 閺嗘挳婀?`drainSteeringQueue()`
+  - CLI/session 鐏炲倻骞囬崷銊ュ讲娴犮儱鍎?follow-up 娑撯偓閺嶇柉顕伴崣鏍ф嫲閹垹顦?steering queue
+- `PiInteractiveSession` 閻滄澘婀悰銉ょ啊 steering queue contract閿?  - 閺嗘挳婀?`steer(String)`
+  - 閺嗘挳婀?`queuedSteeringMessages()`
+- `PiAgentSession` 閻滄澘婀悰銉ょ啊 steering queue 閹恒儳鍤庨敍?  - streaming 娑擃厽娅橀柅姘礀鏉烇箒铔?`Agent.steer(...)`
+  - `queuedSteeringMessages()` 娴兼碍濡?runtime steering queue 濞撳弶鐓嬮幋?editor-friendly 閺傚洦婀?
+  - `dequeue()` 閻滄澘婀导姘瘻 `steering -> follow-up` 妞ゅ搫绨崥鍫濊嫙閹垹顦查幍鈧張?runtime queued messages
+- `PiInteractiveMode` 閻滄澘婀悰銉ょ啊 pending queue steering parity 妫ｆ牜澧楅敍?  - streaming 娑擃厽娅橀柅姘礀鏉烇缚绗夐崘宥囨纯閹恒儲濮?`Agent is already processing`
+  - 娴兼碍鏁奸幋?queue steering message閿涘苯鑻熼崶鐐存▔ `Queued steering message`
+  - status 閸栬櫣骞囬崷銊ょ窗閸忓牊妯夌粈?`Steering: ...`閿涘苯鍟€閺勫墽銇?`Follow-up: ...`
+  - `alt+up` 閻ㄥ嫭浠径宥夈€庢惔蹇庣瘍閸?TS 娑撯偓閼疯揪绱伴崗?steering閿涘苯鍟€ follow-up
+- `PiModelSelector` 閻滄澘婀幎?selected detail 閺€瑙勫灇閻欘剛鐝涙惔鏇㈠劥闂堛垺婢橀敍?  - detail 娑撳秴鍟€閹绘帒婀?search 鏉堟挸鍙嗛崪灞藉灙鐞涖劋绠ｉ梻?  - 閸掓銆冨〒鍙夌厠閸氬簼绱伴崷銊ョ俺闁劏鎷烽崝?`Selected model`
+  - 娑撳娼伴崘宥嗘▔缁€?`provider/model` 閸滃奔绔寸悰?metadata 閹芥顩?
+- `PiModelSelector` 閻滄澘婀崷?all-scope 娑撳藟娴?TS 妞嬪孩鐗?warning閿?  - 妞ゅ爼鍎存导姘▔缁€?`Only showing models with configured API keys (see README for details)`
+  - 娴犲秳绻氶悾?Java 閻楀牏骞囬張?`type/filter/select/cancel` hint閿涘奔绗夐崶鐐衡偓鈧禍銈勭鞍閹绘劗銇?
+- `PiModelSelector` 閻滄澘婀紒褏鐢婚幎?row/detail 閸掑棗浼愬鈧?TS 闂堢媴绱?
+  - 閸掓銆?description 閻滄澘婀崣顏冪箽閻?provider badge閿涘潉[provider]`閿?  - `model name` / `thinking` / `context` 閸忋劑鍎存稉瀣焽閸掓澘绨抽柈?detail panel
+  - detail panel 閺€瑙勫灇閺勬儳绱＄€涙顔岀悰宀嬬窗`Model name:`閵嗕梗Thinking:`閵嗕梗Context:`
+- `PiModelSelector` 閻滄澘婀紒褏鐢婚幎?detail panel 鐎圭懓娅掔仦鍌滈獓瀵扳偓 TS 闂堢媴绱?
+  - selected detail panel 妞ゅ爼鍎撮崪灞界俺闁劑鍏樻导姘閺?muted separator
+  - `Selected model`閵嗕梗provider/model`閵嗕龚etail 鐎涙顔屾导姘愁潶閸栧懓绻橀悪顒傜彌 panel 閸?  - 缁愬嫮绮撶粩顖欑瑓 separator 閸?detail 鐞涘矂鍏樼紒褏鐢荤挧鏉跨暔閸忋劍鍩呴弬顓ㄧ礉娑撳秳绱伴幎?panel 閹炬垹鐗?viewport
+- `PiModelSelector` 閻滄澘婀紒褏鐢婚幎?selector 婢舵牗顢嬪鈧?TS 闂堢媴绱?
+  - 閺佺繝閲?selector 妞ゅ爼鍎撮崪灞界俺闁劑鍏樻导姘閺?muted separator
+  - 閺嶅洭顣?閹绘劗銇?閹兼粎鍌ㄥ?閸掓銆冮悳鏉挎躬闁€燁潶閸栧懓绻樼紒鐔剁 outer panel
+  - 婢舵牗顢嬮崪?detail panel 娴兼艾鍙＄€涙﹫绱濊ぐ銏″灇閺囧瓨甯存潻?TS `DynamicBorder + detail area` 閻ㄥ嫬顔愰崳銊ョ湴缁?- `PiModelSelector` 閻滄澘婀紒褏鐢婚幎?scope copy 瀵扳偓 TS 闂堢媴绱?
+  - scope 鐞涘本鏁奸幋?`Scope: all | scoped`
+  - scoped selector 閻?hint 鐞涘本鏁奸幋?`tab scope (all/scoped)`
+  - 閸忔湹缍?filter/select/cancel 閹绘劗銇氱紒褏鐢绘穱婵堟殌閿涘矂浼╅崗?Java 閻楀牅姘︽禍鎺撳絹缁€鍝勬礀闁偓
+- `PiModelSelector` 閻滄澘婀紒褏鐢婚幎濠傜秼閸撳秵膩閸ㄥ鐖ｇ拋鏉跨窔 TS 闂堢媴绱?
+  - row label 闁插瞼娈?`閴佹彵 閺€瑙勫灇 success 閺嶅嘲绱?
+  - detail panel 閻?`provider/model 閴佹彵 娑旂喐鏁奸幋?success 閺嶅嘲绱?
+  - 瑜版挸澧犲Ο鈥崇€烽崷銊ュ灙鐞涖劌鎷?detail 閸栬櫣娈戠仦鍌滈獓閺囧瓨甯存潻?TS 閻ㄥ嫮璞㈤懝?checkmark
+- `PiModelSelector` 閻滄澘婀紒褏鐢婚幎?detail panel 閻?ANSI 鐏炲倻楠囧鈧?TS 闂堢媴绱?
+  - `Selected model` 閺€瑙勫灇 accent+bold
+  - `provider/model` 鐞涘本鏁奸幋?provider muted + model bold
+  - detail 閸栫儤鐖ｆ０妯烘嫲濡€崇€烽弽鍥槕閻ㄥ嫯顫嬬憴澶婄湴缁狙勭槷鐎涙顔岀拠瀛樻閺囧瓨绔婚弲?- `SelectListTheme` / `SelectList` 閻滄澘婀悰銉ょ啊闁鑵戠悰?description 閻ㄥ嫮瀚粩瀣壉瀵繘鈧岸浜鹃敍?  - `SelectListTheme` 閺傛澘顤?`selectedDescription()`
+  - 闁鑵戠悰灞肩瑝閸愬秵濡?`display + spacing + description` 閺佸瓨顔岀涵顒€瀵樻潻?`selectedText()`
+  - 鏉╂瑨顔€ model selector 閻?provider badge 閼崇晫菙鐎规矮绻氶幐?muted閿涘矁鈧奔绗夋导姘愁潶闁鑵戠悰宀€娈戞稉缁樻瀮閺堫剚鐗卞蹇氼洬閻?- `PiModelSelector` 閻滄澘婀崚鍥у煂娑撴挾鏁?row theme閿?  - 娑撳秴鍟€婢跺秶鏁?session selector 閻?`selectedText = bold`
+  - model selector 闁鑵戠悰灞煎瘜閺傚洦婀伴弨瑙勫灇 accent+bold
+  - provider badge 缂佈呯敾鐠?muted閿涘矁顫嬬憴澶夌瑐閺囧瓨甯存潻?TS 閻楀牆缍嬮崜宥喣侀崹瀣彯娴?- `PiModelSelector` 閻滄澘婀幎?hints 閹恒儱鍩岄崣顖炲帳缂?keybindings閿?  - `scope/select/cancel` 閹绘劗銇氶柈鑺ユ暭閹存劘顕伴崣?`EditorKeybindings.global()`
+  - 娑撳秴鍟€閹?`tab/enter/esc` 閺傚洦顢嶇涵顒傜椽閻礁婀?selector 闁?  - 閼奉亜鐣炬稊?keybindings 閸氬函绱漮verlay 閹绘劗銇氭导姘倱濮濄儱褰夐崠?- `PiModelSelector` 閻滄澘婀紒褏鐢婚幎?detail field 鐏炲倻楠囧鈧?TS 闂堢媴绱?
+  - field label 閺€瑙勫灇 bold
+  - field value 娣囨繃瀵?muted
+  - detail panel 闁?`Model name/Thinking/Context` 閻ㄥ嫰鏁崐鐓庡彠缁粯娲垮〒鍛珰
+- `PiModelSelector` 閻滄澘婀幎?warning/hint 鐞涘本鏁奸幋鎰啍鎼达附鍔呴惌銉﹀床鐞涘矉绱?
+  - all-scope warning 娴兼碍瀵滅紒鍫㈩伂鐎硅棄瀹抽幎妯款攽
+  - scoped/all 娑撱倗顫?hint 鐞涘矂鍏樻导姘瘻鐎硅棄瀹抽幎妯款攽
+  - 缁愬嫮绮撶粩顖欑瑓 selector 妞ゅ爼鍎撮幓鎰仛娑撳秴鍟€濡亜鎮滃┃銏犲毉
+- `KeyMatcher` 閻滄澘婀弰鎯х础閺€顖涘瘮 `tab`
+- `KeyMatcher` 閻滄澘婀弰鎯х础閺€顖涘瘮 `ctrl+s`
+- `KeyMatcher` 閻滄澘婀弰鎯х础閺€顖涘瘮 `ctrl+l`
+- `KeyMatcher` 閻滄澘婀弰鎯х础閺€顖涘瘮 `ctrl+n`
+- `KeyMatcher` 閻滄澘婀弰鎯х础閺€顖涘瘮 `ctrl+p`
+- `KeyMatcher` 閻滄澘婀弰鎯х础閺€顖涘瘮 `alt+up`
+- `PiSessionPicker.filterAndSortSessions()` 閻滄澘婀幎鑺ュ灇閸栧懎鍞撮棃娆愨偓浣界窡閸斺晜鏌熷▔鏇礉閻╁瓨甯撮悽銊ュ礋閸忓啯绁寸拠鏇炲幑娴?`recent/relevance` 閹烘帒绨拠顓濈疅
 
-## 褰撳墠杈圭晫
+## 瑜版挸澧犳潏鍦櫕
 
-- 杩欒繕鏄鐗?scope toggle锛?  - cycle/default 鐜板湪宸插熀鏈榻?TS锛屼絾 loading/progress header 杩樺彧鏄鐗?  - path show/hide 鐩墠杩樻槸 description 绾у埆寮€鍏筹紝杩樻病鏈?TS 鐗堝彸渚у竷灞€/鍒楀鎴柇娓叉煋
-  - 椤舵爮鐜板湪铏界劧鍚堟垚鍗曡浜嗭紝浣嗕粛鐒舵病鏈?TS 閭ｇ瀹藉害鎰熺煡鎴柇/瀵归綈鍜岄鑹插眰绾?- `selectModel` 杩樻槸棣栫増锛?  - 褰撳墠鍙毚闇?cycle scope 鍐呯殑妯″瀷锛屼笉浼氭墦寮€瀹屾暣 provider/model registry
-  - selector description 鍙樉绀?thinking level锛岃繕娌℃湁 TS 鐨?richer provider/model metadata
-- 褰撳墠 queue parity 杩樻槸棣栫増锛?  - `dequeue` 鍙仮澶?follow-up queue
-  - status 涔熷彧鏄剧ず follow-up queue
-  - 杩樻病鏈?TS 閭ｇ steering/compaction queue 鍚堝苟鎭㈠涓庡悎骞跺睍绀?- resolver 鐜板湪鍙湪 `--session-dir` 鏈樉寮忔寚瀹氭椂鎻愪緵 current/all 鍙?scope锛涙樉寮?`--session-dir` 浠嶉€€鍖栨垚鍗?scope
+- 鏉╂瑨绻曢弰顖烆浕閻?scope toggle閿?  - cycle/default 閻滄澘婀鎻掔唨閺堫剙顕?TS閿涘奔绲?loading/progress header 鏉╂ê褰ч弰顖烆浕閻?  - path show/hide 閻╊喖澧犳潻妯绘Ц description 缁狙冨焼瀵偓閸忕绱濇潻妯荤梾閺?TS 閻楀牆褰告笟褍绔风仦鈧?閸掓顔旈幋顏呮焽濞撳弶鐓?
+  - 妞よ埖鐖悳鏉挎躬閾忕晫鍔ч崥鍫熷灇閸楁洝顢戞禍鍡礉娴ｅ棔绮涢悞鑸电梾閺?TS 闁絿顫掔€硅棄瀹抽幇鐔虹叀閹搭亝鏌?鐎靛綊缍堥崪宀勵杹閼规彃鐪扮痪?- `selectModel` 鏉╂ɑ妲告＃鏍閿?  - 瑜版挸澧犻崣顏呮瘹闂?cycle scope 閸愬懐娈戝Ο鈥崇€烽敍灞肩瑝娴兼碍澧﹀鈧€瑰本鏆?provider/model registry
+  - selector description 閸欘亝妯夌粈?thinking level閿涘矁绻曞▽鈩冩箒 TS 閻?richer provider/model metadata
+- 瑜版挸澧?queue parity 鏉╂ɑ妲告＃鏍閿?  - `dequeue` 閸欘亝浠径?follow-up queue
+  - status 娑旂喎褰ч弰鍓с仛 follow-up queue
+  - 鏉╂ɑ鐥呴張?TS 闁絿顫?steering/compaction queue 閸氬牆鑻熼幁銏狀槻娑撳骸鎮庨獮璺虹潔缁€?- resolver 閻滄澘婀崣顏勬躬 `--session-dir` 閺堫亝妯夊蹇斿瘹鐎规碍妞傞幓鎰返 current/all 閸?scope閿涙稒妯夊?`--session-dir` 娴犲秹鈧偓閸栨牗鍨氶崡?scope
 
-## 娴嬭瘯
+## 濞村鐦?
 
-鏈疆鏂板/鏇存柊瑕嗙洊锛?
-- `PiCliSessionResolverTest`锛歱icker 鐜板湪鎺ユ敹 `current/all` 鍙屽垪琛?- `PiSessionPickerTest`锛歚Tab` scope toggle銆乧urrent/all 娓叉煋涓庨€夋嫨
-- `PiSessionPickerTest`锛歚Ctrl+S` sort toggle銆乺ecent/relevance 鎺掑簭鍒囨崲
-- `PiSessionPickerTest`锛歚Ctrl+N` named-only filter銆乥lank name 鎺掗櫎
-- `PiSessionPickerTest`锛歚Ctrl+P` path show/hide toggle
-- `PiSessionPickerTest`锛歚filterAndSortSessions()` 鐩存帴瑕嗙洊 recent/relevance 鎺掑簭璇箟
-- `PiSessionPickerTest`锛歚Ctrl+S` 绗笁鎬佽繘鍏?threaded tree 娓叉煋
-- `PiSessionPickerTest`锛歲uoted phrase / `re:` regex / subsequence fuzzy 鎼滅储
-- `PiSessionPickerTest`锛歩nitial current loading header銆乤ll-scope progress header
-- `PiCliSessionResolverTest`锛歭oader-style picker stub 瑕嗙洊 current/all lazy load
-- `PiSessionPickerTest`锛氳繛缁懡涓€亀ord boundary銆乤lpha-numeric swapped fuzzy scoring/鍖归厤
-- `PiSessionPickerTest`锛歚path` 鍙樉绀轰笉鍙備笌鎼滅储
-- `PiSessionPickerTest`锛歍S 椋庢牸鎼滅储/鍔ㄤ綔鎻愮ず鏂囨娓叉煋
-- `PiSessionPickerTest`锛歯amed filter 鏀硅蛋 app keybindings
-- `KeyMatcherTest`锛歡eneric `alt+<char>` sequence
-- `PiSessionPickerTest`锛氶粯璁?metadata 涓嶆樉绀?session file name
-- `PiSessionPickerTest`锛歵itle 鍜?scope summary 鍏辩敤鍗曡椤舵爮
-- `PiCliModuleTest`锛氫粠涓存椂 agent dir 鍔犺浇 `keybindings.json` 瑕嗙洊
-- `PiInteractiveModeTest`锛歛pp keybindings 椹卞姩 tree / fork / interrupt
-- `PiInteractiveModeTest`锛歛pp keybindings 椹卞姩 resume
-- `PiSessionPickerTest`锛氱獎缁堢涓嬪崟琛岄《鏍忎笉浼氳秴瀹斤紝骞朵繚鐣?scope summary
-- `SelectListTest`锛氫腑绛夊搴︿笅浠嶄繚鐣?description 鍒?- `PiSessionPickerTest`锛氫腑绛夊搴︿笅 session metadata 涓嶄細杩囨棭娑堝け
-- `PiSessionPickerTest`锛氱獎缁堢涓?info/hint token 涓嶄細琚‖鎹㈠垪鍒囩
-- `PiSessionPickerTest`锛歴elected row / metadata 鐨?ANSI 搴忓垪灞傜骇
-- `PiSessionPickerTest`锛歨eader/hint 鐨?ANSI 搴忓垪灞傜骇
-- `PiSessionPickerTest`锛歞elete confirm / load error 鐨?ANSI 搴忓垪灞傜骇
-- `PiSessionPickerTest`锛歛ll-scope loading summary 鐨勫垎娈?ANSI 搴忓垪
-- `PiSelectorThemeTest`锛歵ree selector 鐨勫叡浜?ANSI 灞傜骇
-- `PiSelectorThemeTest`锛歠ork selector 鐨勫叡浜?ANSI 灞傜骇
-- `PiSessionPickerTest`锛歳egex parse error 鐨?error 鏍峰紡
-- `PiSessionPickerTest`锛歝urrent scope empty 鐘舵€佷笉鍐嶅洖閫€鍒?`No matching commands`
-- `PiSessionPickerTest`锛歴earch no-match 鐘舵€佹樉绀?`No matches for "..."`
-- `PiSessionPickerTest`锛歳egex error 鐘舵€佸拰 no-match 鐘舵€佸垎绂?- `PiSessionPickerTest`锛歭oading / load error 鐘舵€佷笉鍐嶆覆鏌撻€氱敤 no-match 鏂囨
-- `PiSessionPickerTest`锛歝urrent scope empty 鐘舵€佹樉绀?`tab` 鎭㈠鎻愮ず
-- `PiSessionPickerTest`锛歯amed-only 涓虹┖鏃舵樉绀?named filter / scope 鎭㈠鎻愮ず
-- `SelectListTest`锛氬缁堢涓?description 鍙充晶瀵归綈
-- `SelectListTest`锛氱煭 label 鏃朵笉鍐嶇櫧鐧藉悶鎺?metadata 绌洪棿
-- `SelectListTest`锛氶暱 label 鎴柇鏃朵粛浼樺厛淇濅綇鍙充晶 metadata
-- `PiInteractiveModeTest`锛歚14` 琛岀粓绔笅娓叉煋 usage/cost/model footer
-- `PiInteractiveModeTest`锛歠ooter usage/model 鐨?ANSI 灞傜骇
-- `PiInteractiveModeTest`锛歳easoning model footer 浼氭樉绀?thinking level
-- `PiInteractiveModeTest`锛氬搴﹁冻澶熸椂 footer 浼氭樉绀?provider 鍓嶇紑
-- `KeyMatcherTest`锛歚shift+tab` 鍖归厤
-- `PiInteractiveModeTest`锛歛pp keybinding 椹卞姩 thinking level cycle
-- `PiCliModuleTest`锛氫粠 `keybindings.json` 鍔犺浇 `cycleThinkingLevel`
-- `PiAgentSessionTest`锛歠orward cycle 浼氭寔涔呭寲 `model_change` / `thinking_level_change`
-- `PiInteractiveModeTest`锛歛pp keybinding 椹卞姩 model forward cycle
-- `PiCliModuleTest`锛氫粠 `keybindings.json` 鍔犺浇 `cycleModelForward`
-- `PiCliModuleTest`锛歚--models` pattern 浼氳В鏋愭垚 scoped cycle models
-- `PiInteractiveModeTest`锛歠ooter 浼氭樉绀?context window 鍗犵敤姣斾緥
-- `PiInteractiveModeTest`锛氶珮 context 鍗犵敤鏃?footer indicator 浼氬垏鍒?error 鏍峰紡
-- `PiInteractiveModeTest`锛氱獎瀹藉害 footer 浠嶄繚鐣欏彸渚?model 鎽樿
-- `PiInteractiveModeTest`锛歛uto-compaction 鍏抽棴鏃?footer 涓嶆樉绀?`(auto)` suffix
-- `PiInteractiveModeTest`锛歮anual compaction 鍚?footer 浼氬垏鍒?`?/%window`
-- `PiInteractiveModeTest`锛歩dle 鐘舵€?footer 浼氭樉绀?`0.0%/%window`
-- `PiInteractiveModeTest`锛氬崟 provider 鍦烘櫙 footer 涓嶆樉绀?`provider/`
-- `PiInteractiveModeTest`锛歚15` 琛岀粓绔笅 footer 浼氭樉绀?`cwd 鈥?session name`
-- `TerminalTextTest`锛歮iddle truncation 浼氫繚鐣欓灏惧彲瑙佺墖娈碉紝骞跺吋瀹?ANSI 鏂囨湰
-- `PiInteractiveModeTest`锛氶暱 `cwd` footer 绗簩琛屼細鏀规垚涓棿鎴柇锛屽苟淇濈暀 session name
-- `PiGitBranchResolverTest`锛氭櫘閫?repo銆乨etached HEAD銆亀orktree `gitdir:` 涓夌鍒嗘敮瑙ｆ瀽
-- `PiInteractiveModeTest`锛歠ooter 绗簩琛屼細鏄剧ず `cwd (branch) 鈥?session name`
-- `PiGitBranchWatcherTest`锛氫慨鏀?`HEAD` 鍚庝細鏀跺埌 branch change 閫氱煡
-- `PiInteractiveModeTest`锛歜ranch 鏀瑰彉鍚?footer 浼氳嚜鍔ㄥ埛鏂板埌鏂?branch
-- `PiAgentSessionTest`锛歜ackward cycle 浼氭寔涔呭寲 `model_change` / `thinking_level_change`
-- `PiInteractiveModeTest`锛歛pp keybinding 椹卞姩 backward model cycle
-- `PiCliModuleTest`锛氫粠 `keybindings.json` 鍔犺浇 `cycleModelBackward`
-- `KeyMatcherTest`锛氬尮閰?`shift+ctrl+p`
-- `PiAgentSessionTest`锛歚newSession()` 鍚?session id 浼氬彉鍖栵紝鍚庣画 prompt 浼氳惤鍒版柊 session
-- `PiInteractiveModeTest`锛歛pp keybinding 椹卞姩 `newSession`
-- `PiCliModuleTest`锛氫粠 `keybindings.json` 鍔犺浇 `newSession`
-- `PiAgentSessionTest`锛歴treaming 涓帓闃熺殑 `followUp` 浼氬湪褰撳墠 turn 缁撴潫鍚庣户缁墽琛?- `PiInteractiveModeTest`锛歴treaming 涓?`Alt+Enter` 浼氳蛋 follow-up queue
-- `PiInteractiveModeTest`锛歩dle 涓?`Alt+Enter` 浼氶€€鍖栨垚鏅€?submit
-- `PiCliModuleTest`锛氫粠 `keybindings.json` 鍔犺浇 `followUp`
-- `PiAgentSessionTest`锛歚dequeue()` 浼氭仮澶嶆墍鏈?follow-up queue 鏂囨湰骞舵竻绌?runtime queue
-- `PiInteractiveModeTest`锛歚Alt+Up` 浼氭妸 queued messages 鎭㈠鍥?editor锛屽苟淇濈暀褰撳墠鑽夌
-- `PiInteractiveModeTest`锛氱┖闃熷垪涓?`Alt+Up` 浼氬洖鏄?`No queued messages`
-- `PiCliModuleTest`锛氫粠 `keybindings.json` 鍔犺浇 `dequeue`
-- `KeyMatcherTest`锛氬尮閰?`alt+up`
-- `PiAgentSessionTest`锛歚selectModel(index)` 浼氬懡涓簿纭?cycle target 骞舵洿鏂?thinking level
-- `PiInteractiveModeTest`锛歚Ctrl+L` 浼氭墦寮€ model selector锛屽苟鎶婇€変腑缁撴灉鍐欏洖 session
-- `PiCliModuleTest`锛氫粠 `keybindings.json` 鍔犺浇 `selectModel`
-- `KeyMatcherTest`锛氬尮閰?`ctrl+l`
-- `PiAgentSessionTest`锛歚queuedFollowUps()` 浼氬弽鏄?runtime queue 涓殑 follow-up 鏂囨湰
-- `PiInteractiveModeTest`锛歴treaming 涓帓闃?follow-up 鍚庯紝鐘舵€佸尯浼氭樉绀?pending message 鍜?`alt+up` 鎻愮ず
-- `PiAgentSessionTest`锛歴ession 浼氫粠 settings 鎭㈠榛樿 queue modes / thinking level
-- `PiAgentSessionTest`锛歚updateSetting()` 浼氭寔涔呭寲 `autocompact` / queue mode / thinking level
-- `PiSettingsSelectorIntegrationTest`锛歚/settings` 浼氭墦寮€ overlay 骞跺嵆鏃跺垏鎹?auto-compact
-- `PiSettingsSelectorIntegrationTest`锛歳easoning model 涓?settings overlay 浼氭樉绀?thinking level
-- `PiAgentSessionTest`锛歚selectableModels()` 浼氭毚闇?`model name` / `reasoning` / `context window`
-- `PiModelSelectorTest`锛歴elector 浼氭妸褰撳墠椤规帓鍦ㄥ墠闈㈠苟娓叉煋 richer metadata
-- `PiModelSelectorTest`锛氭帓搴忓悗閫夋嫨浠嶄細鍛戒腑鍘熷 model index
-- `PiAgentSessionTest`锛歚modelSelection()` 浼氬悓鏃舵毚闇?all/scoped 涓や釜 selector 瑙嗗浘
-- `PiModelSelectorTest`锛歚Tab` 浼氬湪 all/scoped 鍙?scope 闂村垏鎹紝骞跺懡涓?all-scope target
-- `PiCliModuleTest`锛歴tartup model resolution 浼氫紭鍏堜娇鐢ㄤ繚瀛樼殑 `defaultProvider/defaultModel`
-- `PiCliModuleTest`锛氬彧鏈?`defaultModel` 涓斿敮涓€鍛戒腑鏃讹紝涔熶細鎭㈠淇濆瓨鐨勯粯璁ゆā鍨?- `PiCliModuleTest`锛氫繚瀛樼殑榛樿妯″瀷澶辨晥鏃朵細鍥為€€鍒板師鏈夎В鏋愰€昏緫
-- `PiAgentSessionTest`锛歴tartup 浼氫粠 settings 鎭㈠ `transport`锛屼笖 `/settings` 鏇存柊鍚庝細褰卞搷鍚庣画 prompt 鐨?request options
-- `PiSettingsSelectorIntegrationTest`锛歚/settings` overlay 浼氭樉绀?`Transport`锛屽苟鍙垏鎹㈠埌 `sse`
-- `PiModelSelectorTest`锛歱rovider / modelName 鏌ヨ浼氬懡涓纭ā鍨?- `PiModelSelectorTest`锛歟xact / prefix 鍛戒腑浼氭帓鍦ㄦ洿瀹芥硾鍖归厤鍓嶉潰
-- `PiModelSelectorTest`锛氱┖缁撴灉鏃舵樉绀?`No matching models`
-- `PiModelSelectorTest`锛氶《閮ㄤ細鏄剧ず褰撳墠閫変腑妯″瀷鐨?detail
-- `PiModelSelectorTest`锛氭柟鍚戦敭绉诲姩鍚?detail 浼氬垏鍒版柊閫変腑椤?- `AgentTest`锛歚steeringMessages()` / `drainSteeringQueue()` snapshot + drain
-- `PiAgentSessionTest`锛歚dequeue()` 浼氭寜 `steering -> follow-up` 椤哄簭鎭㈠ queued messages
-- `PiAgentSessionTest`锛歚queuedSteeringMessages()` 浼氭毚闇?runtime steering queue 鏂囨湰
-- `PiInteractiveModeTest`锛歴treaming 涓櫘閫氬洖杞︿細 queue steering锛屽苟鍦ㄧ姸鎬佸尯鏄剧ず `Steering: ...`
-- `PiModelSelectorTest`锛歛ll-scope 浼氭樉绀?configured-API-key warning
-- `PiModelSelectorTest`锛歴elected detail 鏀规垚搴曢儴鐙珛闈㈡澘锛屽苟浼氶殢閫夋嫨鍚屾鏇存柊
-- `PiModelSelectorTest`锛歞etail panel 浼氭樉绀?`Model name:` / `Thinking:` / `Context:` 瀛楁琛?- `PiModelSelectorTest`锛歞etail panel 浼氭覆鏌撶嫭绔?separator 瀹瑰櫒
-- `PiModelSelectorTest`锛歴elector 浼氭覆鏌撻《閮?搴曢儴 outer border
-- `PiModelSelectorTest`锛歴coped selector 浼氭覆鏌?`Scope:` 鍜?`tab scope (all/scoped)` 鏂囨
-- `PiModelSelectorTest`锛氬綋鍓嶆ā鍨?`鉁揱 浼氭覆鏌?success ANSI
-- `PiModelSelectorTest`锛歞etail panel 浼氭覆鏌?accent+bold 鏍囬鍜?provider/model 鍒嗗眰 ANSI
-- `SelectListTest`锛歴elected description 浼氳蛋鐙珛鏍峰紡閫氶亾
-- `PiModelSelectorTest`锛氶€変腑琛?provider badge 浼氱户缁繚鎸?muted ANSI
-- `PiModelSelectorTest`锛氶€変腑琛?model id 浼氳蛋 accent+bold ANSI
-- `PiModelSelectorTest`锛歝ustom keybindings 浼氬弽鏄犲埌 selector hint 鏂囨
-- `PiModelSelectorTest`锛歞etail field 鐨?label/value 浼氬垎鍒覆鏌?bold/muted ANSI
-- `PiModelSelectorTest`锛氱獎缁堢涓?warning/hint 浼氭寜瀹藉害鎹㈣涓斾笉瓒呭
+閺堫剝鐤嗛弬鏉款杻/閺囧瓨鏌婄憰鍡欐磰閿?
+- `PiCliSessionResolverTest`閿涙icker 閻滄澘婀幒銉︽暪 `current/all` 閸欏苯鍨悰?- `PiSessionPickerTest`閿涙瓪Tab` scope toggle閵嗕恭urrent/all 濞撳弶鐓嬫稉搴ㄢ偓澶嬪
+- `PiSessionPickerTest`閿涙瓪Ctrl+S` sort toggle閵嗕购ecent/relevance 閹烘帒绨崚鍥ㄥ床
+- `PiSessionPickerTest`閿涙瓪Ctrl+N` named-only filter閵嗕攻lank name 閹烘帡娅?
+- `PiSessionPickerTest`閿涙瓪Ctrl+P` path show/hide toggle
+- `PiSessionPickerTest`閿涙瓪filterAndSortSessions()` 閻╁瓨甯寸憰鍡欐磰 recent/relevance 閹烘帒绨拠顓濈疅
+- `PiSessionPickerTest`閿涙瓪Ctrl+S` 缁楊兛绗侀幀浣界箻閸?threaded tree 濞撳弶鐓?
+- `PiSessionPickerTest`閿涙uoted phrase / `re:` regex / subsequence fuzzy 閹兼粎鍌?
+- `PiSessionPickerTest`閿涙nitial current loading header閵嗕工ll-scope progress header
+- `PiCliSessionResolverTest`閿涙oader-style picker stub 鐟曞棛娲?current/all lazy load
+- `PiSessionPickerTest`閿涙俺绻涚紒顓炴嚒娑擃厹鈧簚ord boundary閵嗕工lpha-numeric swapped fuzzy scoring/閸栧綊鍘?
+- `PiSessionPickerTest`閿涙瓪path` 閸欘亝妯夌粈杞扮瑝閸欏倷绗岄幖婊呭偍
+- `PiSessionPickerTest`閿涙瓖S 妞嬪孩鐗搁幖婊呭偍/閸斻劋缍旈幓鎰仛閺傚洦顢嶅〒鍙夌厠
+- `PiSessionPickerTest`閿涙amed filter 閺€纭呰泲 app keybindings
+- `KeyMatcherTest`閿涙eneric `alt+<char>` sequence
+- `PiSessionPickerTest`閿涙岸绮拋?metadata 娑撳秵妯夌粈?session file name
+- `PiSessionPickerTest`閿涙itle 閸?scope summary 閸忚京鏁ら崡鏇☆攽妞よ埖鐖?
+- `PiCliModuleTest`閿涙矮绮犳稉瀛樻 agent dir 閸旂姾娴?`keybindings.json` 鐟曞棛娲?
+- `PiInteractiveModeTest`閿涙瓫pp keybindings 妞瑰崬濮?tree / fork / interrupt
+- `PiInteractiveModeTest`閿涙瓫pp keybindings 妞瑰崬濮?resume
+- `PiSessionPickerTest`閿涙氨鐛庣紒鍫㈩伂娑撳宕熺悰宀勩€婇弽蹇庣瑝娴兼俺绉寸€规枻绱濋獮鏈电箽閻?scope summary
+- `SelectListTest`閿涙矮鑵戠粵澶婎啍鎼达缚绗呮禒宥勭箽閻?description 閸?- `PiSessionPickerTest`閿涙矮鑵戠粵澶婎啍鎼达缚绗?session metadata 娑撳秳绱版潻鍥ㄦ－濞戝牆銇?
+- `PiSessionPickerTest`閿涙氨鐛庣紒鍫㈩伂娑?info/hint token 娑撳秳绱扮悮顐も€栭幑銏犲灙閸掑洨顣?
+- `PiSessionPickerTest`閿涙elected row / metadata 閻?ANSI 鎼村繐鍨仦鍌滈獓
+- `PiSessionPickerTest`閿涙eader/hint 閻?ANSI 鎼村繐鍨仦鍌滈獓
+- `PiSessionPickerTest`閿涙瓰elete confirm / load error 閻?ANSI 鎼村繐鍨仦鍌滈獓
+- `PiSessionPickerTest`閿涙瓫ll-scope loading summary 閻ㄥ嫬鍨庡▓?ANSI 鎼村繐鍨?
+- `PiSelectorThemeTest`閿涙ree selector 閻ㄥ嫬鍙℃禍?ANSI 鐏炲倻楠?
+- `PiSelectorThemeTest`閿涙瓲ork selector 閻ㄥ嫬鍙℃禍?ANSI 鐏炲倻楠?
+- `PiSessionPickerTest`閿涙egex parse error 閻?error 閺嶅嘲绱?
+- `PiSessionPickerTest`閿涙瓭urrent scope empty 閻樿埖鈧椒绗夐崘宥呮礀闁偓閸?`No matching commands`
+- `PiSessionPickerTest`閿涙earch no-match 閻樿埖鈧焦妯夌粈?`No matches for "..."`
+- `PiSessionPickerTest`閿涙egex error 閻樿埖鈧礁鎷?no-match 閻樿埖鈧礁鍨庣粋?- `PiSessionPickerTest`閿涙oading / load error 閻樿埖鈧椒绗夐崘宥嗚閺屾捇鈧氨鏁?no-match 閺傚洦顢?
+- `PiSessionPickerTest`閿涙瓭urrent scope empty 閻樿埖鈧焦妯夌粈?`tab` 閹垹顦查幓鎰仛
+- `PiSessionPickerTest`閿涙amed-only 娑撹櫣鈹栭弮鑸垫▔缁€?named filter / scope 閹垹顦查幓鎰仛
+- `SelectListTest`閿涙艾顔旂紒鍫㈩伂娑?description 閸欏厖鏅剁€靛綊缍?
+- `SelectListTest`閿涙氨鐓?label 閺冩湹绗夐崘宥囨閻ц棄鎮堕幒?metadata 缁屾椽妫?
+- `SelectListTest`閿涙岸鏆?label 閹搭亝鏌囬弮鏈电矝娴兼ê鍘涙穱婵呯秶閸欏厖鏅?metadata
+- `PiInteractiveModeTest`閿涙瓪14` 鐞涘瞼绮撶粩顖欑瑓濞撳弶鐓?usage/cost/model footer
+- `PiInteractiveModeTest`閿涙瓲ooter usage/model 閻?ANSI 鐏炲倻楠?
+- `PiInteractiveModeTest`閿涙easoning model footer 娴兼碍妯夌粈?thinking level
+- `PiInteractiveModeTest`閿涙艾顔旀惔锕佸喕婢剁喐妞?footer 娴兼碍妯夌粈?provider 閸撳秶绱?
+- `KeyMatcherTest`閿涙瓪shift+tab` 閸栧綊鍘?
+- `PiInteractiveModeTest`閿涙瓫pp keybinding 妞瑰崬濮?thinking level cycle
+- `PiCliModuleTest`閿涙矮绮?`keybindings.json` 閸旂姾娴?`cycleThinkingLevel`
+- `PiAgentSessionTest`閿涙瓲orward cycle 娴兼碍瀵旀稊鍛 `model_change` / `thinking_level_change`
+- `PiInteractiveModeTest`閿涙瓫pp keybinding 妞瑰崬濮?model forward cycle
+- `PiCliModuleTest`閿涙矮绮?`keybindings.json` 閸旂姾娴?`cycleModelForward`
+- `PiCliModuleTest`閿涙瓪--models` pattern 娴兼俺袙閺嬫劖鍨?scoped cycle models
+- `PiInteractiveModeTest`閿涙瓲ooter 娴兼碍妯夌粈?context window 閸楃姷鏁ゅВ鏂剧伐
+- `PiInteractiveModeTest`閿涙岸鐝?context 閸楃姷鏁ら弮?footer indicator 娴兼艾鍨忛崚?error 閺嶅嘲绱?
+- `PiInteractiveModeTest`閿涙氨鐛庣€硅棄瀹?footer 娴犲秳绻氶悾娆忓礁娓?model 閹芥顩?
+- `PiInteractiveModeTest`閿涙瓫uto-compaction 閸忔娊妫撮弮?footer 娑撳秵妯夌粈?`(auto)` suffix
+- `PiInteractiveModeTest`閿涙anual compaction 閸?footer 娴兼艾鍨忛崚?`?/%window`
+- `PiInteractiveModeTest`閿涙dle 閻樿埖鈧?footer 娴兼碍妯夌粈?`0.0%/%window`
+- `PiInteractiveModeTest`閿涙艾宕?provider 閸︾儤娅?footer 娑撳秵妯夌粈?`provider/`
+- `PiInteractiveModeTest`閿涙瓪15` 鐞涘瞼绮撶粩顖欑瑓 footer 娴兼碍妯夌粈?`cwd 閳?session name`
+- `TerminalTextTest`閿涙iddle truncation 娴兼矮绻氶悾娆擃浕鐏忔儳褰茬憴浣哄濞堢绱濋獮璺哄悑鐎?ANSI 閺傚洦婀?
+- `PiInteractiveModeTest`閿涙岸鏆?`cwd` footer 缁楊兛绨╃悰灞肩窗閺€瑙勫灇娑擃參妫块幋顏呮焽閿涘苯鑻熸穱婵堟殌 session name
+- `PiGitBranchResolverTest`閿涙碍娅橀柅?repo閵嗕龚etached HEAD閵嗕簚orktree `gitdir:` 娑撳顫掗崚鍡樻暜鐟欙絾鐎?
+- `PiInteractiveModeTest`閿涙瓲ooter 缁楊兛绨╃悰灞肩窗閺勫墽銇?`cwd (branch) 閳?session name`
+- `PiGitBranchWatcherTest`閿涙矮鎱ㄩ弨?`HEAD` 閸氬簼绱伴弨璺哄煂 branch change 闁氨鐓?
+- `PiInteractiveModeTest`閿涙瓬ranch 閺€鐟板綁閸?footer 娴兼俺鍤滈崝銊ュ煕閺傛澘鍩岄弬?branch
+- `PiAgentSessionTest`閿涙瓬ackward cycle 娴兼碍瀵旀稊鍛 `model_change` / `thinking_level_change`
+- `PiInteractiveModeTest`閿涙瓫pp keybinding 妞瑰崬濮?backward model cycle
+- `PiCliModuleTest`閿涙矮绮?`keybindings.json` 閸旂姾娴?`cycleModelBackward`
+- `KeyMatcherTest`閿涙艾灏柊?`shift+ctrl+p`
+- `PiAgentSessionTest`閿涙瓪newSession()` 閸?session id 娴兼艾褰夐崠鏍电礉閸氬海鐢?prompt 娴兼俺鎯ら崚鐗堟煀 session
+- `PiInteractiveModeTest`閿涙瓫pp keybinding 妞瑰崬濮?`newSession`
+- `PiCliModuleTest`閿涙矮绮?`keybindings.json` 閸旂姾娴?`newSession`
+- `PiAgentSessionTest`閿涙treaming 娑擃厽甯撻梼鐔烘畱 `followUp` 娴兼艾婀ぐ鎾冲 turn 缂佹挻娼崥搴ｆ埛缂侇厽澧界悰?- `PiInteractiveModeTest`閿涙treaming 娑?`Alt+Enter` 娴兼俺铔?follow-up queue
+- `PiInteractiveModeTest`閿涙dle 娑?`Alt+Enter` 娴兼岸鈧偓閸栨牗鍨氶弲顕€鈧?submit
+- `PiCliModuleTest`閿涙矮绮?`keybindings.json` 閸旂姾娴?`followUp`
+- `PiAgentSessionTest`閿涙瓪dequeue()` 娴兼碍浠径宥嗗閺?follow-up queue 閺傚洦婀伴獮鑸电缁?runtime queue
+- `PiInteractiveModeTest`閿涙瓪Alt+Up` 娴兼碍濡?queued messages 閹垹顦查崶?editor閿涘苯鑻熸穱婵堟殌瑜版挸澧犻懡澶岊焾
+- `PiInteractiveModeTest`閿涙氨鈹栭梼鐔峰灙娑?`Alt+Up` 娴兼艾娲栭弰?`No queued messages`
+- `PiCliModuleTest`閿涙矮绮?`keybindings.json` 閸旂姾娴?`dequeue`
+- `KeyMatcherTest`閿涙艾灏柊?`alt+up`
+- `PiAgentSessionTest`閿涙瓪selectModel(index)` 娴兼艾鎳℃稉顓犵翱绾?cycle target 楠炶埖娲块弬?thinking level
+- `PiInteractiveModeTest`閿涙瓪Ctrl+L` 娴兼碍澧﹀鈧?model selector閿涘苯鑻熼幎濠団偓澶夎厬缂佹挻鐏夐崘娆忔礀 session
+- `PiCliModuleTest`閿涙矮绮?`keybindings.json` 閸旂姾娴?`selectModel`
+- `KeyMatcherTest`閿涙艾灏柊?`ctrl+l`
+- `PiAgentSessionTest`閿涙瓪queuedFollowUps()` 娴兼艾寮介弰?runtime queue 娑擃厾娈?follow-up 閺傚洦婀?
+- `PiInteractiveModeTest`閿涙treaming 娑擃厽甯撻梼?follow-up 閸氬函绱濋悩鑸碘偓浣稿隘娴兼碍妯夌粈?pending message 閸?`alt+up` 閹绘劗銇?
+- `PiAgentSessionTest`閿涙ession 娴兼矮绮?settings 閹垹顦叉妯款吇 queue modes / thinking level
+- `PiAgentSessionTest`閿涙瓪updateSetting()` 娴兼碍瀵旀稊鍛 `autocompact` / queue mode / thinking level
+- `PiSettingsSelectorIntegrationTest`閿涙瓪/settings` 娴兼碍澧﹀鈧?overlay 楠炶泛宓嗛弮璺哄瀼閹?auto-compact
+- `PiSettingsSelectorIntegrationTest`閿涙easoning model 娑?settings overlay 娴兼碍妯夌粈?thinking level
+- `PiAgentSessionTest`閿涙瓪selectableModels()` 娴兼碍姣氶棁?`model name` / `reasoning` / `context window`
+- `PiModelSelectorTest`閿涙elector 娴兼碍濡歌ぐ鎾冲妞よ甯撻崷銊ュ闂堛垹鑻熷〒鍙夌厠 richer metadata
+- `PiModelSelectorTest`閿涙碍甯撴惔蹇撴倵闁瀚ㄦ禒宥勭窗閸涙垝鑵戦崢鐔奉潗 model index
+- `PiAgentSessionTest`閿涙瓪modelSelection()` 娴兼艾鎮撻弮鑸垫瘹闂?all/scoped 娑撱倓閲?selector 鐟欏棗娴?
+- `PiModelSelectorTest`閿涙瓪Tab` 娴兼艾婀?all/scoped 閸?scope 闂傛潙鍨忛幑顫礉楠炶泛鎳℃稉?all-scope target
+- `PiCliModuleTest`閿涙tartup model resolution 娴兼矮绱崗鍫滃▏閻劋绻氱€涙娈?`defaultProvider/defaultModel`
+- `PiCliModuleTest`閿涙艾褰ч張?`defaultModel` 娑撴柨鏁稉鈧崨鎴掕厬閺冭绱濇稊鐔剁窗閹垹顦叉穱婵嗙摠閻ㄥ嫰绮拋銈喣侀崹?- `PiCliModuleTest`閿涙矮绻氱€涙娈戞妯款吇濡€崇€锋径杈ㄦ櫏閺冩湹绱伴崶鐐衡偓鈧崚鏉垮斧閺堝袙閺嬫劙鈧槒绶?
+- `PiAgentSessionTest`閿涙tartup 娴兼矮绮?settings 閹垹顦?`transport`閿涘奔绗?`/settings` 閺囧瓨鏌婇崥搴濈窗瑜板崬鎼烽崥搴ｇ敾 prompt 閻?request options
+- `PiSettingsSelectorIntegrationTest`閿涙瓪/settings` overlay 娴兼碍妯夌粈?`Transport`閿涘苯鑻熼崣顖氬瀼閹广垹鍩?`sse`
+- `PiModelSelectorTest`閿涙rovider / modelName 閺屻儴顕楁导姘嚒娑擃厽顒滅涵顔侥侀崹?- `PiModelSelectorTest`閿涙瓱xact / prefix 閸涙垝鑵戞导姘笓閸︺劍娲跨€硅姤纭鹃崠褰掑帳閸撳秹娼?
+- `PiModelSelectorTest`閿涙氨鈹栫紒鎾寸亯閺冭埖妯夌粈?`No matching models`
+- `PiModelSelectorTest`閿涙岸銆婇柈銊ょ窗閺勫墽銇氳ぐ鎾冲闁鑵戝Ο鈥崇€烽惃?detail
+- `PiModelSelectorTest`閿涙碍鏌熼崥鎴︽暛缁夎濮╅崥?detail 娴兼艾鍨忛崚鐗堟煀闁鑵戞い?- `AgentTest`閿涙瓪steeringMessages()` / `drainSteeringQueue()` snapshot + drain
+- `PiAgentSessionTest`閿涙瓪dequeue()` 娴兼碍瀵?`steering -> follow-up` 妞ゅ搫绨幁銏狀槻 queued messages
+- `PiAgentSessionTest`閿涙瓪queuedSteeringMessages()` 娴兼碍姣氶棁?runtime steering queue 閺傚洦婀?
+- `PiInteractiveModeTest`閿涙treaming 娑擃厽娅橀柅姘礀鏉烇缚绱?queue steering閿涘苯鑻熼崷銊уЦ閹礁灏弰鍓с仛 `Steering: ...`
+- `PiModelSelectorTest`閿涙瓫ll-scope 娴兼碍妯夌粈?configured-API-key warning
+- `PiModelSelectorTest`閿涙elected detail 閺€瑙勫灇鎼存洟鍎撮悪顒傜彌闂堛垺婢橀敍灞借嫙娴兼岸娈㈤柅澶嬪閸氬本顒為弴瀛樻煀
+- `PiModelSelectorTest`閿涙瓰etail panel 娴兼碍妯夌粈?`Model name:` / `Thinking:` / `Context:` 鐎涙顔岀悰?- `PiModelSelectorTest`閿涙瓰etail panel 娴兼碍瑕嗛弻鎾跺缁?separator 鐎圭懓娅?
+- `PiModelSelectorTest`閿涙elector 娴兼碍瑕嗛弻鎾汇€婇柈?鎼存洟鍎?outer border
+- `PiModelSelectorTest`閿涙coped selector 娴兼碍瑕嗛弻?`Scope:` 閸?`tab scope (all/scoped)` 閺傚洦顢?
+- `PiModelSelectorTest`閿涙艾缍嬮崜宥喣侀崹?`閴佹彵 娴兼碍瑕嗛弻?success ANSI
+- `PiModelSelectorTest`閿涙瓰etail panel 娴兼碍瑕嗛弻?accent+bold 閺嶅洭顣介崪?provider/model 閸掑棗鐪?ANSI
+- `SelectListTest`閿涙elected description 娴兼俺铔嬮悪顒傜彌閺嶅嘲绱￠柅姘朵壕
+- `PiModelSelectorTest`閿涙岸鈧鑵戠悰?provider badge 娴兼氨鎴风紒顓濈箽閹?muted ANSI
+- `PiModelSelectorTest`閿涙岸鈧鑵戠悰?model id 娴兼俺铔?accent+bold ANSI
+- `PiModelSelectorTest`閿涙瓭ustom keybindings 娴兼艾寮介弰鐘插煂 selector hint 閺傚洦顢?
+- `PiModelSelectorTest`閿涙瓰etail field 閻?label/value 娴兼艾鍨庨崚顐ｈ閺?bold/muted ANSI
+- `PiModelSelectorTest`閿涙氨鐛庣紒鍫㈩伂娑?warning/hint 娴兼碍瀵滅€硅棄瀹抽幑銏ｎ攽娑撴柧绗夌搾鍛啍
 
-- PiSettingsSelector 鐜板湪鎶?settings overlay 椤堕儴 hint 鎺ュ埌 EditorKeybindings.global()锛宻ubmit/cancel 鏂囨浼氶殢閰嶇疆鍙樺寲
-  - space 缁х画淇濈暀涓哄浐瀹?secondary activate key
-- SettingsList 鐜板湪鎶婂簳閮?search/change/cancel hint 涔熸敼鎴愯鍙?EditorKeybindings.global()锛屼笉鍐嶇‖缂栫爜 enter/esc
-- PiSettingsSelectorIntegrationTest锛歝ustom keybindings 涓嬩細瑕嗙洊 settings selector 椤堕儴/搴曢儴 hint 娓叉煋
+- PiSettingsSelector 閻滄澘婀幎?settings overlay 妞ゅ爼鍎?hint 閹恒儱鍩?EditorKeybindings.global()閿涘ubmit/cancel 閺傚洦顢嶆导姘舵闁板秶鐤嗛崣妯哄
+  - space 缂佈呯敾娣囨繄鏆€娑撳搫娴愮€?secondary activate key
+- SettingsList 閻滄澘婀幎濠傜俺闁?search/change/cancel hint 娑旂喐鏁奸幋鎰嚢閸?EditorKeybindings.global()閿涘奔绗夐崘宥団€栫紓鏍垳 enter/esc
+- PiSettingsSelectorIntegrationTest閿涙瓭ustom keybindings 娑撳绱扮憰鍡欐磰 settings selector 妞ゅ爼鍎?鎼存洟鍎?hint 濞撳弶鐓?
 
-- PiInteractiveSession.SettingsSelection / PiAgentSession 鐜板湪琛ヤ簡 hideThinkingBlock 蹇収涓庢寔涔呭寲鍥炲啓
-- PiSettingsSelector 鐜板湪鏂板 Hide thinking 椤癸紝reasoning 妯″瀷涓嬩細鎺掑湪 Thinking level 鍚庨潰锛岄伩鍏嶆妸鐜版湁 overlay 甯冨眬鎸ゅ嚭瑙嗗彛
-- PiInteractiveMode / PiMessageRenderer 鐜板湪浼氬湪 hideThinkingBlock=true 鏃惰烦杩?Thinking: block 娓叉煋
-- PiAgentSessionTest / PiSettingsSelectorIntegrationTest / PiInteractiveModeTest 鐜板湪瑕嗙洊 hide-thinking 鐨勬寔涔呭寲銆乷verlay 鍒囨崲鍜?transcript 闅愯棌
-- PiInteractiveSession.SettingsSelection / PiAgentSession 鐜板湪琛ヤ簡 quietStartup 蹇収涓庢寔涔呭寲鍥炲啓
-- PiSettingsSelector 鐜板湪鏂板 Quiet startup 椤癸紝骞舵斁鍦?settings 鍒楄〃搴曢儴锛岄伩鍏嶆妸鐜版湁 reasoning/hide-thinking 鍙椤规尋鍑?overlay 瑙嗗彛
-- PiInteractiveMode 鐜板湪浼氬湪 quietStartup=true 鏃堕殣钘?interactive header锛涘綋鍓嶈繖鍙鐩?Java 渚?header 闈欓粯锛孴S 閭ｅ startup resource listing silence 浠嶅緟鍚庣画琛ラ綈
-- PiAgentSessionTest / PiSettingsSelectorIntegrationTest / PiInteractiveModeTest 鐜板湪瑕嗙洊 quiet-startup 鐨勬寔涔呭寲銆乻elector 鍒囨崲鍜?header 闈欓粯
-- PiAppAction / PiAppKeybindings / PiCliKeybindingsLoader 鐜板湪琛ヤ簡 toggleThinking app action銆侀粯璁?ctrl+t 鍜?keybindings.json alias
-- PiInteractiveMode 鐜板湪浼氱洿鎺ュ鐢?hide-thinking setting 璺緞鍒囨崲 thinking block 鍙鎬э紝骞剁珛鍗冲埛鏂?transcript + status锛圱hinking blocks: hidden|visible锛?- KeyMatcher 鐜板湪琛ヤ簡 ctrl+t锛岄伩鍏嶉粯璁?toggle-thinking 閿綅鍦?Java 渚уけ鏁?- PiCliModuleTest / PiInteractiveModeTest / KeyMatcherTest 鐜板湪瑕嗙洊 toggle-thinking 鐨?loader alias銆侀粯璁ら敭浣嶅尮閰嶅拰 interactive transcript/status 鍒囨崲
-- PiAppAction / PiAppKeybindings / PiCliKeybindingsLoader 鐜板湪琛ヤ簡 clear app action銆侀粯璁?ctrl+c 鍜?keybindings.json alias
-- PiInteractiveMode 鐜板湪浼氬厛 clear editor锛屽啀鍦?500ms 鍐呯浜屾 clear 鏃堕€€鍑猴紝璐磋繎 TS 鐨?clear once / exit twice 璇箟
-- PiCliModuleTest / PiInteractiveModeTest 鐜板湪瑕嗙洊 clear 鐨?loader alias銆乪ditor clear 鍜?double-clear exit
-- PiAppAction / PiAppKeybindings / PiCliKeybindingsLoader 鐜板湪琛ヤ簡 exit app action銆侀粯璁?ctrl+d 鍜?keybindings.json alias
-- PiInteractiveMode 鐜板湪鏀寔鍙厤缃?exit 閿綅锛屽苟淇濇寔鍙湁绌鸿緭鍏ユ椂鎵嶉€€鍑猴紝閬垮厤鎵撴柇宸叉湁鐨勭紪杈?鍒犻櫎璇箟
-- PiCliModuleTest / PiInteractiveModeTest 鐜板湪瑕嗙洊 exit 鐨?loader alias 鍜?empty-input exit
-- PiAppAction / PiAppKeybindings / PiCliKeybindingsLoader 鐜板湪琛ヤ簡 expandTools app action銆侀粯璁?ctrl+o 鍜?keybindings.json alias
-- PiMessageRenderer / PiInteractiveMode 鐜板湪鏀寔鎸夐敭鍒囨崲 tool result details 灞曞紑锛屽苟淇濇寔榛樿 transcript 涓嶅彉
-- PiCliModuleTest / PiInteractiveModeTest / KeyMatcherTest 鐜板湪瑕嗙洊 expandTools 鐨?loader alias銆乼ool details toggle 鍜?ctrl+o 閿綅鍖归厤
-- PiAppAction / PiAppKeybindings / PiCliKeybindingsLoader 鐜板湪琛ヤ簡 pasteImage app action銆侀粯璁?Windows `alt+v` / 鍏朵粬骞冲彴 `ctrl+v` 鍜?keybindings.json alias
-- PiClipboardImage / PiInteractiveMode 鐜板湪鏀寔浠庣郴缁熷壀璐存澘璇诲彇鍥剧墖骞堕檮鐫€鍒颁笅涓€鏉?user message锛泂treaming 鍜?queued follow-up 浼氭槑纭嫆缁?image attachments
-- Java 渚ц繖娆℃病鏈夎蛋 TS 鐨勨€滃啓涓存椂鏂囦欢鍐嶆彃鍏ヨ矾寰勨€濊矾绾匡紱鍥犱负褰撳墠 interactive submit 杩樻病鏈?`@file` 瑙ｆ瀽閾捐矾锛屽厛璧?in-memory `ImageContent` 鏇寸洿鎺ヤ笖宸茶兘澶嶇敤鐜版湁鍥剧墖娑堟伅璇箟
-- PiCliModuleTest / PiInteractiveModeTest / KeyMatcherTest 鐜板湪瑕嗙洊 pasteImage 鐨?loader alias銆乮nteractive attach/submit銆乻treaming 鎷掔粷鍜?`ctrl+v` 閿綅鍖归厤
-- PiInteractiveMode 鐜板湪浼氬湪杈冮珮 terminal 涓婃妸 startup header 鎵╂垚 keybinding-aware hints锛屼袱琛屽垎鍒鐩?interrupt/clear/exit 鍜?model/tools/thinking/paste-image
-- startup header hints 浼氳鍙?`PiAppKeybindings.global()`锛屽洜姝?custom app keybindings 浼氬悓姝ュ弽鏄犲埌 header 鏂囨閲?- `quietStartup=true` 浠嶇劧浼氭暣浣撻殣钘忚繖浜?startup header hints锛屼笉浼氬洜涓烘柊澧炴彁绀鸿鎶婇潤榛樺惎鍔ㄨ涓烘墦鐮?- PiInteractiveModeTest 鐜板湪瑕嗙洊 startup header hints 鐨?keybinding-aware 娓叉煋
-- `ProcessTerminal` 鐜板湪鍦ㄦ瘡娆?`start()` 鏃堕兘浼氶噸鏂板垱寤?backend锛屽苟鍦?`stop()` 鍚庨噴鏀炬棫 backend锛涜繖璁?stop/start 鐢熷懡鍛ㄦ湡閲嶆柊鍙樻垚鍙噸鍏?- `ProcessTerminalTest` 鐜板湪瑕嗙洊 stop 鍚?restart 浼氭嬁鍒?fresh backend锛岃€屼笉鏄户缁鐢ㄥ凡鍏抽棴鐨?backend
-- 杩欏垁鏄悗缁?`suspend` / `externalEditor` 鐨勫墠缃簳搴э紱姝ゅ墠瀹冧滑鍦?Java 渚ф棤娉曞彲闈犲疄鐜帮紝鏍瑰洜灏辨槸 `ProcessTerminal.stop()` 浼氭妸搴曞眰 backend 鍏虫
-- PiAppAction / PiAppKeybindings / PiCliKeybindingsLoader 鐜板湪琛ヤ簡 suspend app action銆侀粯璁?`ctrl+z` 鍜?keybindings.json alias
-- PiInteractiveMode 鐜板湪鏀寔 suspend app keybinding锛涢粯璁ゅ疄鐜颁細鍦?POSIX 涓?stop TUI -> `kill -TSTP <pid>` -> start TUI锛學indows 涓婂垯鏄庣‘鎻愮ず `Suspend is not supported on Windows`
-- PiCliModuleTest / PiInteractiveModeTest / KeyMatcherTest 鐜板湪瑕嗙洊 suspend 鐨?loader alias銆乮nteractive dispatch銆乽nsupported 鏂囨鍜?`ctrl+z` 閿綅鍖归厤
-- PiAppAction / PiAppKeybindings / PiCliKeybindingsLoader 鐜板湪琛ヤ簡 externalEditor app action銆侀粯璁?`ctrl+g` 鍜?keybindings.json alias
-- `PiExternalEditor` 鐜板湪鎻愪緵 system 棣栫増锛?  - 璇诲彇 `$VISUAL` / `$EDITOR`
-  - 鍐欎复鏃舵枃浠躲€乻top TUI銆佷互 inherited stdio 鍚屾鍚姩澶栭儴缂栬緫鍣ㄣ€侀€€鍑哄悗鍐?start TUI
-  - 闈為浂閫€鍑虹爜鏃朵繚鐣欏師 editor 鏂囨湰涓嶅彉
-- PiInteractiveMode 鐜板湪鏀寔 external editor app keybinding锛?  - 瑙﹀彂鍚庝細鎶婂綋鍓?editor 鏂囨湰浜ょ粰澶栭儴缂栬緫鍣?  - 璇诲洖鍐呭鍚庝細鍘绘帀鍗曚釜鏈熬鎹㈣
-  - 鍥犱负褰撳墠 Java `Input` 浠嶆槸鍗曡缁勪欢锛屽叾浣欐崲琛屼細琚帇骞虫垚绌烘牸鍐嶅啓鍥?editor
-- PiCliModuleTest / PiInteractiveModeTest / KeyMatcherTest 鐜板湪瑕嗙洊 externalEditor 鐨?loader alias銆乮nteractive dispatch銆乵issing-editor 鏂囨銆乵ultiline flattening 鍜?`ctrl+g` 閿綅鍖归厤
-- PiModelSelector 鐜板湪缁х画鎶?warning/hint copy 寰€ TS 闈狅細
-  - scoped selector 椤堕儴淇濈暀 `Scope: all | scoped`
-  - `tab scope (all/scoped)` 閲嶆柊鎷嗘垚鐙珛 hint 琛?  - `Type to filter 路 ...` 缁х画鍗曠嫭鍗犱竴琛岋紝閬垮厤鎶?scope hint 鍜?action hint 娣峰湪涓€璧?- PiModelSelector 鐜板湪缁熶竴绌虹粨鏋滄枃妗堜负 `No matching models`锛屼笉鍐嶅尯鍒?blank query 鐨?`No models available`
-- PiModelSelector detail panel 鐜板湪鎶?`Model Name` label 鐨勫ぇ灏忓啓瀵归綈鍒?TS 缁勪欢
-- PiModelSelectorTest 鐜板湪瑕嗙洊 scoped hint 鎷嗚銆乣Model Name:` label 鍜岀粺涓€ no-match copy
-- PiInteractiveSession.SettingsSelection / PiAgentSession 鐜板湪琛ヤ簡 theme settings contract锛?  - 鏆撮湶褰撳墠 theme
-  - 鏆撮湶褰撳墠鍙垏鎹㈢殑 theme 鍒楄〃
-  - 褰撳墠棣栫増鍙彁渚?`dark/light`锛屽苟鎶婂凡鏈夎嚜瀹氫箟鍊兼斁鍦ㄥ垪琛ㄩ浣嶄繚鐣?- PiAgentSession 鐜板湪鏀寔 `theme` setting 鏇存柊锛?  - 浼氭妸鍊煎啓鍥?global settings 鐨?`/theme`
-  - 褰撳墠鍙仛鎸佷箙鍖栵紝涓嶅仛 runtime theme preview / live switch
-- PiSettingsSelector 鐜板湪鏂板 `Theme` 鏉＄洰锛?  - 鎻忚堪鏂囨鏄?`Color theme for the interface`
-  - 褰撳墠棣栫増娌跨敤 `SettingsList` 鐨?cycle 浜や簰锛屼笉鍋?submenu 棰勮
-- PiSettingsSelectorIntegrationTest 鐜板湪瑕嗙洊 `Theme` 鏉＄洰鍒囨崲
-- PiInteractiveSession.SettingsSelection / PiAgentSession 鐜板湪琛ヤ簡 `doubleEscapeAction` settings contract锛?  - 榛樿鍊兼槸 `tree`
-  - 褰撳墠鎸佷箙鍖栧€艰蛋 global settings 鐨?`/doubleEscapeAction`
-- PiSettingsSelector 鐜板湪鏂板 `Double-escape action` 鏉＄洰锛?  - 鍙€夊€兼槸 `tree` / `fork` / `none`
-  - 鎻忚堪鏂囨瀵归綈 TS锛歚Action when pressing Escape twice with empty editor`
-- PiInteractiveMode 鐜板湪鎶婄湡瀹?`Escape` 鍙屽嚮绌虹紪杈戝櫒鎺ュ埌浜?settings锛?  - streaming 鏃朵粛鏃т紭鍏堣蛋 abort
-  - 闈?`Escape` 鐨勮嚜瀹氫箟 interrupt 閿綅浠嶆棫淇濇寔鍘熸潵鐨?abort 璇箟
-  - 绌虹紪杈戝櫒涓嬪弻鍑?`Escape` 浼氭寜璁剧疆鎵撳紑 tree / fork锛屾垨鍦?`none` 涓嬩繚鎸佹棤鍔ㄤ綔
-- PiSettingsSelectorIntegrationTest / PiInteractiveModeTest 鐜板湪瑕嗙洊 `Double-escape action` 鍒囨崲锛屼互鍙婂弻鍑?`Escape` 鎵撳紑 tree/fork
-- PiInteractiveSession.SettingsSelection / PiAgentSession 鐜板湪琛ヤ簡 `editorPaddingX` settings contract锛?  - 榛樿鍊兼槸 `0`
-  - 褰撳墠鎸佷箙鍖栧€艰蛋 global settings 鐨?`/editorPaddingX`
-  - `updateSetting("editor-padding", value)` 鐩墠鎺ュ彈 `0-3`
-- PiSettingsSelector 鐜板湪鏂板 `Editor padding` 鏉＄洰锛?  - 鍙€夊€兼槸 `0` / `1` / `2` / `3`
-  - 鎻忚堪鏂囨瀵归綈 TS锛歚Horizontal padding for input editor (0-3)`
-- `Input` 鐜板湪琛ヤ簡 `paddingX` 鏀寔锛孭iInteractiveMode 浼氬湪姣忔 `renderState()` 鍓嶅悓姝?`session.settingsSelection().editorPaddingX()`
-  - 杩欒 interactive prompt 棣栨娓叉煋鍜?`/settings` 鏇存柊鍚庣殑鍚庣画閲嶇粯閮借兘鍚冨埌鏂扮殑 horizontal padding
-  - 褰撳墠 Java 渚у彧鎶婅繖椤规帴鍒颁簡鍗曡 `Input`锛沗Editor` 鏈韩涔嬪墠宸茬粡鏈?`setPaddingX()`锛屼絾 interactive mode 浠嶆湭鍒囧埌澶氳 editor
-- InputTest / PiAgentSessionTest / PiSettingsSelectorIntegrationTest / PiInteractiveModeTest 鐜板湪瑕嗙洊 editor-padding 鐨勬覆鏌撱€佹寔涔呭寲銆乻elector 鍒囨崲鍜?interactive prompt 鍒濆鍖栧悓姝?- `PiCliAnsi` 鐜板湪琛ヤ簡 light/dark palette锛?  - `dark` 缁х画璧板綋鍓嶇殑 cyan/muted-gray ANSI 缁勫悎
-  - `light` 棣栫増鍒囧埌 blue accent + dim-black muted锛屼紭鍏堜繚璇佸湪娴呰壊鑳屾櫙涓嬬殑鍙鎬?  - 鏈瘑鍒?theme name 鐩墠浼氬洖閫€鍒?`dark`
-- PiInteractiveMode 鐜板湪浼氬湪姣忔 `renderState()` 鍓嶈皟鐢?`PiCliAnsi.setTheme(session.settingsSelection().theme())`
-  - 杩欒 startup render銆乣/settings` 閲岀殑 theme 鍒囨崲锛屼互鍙?`/reload` 鍚庣殑 settings 鍥炴斁閮借兘閲嶆柊鐫€鑹?  - 褰撳墠杩欏垁鍙鐩?CLI ANSI palette锛涜繕娌℃湁鎺ュ叆 TS 閭ｅ theme file/resource loader
-- PiCliAnsiTest / PiInteractiveModeTest 鐜板湪瑕嗙洊 dark/light palette銆乽nknown theme fallback锛屼互鍙?interactive runtime 閲嶇粯鍚庣殑 light-theme footer ANSI
-- PiSettingsSelector 鐜板湪鎶?`Theme` 鏉＄洰浠?cycle 鏀规垚 submenu锛?  - `Enter`/`space` 鎵撳紑 theme list锛屾柟鍚戦敭绉诲姩鏃跺彧鍋?preview锛屼笉浼氱珛鍒绘寔涔呭寲
-  - `Enter` 鎻愪氦閫変腑鐨?theme锛宍Esc` 浼氭仮澶嶆墦寮€ submenu 鍓嶇殑 theme
-  - 鍒楄〃浼氱粰褰撳墠 theme 鎵?`(current)` 鏍囪锛屽拰 TS 鐨?theme selector 浜や簰淇濇寔涓€鑷?- PiInteractiveMode 鐜板湪鍦?settings overlay 鐢熷懡鍛ㄦ湡閲岀淮鎶ょ灛鏃?`previewTheme`
-  - theme submenu preview 鏃朵細瑕嗙洊 `renderState()` 浣跨敤鐨?palette
-  - submenu cancel 鍜?overlay close 閮戒細娓呮帀 preview锛岄伩鍏嶆妸鏈彁浜ょ殑 theme 鐣欏湪涓荤晫闈?- PiSettingsSelectorIntegrationTest 鐜板湪瑕嗙洊 theme submenu 鐨?`preview -> cancel restore` 鍜?submenu submit
-- PiSettingsSelector 鐜板湪鎶?`Thinking level` 涔熷垏鎴?submenu锛?  - option 鏂囨瀵归綈 TS锛歚off/minimal/low/medium/high/xhigh`
-  - 姣忎釜 level 閮藉甫 reasoning 娣卞害璇存槑锛屼緥濡?`Very brief reasoning (~1k tokens)` / `Deep reasoning (~16k tokens)`
-  - `Enter` 鎻愪氦锛宍Esc` 杩斿洖涓?settings list锛屼笉浼氱珛鍒绘敼鍐欏綋鍓嶅€?- PiSettingsSelectorIntegrationTest 鐜板湪瑕嗙洊 `Thinking level` submenu 鐨勬墦寮€銆佽鏄庢枃妗堝拰閫夋嫨鎻愪氦
-- PiInteractiveSession.SettingsSelection / PiAgentSession 鐜板湪琛ヤ簡 `showHardwareCursor` / `clearOnShrink` settings contract
-  - 榛樿鍊奸兘淇濇寔 `true`锛屼笉鏀瑰彉褰撳墠 Java interactive 鐨勬棦鏈夋覆鏌撹涓?  - `updateSetting()` 浼氭妸涓ら」鍒嗗埆鎸佷箙鍖栧埌 global settings 鐨?`/showHardwareCursor` 鍜?`/clearOnShrink`
-- PiSettingsSelector 鐜板湪鏂板 `Show hardware cursor` / `Clear on shrink` 涓や釜鏉＄洰
-  - `Show hardware cursor` 浼氬垏 TUI 鏄惁鏄剧ず鐪熷疄缁堢鍏夋爣锛屽悓鏃剁户缁繚鐣?Java 渚х殑瀹氫綅閫昏緫
-  - `Clear on shrink` 浼氬垏 `DiffRenderer` 鍦ㄥ唴瀹规敹缂╂椂鏄惁寮哄埗 clear redraw
-- `Tui` 鐜板湪鏆撮湶 runtime setter锛孭iInteractiveMode 姣忔 `renderState()` 閮戒細鎶?`showHardwareCursor` / `clearOnShrink` 鍚屾鍒板綋鍓?TUI
-- `DiffRenderer` 鐜板湪鍦?`clearOnShrink=false` 涓斿熬閮ㄦ暣娈垫敹缂╂椂涓嶅啀寮哄埗 full redraw锛岄伩鍏嶈繖涓?setting 鍙樻垚绌哄紑鍏?- DiffRendererTest / TuiTest / PiSettingsSelectorIntegrationTest 鐜板湪瑕嗙洊 `clear-on-shrink`銆乭ardware cursor runtime toggle 鍜?settings selector 鍒囨崲
-- `PiSettingsSelector` 鐜板湪缁х画鎶?settings overlay 鐨?copy 鏀舵暃鍒?TS锛?  - `Steering mode` 鏀规垚 `Enter while streaming queues steering messages. ...`
-  - `Follow-up mode` 鏀规垚 `Alt+Enter queues follow-up messages until agent stops. ...`
-  - `Transport` 鏀规垚 `Preferred transport for providers that support multiple transports`
-  - `Quiet startup` 鏀规垚 `Disable verbose printing at startup`
-- `PiSettingsSelector` 鐜板湪鎶?`Transport` 鐨勫彲閫夊€奸『搴忔敼鎴?`sse -> websocket -> auto`锛屽拰 TS `/settings` selector 淇濇寔涓€鑷?- `PiSettingsSelectorIntegrationTest` 鐜板湪瑕嗙洊 TS-style settings descriptions锛岄伩鍏嶅悗缁?copy 鍥為€€
+- PiInteractiveSession.SettingsSelection / PiAgentSession 閻滄澘婀悰銉ょ啊 hideThinkingBlock 韫囶偆鍙庢稉搴㈠瘮娑斿懎瀵查崶鐐插晸
+- PiSettingsSelector 閻滄澘婀弬鏉款杻 Hide thinking 妞ょ櫢绱漴easoning 濡€崇€锋稉瀣╃窗閹烘帒婀?Thinking level 閸氬酣娼伴敍宀勪缉閸忓秵濡搁悳鐗堟箒 overlay 鐢啫鐪幐銈呭毉鐟欏棗褰?
+- PiInteractiveMode / PiMessageRenderer 閻滄澘婀导姘躬 hideThinkingBlock=true 閺冩儼鐑︽潻?Thinking: block 濞撳弶鐓?
+- PiAgentSessionTest / PiSettingsSelectorIntegrationTest / PiInteractiveModeTest 閻滄澘婀憰鍡欐磰 hide-thinking 閻ㄥ嫭瀵旀稊鍛閵嗕狗verlay 閸掑洦宕查崪?transcript 闂呮劘妫?
+- PiInteractiveSession.SettingsSelection / PiAgentSession 閻滄澘婀悰銉ょ啊 quietStartup 韫囶偆鍙庢稉搴㈠瘮娑斿懎瀵查崶鐐插晸
+- PiSettingsSelector 閻滄澘婀弬鏉款杻 Quiet startup 妞ょ櫢绱濋獮鑸垫杹閸?settings 閸掓銆冩惔鏇㈠劥閿涘矂浼╅崗宥嗗Ω閻滅増婀?reasoning/hide-thinking 閸欘垵顫嗘い瑙勫皨閸?overlay 鐟欏棗褰?
+- PiInteractiveMode 閻滄澘婀导姘躬 quietStartup=true 閺冨爼娈ｉ挊?interactive header閿涙稑缍嬮崜宥堢箹閸欘亣顩惄?Java 娓?header 闂堟瑩绮敍瀛碨 闁絽顨?startup resource listing silence 娴犲秴绶熼崥搴ｇ敾鐞涖儵缍?
+- PiAgentSessionTest / PiSettingsSelectorIntegrationTest / PiInteractiveModeTest 閻滄澘婀憰鍡欐磰 quiet-startup 閻ㄥ嫭瀵旀稊鍛閵嗕够elector 閸掑洦宕查崪?header 闂堟瑩绮?
+- PiAppAction / PiAppKeybindings / PiCliKeybindingsLoader 閻滄澘婀悰銉ょ啊 toggleThinking app action閵嗕線绮拋?ctrl+t 閸?keybindings.json alias
+- PiInteractiveMode 閻滄澘婀导姘辨纯閹恒儱顦查悽?hide-thinking setting 鐠侯垰绶為崚鍥ㄥ床 thinking block 閸欘垵顫嗛幀褝绱濋獮鍓佺彌閸楀啿鍩涢弬?transcript + status閿涘湵hinking blocks: hidden|visible閿?- KeyMatcher 閻滄澘婀悰銉ょ啊 ctrl+t閿涘矂浼╅崗宥夌帛鐠?toggle-thinking 闁款喕缍呴崷?Java 娓氀冦亼閺?- PiCliModuleTest / PiInteractiveModeTest / KeyMatcherTest 閻滄澘婀憰鍡欐磰 toggle-thinking 閻?loader alias閵嗕線绮拋銈夋暛娴ｅ秴灏柊宥呮嫲 interactive transcript/status 閸掑洦宕?
+- PiAppAction / PiAppKeybindings / PiCliKeybindingsLoader 閻滄澘婀悰銉ょ啊 clear app action閵嗕線绮拋?ctrl+c 閸?keybindings.json alias
+- PiInteractiveMode 閻滄澘婀导姘帥 clear editor閿涘苯鍟€閸?500ms 閸愬懐顑囨禍灞绢偧 clear 閺冨爼鈧偓閸戠尨绱濈拹纾嬬箮 TS 閻?clear once / exit twice 鐠囶厺绠?
+- PiCliModuleTest / PiInteractiveModeTest 閻滄澘婀憰鍡欐磰 clear 閻?loader alias閵嗕躬ditor clear 閸?double-clear exit
+- PiAppAction / PiAppKeybindings / PiCliKeybindingsLoader 閻滄澘婀悰銉ょ啊 exit app action閵嗕線绮拋?ctrl+d 閸?keybindings.json alias
+- PiInteractiveMode 閻滄澘婀弨顖涘瘮閸欘垶鍘ょ純?exit 闁款喕缍呴敍灞借嫙娣囨繃瀵旈崣顏呮箒缁岄缚绶崗銉︽閹靛秹鈧偓閸戠尨绱濋柆鍨帳閹垫挻鏌囧鍙夋箒閻ㄥ嫮绱潏?閸掔娀娅庣拠顓濈疅
+- PiCliModuleTest / PiInteractiveModeTest 閻滄澘婀憰鍡欐磰 exit 閻?loader alias 閸?empty-input exit
+- PiAppAction / PiAppKeybindings / PiCliKeybindingsLoader 閻滄澘婀悰銉ょ啊 expandTools app action閵嗕線绮拋?ctrl+o 閸?keybindings.json alias
+- PiMessageRenderer / PiInteractiveMode 閻滄澘婀弨顖涘瘮閹稿鏁崚鍥ㄥ床 tool result details 鐏炴洖绱戦敍灞借嫙娣囨繃瀵旀妯款吇 transcript 娑撳秴褰?
+- PiCliModuleTest / PiInteractiveModeTest / KeyMatcherTest 閻滄澘婀憰鍡欐磰 expandTools 閻?loader alias閵嗕辜ool details toggle 閸?ctrl+o 闁款喕缍呴崠褰掑帳
+- PiAppAction / PiAppKeybindings / PiCliKeybindingsLoader 閻滄澘婀悰銉ょ啊 pasteImage app action閵嗕線绮拋?Windows `alt+v` / 閸忔湹绮獮鍐插酱 `ctrl+v` 閸?keybindings.json alias
+- PiClipboardImage / PiInteractiveMode 閻滄澘婀弨顖涘瘮娴犲海閮寸紒鐔峰鐠愬瓨婢樼拠璇插絿閸ュ墽澧栭獮鍫曟閻偓閸掗绗呮稉鈧弶?user message閿涙硞treaming 閸?queued follow-up 娴兼碍妲戠涵顔藉珕缂?image attachments
+- Java 娓氀嗙箹濞嗏剝鐥呴張澶庤泲 TS 閻ㄥ嫧鈧粌鍟撴稉瀛樻閺傚洣娆㈤崘宥嗗絻閸忋儴鐭惧鍕ㄢ偓婵婄熅缁惧尅绱遍崶鐘辫礋瑜版挸澧?interactive submit 鏉╂ɑ鐥呴張?`@file` 鐟欙絾鐎介柧鎹愮熅閿涘苯鍘涚挧?in-memory `ImageContent` 閺囧娲块幒銉ょ瑬瀹歌尪鍏樻径宥囨暏閻滅増婀侀崶鍓у濞戝牊浼呯拠顓濈疅
+- PiCliModuleTest / PiInteractiveModeTest / KeyMatcherTest 閻滄澘婀憰鍡欐磰 pasteImage 閻?loader alias閵嗕巩nteractive attach/submit閵嗕够treaming 閹锋帞绮烽崪?`ctrl+v` 闁款喕缍呴崠褰掑帳
+- PiInteractiveMode 閻滄澘婀导姘躬鏉堝啴鐝?terminal 娑撳﹥濡?startup header 閹碘晜鍨?keybinding-aware hints閿涘奔琚辩悰灞藉瀻閸掝偉顩惄?interrupt/clear/exit 閸?model/tools/thinking/paste-image
+- startup header hints 娴兼俺顕伴崣?`PiAppKeybindings.global()`閿涘苯娲滃?custom app keybindings 娴兼艾鎮撳銉ュ冀閺勭姴鍩?header 閺傚洦顢嶉柌?- `quietStartup=true` 娴犲秶鍔ф导姘殻娴ｆ捇娈ｉ挊蹇氱箹娴?startup header hints閿涘奔绗夋导姘礈娑撶儤鏌婃晶鐐村絹缁€楦款攽閹跺﹪娼ゆ妯烘儙閸斻劏顢戞稉鐑樺ⅵ閻?- PiInteractiveModeTest 閻滄澘婀憰鍡欐磰 startup header hints 閻?keybinding-aware 濞撳弶鐓?
+- `ProcessTerminal` 閻滄澘婀崷銊︾槨濞?`start()` 閺冨爼鍏樻导姘跺櫢閺傛澘鍨卞?backend閿涘苯鑻熼崷?`stop()` 閸氬酣鍣撮弨鐐＋ backend閿涙稖绻栫拋?stop/start 閻㈢喎鎳￠崨銊︽埂闁插秵鏌婇崣妯诲灇閸欘垶鍣搁崗?- `ProcessTerminalTest` 閻滄澘婀憰鍡欐磰 stop 閸?restart 娴兼碍瀣侀崚?fresh backend閿涘矁鈧奔绗夐弰顖滄埛缂侇厼顦查悽銊ュ嚒閸忔娊妫撮惃?backend
+- 鏉╂瑥鍨侀弰顖氭倵缂?`suspend` / `externalEditor` 閻ㄥ嫬澧犵純顔肩俺鎼囱嶇幢濮濄倕澧犵€瑰啩婊戦崷?Java 娓氀勬￥濞夋洖褰查棃鐘茬杽閻滃府绱濋弽鐟版礈鐏忚鲸妲?`ProcessTerminal.stop()` 娴兼碍濡告惔鏇炵湴 backend 閸忚櫕顒?
+- PiAppAction / PiAppKeybindings / PiCliKeybindingsLoader 閻滄澘婀悰銉ょ啊 suspend app action閵嗕線绮拋?`ctrl+z` 閸?keybindings.json alias
+- PiInteractiveMode 閻滄澘婀弨顖涘瘮 suspend app keybinding閿涙盯绮拋銈呯杽閻滈绱伴崷?POSIX 娑?stop TUI -> `kill -TSTP <pid>` -> start TUI閿涘indows 娑撳﹤鍨弰搴ｂ€橀幓鎰仛 `Suspend is not supported on Windows`
+- PiCliModuleTest / PiInteractiveModeTest / KeyMatcherTest 閻滄澘婀憰鍡欐磰 suspend 閻?loader alias閵嗕巩nteractive dispatch閵嗕菇nsupported 閺傚洦顢嶉崪?`ctrl+z` 闁款喕缍呴崠褰掑帳
+- PiAppAction / PiAppKeybindings / PiCliKeybindingsLoader 閻滄澘婀悰銉ょ啊 externalEditor app action閵嗕線绮拋?`ctrl+g` 閸?keybindings.json alias
+- `PiExternalEditor` 閻滄澘婀幓鎰返 system 妫ｆ牜澧楅敍?  - 鐠囪褰?`$VISUAL` / `$EDITOR`
+  - 閸愭瑤澶嶉弮鑸垫瀮娴犺翰鈧够top TUI閵嗕椒浜?inherited stdio 閸氬本顒為崥顖氬З婢舵牠鍎寸紓鏍帆閸ｃ劊鈧線鈧偓閸戝搫鎮楅崘?start TUI
+  - 闂堢偤娴傞柅鈧崙铏圭垳閺冩湹绻氶悾娆忓斧 editor 閺傚洦婀版稉宥呭綁
+- PiInteractiveMode 閻滄澘婀弨顖涘瘮 external editor app keybinding閿?  - 鐟欙箑褰傞崥搴濈窗閹跺﹤缍嬮崜?editor 閺傚洦婀版禍銈囩舶婢舵牠鍎寸紓鏍帆閸?  - 鐠囪娲栭崘鍛啇閸氬簼绱伴崢缁樺竴閸楁洑閲滈張顐㈢啲閹广垼顢?
+  - 閸ョ姳璐熻ぐ鎾冲 Java `Input` 娴犲秵妲搁崡鏇☆攽缂佸嫪娆㈤敍灞藉従娴ｆ瑦宕茬悰灞肩窗鐞氼偄甯囬獮铏灇缁岀儤鐗搁崘宥呭晸閸?editor
+- PiCliModuleTest / PiInteractiveModeTest / KeyMatcherTest 閻滄澘婀憰鍡欐磰 externalEditor 閻?loader alias閵嗕巩nteractive dispatch閵嗕沟issing-editor 閺傚洦顢嶉妴涔祏ltiline flattening 閸?`ctrl+g` 闁款喕缍呴崠褰掑帳
+- PiModelSelector 閻滄澘婀紒褏鐢婚幎?warning/hint copy 瀵扳偓 TS 闂堢媴绱?
+  - scoped selector 妞ゅ爼鍎存穱婵堟殌 `Scope: all | scoped`
+  - `tab scope (all/scoped)` 闁插秵鏌婇幏鍡樺灇閻欘剛鐝?hint 鐞?  - `Type to filter 璺?...` 缂佈呯敾閸楁洜瀚崡鐘辩鐞涘矉绱濋柆鍨帳閹?scope hint 閸?action hint 濞ｅ嘲婀稉鈧挧?- PiModelSelector 閻滄澘婀紒鐔剁缁岃櫣绮ㄩ弸婊勬瀮濡楀牅璐?`No matching models`閿涘奔绗夐崘宥呭隘閸?blank query 閻?`No models available`
+- PiModelSelector detail panel 閻滄澘婀幎?`Model Name` label 閻ㄥ嫬銇囩亸蹇撳晸鐎靛綊缍堥崚?TS 缂佸嫪娆?
+- PiModelSelectorTest 閻滄澘婀憰鍡欐磰 scoped hint 閹峰棜顢戦妴涔odel Name:` label 閸滃瞼绮烘稉鈧?no-match copy
+- PiInteractiveSession.SettingsSelection / PiAgentSession 閻滄澘婀悰銉ょ啊 theme settings contract閿?  - 閺嗘挳婀惰ぐ鎾冲 theme
+  - 閺嗘挳婀惰ぐ鎾冲閸欘垰鍨忛幑銏㈡畱 theme 閸掓銆?
+  - 瑜版挸澧犳＃鏍閸欘亝褰佹笟?`dark/light`閿涘苯鑻熼幎濠傚嚒閺堝鍤滅€规矮绠熼崐鍏兼杹閸︺劌鍨悰銊╊浕娴ｅ秳绻氶悾?- PiAgentSession 閻滄澘婀弨顖涘瘮 `theme` setting 閺囧瓨鏌婇敍?  - 娴兼碍濡搁崐鐓庡晸閸?global settings 閻?`/theme`
+  - 瑜版挸澧犻崣顏勪粵閹镐椒绠欓崠鏍电礉娑撳秴浠?runtime theme preview / live switch
+- PiSettingsSelector 閻滄澘婀弬鏉款杻 `Theme` 閺夛紕娲伴敍?  - 閹诲繗鍫弬鍥攳閺?`Color theme for the interface`
+  - 瑜版挸澧犳＃鏍濞岃法鏁?`SettingsList` 閻?cycle 娴溿倓绨伴敍灞肩瑝閸?submenu 妫板嫯顫?
+- PiSettingsSelectorIntegrationTest 閻滄澘婀憰鍡欐磰 `Theme` 閺夛紕娲伴崚鍥ㄥ床
+- PiInteractiveSession.SettingsSelection / PiAgentSession 閻滄澘婀悰銉ょ啊 `doubleEscapeAction` settings contract閿?  - 姒涙顓婚崐鍏兼Ц `tree`
+  - 瑜版挸澧犻幐浣风畽閸栨牕鈧壈铔?global settings 閻?`/doubleEscapeAction`
+- PiSettingsSelector 閻滄澘婀弬鏉款杻 `Double-escape action` 閺夛紕娲伴敍?  - 閸欘垶鈧鈧吋妲?`tree` / `fork` / `none`
+  - 閹诲繗鍫弬鍥攳鐎靛綊缍?TS閿涙瓪Action when pressing Escape twice with empty editor`
+- PiInteractiveMode 閻滄澘婀幎濠勬埂鐎?`Escape` 閸欏苯鍤粚铏圭椽鏉堟垵娅掗幒銉ュ煂娴?settings閿?  - streaming 閺冩湹绮涢弮褌绱崗鍫ｈ泲 abort
+  - 闂?`Escape` 閻ㄥ嫯鍤滅€规矮绠?interrupt 闁款喕缍呮禒宥嗘＋娣囨繃瀵旈崢鐔告降閻?abort 鐠囶厺绠?
+  - 缁岃櫣绱潏鎴濇珤娑撳寮婚崙?`Escape` 娴兼碍瀵滅拋鍓х枂閹垫挸绱?tree / fork閿涘本鍨ㄩ崷?`none` 娑撳绻氶幐浣规￥閸斻劋缍?
+- PiSettingsSelectorIntegrationTest / PiInteractiveModeTest 閻滄澘婀憰鍡欐磰 `Double-escape action` 閸掑洦宕查敍灞间簰閸欏﹤寮婚崙?`Escape` 閹垫挸绱?tree/fork
+- PiInteractiveSession.SettingsSelection / PiAgentSession 閻滄澘婀悰銉ょ啊 `editorPaddingX` settings contract閿?  - 姒涙顓婚崐鍏兼Ц `0`
+  - 瑜版挸澧犻幐浣风畽閸栨牕鈧壈铔?global settings 閻?`/editorPaddingX`
+  - `updateSetting("editor-padding", value)` 閻╊喖澧犻幒銉ュ綀 `0-3`
+- PiSettingsSelector 閻滄澘婀弬鏉款杻 `Editor padding` 閺夛紕娲伴敍?  - 閸欘垶鈧鈧吋妲?`0` / `1` / `2` / `3`
+  - 閹诲繗鍫弬鍥攳鐎靛綊缍?TS閿涙瓪Horizontal padding for input editor (0-3)`
+- `Input` 閻滄澘婀悰銉ょ啊 `paddingX` 閺€顖涘瘮閿涘iInteractiveMode 娴兼艾婀В蹇旑偧 `renderState()` 閸撳秴鎮撳?`session.settingsSelection().editorPaddingX()`
+  - 鏉╂瑨顔€ interactive prompt 妫ｆ牗顐煎〒鍙夌厠閸?`/settings` 閺囧瓨鏌婇崥搴ｆ畱閸氬海鐢婚柌宥囩帛闁€熷厴閸氬啫鍩岄弬鎵畱 horizontal padding
+  - 瑜版挸澧?Java 娓氀冨涧閹跺﹨绻栨い瑙勫复閸掗绨￠崡鏇☆攽 `Input`閿涙矖Editor` 閺堫剝闊╂稊瀣瀹歌尙绮￠張?`setPaddingX()`閿涘奔绲?interactive mode 娴犲秵婀崚鍥у煂婢舵俺顢?editor
+- InputTest / PiAgentSessionTest / PiSettingsSelectorIntegrationTest / PiInteractiveModeTest 閻滄澘婀憰鍡欐磰 editor-padding 閻ㄥ嫭瑕嗛弻鎾扁偓浣瑰瘮娑斿懎瀵查妴涔籩lector 閸掑洦宕查崪?interactive prompt 閸掓繂顫愰崠鏍ф倱濮?- `PiCliAnsi` 閻滄澘婀悰銉ょ啊 light/dark palette閿?  - `dark` 缂佈呯敾鐠ф澘缍嬮崜宥囨畱 cyan/muted-gray ANSI 缂佸嫬鎮?
+  - `light` 妫ｆ牜澧楅崚鍥у煂 blue accent + dim-black muted閿涘奔绱崗鍫滅箽鐠囦礁婀ù鍛板閼冲本娅欐稉瀣畱閸欘垵顕伴幀?  - 閺堫亣鐦戦崚?theme name 閻╊喖澧犳导姘礀闁偓閸?`dark`
+- PiInteractiveMode 閻滄澘婀导姘躬濮ｅ繑顐?`renderState()` 閸撳秷鐨熼悽?`PiCliAnsi.setTheme(session.settingsSelection().theme())`
+  - 鏉╂瑨顔€ startup render閵嗕梗/settings` 闁插瞼娈?theme 閸掑洦宕查敍灞间簰閸?`/reload` 閸氬海娈?settings 閸ョ偞鏂侀柈鍊熷厴闁插秵鏌婇惈鈧懝?  - 瑜版挸澧犳潻娆忓瀬閸欘亣顩惄?CLI ANSI palette閿涙稖绻曞▽鈩冩箒閹恒儱鍙?TS 闁絽顨?theme file/resource loader
+- PiCliAnsiTest / PiInteractiveModeTest 閻滄澘婀憰鍡欐磰 dark/light palette閵嗕菇nknown theme fallback閿涘奔浜掗崣?interactive runtime 闁插秶绮崥搴ｆ畱 light-theme footer ANSI
+- PiSettingsSelector 閻滄澘婀幎?`Theme` 閺夛紕娲版禒?cycle 閺€瑙勫灇 submenu閿?  - `Enter`/`space` 閹垫挸绱?theme list閿涘本鏌熼崥鎴︽暛缁夎濮╅弮璺哄涧閸?preview閿涘奔绗夋导姘辩彌閸掔粯瀵旀稊鍛
+  - `Enter` 閹绘劒姘﹂柅澶夎厬閻?theme閿涘畭Esc` 娴兼碍浠径宥嗗ⅵ瀵偓 submenu 閸撳秶娈?theme
+  - 閸掓銆冩导姘辩舶瑜版挸澧?theme 閹?`(current)` 閺嶅洩顔囬敍灞芥嫲 TS 閻?theme selector 娴溿倓绨版穱婵囧瘮娑撯偓閼?- PiInteractiveMode 閻滄澘婀崷?settings overlay 閻㈢喎鎳￠崨銊︽埂闁插瞼娣幎銈囩仜閺?`previewTheme`
+  - theme submenu preview 閺冩湹绱扮憰鍡欐磰 `renderState()` 娴ｈ法鏁ら惃?palette
+  - submenu cancel 閸?overlay close 闁垝绱板〒鍛竴 preview閿涘矂浼╅崗宥嗗Ω閺堫亝褰佹禍銈囨畱 theme 閻ｆ瑥婀稉鑽ゆ櫕闂?- PiSettingsSelectorIntegrationTest 閻滄澘婀憰鍡欐磰 theme submenu 閻?`preview -> cancel restore` 閸?submenu submit
+- PiSettingsSelector 閻滄澘婀幎?`Thinking level` 娑旂喎鍨忛幋?submenu閿?  - option 閺傚洦顢嶇€靛綊缍?TS閿涙瓪off/minimal/low/medium/high/xhigh`
+  - 濮ｅ繋閲?level 闁棄鐢?reasoning 濞ｅ崬瀹崇拠瀛樻閿涘奔绶ユ俊?`Very brief reasoning (~1k tokens)` / `Deep reasoning (~16k tokens)`
+  - `Enter` 閹绘劒姘﹂敍瀹岴sc` 鏉╂柨娲栨稉?settings list閿涘奔绗夋导姘辩彌閸掔粯鏁奸崘娆忕秼閸撳秴鈧?- PiSettingsSelectorIntegrationTest 閻滄澘婀憰鍡欐磰 `Thinking level` submenu 閻ㄥ嫭澧﹀鈧妴浣筋嚛閺勫孩鏋冨鍫濇嫲闁瀚ㄩ幓鎰唉
+- PiInteractiveSession.SettingsSelection / PiAgentSession 閻滄澘婀悰銉ょ啊 `showHardwareCursor` / `clearOnShrink` settings contract
+  - 姒涙顓婚崐濂稿厴娣囨繃瀵?`true`閿涘奔绗夐弨鐟板綁瑜版挸澧?Java interactive 閻ㄥ嫭妫﹂張澶嬭閺屾捁顢戞稉?  - `updateSetting()` 娴兼碍濡告稉銈夈€嶉崚鍡楀焼閹镐椒绠欓崠鏍у煂 global settings 閻?`/showHardwareCursor` 閸?`/clearOnShrink`
+- PiSettingsSelector 閻滄澘婀弬鏉款杻 `Show hardware cursor` / `Clear on shrink` 娑撱倓閲滈弶锛勬窗
+  - `Show hardware cursor` 娴兼艾鍨?TUI 閺勵垰鎯侀弰鍓с仛閻喎鐤勭紒鍫㈩伂閸忓鐖ｉ敍灞芥倱閺冨墎鎴风紒顓濈箽閻?Java 娓氀呮畱鐎规矮缍呴柅鏄忕帆
+  - `Clear on shrink` 娴兼艾鍨?`DiffRenderer` 閸︺劌鍞寸€硅鏁圭紓鈺傛閺勵垰鎯佸鍝勫煑 clear redraw
+- `Tui` 閻滄澘婀弳鎾苟 runtime setter閿涘iInteractiveMode 濮ｅ繑顐?`renderState()` 闁垝绱伴幎?`showHardwareCursor` / `clearOnShrink` 閸氬本顒為崚鏉跨秼閸?TUI
+- `DiffRenderer` 閻滄澘婀崷?`clearOnShrink=false` 娑撴柨鐔柈銊︽殻濞堝灚鏁圭紓鈺傛娑撳秴鍟€瀵搫鍩?full redraw閿涘矂浼╅崗宥堢箹娑?setting 閸欐ɑ鍨氱粚鍝勭磻閸?- DiffRendererTest / TuiTest / PiSettingsSelectorIntegrationTest 閻滄澘婀憰鍡欐磰 `clear-on-shrink`閵嗕弓ardware cursor runtime toggle 閸?settings selector 閸掑洦宕?
+- `PiSettingsSelector` 閻滄澘婀紒褏鐢婚幎?settings overlay 閻?copy 閺€鑸垫殐閸?TS閿?  - `Steering mode` 閺€瑙勫灇 `Enter while streaming queues steering messages. ...`
+  - `Follow-up mode` 閺€瑙勫灇 `Alt+Enter queues follow-up messages until agent stops. ...`
+  - `Transport` 閺€瑙勫灇 `Preferred transport for providers that support multiple transports`
+  - `Quiet startup` 閺€瑙勫灇 `Disable verbose printing at startup`
+- `PiSettingsSelector` 閻滄澘婀幎?`Transport` 閻ㄥ嫬褰查柅澶娾偓濂搞€庢惔蹇旀暭閹?`sse -> websocket -> auto`閿涘苯鎷?TS `/settings` selector 娣囨繃瀵旀稉鈧懛?- `PiSettingsSelectorIntegrationTest` 閻滄澘婀憰鍡欐磰 TS-style settings descriptions閿涘矂浼╅崗宥呮倵缂?copy 閸ョ偤鈧偓
 - `PiCliThemeLoader` now covers the first custom theme loader slice:
   - scans `~/.pi/agent/themes/*.json`
   - scans project `.pi/themes/*.json`
@@ -723,18 +723,23 @@
 - `PiSettingsSelectorIntegrationTest` now checks both the styled top hint and the styled submenu footer under custom keybindings
 - `SettingsListTheme` now exposes `hintKey()` and `hintDescription()` default methods, so hint styling can split key labels from body copy without making `pi-tui` depend on CLI classes.
 - `SettingsList.addHintLine()` now composes the footer from those theme channels, keeping the existing keybinding lookup but letting callers style `submit/space` and `cancel` independently of the prose around them.
-- `PiSettingsSelector.theme()` now maps those channels onto `PiCliAnsi.dim(...)` for key labels and `PiCliAnsi.muted(...)` for descriptions, so the bottom `Type to search · ...` footer matches the top-line hint hierarchy.
+- `PiSettingsSelector.theme()` now maps those channels onto `PiCliAnsi.dim(...)` for key labels and `PiCliAnsi.muted(...)` for descriptions, so the bottom `Type to search 路 ...` footer matches the top-line hint hierarchy.
 - New tests:
   - `SettingsListTest` now checks that footer key and description segments go through separate theme callbacks.
   - `PiSettingsSelectorIntegrationTest` now checks the styled bottom footer under custom keybindings.
+- `PiCliKeyHints` now also exposes `appKey()` / `appHint()`, so CLI overlays can style app-level keybindings without re-implementing lookup logic.
+- `PiSessionPicker` now uses split key/prose styling for the two top help lines and the delete-confirmation line:
+  - sort/named/path and scope/delete/rename hints now render dim key labels plus muted descriptions
+  - delete confirmation now renders warning prose plus dim `[Enter]` / `[Esc]` key labels
+- `PiSessionPickerTest` now covers the split-styled delete confirmation and a custom-keybinding case for the session-picker help lines.
 
 ?????```bash
 .\\gradlew.bat :pi-cli:test --no-daemon
 npm.cmd run check
 ```
 
-## 涓嬩竴姝ュ缓璁?
-1. selector parity: continue evaluating model selector detail/no-match hierarchy, or extend the same dim/muted key-hint layering into session picker surfaces.
+## 娑撳绔村銉ョ紦鐠?
+1. selector parity: continue evaluating model selector detail/no-match hierarchy; the session picker top-hint layering slice is now done.
 2. settings selector parity: theme work now covers hint/keybinding parity, hide-thinking transcript parity, quiet-startup header parity, quiet-startup startup-resource silence, double-escape, editor-padding, dark/light runtime ANSI theme switching, `Theme` submenu preview, `Thinking level` submenu, hardware-cursor/clear-on-shrink, TS-style copy for steering/follow-up/transport/quiet-startup, plus the first custom theme loader + hot reload slice and the first broader core-token slice; remaining theme gaps are package/source theme discovery and wider token adoption across more CLI surfaces
-3. pending queue parity锛氱户缁ˉ compaction queue 鍚堝苟灞曠ず涓庢仮澶嶏紱steering/follow-up runtime queue 宸叉帴涓婏紝浣?Java 渚т粛娌℃湁 compaction pending queue
-4. footer parity锛氱户缁瘎浼?extension status 绗笁琛岋紝鎴栨妸 git branch 瑙ｆ瀽缂撳瓨涓嬫矇鎴?provider 椋庢牸缁勪欢
+3. pending queue parity閿涙氨鎴风紒顓∷?compaction queue 閸氬牆鑻熺仦鏇犮仛娑撳孩浠径宥忕幢steering/follow-up runtime queue 瀹稿弶甯存稉濠忕礉娴?Java 娓氀傜矝濞屸剝婀?compaction pending queue
+4. footer parity閿涙氨鎴风紒顓＄槑娴?extension status 缁楊兛绗佺悰宀嬬礉閹存牗濡?git branch 鐟欙絾鐎界紓鎾崇摠娑撳鐭囬幋?provider 妞嬪孩鐗哥紒鍕

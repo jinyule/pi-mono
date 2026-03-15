@@ -554,33 +554,16 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             var lines = new java.util.ArrayList<String>();
             lines.add(composeHeaderLine(width));
             if (pendingDeletePath != null) {
-                lines.addAll(styleInfoLines("Delete session? [Enter] confirm · [Esc] cancel", width, PiCliAnsi::warning));
+                lines.addAll(wrapStyledInfoLine(deleteConfirmationLine(), width));
                 lines.add("");
             } else {
-                lines.addAll(styleInfoLines(
-                    "%s sort(%s) · %s named(%s) · %s path(%s)"
-                        .formatted(
-                            keyHint(EditorAction.SESSION_SORT_TOGGLE),
-                            sortMode.label(),
-                            appKeyHint(PiAppAction.TOGGLE_SESSION_NAMED_FILTER),
-                            nameFilter.label(),
-                            keyHint(EditorAction.SESSION_PATH_TOGGLE),
-                            showPath ? "on" : "off"
-                        ),
-                    width,
-                    PiCliAnsi::muted
-                ));
+                lines.addAll(wrapStyledInfoLine(actionSummaryLine(), width));
                 lines.addAll(styleInfoLines(
                     loadingError != null
                         ? "Failed to load sessions: " + loadingError
-                        : "%s scope · re:<pattern> regex · \"phrase\" exact · %s delete · %s rename"
-                            .formatted(
-                                keyHint(EditorAction.SESSION_SCOPE_TOGGLE),
-                                keyHint(EditorAction.SESSION_DELETE),
-                                keyHint(EditorAction.SESSION_RENAME)
-                            ),
+                        : searchSummaryLine(),
                     width,
-                    loadingError != null ? PiCliAnsi::error : PiCliAnsi::muted
+                    loadingError != null ? PiCliAnsi::error : UnaryOperator.identity()
                 ));
                 var searchError = searchError();
                 if (searchError != null) {
@@ -940,12 +923,12 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
                 if (currentLoading) {
                     return "Loading current " + progressText(currentProgress);
                 }
-                return "◉ Current Folder | ○ All";
+                return "\u25c9 Current Folder | \u25cb All";
             }
             if (allLoading) {
-                return "○ Current Folder | Loading " + progressText(allProgress);
+                return "\u25cb Current Folder | Loading " + progressText(allProgress);
             }
-            return "○ Current Folder | ◉ All";
+            return "\u25cb Current Folder | \u25c9 All";
         }
 
         private String composeHeaderLine(int width) {
@@ -981,22 +964,50 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
                 if (currentLoading) {
                     return PiCliAnsi.accent("Loading current " + progressText(currentProgress));
                 }
-                return PiCliAnsi.accent("◉ Current Folder") + PiCliAnsi.muted(" | ○ All");
+                return PiCliAnsi.accent("\u25c9 Current Folder") + PiCliAnsi.muted(" | \u25cb All");
             }
             if (allLoading) {
-                return PiCliAnsi.muted("○ Current Folder | ") + PiCliAnsi.accent("Loading " + progressText(allProgress));
+                return PiCliAnsi.muted("\u25cb Current Folder | ") + PiCliAnsi.accent("Loading " + progressText(allProgress));
             }
-            return PiCliAnsi.muted("○ Current Folder | ") + PiCliAnsi.accent("◉ All");
+            return PiCliAnsi.muted("\u25cb Current Folder | ") + PiCliAnsi.accent("\u25c9 All");
         }
 
         private static List<String> wrapInfoLine(String text, int width) {
             return TerminalText.wrapText(text, Math.max(1, width));
         }
 
+        private static List<String> wrapStyledInfoLine(String text, int width) {
+            return wrapInfoLine(text, width);
+        }
+
         private static List<String> styleInfoLines(String text, int width, UnaryOperator<String> style) {
             return wrapInfoLine(text, width).stream()
                 .map(style)
                 .toList();
+        }
+
+        private String deleteConfirmationLine() {
+            return PiCliAnsi.warning("Delete session? ")
+                + PiCliAnsi.dim("[Enter]")
+                + PiCliAnsi.warning(" confirm \u00b7 ")
+                + PiCliAnsi.dim("[Esc]")
+                + PiCliAnsi.warning(" cancel");
+        }
+
+        private String actionSummaryLine() {
+            return PiCliKeyHints.rawHint(keyHint(EditorAction.SESSION_SORT_TOGGLE), "sort(" + sortMode.label() + ")")
+                + PiCliAnsi.muted(" \u00b7 ")
+                + PiCliKeyHints.appHint(PiAppAction.TOGGLE_SESSION_NAMED_FILTER, "named(" + nameFilter.label() + ")")
+                + PiCliAnsi.muted(" \u00b7 ")
+                + PiCliKeyHints.rawHint(keyHint(EditorAction.SESSION_PATH_TOGGLE), "path(" + (showPath ? "on" : "off") + ")");
+        }
+
+        private String searchSummaryLine() {
+            return PiCliKeyHints.rawHint(keyHint(EditorAction.SESSION_SCOPE_TOGGLE), "scope")
+                + PiCliAnsi.muted(" \u00b7 re:<pattern> regex \u00b7 \"phrase\" exact \u00b7 ")
+                + PiCliKeyHints.rawHint(keyHint(EditorAction.SESSION_DELETE), "delete")
+                + PiCliAnsi.muted(" \u00b7 ")
+                + PiCliKeyHints.rawHint(keyHint(EditorAction.SESSION_RENAME), "rename");
         }
 
         private List<String> renderSessionResults(int width) {
@@ -1100,9 +1111,9 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             }
             var prefix = new StringBuilder();
             for (var branchIsLast : ancestry) {
-                prefix.append(branchIsLast ? "   " : "│  ");
+                prefix.append(branchIsLast ? "   " : "\u2502  ");
             }
-            prefix.append(isLast ? "└─ " : "├─ ");
+            prefix.append(isLast ? "\u2514\u2500 " : "\u251c\u2500 ");
             return prefix.toString();
         }
 
@@ -1117,7 +1128,7 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
             }
             metadata.add("%d msg".formatted(session.messageCount()));
             metadata.add(formatAge(session.modified()));
-            var description = String.join(" · ", metadata);
+            var description = String.join(" \u00b7 ", metadata);
             return new SelectItem(encodeValue(session, label), label, description);
         }
 
@@ -1127,8 +1138,7 @@ public final class PiSessionPicker implements PiCliSessionResolver.SessionPicker
         }
 
         private static String appKeyHint(PiAppAction action) {
-            var keys = PiAppKeybindings.global().getKeys(action);
-            return keys.isEmpty() ? action.name() : keys.getFirst();
+            return PiCliKeyHints.appKey(action);
         }
 
         private static String formatAge(Instant modified) {

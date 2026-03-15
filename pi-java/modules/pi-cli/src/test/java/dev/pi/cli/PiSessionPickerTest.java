@@ -134,7 +134,8 @@ class PiSessionPickerTest {
             .contains("\u001b[1mResume session (Current folder)")
             .contains("\u001b[36m◉ Current Folder")
             .contains("\u001b[90m | ○ All")
-            .contains("\u001b[90mtab scope");
+            .contains("\u001b[2;37mtab\u001b[0m")
+            .contains("\u001b[90m scope\u001b[0m");
 
         terminal.sendInput("\u001b");
     }
@@ -153,7 +154,12 @@ class PiSessionPickerTest {
         deleteTerminal.sendInput("\u0004");
         waitFor(() -> deleteTerminal.output().contains("Delete session?"));
 
-        assertThat(deleteTerminal.output()).contains("\u001b[33mDelete session? [Enter] confirm · [Esc] cancel\u001b[0m");
+        assertThat(deleteTerminal.output())
+            .contains("\u001b[33mDelete session? \u001b[0m")
+            .contains("\u001b[2;37m[Enter]\u001b[0m")
+            .contains("\u001b[33m confirm \u00b7 \u001b[0m")
+            .contains("\u001b[2;37m[Esc]\u001b[0m")
+            .contains("\u001b[33m cancel\u001b[0m");
         deleteTerminal.sendInput("\u001b");
 
         var errorTerminal = new RecordingTerminal(120, 12);
@@ -494,6 +500,52 @@ class PiSessionPickerTest {
             .contains("\"phrase\" exact")
             .contains("delete")
             .contains("rename");
+
+        terminal.sendInput("\u001b");
+    }
+
+    @Test
+    void stylesSessionPickerHintKeysWithCustomBindings() {
+        var terminal = new RecordingTerminal(180, 12);
+        var picker = new PiSessionPicker(terminal);
+        var previousEditor = EditorKeybindings.global();
+        var previousApp = PiAppKeybindings.global();
+        try {
+            EditorKeybindings.setGlobal(new EditorKeybindings(Map.of(
+                EditorAction.SESSION_SORT_TOGGLE, List.of("ctrl+s"),
+                EditorAction.SESSION_PATH_TOGGLE, List.of("ctrl+p"),
+                EditorAction.SESSION_SCOPE_TOGGLE, List.of("ctrl+o"),
+                EditorAction.SESSION_DELETE, List.of("ctrl+d"),
+                EditorAction.SESSION_RENAME, List.of("ctrl+r")
+            )));
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(Map.of(
+                PiAppAction.TOGGLE_SESSION_NAMED_FILTER, List.of("alt+n")
+            )));
+
+            Thread.ofVirtual().start(() -> picker.pick(
+                List.of(session("current.jsonl", "Current task", 2, Instant.now().minusSeconds(30), "/workspace/current")),
+                List.of(session("current.jsonl", "Current task", 2, Instant.now().minusSeconds(30), "/workspace/current"))
+            ));
+
+            waitFor(() -> terminal.output().contains("Resume session"));
+
+            assertThat(terminal.output())
+                .contains("\u001b[2;37mctrl+s\u001b[0m")
+                .contains("\u001b[90m sort(Threaded)\u001b[0m")
+                .contains("\u001b[2;37malt+n\u001b[0m")
+                .contains("\u001b[90m named(All)\u001b[0m")
+                .contains("\u001b[2;37mctrl+p\u001b[0m")
+                .contains("\u001b[90m path(off)\u001b[0m")
+                .contains("\u001b[2;37mctrl+o\u001b[0m")
+                .contains("\u001b[90m scope\u001b[0m")
+                .contains("\u001b[2;37mctrl+d\u001b[0m")
+                .contains("\u001b[90m delete\u001b[0m")
+                .contains("\u001b[2;37mctrl+r\u001b[0m")
+                .contains("\u001b[90m rename\u001b[0m");
+        } finally {
+            EditorKeybindings.setGlobal(previousEditor);
+            PiAppKeybindings.setGlobal(previousApp);
+        }
 
         terminal.sendInput("\u001b");
     }

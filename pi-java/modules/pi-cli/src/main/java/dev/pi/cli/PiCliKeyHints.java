@@ -16,6 +16,15 @@ final class PiCliKeyHints {
         return PiCliAnsi.dim(editorKey(action)) + PiCliAnsi.muted(" " + description);
     }
 
+    static String appKey(PiAppAction action) {
+        var keys = PiAppKeybindings.global().getKeys(action);
+        return keys.isEmpty() ? action.name() : keys.getFirst();
+    }
+
+    static String appHint(PiAppAction action, String description) {
+        return PiCliAnsi.dim(appKey(action)) + PiCliAnsi.muted(" " + description);
+    }
+
     static String rawHint(String key, String description) {
         return PiCliAnsi.dim(key) + PiCliAnsi.muted(" " + description);
     }
