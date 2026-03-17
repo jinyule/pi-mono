@@ -172,7 +172,7 @@ public final class PiModelSelector implements Component, Focusable {
     }
 
     private static SelectItem toSelectItem(PiInteractiveSession.SelectableModel model) {
-        var label = model.modelId() + (model.current() ? " " + PiCliAnsi.success("✓") : "");
+        var label = model.modelId() + (model.current() ? " " + PiCliAnsi.success("\u2713") : "");
         return new SelectItem(encodeValue(label, model.index()), label, metadata(model));
     }
 
@@ -267,8 +267,7 @@ public final class PiModelSelector implements Component, Focusable {
     private static List<String> renderSelectedDetailPanel(PiInteractiveSession.SelectableModel model, int width) {
         var lines = new ArrayList<String>();
         lines.add(separatorLine(width));
-        lines.add(PiCliAnsi.accentBold("Selected model"));
-        lines.add(TerminalText.truncateToWidth(renderSelectedModelTitle(model), width, "..."));
+        lines.add(TerminalText.truncateToWidth(renderSelectedDetailHeader(model), width, "..."));
         for (var detailLine : selectedDetailLines(model)) {
             lines.add(TerminalText.truncateToWidth(detailLine, width, "..."));
         }
@@ -276,16 +275,18 @@ public final class PiModelSelector implements Component, Focusable {
         return List.copyOf(lines);
     }
 
-    private static String renderSelectedModelTitle(PiInteractiveSession.SelectableModel model) {
+    private static String renderSelectedDetailHeader(PiInteractiveSession.SelectableModel model) {
         var line = "  "
+            + PiCliAnsi.bold("Selected:")
+            + " "
             + PiCliAnsi.muted(model.provider() + "/")
             + PiCliAnsi.bold(model.modelId())
-            + (model.current() ? " " + PiCliAnsi.success("✓") : "");
+            + (model.current() ? " " + PiCliAnsi.success("\u2713") : "");
         return line;
     }
 
     private static String separatorLine(int width) {
-        return PiCliAnsi.borderMuted("─".repeat(Math.max(1, width)));
+        return PiCliAnsi.borderMuted("\u2500".repeat(Math.max(1, width)));
     }
 
     private static List<String> selectedDetailLines(PiInteractiveSession.SelectableModel model) {
