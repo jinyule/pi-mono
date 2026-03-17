@@ -65,6 +65,7 @@
    - incremental update: `SettingsList` footer hints now split key and description styling via `SettingsListTheme.hintKey()/hintDescription()`, and the CLI settings overlay wires them to dim/muted ANSI channels.
    - incremental update: session picker top action hints and delete confirmation now split key labels from prose via `PiCliKeyHints`, and `PiSessionPickerTest` covers the styled output under custom keybindings.
    - incremental update: model selector selected-detail header now collapses to a single `Selected:` line with stable Unicode separators/checkmarks, and `PiModelSelectorTest` now asserts the refined detail copy.
+   - incremental update: interactive model selection now short-circuits empty registries with `No models available` instead of opening an empty overlay, and `PiInteractiveModeTest` covers the status path.
 ## 闂傚啳鍩栭?9闁挎稒姘ㄩ弫鎾诲箑娴ｉ鐟㈤柛鎺戞瑜?
 
 1. 閻庤鐭粻?Java 闁绘鐗婅ぐ鍐╃閼搁潧鈪甸柛鏍ф嚀椤鎳犻崘锔瑰亾?2. 閻庤鐭粻?`skills / prompts / themes` 闁瑰吋绮庨崒銊ф崉椤栨氨绐炲☉?package source 閻熸瑥瀚€垫牠濡?3. 閻犲洤瀚崣?`maven:`闁靛棔姊梖ile:`闁靛棔姊梘it:` 濞戞挸顦辩悮顐ゆ導閸曨剛鐖辨繝褎鍔戦埀?4. 濞存籂鍐ㄦ瘔 fat JAR 闁告帒妫楄ぐ鍌炲Υ?5. 閻犲洤瀚崣?`jpackage` 閻庣懓顦抽ˉ濠囧礌閸涱偀鍋?

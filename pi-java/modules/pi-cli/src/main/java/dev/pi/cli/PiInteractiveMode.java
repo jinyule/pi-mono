@@ -671,6 +671,11 @@ public final class PiInteractiveMode implements AutoCloseable {
 
     private void handleSelectModelCommand() {
         var selection = session.modelSelection();
+        if (selection.allModels().isEmpty() && selection.scopedModels().isEmpty()) {
+            manualStatus = "No models available";
+            renderState(session.state());
+            return;
+        }
         if (selection.allModels().size() <= 1 && selection.scopedModels().size() <= 1) {
             manualStatus = "Only one model available";
             renderState(session.state());

@@ -1250,6 +1250,30 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void showsStatusWhenNoModelsAreAvailableForSelector() {
+        var session = new FakeSession().withSelectableModels(List.of());
+        var terminal = new VirtualTerminal(100, 18);
+        var mode = new PiInteractiveMode(session, terminal);
+        var previousApp = PiAppKeybindings.global();
+        try {
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(
+                PiAppAction.SELECT_MODEL,
+                java.util.List.of("ctrl+l")
+            )));
+
+            mode.start();
+            terminal.sendInput("\u000c");
+
+            assertThat(String.join("\n", terminal.getViewport()))
+                .contains("No models available")
+                .doesNotContain("Select model");
+        } finally {
+            PiAppKeybindings.setGlobal(previousApp);
+            mode.stop();
+        }
+    }
+
+    @Test
     void doubleEscapeOpensTreeWhenConfigured() {
         var session = new FakeSession().withMessageHistory("Hello").withDoubleEscapeAction("tree");
         var terminal = new VirtualTerminal(100, 18);
