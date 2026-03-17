@@ -32,7 +32,7 @@ class PiModelSelectorTest {
         var lines = selector.render(100);
 
         assertThat(lines.getFirst()).contains("\u2500\u2500\u2500\u2500");
-        assertThat(lines).anyMatch(line -> line.contains("Select model"));
+        assertThat(lines).noneMatch(line -> line.contains("Select model"));
         assertThat(lines).anyMatch(line -> line.contains("Only showing models with configured API keys"));
         assertThat(lines).anyMatch(line -> line.contains("gpt-5"));
         assertThat(lines).anyMatch(line -> line.contains("\u001b[1;36mgpt-5"));

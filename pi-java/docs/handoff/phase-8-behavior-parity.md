@@ -95,6 +95,8 @@
   - interactive settings selector key-hint styling first cut
 - completed cut 85:
   - interactive model selector empty-registry guard first cut
+- completed cut 86:
+  - interactive model selector title-row removal first cut
 
 ## 闁哄牜鍓濋悿鍡涙媰閽樺鍕?
 
@@ -742,6 +744,10 @@
   - when both `allModels` and `scopedModels` are empty, the interactive surface shows `No models available`
   - no selector overlay is opened for the empty case, matching the TS-side top-level status path
 - `PiInteractiveModeTest` now covers the empty-registry keyboard path by pressing the configured select-model binding and asserting the status line rather than selector UI.
+- `PiModelSelector` no longer inserts a Java-only `Select model` title row above the warning/scope block:
+  - the selector now starts directly with the TS-style top section after the border spacer
+  - the configured-API-key warning and scoped `Scope:` block remain unchanged
+- `PiModelSelectorTest` now asserts that `Select model` stays absent while the warning copy still renders.
 
 ?????```bash
 .\\gradlew.bat :pi-cli:test --no-daemon
@@ -749,7 +755,7 @@ npm.cmd run check
 ```
 
 ## 濞戞挸顑勭粩鏉戭潰閵夈儳绱﹂悹?
-1. selector parity: empty-registry handling now surfaces `No models available` before opening the model selector; next gap is the remaining warning/hint copy parity inside the selector.
+1. selector parity: the selector no longer shows the extra `Select model` title row; next gap is any remaining top-section copy/styling drift inside the selector.
 2. settings selector parity: theme work now covers hint/keybinding parity, hide-thinking transcript parity, quiet-startup header parity, quiet-startup startup-resource silence, double-escape, editor-padding, dark/light runtime ANSI theme switching, `Theme` submenu preview, `Thinking level` submenu, hardware-cursor/clear-on-shrink, TS-style copy for steering/follow-up/transport/quiet-startup, plus the first custom theme loader + hot reload slice and the first broader core-token slice; remaining theme gaps are package/source theme discovery and wider token adoption across more CLI surfaces
 3. pending queue parity闁挎稒姘ㄩ幋椋庣磼椤撯埛?compaction queue 闁告艾鐗嗛懟鐔轰沪閺囩姰浠涘☉鎾冲娴狀喗寰勫蹇曞耿steering/follow-up runtime queue 鐎圭寮剁敮瀛樼▔婵犲繒绀夊ù?Java 濞撴皜鍌滅煗婵炲备鍓濆﹢?compaction pending queue
 4. footer parity闁挎稒姘ㄩ幋椋庣磼椤擄紕妲戝ù?extension status 缂佹鍏涚粭浣烘偘瀹€瀣闁瑰瓨鐗楁俊?git branch 閻熸瑱绲鹃悗鐣岀磽閹惧磭鎽犲☉鎾愁儐閻洭骞?provider 濡炲瀛╅悧鍝ョ磼閸曨亝顐?

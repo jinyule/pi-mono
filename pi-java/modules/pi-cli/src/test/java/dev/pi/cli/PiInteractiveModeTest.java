@@ -1236,7 +1236,10 @@ class PiInteractiveModeTest {
 
             mode.start();
             terminal.sendInput("\u000c");
-            assertThat(String.join("\n", terminal.getViewport())).contains("Select model");
+            assertThat(String.join("\n", terminal.getViewport()))
+                .doesNotContain("Select model")
+                .contains("Only showing models with configured API keys")
+                .contains("gpt-5");
 
             terminal.sendInput("\u001b[B");
             terminal.sendInput("\r");

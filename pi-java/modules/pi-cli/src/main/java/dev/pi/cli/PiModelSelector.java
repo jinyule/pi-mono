@@ -83,7 +83,6 @@ public final class PiModelSelector implements Component, Focusable {
         var lines = new ArrayList<String>();
         lines.add(separatorLine(width));
         lines.add("");
-        lines.add(PiCliAnsi.bold("Select model"));
         if (!scopedModels.isEmpty()) {
             lines.add(scopeSummary());
             lines.add(scopeHint());
