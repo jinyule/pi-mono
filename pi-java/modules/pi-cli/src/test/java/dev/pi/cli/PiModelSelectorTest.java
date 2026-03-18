@@ -37,11 +37,10 @@ class PiModelSelectorTest {
         assertThat(lines).anyMatch(line -> line.contains("gpt-5"));
         assertThat(lines).anyMatch(line -> line.contains("\u001b[1;36mgpt-5"));
         assertThat(lines).anyMatch(line -> line.contains("\u001b[90m") && line.contains("[openai]"));
-        assertThat(lines).anyMatch(line -> line.contains("\u001b[1mSelected:"));
-        assertThat(lines).anyMatch(line -> line.contains("\u001b[90mopenai/"));
-        assertThat(lines).anyMatch(line -> line.contains("\u001b[1mgpt-5"));
-        assertThat(lines).anyMatch(line -> line.contains("\u001b[1mModel Name:"));
-        assertThat(lines).anyMatch(line -> line.contains("\u001b[90mGPT-5"));
+        assertThat(lines).noneMatch(line -> line.contains("\u001b[1mSelected:"));
+        assertThat(lines).noneMatch(line -> line.contains("\u001b[90mopenai/"));
+        assertThat(lines).noneMatch(line -> line.contains("\u001b[1mgpt-5"));
+        assertThat(lines).anyMatch(line -> line.contains("\u001b[90m  Model Name: GPT-5"));
         assertThat(lines).noneMatch(line -> line.contains("\u001b[1mThinking:"));
         assertThat(lines).noneMatch(line -> line.contains("\u001b[1mContext:"));
         assertThat(lines).anyMatch(line -> line.contains("\u001b[32m\u2713"));
@@ -291,10 +290,9 @@ class PiModelSelectorTest {
         selector.handleInput("\u001b[B");
 
         var lines = selector.render(100);
-        assertThat(lines).anyMatch(line -> line.contains("\u001b[1mSelected:"));
-        assertThat(lines).anyMatch(line -> line.contains("\u001b[90manthropic/"));
-        assertThat(lines).anyMatch(line -> line.contains("\u001b[1mclaude-3-7-sonnet"));
-        assertThat(lines).anyMatch(line -> line.contains("\u001b[1mModel Name:"));
-        assertThat(lines).anyMatch(line -> line.contains("\u001b[90mClaude 3.7 Sonnet"));
+        assertThat(lines).noneMatch(line -> line.contains("\u001b[1mSelected:"));
+        assertThat(lines).noneMatch(line -> line.contains("\u001b[90manthropic/"));
+        assertThat(lines).noneMatch(line -> line.contains("\u001b[1mclaude-3-7-sonnet"));
+        assertThat(lines).anyMatch(line -> line.contains("\u001b[90m  Model Name: Claude 3.7 Sonnet"));
     }
 }

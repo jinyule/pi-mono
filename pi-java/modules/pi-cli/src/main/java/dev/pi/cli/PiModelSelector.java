@@ -101,9 +101,10 @@ public final class PiModelSelector implements Component, Focusable {
         } else {
             lines.addAll(models.render(width));
             var selectedModel = selectedModel();
-            if (selectedModel != null) {
+            var selectedDetailLine = selectedModel == null ? null : selectedDetailLine(selectedModel);
+            if (selectedDetailLine != null) {
                 lines.add("");
-                lines.addAll(renderSelectedDetailPanel(selectedModel, width));
+                lines.add(TerminalText.truncateToWidth(selectedDetailLine, width, "..."));
             }
         }
         lines.add("");
@@ -263,40 +264,15 @@ public final class PiModelSelector implements Component, Focusable {
             .orElse(null);
     }
 
-    private static List<String> renderSelectedDetailPanel(PiInteractiveSession.SelectableModel model, int width) {
-        var lines = new ArrayList<String>();
-        lines.add(separatorLine(width));
-        lines.add(TerminalText.truncateToWidth(renderSelectedDetailHeader(model), width, "..."));
-        for (var detailLine : selectedDetailLines(model)) {
-            lines.add(TerminalText.truncateToWidth(detailLine, width, "..."));
-        }
-        lines.add(separatorLine(width));
-        return List.copyOf(lines);
-    }
-
-    private static String renderSelectedDetailHeader(PiInteractiveSession.SelectableModel model) {
-        var line = "  "
-            + PiCliAnsi.bold("Selected:")
-            + " "
-            + PiCliAnsi.muted(model.provider() + "/")
-            + PiCliAnsi.bold(model.modelId())
-            + (model.current() ? " " + PiCliAnsi.success("\u2713") : "");
-        return line;
-    }
-
     private static String separatorLine(int width) {
         return PiCliAnsi.borderMuted("\u2500".repeat(Math.max(1, width)));
     }
 
-    private static List<String> selectedDetailLines(PiInteractiveSession.SelectableModel model) {
+    private static String selectedDetailLine(PiInteractiveSession.SelectableModel model) {
         if (model.modelName() == null || model.modelName().isBlank()) {
-            return List.of();
+            return null;
         }
-        return List.of(detailField("Model Name", model.modelName()));
-    }
-
-    private static String detailField(String label, String value) {
-        return "  " + PiCliAnsi.bold(label + ":") + " " + PiCliAnsi.muted(value);
+        return PiCliAnsi.muted("  Model Name: " + model.modelName());
     }
 
     private static Integer searchScore(PiInteractiveSession.SelectableModel model, String query) {
