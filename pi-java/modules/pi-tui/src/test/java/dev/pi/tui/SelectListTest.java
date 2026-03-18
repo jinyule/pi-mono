@@ -76,6 +76,17 @@ class SelectListTest {
     }
 
     @Test
+    void rendersStableUnicodeSelectedPrefix() {
+        var list = new SelectList(
+            List.of(new SelectItem("one", "One", null)),
+            5,
+            THEME
+        );
+
+        assertThat(list.render(40).getFirst()).startsWith("\u2192 ");
+    }
+
+    @Test
     void rendersNoMatchAndScrollInfo() {
         var list = new SelectList(
             List.of(

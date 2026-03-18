@@ -774,6 +774,10 @@
   - the selector window is capped at 10 visible rows
   - once the model list reaches 11 entries, the scroll indicator appears again instead of Java’s previous 11/12-row expansion
 - `PiModelSelectorTest` now covers the 11-model case and asserts the restored `(1/11)` scroll info.
+- `SelectList` now uses a stable Unicode selected prefix:
+  - selected rows render with `→ ` instead of the previous mojibake glyph
+  - this normalizes the shared row prefix across model/session/tree/fork selectors
+- `SelectListTest` now covers the normalized Unicode prefix directly.
 
 ?????```bash
 .\\gradlew.bat :pi-cli:test --no-daemon
@@ -781,7 +785,7 @@ npm.cmd run check
 ```
 
 ## 濞戞挸顑勭粩鏉戭潰閵夈儳绱﹂悹?
-1. selector parity: selector search, ordering, selected-detail structure, selected-row weight, and visible-row cap now match TS more closely; next gap is the remaining list-row/layout polish against TS.
+1. selector parity: selector search, ordering, selected-detail structure, selected-row weight, visible-row cap, and shared row prefix now match TS more closely; next gap is the remaining list-row/layout polish against TS.
 2. settings selector parity: theme work now covers hint/keybinding parity, hide-thinking transcript parity, quiet-startup header parity, quiet-startup startup-resource silence, double-escape, editor-padding, dark/light runtime ANSI theme switching, `Theme` submenu preview, `Thinking level` submenu, hardware-cursor/clear-on-shrink, TS-style copy for steering/follow-up/transport/quiet-startup, plus the first custom theme loader + hot reload slice and the first broader core-token slice; remaining theme gaps are package/source theme discovery and wider token adoption across more CLI surfaces
 3. pending queue parity闁挎稒姘ㄩ幋椋庣磼椤撯埛?compaction queue 闁告艾鐗嗛懟鐔轰沪閺囩姰浠涘☉鎾冲娴狀喗寰勫蹇曞耿steering/follow-up runtime queue 鐎圭寮剁敮瀛樼▔婵犲繒绀夊ù?Java 濞撴皜鍌滅煗婵炲备鍓濆﹢?compaction pending queue
 4. footer parity闁挎稒姘ㄩ幋椋庣磼椤擄紕妲戝ù?extension status 缂佹鍏涚粭浣烘偘瀹€瀣闁瑰瓨鐗楁俊?git branch 閻熸瑱绲鹃悗鐣岀磽閹惧磭鎽犲☉鎾愁儐閻洭骞?provider 濡炲瀛╅悧鍝ョ磼閸曨亝顐?

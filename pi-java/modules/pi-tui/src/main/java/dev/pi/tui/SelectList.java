@@ -7,6 +7,8 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 public final class SelectList implements Component {
+    private static final String SELECTED_PREFIX = "\u2192 ";
+
     private final List<SelectItem> items;
     private final SelectListTheme theme;
     private final int maxVisible;
@@ -117,7 +119,7 @@ public final class SelectList implements Component {
     private String renderItem(SelectItem item, boolean selected, int width) {
         var description = normalizeSingleLine(item.description());
         var display = item.displayValue();
-        var selectedPrefix = theme.selectedPrefix("→ ");
+        var selectedPrefix = theme.selectedPrefix(SELECTED_PREFIX);
         var plainPrefix = "  ";
         var prefix = selected ? selectedPrefix : plainPrefix;
         var availableWidth = Math.max(1, width - TerminalText.visibleWidth(prefix) - 2);
