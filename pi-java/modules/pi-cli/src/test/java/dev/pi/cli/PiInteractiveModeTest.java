@@ -118,10 +118,10 @@ class PiInteractiveModeTest {
         var previousApp = PiAppKeybindings.global();
         try {
             PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(
-                PiAppAction.INTERRUPT, java.util.List.of("alt+x"),
+                PiAppAction.INTERRUPT, java.util.List.of("alt+x", "ctrl+c"),
                 PiAppAction.CLEAR, java.util.List.of("alt+c"),
                 PiAppAction.EXIT, java.util.List.of("alt+q"),
-                PiAppAction.SELECT_MODEL, java.util.List.of("alt+l"),
+                PiAppAction.SELECT_MODEL, java.util.List.of("alt+l", "ctrl+l"),
                 PiAppAction.EXPAND_TOOLS, java.util.List.of("alt+h"),
                 PiAppAction.TOGGLE_THINKING, java.util.List.of("alt+t"),
                 PiAppAction.PASTE_IMAGE, java.util.List.of("alt+z")
@@ -130,10 +130,10 @@ class PiInteractiveModeTest {
             mode.start();
 
             assertThat(String.join("\n", terminal.getViewport()))
-                .contains("alt+x interrupt")
+                .contains("alt+x/ctrl+c interrupt")
                 .contains("alt+c clear")
                 .contains("alt+q empty exit")
-                .contains("alt+l model")
+                .contains("alt+l/ctrl+l model")
                 .contains("alt+h tools")
                 .contains("alt+t thinking")
                 .contains("alt+z paste image");
@@ -1106,8 +1106,8 @@ class PiInteractiveModeTest {
         var previousApp = PiAppKeybindings.global();
         try {
             PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(
-                PiAppAction.FOLLOW_UP,
-                java.util.List.of("alt+enter")
+                PiAppAction.FOLLOW_UP, java.util.List.of("alt+enter"),
+                PiAppAction.DEQUEUE, java.util.List.of("alt+up", "ctrl+y")
             )));
 
             mode.start();
@@ -1118,7 +1118,7 @@ class PiInteractiveModeTest {
             var viewport = String.join("\n", terminal.getViewport());
             assertThat(viewport).contains("Queued follow-up");
             assertThat(viewport).contains("Follow-up: Queued");
-            assertThat(viewport).contains("alt+up to edit queued messages");
+            assertThat(viewport).contains("alt+up/ctrl+y to edit queued messages");
             assertThat(session.prompts).doesNotContain("Queued");
         } finally {
             PiAppKeybindings.setGlobal(previousApp);

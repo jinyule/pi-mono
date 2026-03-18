@@ -60,6 +60,7 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - suspend
 - external editor
 - startup keybinding hints
+- startup and queued-message hints now join all configured bindings with `/`, matching the selector hint formatter
 
 ### Settings and themes
 
@@ -125,6 +126,7 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - working tree slice: model selector search now uses tokenized fuzzy matching over `modelId + provider`, including alphanumeric swap fallback, matching the TypeScript fuzzy filter more closely
 - working tree slice: model selector now preserves the active filtered-row selection across search updates instead of re-selecting the current model each time
 - working tree slice: model selector top-section lines now truncate to terminal width, avoiding scope-summary and key-hint overflow in narrow layouts
+- working tree slice: interactive header hints and queued-message dequeue hints now render all configured app bindings instead of only the first one
 
 ## Remaining gaps
 

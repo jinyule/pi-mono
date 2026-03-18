@@ -1153,7 +1153,7 @@ public final class PiInteractiveMode implements AutoCloseable {
 
     private String dequeueKeyDisplay() {
         var keys = PiAppKeybindings.global().getKeys(PiAppAction.DEQUEUE);
-        return keys.isEmpty() ? "dequeue" : keys.getFirst();
+        return keyDisplay(keys, "dequeue");
     }
 
     private static String renderHeaderHintLine(int width, String text) {
@@ -1216,7 +1216,11 @@ public final class PiInteractiveMode implements AutoCloseable {
 
     private static String appKeyDisplay(PiAppAction action, String fallback) {
         var keys = PiAppKeybindings.global().getKeys(action);
-        return keys.isEmpty() ? fallback : keys.getFirst();
+        return keyDisplay(keys, fallback);
+    }
+
+    private static String keyDisplay(List<String> keys, String fallback) {
+        return keys.isEmpty() ? fallback : String.join("/", keys);
     }
 
     private static String formatModelCycleStatus(PiInteractiveSession.ModelCycleResult result) {
