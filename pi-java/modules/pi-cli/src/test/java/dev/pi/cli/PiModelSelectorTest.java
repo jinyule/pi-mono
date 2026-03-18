@@ -221,6 +221,38 @@ class PiModelSelectorTest {
     }
 
     @Test
+    void filterAndSortModelsKeepsSourceOrderWithinProviderGroups() {
+        var matches = PiModelSelector.filterAndSortModels(
+            List.of(
+                new PiInteractiveSession.SelectableModel(0, "openai", "gpt-5-mini", "GPT-5 Mini", "minimal", false, true, 200_000),
+                new PiInteractiveSession.SelectableModel(1, "openai", "gpt-5", "GPT-5", "minimal", false, true, 400_000),
+                new PiInteractiveSession.SelectableModel(2, "anthropic", "claude-3-7-sonnet", "Claude 3.7 Sonnet", "high", false, true, 200_000)
+            ),
+            ""
+        );
+
+        assertThat(matches)
+            .extracting(PiInteractiveSession.SelectableModel::modelId)
+            .containsExactly("claude-3-7-sonnet", "gpt-5-mini", "gpt-5");
+    }
+
+    @Test
+    void filterAndSortModelsKeepsSourceOrderForSameProviderScoreTies() {
+        var matches = PiModelSelector.filterAndSortModels(
+            List.of(
+                new PiInteractiveSession.SelectableModel(0, "openai", "gpt-5-mini", "GPT-5 Mini", "minimal", false, true, 200_000),
+                new PiInteractiveSession.SelectableModel(1, "openai", "gpt-5", "GPT-5", "minimal", false, true, 400_000),
+                new PiInteractiveSession.SelectableModel(2, "anthropic", "claude-3-7-sonnet", "Claude 3.7 Sonnet", "high", false, true, 200_000)
+            ),
+            "gpt"
+        );
+
+        assertThat(matches)
+            .extracting(PiInteractiveSession.SelectableModel::modelId)
+            .containsExactly("gpt-5-mini", "gpt-5");
+    }
+
+    @Test
     void rendersModelSpecificNoMatchCopy() {
         var selector = new PiModelSelector(
             new PiInteractiveSession.ModelSelection(

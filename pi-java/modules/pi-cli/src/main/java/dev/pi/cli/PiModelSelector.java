@@ -188,7 +188,7 @@ public final class PiModelSelector implements Component, Focusable {
             if (providerCompare != 0) {
                 return providerCompare;
             }
-            return left.modelId().compareToIgnoreCase(right.modelId());
+            return 0;
         });
         return List.copyOf(sorted);
     }
@@ -224,7 +224,7 @@ public final class PiModelSelector implements Component, Focusable {
             if (providerCompare != 0) {
                 return providerCompare;
             }
-            return left.model().modelId().compareToIgnoreCase(right.model().modelId());
+            return 0;
         });
         return matches.stream().map(ModelSearchMatch::model).toList();
     }
