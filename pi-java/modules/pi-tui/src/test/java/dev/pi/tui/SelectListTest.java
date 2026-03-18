@@ -159,6 +159,51 @@ class SelectListTest {
     }
 
     @Test
+    void supportsCompactDescriptionsWhenThemeDisablesRightAlignment() {
+        var theme = new SelectListTheme() {
+            @Override
+            public String selectedPrefix(String text) {
+                return text;
+            }
+
+            @Override
+            public String selectedText(String text) {
+                return text;
+            }
+
+            @Override
+            public boolean rightAlignDescription() {
+                return false;
+            }
+
+            @Override
+            public String description(String text) {
+                return text;
+            }
+
+            @Override
+            public String scrollInfo(String text) {
+                return text;
+            }
+
+            @Override
+            public String noMatch(String text) {
+                return text;
+            }
+        };
+        var list = new SelectList(
+            List.of(new SelectItem("alpha", "Alpha task", "[openai]")),
+            5,
+            theme
+        );
+
+        var line = list.render(48).getFirst();
+
+        assertThat(line).startsWith("\u2192 Alpha task [openai]");
+        assertThat(line).doesNotContainPattern("Alpha task\\s{2,}\\[openai\\]");
+    }
+
+    @Test
     void expandsDescriptionWhenLabelIsShort() {
         var list = new SelectList(
             List.of(new SelectItem("alpha", "Alpha", "/workspace/project/path · 2 msg · 1m")),

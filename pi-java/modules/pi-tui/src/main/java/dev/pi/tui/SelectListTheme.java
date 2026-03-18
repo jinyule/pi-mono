@@ -5,6 +5,10 @@ public interface SelectListTheme {
 
     String selectedText(String text);
 
+    default boolean rightAlignDescription() {
+        return true;
+    }
+
     default String selectedDescription(String text) {
         return description(text);
     }

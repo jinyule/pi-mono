@@ -31,6 +31,11 @@ public final class PiModelSelector implements Component, Focusable {
         }
 
         @Override
+        public boolean rightAlignDescription() {
+            return false;
+        }
+
+        @Override
         public String description(String text) {
             return PiCliAnsi.muted(text);
         }

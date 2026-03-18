@@ -7,6 +7,7 @@ import dev.pi.tui.EditorKeybindings;
 import dev.pi.tui.TerminalText;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 
@@ -38,6 +39,8 @@ class PiModelSelectorTest {
         assertThat(lines).anyMatch(line -> line.contains("\u001b[36mgpt-5"));
         assertThat(lines).noneMatch(line -> line.contains("\u001b[1;36mgpt-5"));
         assertThat(lines).anyMatch(line -> line.contains("\u001b[90m") && line.contains("[openai]"));
+        assertThat(lines.stream().map(PiModelSelectorTest::stripAnsi))
+            .anyMatch(line -> Pattern.compile("^→ gpt-5 ✓ \\[openai\\]").matcher(line).find());
         assertThat(lines).noneMatch(line -> line.contains("\u001b[1mSelected:"));
         assertThat(lines).noneMatch(line -> line.contains("\u001b[90mopenai/"));
         assertThat(lines).noneMatch(line -> line.contains("\u001b[1mgpt-5"));
@@ -321,6 +324,12 @@ class PiModelSelectorTest {
         assertThat(lines).noneMatch(line -> line.contains("\u001b[1mSelected:"));
         assertThat(lines).noneMatch(line -> line.contains("\u001b[90manthropic/"));
         assertThat(lines).noneMatch(line -> line.contains("\u001b[1mclaude-3-7-sonnet"));
+        assertThat(lines.stream().map(PiModelSelectorTest::stripAnsi))
+            .anyMatch(line -> Pattern.compile("^→ claude-3-7-sonnet \\[anthropic\\]").matcher(line).find());
         assertThat(lines).anyMatch(line -> line.contains("\u001b[90m  Model Name: Claude 3.7 Sonnet"));
+    }
+
+    private static String stripAnsi(String text) {
+        return text.replaceAll("\\u001B\\[[;\\d]*m", "");
     }
 }

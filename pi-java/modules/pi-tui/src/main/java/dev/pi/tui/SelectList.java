@@ -123,7 +123,7 @@ public final class SelectList implements Component {
         var plainPrefix = "  ";
         var prefix = selected ? selectedPrefix : plainPrefix;
         var availableWidth = Math.max(1, width - TerminalText.visibleWidth(prefix) - 2);
-        var itemLayout = layoutItem(display, description, availableWidth);
+        var itemLayout = layoutItem(display, description, availableWidth, theme.rightAlignDescription());
 
         if (selected) {
             if (itemLayout != null) {
@@ -141,10 +141,23 @@ public final class SelectList implements Component {
         return plainPrefix + TerminalText.truncateToWidth(display, availableWidth, "");
     }
 
-    private static ItemLayout layoutItem(String display, String description, int availableWidth) {
+    private static ItemLayout layoutItem(String display, String description, int availableWidth, boolean rightAlignDescription) {
         if (description == null || availableWidth <= 0) {
             return null;
         }
+        if (!rightAlignDescription) {
+            var descriptionVisibleWidth = TerminalText.visibleWidth(description);
+            var gapWidth = 1;
+            var maxDescriptionWidth = Math.max(1, availableWidth - gapWidth - 1);
+            var descriptionWidth = Math.min(descriptionVisibleWidth, maxDescriptionWidth);
+            var maxDisplayWidth = Math.max(1, availableWidth - gapWidth - descriptionWidth);
+            var truncatedDisplay = TerminalText.truncateToWidth(display, maxDisplayWidth, "");
+            var actualDisplayWidth = TerminalText.visibleWidth(truncatedDisplay);
+            descriptionWidth = Math.max(1, Math.min(descriptionVisibleWidth, availableWidth - actualDisplayWidth - gapWidth));
+            var truncatedDescription = TerminalText.truncateToWidth(description, descriptionWidth, "");
+            return new ItemLayout(truncatedDisplay, " ".repeat(gapWidth), truncatedDescription);
+        }
+
         var gapWidth = 2;
         var minDisplayWidth = 8;
         var minDescriptionWidth = 8;
