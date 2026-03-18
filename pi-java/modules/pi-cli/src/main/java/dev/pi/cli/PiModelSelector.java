@@ -26,7 +26,7 @@ public final class PiModelSelector implements Component, Focusable {
 
         @Override
         public String selectedText(String text) {
-            return PiCliAnsi.accentBold(text);
+            return PiCliAnsi.accent(text);
         }
 
         @Override

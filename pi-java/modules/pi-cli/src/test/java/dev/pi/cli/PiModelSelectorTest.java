@@ -35,7 +35,8 @@ class PiModelSelectorTest {
         assertThat(lines).noneMatch(line -> line.contains("Select model"));
         assertThat(lines).anyMatch(line -> line.contains("Only showing models with configured API keys"));
         assertThat(lines).anyMatch(line -> line.contains("gpt-5"));
-        assertThat(lines).anyMatch(line -> line.contains("\u001b[1;36mgpt-5"));
+        assertThat(lines).anyMatch(line -> line.contains("\u001b[36mgpt-5"));
+        assertThat(lines).noneMatch(line -> line.contains("\u001b[1;36mgpt-5"));
         assertThat(lines).anyMatch(line -> line.contains("\u001b[90m") && line.contains("[openai]"));
         assertThat(lines).noneMatch(line -> line.contains("\u001b[1mSelected:"));
         assertThat(lines).noneMatch(line -> line.contains("\u001b[90mopenai/"));
