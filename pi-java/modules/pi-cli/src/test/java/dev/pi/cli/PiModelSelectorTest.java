@@ -107,6 +107,33 @@ class PiModelSelectorTest {
     }
 
     @Test
+    void rendersScrollInfoWhenMoreThanTenModelsAreVisible() {
+        var models = java.util.stream.IntStream.range(0, 11)
+            .mapToObj(index -> new PiInteractiveSession.SelectableModel(
+                index,
+                "openai",
+                "gpt-5-" + index,
+                "GPT-5 " + index,
+                "minimal",
+                index == 0,
+                true,
+                400_000
+            ))
+            .toList();
+        var selector = new PiModelSelector(
+            new PiInteractiveSession.ModelSelection(models, List.of()),
+            ignored -> {
+            },
+            () -> {
+            },
+            () -> {
+            }
+        );
+
+        assertThat(selector.render(100)).anyMatch(line -> line.contains("(1/11)"));
+    }
+
+    @Test
     void rendersConfiguredKeybindingHints() {
         var previous = EditorKeybindings.global();
         try {

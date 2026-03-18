@@ -18,6 +18,7 @@ import java.util.function.UnaryOperator;
 
 public final class PiModelSelector implements Component, Focusable {
     private static final String VALUE_DELIMITER = "\u0000";
+    private static final int MAX_VISIBLE_MODELS = 10;
     private static final SelectListTheme THEME = new SelectListTheme() {
         @Override
         public String selectedPrefix(String text) {
@@ -150,7 +151,7 @@ public final class PiModelSelector implements Component, Focusable {
     private void rebuildList() {
         visibleModels = activeModels();
         var items = visibleModels.stream().map(PiModelSelector::toSelectItem).toList();
-        models = new SelectList(items, Math.max(6, Math.min(12, Math.max(1, items.size()))), THEME);
+        models = new SelectList(items, Math.min(MAX_VISIBLE_MODELS, Math.max(1, items.size())), THEME);
         models.setOnSelectionChange(ignored -> requestRender.run());
         models.setOnSelect(item -> onSelect.accept(decodeIndex(item.value())));
         models.setOnCancel(onCancel);
