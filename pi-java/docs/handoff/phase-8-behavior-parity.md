@@ -61,6 +61,7 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - external editor
 - startup keybinding hints
 - startup and queued-message hints now join all configured bindings with `/`, matching the selector hint formatter
+- queued-message dequeue hints now use the shared `PiCliKeyHints.appHint` ANSI layering instead of plain text concatenation
 
 ### Settings and themes
 
@@ -127,6 +128,7 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - working tree slice: model selector now preserves the active filtered-row selection across search updates instead of re-selecting the current model each time
 - working tree slice: model selector top-section lines now truncate to terminal width, avoiding scope-summary and key-hint overflow in narrow layouts
 - working tree slice: interactive header hints and queued-message dequeue hints now render all configured app bindings instead of only the first one
+- working tree slice: queued-message dequeue hints now use shared key-hint styling, matching the selector hint hierarchy more closely
 
 ## Remaining gaps
 

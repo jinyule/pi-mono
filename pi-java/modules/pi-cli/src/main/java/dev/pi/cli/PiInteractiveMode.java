@@ -308,7 +308,7 @@ public final class PiInteractiveMode implements AutoCloseable {
             for (var message : queuedFollowUps) {
                 lines.add("Follow-up: " + message);
             }
-            lines.add("↳ " + dequeueKeyDisplay() + " to edit queued messages");
+            lines.add(PiCliAnsi.muted("↳ ") + PiCliKeyHints.appHint(PiAppAction.DEQUEUE, "to edit queued messages"));
         }
         return String.join("\n", lines);
     }
@@ -1149,11 +1149,6 @@ public final class PiInteractiveMode implements AutoCloseable {
             manualStatus = "Error: " + rootMessage(exception);
         }
         renderState(session.state());
-    }
-
-    private String dequeueKeyDisplay() {
-        var keys = PiAppKeybindings.global().getKeys(PiAppAction.DEQUEUE);
-        return keyDisplay(keys, "dequeue");
     }
 
     private static String renderHeaderHintLine(int width, String text) {

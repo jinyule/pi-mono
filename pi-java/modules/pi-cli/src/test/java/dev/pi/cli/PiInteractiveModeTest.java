@@ -1127,6 +1127,33 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void stylesQueuedMessageHintWithSharedKeyHintFormatter() {
+        var session = new FakeSession().withStreaming(true);
+        var terminal = new RecordingTerminal(100, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+        var previousApp = PiAppKeybindings.global();
+        try {
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(
+                PiAppAction.FOLLOW_UP, java.util.List.of("alt+enter"),
+                PiAppAction.DEQUEUE, java.util.List.of("alt+up", "ctrl+y")
+            )));
+
+            mode.start();
+            terminal.sendInput("Queued");
+            terminal.sendInput("\u001b\r");
+
+            waitFor(() -> terminal.output().contains("to edit queued messages"));
+            assertThat(terminal.output())
+                .contains("\u001b[90m↳ \u001b[0m")
+                .contains("\u001b[2;37malt+up/ctrl+y\u001b[0m")
+                .contains("\u001b[90m to edit queued messages\u001b[0m");
+        } finally {
+            PiAppKeybindings.setGlobal(previousApp);
+            mode.stop();
+        }
+    }
+
+    @Test
     void submitQueuesSteeringWhileStreaming() {
         var session = new FakeSession().withStreaming(true);
         var terminal = new VirtualTerminal(100, 16);

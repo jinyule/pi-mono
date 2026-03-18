@@ -42,7 +42,7 @@ Updated: 2026-03-18
   - Session selector parity is substantially advanced.
   - Settings/theme parity is substantially advanced.
   - Footer parity is substantially advanced.
-  - Interactive app key-hint parity continues to advance, including multi-binding rendering in header and queued-message hints.
+  - Interactive app key-hint parity continues to advance, including multi-binding rendering and shared key-hint styling in header and queued-message hints.
   - Model selector parity is active and is now down to the last minor row polish after compact-row truncation, multi-key scope-hint alignment, TypeScript-style tokenized fuzzy search alignment, selection-retention parity while searching, and top-section width handling at narrow terminal sizes.
 - Phase 9 (package sources / distribution): not started.
 
