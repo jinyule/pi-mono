@@ -1,24 +1,32 @@
-# pi-java 分阶段交接
+# Handoff docs
 
-更新时间：2026-03-10
+Updated: 2026-03-18
 
-## 目的
+This directory stores phase-specific handoff notes for `pi-java`.
 
-`handoff.md` 已改成总览入口；后续交接按阶段增量维护，避免单文件持续膨胀。
+The original long-form handoff notes were split into phase files and then normalized on 2026-03-18 after an encoding issue corrupted the markdown. These files are now the authoritative continuation docs.
 
-## 当前文件
+## Files
 
-- `pi-java/docs/handoff/phase-6-pi-tui.md`
-- `pi-java/docs/handoff/phase-7-pi-cli-sdk.md`
-- `pi-java/docs/handoff/archive-2026-03-10.md`
+- `archive-2026-03-10.md`
+  - Normalized archive snapshot for work completed before the handoff split.
+- `phase-6-pi-tui.md`
+  - Completed `pi-tui` bring-up summary.
+- `phase-7-pi-cli-sdk.md`
+  - Completed `pi-cli` / `pi-sdk` functional bring-up summary.
+- `phase-8-behavior-parity.md`
+  - Active parity backlog and latest completed slices.
 
-## 维护规则
+## Reading order
 
-- 总览状态只更新 `pi-java/docs/handoff.md`
-- 某一阶段有新进展时，只更新对应阶段文件
-- 旧的单体交接保留在 archive，默认不再追加
+1. `pi-java/docs/tasks.md`
+2. `pi-java/docs/handoff/phase-8-behavior-parity.md`
+3. `pi-java/docs/handoff/phase-7-pi-cli-sdk.md`
+4. `pi-java/docs/handoff/phase-6-pi-tui.md`
+5. `pi-java/docs/handoff/archive-2026-03-10.md`
 
-## 当前重点
+## Maintenance rule
 
-- 当前活跃阶段：`pi-cli` / `pi-sdk`
-- 当前活跃交接文件：`pi-java/docs/handoff/phase-7-pi-cli-sdk.md`
+- Keep `pi-java/docs/handoff.md` as a short index only.
+- Put active continuation detail into the phase-specific file.
+- Prefer concise incremental summaries over large duplicated logs.

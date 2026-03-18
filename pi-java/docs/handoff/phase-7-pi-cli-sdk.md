@@ -1,333 +1,65 @@
-# 阶段 7 交接：`pi-cli` / `pi-sdk`
+# Phase 7 - `pi-cli` and `pi-sdk`
 
-更新时间：2026-03-11
+Updated: 2026-03-18
+Status: functionally complete
 
-## 当前状态
+## Scope
 
-- 阶段 7 已开始。
-- 已完成前六刀：
-  - `pi-cli` CLI 参数解析
-  - `PiAgentSession` skeleton + 最小 `interactive` mode
-  - `print` mode
-  - `json` mode
-  - `rpc` mode
-  - `pi-sdk` facade
-- 已完成第七刀：
-  - CLI startup dispatcher skeleton
-- 已完成第八刀：
-  - `list-models` command
-- 已完成第九刀：
-  - resume/new session resolution primitives
-- 已完成第十刀：
-  - `--resume` picker first cut
-- 已完成第十一刀：
-  - `--export` first cut
-- 已完成第十二刀：
-  - `/copy` first cut
-- 已完成第十三刀：
-  - `/tree` first cut
-- 已完成第十四刀：
-  - `/fork` first cut
-- 已完成第十五刀：
-  - `/compact` first cut
-- 已完成第十六刀：
-  - `/reload` first cut
-- 已完成第十七刀：
-  - `--resume` all-sessions scope first cut
-- 已完成第十八刀：
-  - `--resume` richer search first cut
-- 已完成第十九刀：
-  - `--resume` delete first cut
-- 已完成第二十刀：
-  - `--resume` rename first cut
-- 已完成第二十一刀：
-  - richer HTML export first cut
-- 已完成第二十二刀：
-  - startup/session shell shared core first cut
-- 已完成第二十三刀：
-  - real main/module wiring first cut
-- 已完成第二十四刀：
-  - `/reload` extension runtime / startup pipeline first cut
-- 已完成第二十五刀：
-  - instruction-resource-aware system prompt composition downshift first cut
-- 已完成第二十六刀：
-  - real module wiring `@file` / initial prompt first cut
-- 已完成第二十七刀：
-  - real module wiring `help/version` output first cut
-- 已完成第二十八刀：
-  - interactive exit semantics first cut
+Phase 7 brought the Java CLI and SDK from skeleton state to usable end-to-end feature coverage.
 
-## 已落地内容
+## Completed CLI modes
 
-新增：
+- `interactive`
+- `print`
+- `json`
+- `rpc`
 
-- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiCliMode.java`
-- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiCliThinkingLevel.java`
-- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiCliArgs.java`
-- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiCliParser.java`
-- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiInteractiveSession.java`
-- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiAgentSession.java`
-- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiInteractiveMode.java`
-- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiMessageRenderer.java`
-- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiPrintMode.java`
-- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiJsonMode.java`
-- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiRpcMode.java`
-- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiCliApplication.java`
-- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiListModelsCommand.java`
-- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiCliSessionResolver.java`
-- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiSessionPicker.java`
-- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiExportCommand.java`
-- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiClipboard.java`
-- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiCopyCommand.java`
-- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiTreeSelector.java`
-- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiForkSelector.java`
-- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiCompactor.java`
-- `pi-java/modules/pi-sdk/src/main/java/dev/pi/sdk/CreateAgentSessionOptions.java`
-- `pi-java/modules/pi-sdk/src/main/java/dev/pi/sdk/PiSdk.java`
-- `pi-java/modules/pi-sdk/src/main/java/dev/pi/sdk/PiSdkSession.java`
-- `pi-java/modules/pi-sdk/src/main/java/dev/pi/sdk/SessionPromptComposer.java`
-- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiCliPromptFactory.java`
-- `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiCliParserTest.java`
-- `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiAgentSessionTest.java`
-- `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiInteractiveModeTest.java`
-- `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiPrintModeTest.java`
-- `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiJsonModeTest.java`
-- `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiRpcModeTest.java`
-- `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiCliApplicationTest.java`
-- `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiCliPromptFactoryTest.java`
-- `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiListModelsCommandTest.java`
-- `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiCliSessionResolverTest.java`
-- `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiSessionPickerTest.java`
-- `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiExportCommandTest.java`
-- `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiCopyCommandTest.java`
-- `pi-java/modules/pi-sdk/src/test/java/dev/pi/sdk/PiSdkTest.java`
+## Completed SDK surface
 
-调整：
+- `PiSdk`
+- `PiSdkSession`
+- shared session bootstrap helpers
+- instruction-aware prompt composition
 
-- `pi-java/modules/pi-agent-runtime/src/main/java/dev/pi/agent/runtime/Agent.java`
-- `pi-java/modules/pi-cli/src/main/java/dev/pi/cli/PiCliModule.java`
-- `pi-java/modules/pi-cli/src/test/java/dev/pi/cli/PiCliModuleTest.java`
-- `pi-java/modules/pi-session/src/main/java/dev/pi/session/SessionManager.java`
-- `pi-java/modules/pi-session/src/test/java/dev/pi/session/SessionManagerTest.java`
+## Completed commands and flows
 
-## 已具备的参数能力
+- `list-models`
+- session resolution for new and resume flows
+- `--resume` picker baseline
+- `--export`
+- `copy`
+- `tree`
+- `fork`
+- `compact`
+- `reload`
 
-- 默认 `interactive` 模式，以及 `--print` / `--mode print|json|rpc|interactive`。
-- 兼容 `--mode text`，映射到 `print`。
-- 解析通用启动选项：`provider`、`model`、`apiKey`、`systemPrompt`、`appendSystemPrompt`、`thinking`、session 相关选项、tools/resources 相关选项、`--list-models`、`--offline`、`--verbose`。
-- 将 positional 参数拆成两类：
-  - `@file` -> `fileArgs`
-  - 其余 -> `messages`
-- 未知 flag 不再报错；当前会保留在 `unmatchedArguments`，以便后续接 extension flag registry。
+## Completed integration work
 
-## 已具备的 interactive 能力
+- shared startup/session bootstrap between CLI and SDK
+- real `main()` and module wiring
+- instruction-resource-aware system prompt composition
+- `@file` / initial prompt wiring
+- `help` / `version` output
+- interactive exit semantics
 
-- `PiAgentSession` 已把 `Agent`、`SessionManager`、`SettingsManager`、instruction resources 串成最小可用会话壳。
-- startup 时会 replay `SessionContext` 到 `Agent`，并把 context file / system prompt / append prompts 合成首版 system prompt。
-- 新消息通过 `AgentEvent.MessageEnd` 回写到 `SessionManager`，形成基础 session persistence bridge。
-- `PiInteractiveMode` 已接上 `Tui + Input + Text`，具备：
-  - header/status render
-  - transcript render
-  - prompt submit
-  - escape -> abort
-  - `/copy` -> 最近 assistant 文本复制到剪贴板
-  - `/tree` -> session tree overlay、entry select、in-place leaf navigation
-  - `/fork` -> user-message selector、新 session fork、editor prefill
-  - `/compact` -> 手动 compaction、summary replay、状态提示
-  - `/reload` -> settings reload、instruction resources reload、system prompt 重建
-  - fake session / virtual terminal contract tests
-- `PiAgentSession` 现在已具备最小 tree navigation 语义：
-  - 暴露当前 `leafId()` 与 `tree()`
-  - 选择 assistant / compaction / branch summary 等节点时直接切 leaf 并 replay context
-  - 选择 user message 时切到其 parent，并把 user 文本预填回 editor，形成原位分支
-- `PiAgentSession` 现在也已具备最小 fork 语义：
-  - 暴露 `forkMessages()` 用户消息列表
-  - 选择 user message 后，基于其 parent path 提取新 session document
-  - root user fork 会落到空会话，再由 metadata seed 保持 model/thinking 轨迹
-  - fork 后立即更新 `Agent.sessionId`，避免后续 provider request 继续带旧 session id
-- `PiAgentSession` 现在已具备最小 manual compaction 语义：
-  - `/compact` 当前走本地 deterministic summary，不依赖额外 LLM 调用
-  - 默认保留最近一个 user turn，从最新 compaction 边界之后向前折叠
-  - 追加 `CompactionEntry` 后，立即用 `SessionManager.buildSessionContext()` replay 到 `Agent`
-- `PiAgentSession` 现在也已具备最小 manual reload 语义：
-  - `settingsManager.reload()` 会刷新 global/project settings snapshot
-  - 若配置了 `InstructionResourceLoader`，`reload()` 会重新读取 `AGENTS.md` / `CLAUDE.md` / `SYSTEM.md` / `APPEND_SYSTEM.md`
-  - 若配置了 `reloadAction`，`reload()` 会继续触发 runtime 侧重建，并把 warning surface 回传给 UI
-  - reload 后会委托 `PiSdkSession.updateSystemPrompt(...)` 用新的 instruction resources 重新拼接 system prompt，并热更新到 `Agent`
-  - 当前返回 settings/resource/extension warning 列表，供上层 UI 做状态提示
+## Important implementation notes
 
-## 当前边界
+- Phase 7 is considered feature-complete enough to move on.
+- Remaining work is mostly behavior and UI parity rather than missing top-level commands.
+- Session selector, model selector, settings selector, footer behavior, and custom theme polish are tracked in phase 8.
 
-- 这还是首版 interactive shell，不包含完整 coding-agent UI。
-- 还没接 model discovery / settings-driven startup pipeline / extension runtime / built-in tools registry。
-- transcript renderer 目前是 plain-text flatten，不是 `Markdown` / rich message renderer。
-- 还没有把 `PiCliParser`、session/model resolution、`PiInteractiveMode` 串成真正的 CLI main entry。
-- `print` mode 目前输出 final assistant text，不做 token-by-token streaming。
-- `json` mode 当前输出的是最小归一化 JSONL，不是最终 RPC schema，也不包含完整 tool/state payload。
-- `rpc` mode 当前只覆盖最小命令集：`prompt` / `state` / `resume` / `abort`。
-- `pi-sdk` facade 当前与 `pi-cli` 的 session shell 逻辑仍有重复，后续可考虑收敛到共享核心。
-- `PiCliApplication` 当前只负责 `parse -> create session -> dispatch mode` 的启动编排，尚未接真实 `main()`、DI 装配、settings/model resolution 和 built-in tool/runtime bootstrap。
-- `list-models` 当前直接消费 `ModelRegistry` 并输出文本表格，尚未接 settings/auth 过滤，也还没挂到真实 CLI `main()`。
-- `PiCliSessionResolver` 当前已覆盖 `--session` / `--continue` / `--session-dir` / `--no-session`，并已接上 `--resume` picker。
-- `PiCliSessionResolver` 现在已支持 `--resume` 的 all-sessions scope 首版：
-  - 显式 `--session-dir` 时，仍限定在指定目录内选择
-  - 未显式传 `--session-dir` 时，改为跨默认 `~/.pi/agent/sessions/*` 子目录聚合 session 列表
-  - picker 描述行会附带 `cwd`，降低跨 project 同名 session 的歧义
-- `PiSessionPicker` 当前只覆盖 prefix filter、up/down/enter/esc；all-scope toggle、fuzzy/regex search、rename/delete 仍未落地。
-- `PiSessionPicker` 现在已具备更厚一点的 search 语义：
-  - `SelectList` filter 已从 prefix match 调整为 case-insensitive token contains
-  - session picker 的搜索键现在包含 label、file name、`cwd`、absolute path
-  - 因此 `workspace web` 这类多 token 查询可以直接定位跨 project session
-- `PiSessionPicker` 现在也已具备最小 delete 语义：
-  - 新增 `SESSION_DELETE` keybinding action，默认 `ctrl+d`
-  - 首次触发进入 confirm 状态，`Enter` 确认，`Esc` 取消
-  - 删除后会从磁盘删掉 session file，并立即刷新 picker 列表
-- `PiSessionPicker` 现在也已具备最小 rename 语义：
-  - 新增 `SESSION_RENAME` keybinding action，默认 `ctrl+r`
-  - 进入独立 rename mode，输入新名字后回车提交
-  - 通过 `SessionManager.open(...).appendSessionInfo(name)` 写回 session，并立即刷新 picker 列表
-- `PiExportCommand` 现在已具备更厚一点的 standalone HTML export：
-  - sidebar metadata：session id / name / cwd / current leaf / entry count / active branch length
-  - session tree：显示完整 entry tree、label、active branch 与 current leaf
-  - session entries：不再只渲染 replay 后 message transcript，而是渲染完整 session document 中的 message / compaction / branch summary / session info / custom 等 entry
-  - current implementation 仍未追平 TS 版的 theme colors、tool rich render、JSONL download 与 client-side tree interaction
-- `PiAgentSession` 现在开始复用 `PiSdkSession` 的 shared bootstrap/persistence 核心：
-  - `pi-cli` 模块新增对 `pi-sdk` 的依赖
-  - `PiAgentSession.Builder` 改为构造 `CreateAgentSessionOptions` 并直接调用 `PiSdkSession.create(...)`
-  - agent 初始化、session replay、message persistence、initial metadata seed 不再在 `pi-cli` 内重复实现
-  - CLI 侧保留 tree/fork/compact/reload/instruction resources 等交互层语义
-  - system prompt 组合逻辑也已开始下沉：`CreateAgentSessionOptions` 新增 `instructionResources`，`PiSdkSession` 统一处理 compose/update
-- `PiCliModule` 现在开始承担真实装配职责：
-  - 暴露 `application()` / `run()`，内部用真实 `PiCliApplication` handler 装配 `list-models` / `export` / `print` / `json` / `rpc` / `interactive`
-  - 默认 sessionFactory 现在会串 `PiCliSessionResolver`、`SettingsManager`、`InstructionResourceLoader`、`PiAiClient`
-  - 新增 `PiCliMain.main(String[] args)` 作为最小 CLI 入口
-  - `PiCliModuleTest` 已覆盖 real `list-models` wiring、real `export` wiring、real `print` wiring
-  - 默认 sessionFactory 现在也会在显式 `--extension` 路径存在时创建 `ExtensionRuntime`，并把 `/reload` 接到 `ExtensionRuntime.reload()`
-  - `@file` 现在会通过 `PiCliPromptFactory` 转成 initial prompt：文本文件包成 `<file ...>` 块，图片文件附带 `ImageContent`
-  - `--help` / `--version` 现在也会在 session 创建前短路输出
-- `/copy` 当前只复制最近一条 assistant 的 plain-text flatten 文本；未覆盖图片块、富文本选择、历史消息 picker，也还未抽出统一 slash-command registry。
-- `/tree` 当前是首版 selector：只覆盖 prefix search、up/down/enter/esc、基础树前缀渲染和当前 leaf 高亮；尚未接 TS 版的 summarize prompt、custom prompt、label edit、user-only/all-entry filter toggle、bookmark 语义。
-- `/fork` 当前也是首版 selector：只覆盖 prefix search、up/down/enter/esc 与 flat user-message list；尚未接 extension `session_before_fork` / `session_fork` 生命周期、double-escape action、RPC `fork/get_fork_messages`、cross-project `forkFrom`。
-- `/compact` 当前只覆盖手动 compaction；尚未接 TS 版的 LLM summary、`session_before_compact` / `session_compact` 生命周期、auto-compaction threshold、cancel/abort、file-op details、split-turn handling。
-- `/reload` 当前已覆盖 settings / instruction resources / 显式 extension runtime 首版重载：
-  - `PiAgentSession.ReloadResult` 新增 `extensionWarnings`
-  - default `PiCliModule` 会把 `ExtensionRuntime.reload()` 的 `failures()` 格式化为 warning surface
-  - 仍未接 TS 版的 theme/skills/prompts registry rebuild、loaded-resource diagnostics 面板与更广义 startup pipeline 重建
-- instruction-resource-aware system prompt 组合逻辑当前已下沉到 shared layer：
-  - `CreateAgentSessionOptions` 新增 `instructionResources`
-  - `PiSdkSession.create(...)` 现在会统一组合 explicit system prompt、resource system prompt、context files、resource append prompts、CLI append prompt
-  - `PiSdkSession.updateSystemPrompt(...)` 复用同一套组合逻辑
-  - `PiAgentSession` 不再自行维护 `composeSystemPrompt(...)`
-- real module wiring 的 `@file` / initial prompt 当前已补上第一层：
-  - `PiCliPromptFactory` 统一把 CLI `@file` 参数转成 `AgentMessage.UserMessage`
-  - 文本文件内容会以内联 `<file name="...">...</file>` 块注入 prompt
-  - 图片文件会生成占位文本 + `ImageContent` 附件，并默认走 resize
-  - `interactive` 模式启动后若存在 initial prompt，会自动提交首条消息
-  - `print` / `json` 模式现在直接消费 structured user prompt
-  - `rpc` 模式对齐 TS 侧语义，明确拒绝 `@file`
-- real module wiring 的 `help/version` 现在已补上第一层：
-  - `PiCliApplication` 会在 `help/version` 阶段短路，不创建 session
-  - `PiCliModule` 把帮助文本和版本文本稳定输出到注入的 `stdout`
-  - 版本号当前优先取包 `Implementation-Version`，本地开发 fallback 到 `0.1.0-SNAPSHOT`
-- interactive exit 语义现在已补上第一层：
-  - `EditorAction.EXIT` + `Input.onExit` 为空输入 `Ctrl+D` 提供独立退出入口
-  - `PiInteractiveMode` 支持 `/exit` / `/quit`，并在 stop 时触发 `onStop`
-  - `PiCliModule.run(...)` 的 interactive future 现在会在用户退出时完成，而不是永久 pending
-  - shutdown hook 会在正常退出时移除，避免重复积累
-- startup/session shell shared core 这刀之后，`pi-cli` 与 `pi-sdk` 的重复点主要还剩：
-  - startup pipeline 的 module wiring / parser-to-runtime 装配
-  - CLI 特有的 tree/fork/compact/reload 壳层
-  - startup pipeline 的 CLI 专属参数拼装仍主要留在 `pi-cli`
-- real main/module wiring 目前的边界：
-  - 默认 `ModelRegistry` 仍为空；若未显式注入或预注册模型，session mode 会以 clear error 失败
-  - extension runtime 当前只消费显式 `--extension` 路径；还未接默认发现目录或 settings-driven extension source
-  - 当前 help 文本仍是稳定首版，不是 TS 版完整帮助页
-  - 当前 interactive exit 仍是首版：还未接更完整的 quit confirm、pending tool / streaming guard、EOF/drain 语义
-
-## 已确认语义
-
-- `--print` 与 `--mode` 冲突时，只有 `print` 可组合，其他模式直接报错。
-- `--mode text` 作为 TS 兼容别名保留。
-- 未知 flag 当前按 TS 第一遍解析语义处理：flag 自身被保留，但后续普通参数仍按 message 处理。
-- `PiCliThinkingLevel` 保留 `off`，后续可在 runtime 层映射为“无 reasoning”。
-- `PiCliApplication` 的 `SessionFactory` 与 `ModeHandler` 采用注入式接口，优先保证 main entry 可测试，再在后续切片接真实模块装配。
-- `list-models` 优先于 session 创建执行，避免只为列模型启动 session/runtime。
-- `list-models` query 当前采用大小写不敏感的 subsequence fuzzy match，覆盖 provider + model id。
-- `--session <path>` 现在对齐 TS 语义：文件存在则打开，不存在则用该路径创建新 persistent session。
-- `--continue` 现在会在 session 目录内选择最近的有效 JSONL session；若目录为空则创建新 session。
-- `SessionManager.list(dir)` 现在会提取 session 元数据（name / firstMessage / modified / messageCount / allMessagesText），供 picker 和后续 selector 复用。
-- `--resume` 当前默认已切到 all-sessions 聚合；但尚未实现 TS 版在 picker 内 current/all scope 切换。
-- `--resume` 当前 search 已支持大小写不敏感的 token contains；但仍未追平 TS 版的 regex、quoted phrase、sort mode、current/all scope toggle。
-- `--resume` 当前已支持 delete first cut；但仍未追平 TS 版的 trash CLI、rename、status banner、sort mode、current/all scope toggle。
-- `--resume` 当前已支持 rename first cut；但仍未追平 TS 版的 trash CLI、status banner、sort mode、current/all scope toggle。
-- `--export <session.jsonl> [output.html]` 现在会在 session/runtime 之外短路执行，默认输出 `pi-java-session-<basename>.html`。
-- richer HTML export 现在直接消费 `SessionManager.entries()` + `tree()` + `branch()`：
-  - message entry 继续沿用 `PiMessageRenderer`
-  - non-message entry 会按类型输出 metadata / summary / JSON details
-  - 当前 leaf path 会在 sidebar tree 和 entry cards 上双重高亮
-- `/copy` 优先同时写入 OSC52 与 system clipboard；只要任一后端成功即视为成功。
-- `/tree` 首版默认隐藏 `label` / `session_info` / `model_change` / `thinking_level_change` / `custom` 等非导航主节点，只显示 message / compaction / branch summary / custom_message。
-- `/tree` 目前不做 branch summarization；切 leaf 仅更新内存中的 session leaf，并立即用 `SessionManager.buildSessionContext()` replay 到 `Agent`。
-- `/fork` 只允许从 user message 发起；新 session 以该消息的 parent 为 branched path，因此 editor 预填的是被选中的 user 文本，conversation state 恢复的是它之前的上下文。
-- `/compact` 当前 summary 文本结构为固定章节模板（Goal / Custom Focus / Previous Summary / Summarized Messages），`tokensBefore` 采用基于序列化文本长度的轻量估算。
-- `/reload` 当前在非 streaming 状态下可执行；会刷新 `SettingsManager`、可选 `InstructionResourceLoader`，并把最新 system prompt 热更新到当前 `Agent`，但不会重建扩展 runtime。
-- `/reload` 当前在非 streaming 状态下可执行；会刷新 `SettingsManager`、可选 `InstructionResourceLoader`、可选 `ExtensionRuntime`，并把最新 system prompt 热更新到当前 `Agent`。
-
-## 测试
-
-本轮新增 contract tests 覆盖：
-
-- interactive 默认模式
-- `@file` / `message` 拆分
-- print 模式启动参数
-- `--list-models` 可选 query
-- `--mode text` 兼容
-- `--print` / `--mode` 冲突
-- 未知 extension flags 保留
-- session context replay -> agent state
-- prompt 后 session persistence bridge
-- virtual terminal 下的 interactive header / prompt submit render
-- print mode 的 stdout/stderr 选择与 blank prompt 校验
-- json mode 的 event/state envelope 与 blank prompt 校验
-- rpc mode 的 command/response、状态读取、错误响应
-- sdk facade 的 session helpers 与 `createAgentSession()` 集成
-- cli startup dispatcher 的 mode dispatch 与参数透传
-- list-models 的无 session 分流、表格输出、query filter
-- session resolver 的 explicit path open/create、continueRecent、default new-session path 分配
-- current-directory `--resume` picker，以及 `SessionInfo` 元数据列表
-- basic HTML export command
-- copy command 的最近 assistant 选择、空文本/无 assistant 校验、interactive slash-command dispatch
-- tree navigation 的 assistant/user 分流语义、interactive overlay 选择、user message prefill 后继续提交流程
-- fork root-branch rewrite、new session id propagation、interactive fork selector 与 fork 后继续提交流程
-- compact entry append、summary replay、manual `/compact <instructions>` slash-command 行为
-- reload 后 settings snapshot / instruction resources / system prompt 更新，以及 interactive `/reload` slash-command 行为
-- `--resume` 在未传 `--session-dir` 时跨 project 聚合 session 列表，以及 picker 描述里附带 `cwd`
-- `--resume` token-based richer search：覆盖 label/path/cwd，多关键词按 AND 语义过滤
-- `--resume` delete first cut：`ctrl+d` 进入确认态，确认后删除文件并刷新列表
-- `--resume` rename first cut：`ctrl+r` 进入 rename mode，提交后追加 `session_info` 并刷新列表
-- richer HTML export first cut：metadata / tree / full-entry rendering，不再只看 replay 后 transcript
-- startup/session shell shared core first cut：`PiAgentSession` 改为包装 `PiSdkSession`
-- real main/module wiring first cut：`PiCliModule.application()/run()` + `PiCliMain`
-- `/reload` extension runtime / startup pipeline first cut：`ReloadResult.extensionWarnings`、`PiAgentSession.reloadAction`、default `PiCliModule` extension runtime reload wiring
-- instruction-resource-aware system prompt composition downshift first cut：`CreateAgentSessionOptions.instructionResources`、`SessionPromptComposer`、`PiSdkSession.updateSystemPrompt(...)`
-- real module wiring `@file` / initial prompt first cut：`PiCliPromptFactory`、structured user prompt for `print/json/interactive`、RPC `@file` rejection
-- `@file` / initial prompt first cut：文本文件 prompt build、图片附件 prompt build、interactive auto-submit、RPC `@file` rejection
-- real module wiring `help/version` output first cut：`PiCliApplication` short-circuit、`PiCliModule` stdout routing、version fallback
-- interactive exit semantics first cut：`EditorAction.EXIT`、`Input.onExit`、`PiInteractiveMode.onStop`、interactive future completion
-
-## 验证
-
-最近通过：
+## Validation used
 
 ```bash
+.\gradlew.bat :pi-sdk:test :pi-cli:test --no-daemon
 .\gradlew.bat :pi-cli:test --no-daemon
 npm.cmd run check
 ```
 
-## 下一步建议
+## Re-entry guidance
 
-按依赖顺序，下一刀建议进入 CLI 收口：
+Reopen phase 7 only for:
 
-1. 继续下沉 startup pipeline 里剩余的 CLI 专属参数拼装，减少 `pi-cli` / `pi-sdk` 差异。
-2. 阶段 8：开始补 selector/footer 等交互行为追平。
-3. 再往后接 theme/skills/prompts registry rebuild 与 loaded-resource diagnostics。
+- a missing functional CLI/SDK path,
+- a broken command contract,
+- or a bootstrap issue that is not just phase 8 parity polish.
