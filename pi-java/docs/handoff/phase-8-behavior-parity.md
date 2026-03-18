@@ -103,6 +103,7 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - tokenized fuzzy search now matches against the combined `modelId + provider` text, aligning with the TypeScript `fuzzyFilter` behavior
 - alphanumeric swap fallback is now mirrored for model search queries like `5gpt -> gpt-5`
 - search selection now stays on the first filtered result instead of snapping back to the current model after each query change
+- top-section scope summary and hint now truncate cleanly at narrow widths instead of overflowing the terminal
 
 ## Latest completed slices
 
@@ -123,10 +124,11 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - working tree slice: model selector scope hints now render all configured bindings instead of only the first one, matching the TypeScript key-hint formatter more closely
 - working tree slice: model selector search now uses tokenized fuzzy matching over `modelId + provider`, including alphanumeric swap fallback, matching the TypeScript fuzzy filter more closely
 - working tree slice: model selector now preserves the active filtered-row selection across search updates instead of re-selecting the current model each time
+- working tree slice: model selector top-section lines now truncate to terminal width, avoiding scope-summary and key-hint overflow in narrow layouts
 
 ## Remaining gaps
 
-1. Finish the last `PiModelSelector` top-section and minor row polish against TypeScript.
+1. Finish the last `PiModelSelector` minor row polish against TypeScript.
 2. Finish remaining settings/theme parity that still depends on wider CLI surface adoption.
 3. Add pending queue / compaction queue parity.
 4. Finish footer edge cases and any remaining provider/git/cwd display drift.

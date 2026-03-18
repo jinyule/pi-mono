@@ -281,6 +281,41 @@ class PiModelSelectorTest {
     }
 
     @Test
+    void truncatesScopeSummaryAndHintAtNarrowWidths() {
+        var previous = EditorKeybindings.global();
+        try {
+            EditorKeybindings.setGlobal(new EditorKeybindings(Map.of(
+                EditorAction.SESSION_SCOPE_TOGGLE, List.of("shift+tab", "tab")
+            )));
+            var selector = new PiModelSelector(
+                new PiInteractiveSession.ModelSelection(
+                    List.of(new PiInteractiveSession.SelectableModel(0, "openai", "gpt-5", "GPT-5", "minimal", true, true, 400_000)),
+                    List.of(new PiInteractiveSession.SelectableModel(
+                        1,
+                        "anthropic",
+                        "claude-3-7-sonnet",
+                        "Claude 3.7 Sonnet",
+                        "high",
+                        false,
+                        true,
+                        200_000
+                    ))
+                ),
+                ignored -> {
+                },
+                () -> {
+                },
+                () -> {
+                }
+            );
+
+            assertThat(selector.render(18).stream().mapToInt(TerminalText::visibleWidth)).allMatch(width -> width <= 18);
+        } finally {
+            EditorKeybindings.setGlobal(previous);
+        }
+    }
+
+    @Test
     void filterAndSortModelsMatchesProviderAndModelId() {
         var models = PiModelSelector.filterAndSortModels(
             List.of(

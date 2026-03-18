@@ -91,8 +91,8 @@ public final class PiModelSelector implements Component, Focusable {
         lines.add(separatorLine(width));
         lines.add("");
         if (!scopedModels.isEmpty()) {
-            lines.add(scopeSummary());
-            lines.add(scopeHint());
+            lines.add(truncateLine(scopeSummary(), width));
+            lines.add(truncateLine(scopeHint(), width));
         } else {
             lines.addAll(styleWrappedLines(
                 "Only showing models with configured API keys (see README for details)",
@@ -262,6 +262,10 @@ public final class PiModelSelector implements Component, Focusable {
             return null;
         }
         return PiCliAnsi.muted("  Model Name: " + model.modelName());
+    }
+
+    private static String truncateLine(String text, int width) {
+        return TerminalText.truncateToWidth(text, Math.max(1, width), "...");
     }
 
     private static Double searchScore(PiInteractiveSession.SelectableModel model, List<String> tokens) {
