@@ -782,6 +782,10 @@
   - it defaults to `true`, so existing session/tree/fork selectors keep the current right-aligned metadata layout
   - `PiModelSelector` overrides it to `false`, so row metadata now sits directly after the selected text block with a single-space gap instead of floating at the far right
 - `SelectListTest` covers the compact non-right-aligned layout, and `PiModelSelectorTest` now checks stripped row text for compact adjacent metadata output.
+- `PiModelSelector.toSelectItem()` now keeps the current-model checkmark in metadata instead of the display label:
+  - selected rows now read `model-id [provider] ✓`
+  - the previous Java ordering `model-id ✓ [provider]` is gone
+- `PiModelSelectorTest` now asserts the TS-style checkmark order on stripped row text.
 
 ?????```bash
 .\\gradlew.bat :pi-cli:test --no-daemon
@@ -789,7 +793,7 @@ npm.cmd run check
 ```
 
 ## 濞戞挸顑勭粩鏉戭潰閵夈儳绱﹂悹?
-1. selector parity: selector search, ordering, selected-detail structure, selected-row weight, visible-row cap, shared row prefix, and compact row metadata now match TS more closely; next gap is the remaining list-row/layout polish against TS.
+1. selector parity: selector search, ordering, selected-detail structure, selected-row weight, visible-row cap, shared row prefix, compact row metadata, and checkmark ordering now match TS more closely; next gap is the remaining list-row/layout polish against TS.
 2. settings selector parity: theme work now covers hint/keybinding parity, hide-thinking transcript parity, quiet-startup header parity, quiet-startup startup-resource silence, double-escape, editor-padding, dark/light runtime ANSI theme switching, `Theme` submenu preview, `Thinking level` submenu, hardware-cursor/clear-on-shrink, TS-style copy for steering/follow-up/transport/quiet-startup, plus the first custom theme loader + hot reload slice and the first broader core-token slice; remaining theme gaps are package/source theme discovery and wider token adoption across more CLI surfaces
 3. pending queue parity闁挎稒姘ㄩ幋椋庣磼椤撯埛?compaction queue 闁告艾鐗嗛懟鐔轰沪閺囩姰浠涘☉鎾冲娴狀喗寰勫蹇曞耿steering/follow-up runtime queue 鐎圭寮剁敮瀛樼▔婵犲繒绀夊ù?Java 濞撴皜鍌滅煗婵炲备鍓濆﹢?compaction pending queue
 4. footer parity闁挎稒姘ㄩ幋椋庣磼椤擄紕妲戝ù?extension status 缂佹鍏涚粭浣烘偘瀹€瀣闁瑰瓨鐗楁俊?git branch 閻熸瑱绲鹃悗鐣岀磽閹惧磭鎽犲☉鎾愁儐閻洭骞?provider 濡炲瀛╅悧鍝ョ磼閸曨亝顐?

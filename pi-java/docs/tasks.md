@@ -75,6 +75,7 @@
    - incremental update: model selector now caps visible rows at 10 like TS instead of Java’s wider dynamic window, and `PiModelSelectorTest` covers the restored scroll indicator at 11 visible models.
    - incremental update: shared `SelectList` now uses a stable Unicode `→ ` selected prefix instead of the prior mojibake glyph, and `SelectListTest` covers the normalized prefix.
    - incremental update: `SelectListTheme.rightAlignDescription()` lets model selector rows keep metadata adjacent to the selected text block instead of right-aligning it, and both `SelectListTest` and `PiModelSelectorTest` cover the compact TS-style row layout.
+   - incremental update: model selector current-model `✓` now renders after the provider badge instead of before it, and `PiModelSelectorTest` asserts the TS-style `model [provider] ✓` row order.
 ## 闂傚啳鍩栭?9闁挎稒姘ㄩ弫鎾诲箑娴ｉ鐟㈤柛鎺戞瑜?
 
 1. 閻庤鐭粻?Java 闁绘鐗婅ぐ鍐╃閼搁潧鈪甸柛鏍ф嚀椤鎳犻崘锔瑰亾?2. 閻庤鐭粻?`skills / prompts / themes` 闁瑰吋绮庨崒銊ф崉椤栨氨绐炲☉?package source 閻熸瑥瀚€垫牠濡?3. 閻犲洤瀚崣?`maven:`闁靛棔姊梖ile:`闁靛棔姊梘it:` 濞戞挸顦辩悮顐ゆ導閸曨剛鐖辨繝褎鍔戦埀?4. 濞存籂鍐ㄦ瘔 fat JAR 闁告帒妫楄ぐ鍌炲Υ?5. 閻犲洤瀚崣?`jpackage` 閻庣懓顦抽ˉ濠囧礌閸涱偀鍋?

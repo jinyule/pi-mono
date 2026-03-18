@@ -40,7 +40,7 @@ class PiModelSelectorTest {
         assertThat(lines).noneMatch(line -> line.contains("\u001b[1;36mgpt-5"));
         assertThat(lines).anyMatch(line -> line.contains("\u001b[90m") && line.contains("[openai]"));
         assertThat(lines.stream().map(PiModelSelectorTest::stripAnsi))
-            .anyMatch(line -> Pattern.compile("^→ gpt-5 ✓ \\[openai\\]").matcher(line).find());
+            .anyMatch(line -> Pattern.compile("^→ gpt-5 \\[openai\\] ✓").matcher(line).find());
         assertThat(lines).noneMatch(line -> line.contains("\u001b[1mSelected:"));
         assertThat(lines).noneMatch(line -> line.contains("\u001b[90mopenai/"));
         assertThat(lines).noneMatch(line -> line.contains("\u001b[1mgpt-5"));
