@@ -141,7 +141,8 @@ class PiModelSelectorTest {
         );
 
         assertThat(selector.render(100)).anyMatch(line -> line.contains("Scope:"));
-        assertThat(selector.render(100)).anyMatch(line -> line.contains("tab") && line.contains("scope (all/scoped)"));
+        assertThat(selector.render(100).stream().map(PiModelSelectorTest::stripAnsi))
+            .anyMatch(line -> line.contains("tab scope (all/scoped)"));
         assertThat(selector.render(100)).anyMatch(line -> line.contains("scoped"));
         assertThat(selector.render(100)).anyMatch(line -> line.contains("claude-3-7-sonnet"));
 
@@ -216,7 +217,7 @@ class PiModelSelectorTest {
         var previous = EditorKeybindings.global();
         try {
             EditorKeybindings.setGlobal(new EditorKeybindings(Map.of(
-                EditorAction.SESSION_SCOPE_TOGGLE, List.of("shift+tab"),
+                EditorAction.SESSION_SCOPE_TOGGLE, List.of("shift+tab", "tab"),
                 EditorAction.SUBMIT, List.of("ctrl+j"),
                 EditorAction.SELECT_CANCEL, List.of("ctrl+x")
             )));
@@ -244,9 +245,11 @@ class PiModelSelectorTest {
 
             var lines = selector.render(100);
 
-            assertThat(lines).anyMatch(line -> line.contains("shift+tab") && line.contains("scope (all/scoped)"));
-            assertThat(lines).anyMatch(line -> line.contains("\u001b[2;37mshift+tab"));
-            assertThat(lines).anyMatch(line -> line.contains("\u001b[90m scope (all/scoped)"));
+            assertThat(lines.stream().map(PiModelSelectorTest::stripAnsi))
+                .anyMatch(line -> line.contains("shift+tab/tab scope (all/scoped)"));
+            assertThat(lines).anyMatch(line -> line.contains("\u001b[2;37mshift+tab/tab"));
+            assertThat(lines).anyMatch(line -> line.contains("\u001b[90m scope\u001b[0m"));
+            assertThat(lines).anyMatch(line -> line.contains("\u001b[90m (all/scoped)\u001b[0m"));
             assertThat(lines).noneMatch(line -> line.contains("selects"));
             assertThat(lines).noneMatch(line -> line.contains("cancels"));
         } finally {

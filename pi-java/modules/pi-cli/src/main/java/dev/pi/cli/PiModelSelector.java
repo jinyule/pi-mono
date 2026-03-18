@@ -174,7 +174,7 @@ public final class PiModelSelector implements Component, Focusable {
     }
 
     private String scopeHint() {
-        return PiCliAnsi.dim(keyLabel(EditorAction.SESSION_SCOPE_TOGGLE)) + PiCliAnsi.muted(" scope (all/scoped)");
+        return PiCliKeyHints.editorHint(EditorAction.SESSION_SCOPE_TOGGLE, "scope") + PiCliAnsi.muted(" (all/scoped)");
     }
 
     private static SelectItem toSelectItem(PiInteractiveSession.SelectableModel model) {
@@ -360,12 +360,6 @@ public final class PiModelSelector implements Component, Focusable {
         }
         return bestScore == Integer.MAX_VALUE ? -1 : bestScore;
     }
-
-    private static String keyLabel(EditorAction action) {
-        var keys = EditorKeybindings.global().getKeys(action);
-        return keys.isEmpty() ? action.name() : keys.getFirst();
-    }
-
     private static List<String> styleWrappedLines(String text, int width, UnaryOperator<String> style) {
         return TerminalText.wrapText(text, Math.max(1, width)).stream()
             .map(style)

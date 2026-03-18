@@ -85,6 +85,7 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - detail ANSI hierarchy
 - outer border and panel structure
 - scope and hint copy alignment
+- scope hint now joins multiple configured keybindings with `/`, matching the TypeScript key-hint formatter
 - current-model checkmark styling
 - keybinding-aware hints
 - empty-registry guard
@@ -116,10 +117,11 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - `cb8a342c` `feat(pi-java): compact model selector row metadata`
 - `cb44def3` `feat(pi-java): reorder model selector checkmark`
 - working tree slice: compact selector rows now give full width to the model label before truncating provider metadata, matching the TypeScript row-composition strategy more closely
+- working tree slice: model selector scope hints now render all configured bindings instead of only the first one, matching the TypeScript key-hint formatter more closely
 
 ## Remaining gaps
 
-1. Finish the last `PiModelSelector` row/top-section polish against TypeScript.
+1. Finish the last `PiModelSelector` top-section and minor row polish against TypeScript.
 2. Finish remaining settings/theme parity that still depends on wider CLI surface adoption.
 3. Add pending queue / compaction queue parity.
 4. Finish footer edge cases and any remaining provider/git/cwd display drift.

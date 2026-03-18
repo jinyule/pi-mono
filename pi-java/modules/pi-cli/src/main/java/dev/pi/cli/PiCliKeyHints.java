@@ -9,7 +9,7 @@ final class PiCliKeyHints {
 
     static String editorKey(EditorAction action) {
         var keys = EditorKeybindings.global().getKeys(action);
-        return keys.isEmpty() ? action.name() : keys.getFirst();
+        return keys.isEmpty() ? action.name() : String.join("/", keys);
     }
 
     static String editorHint(EditorAction action, String description) {
@@ -18,7 +18,7 @@ final class PiCliKeyHints {
 
     static String appKey(PiAppAction action) {
         var keys = PiAppKeybindings.global().getKeys(action);
-        return keys.isEmpty() ? action.name() : keys.getFirst();
+        return keys.isEmpty() ? action.name() : String.join("/", keys);
     }
 
     static String appHint(PiAppAction action, String description) {
