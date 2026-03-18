@@ -97,6 +97,7 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - visible-row cap alignment
 - shared row-prefix normalization
 - compact metadata layout
+- compact-row truncation now preserves the full model id before provider metadata at narrow widths
 - current-model checkmark reordered after provider badge
 
 ## Latest completed slices
@@ -114,10 +115,11 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - `831ca535` `feat(pi-java): normalize selector row prefix`
 - `cb8a342c` `feat(pi-java): compact model selector row metadata`
 - `cb44def3` `feat(pi-java): reorder model selector checkmark`
+- working tree slice: compact selector rows now give full width to the model label before truncating provider metadata, matching the TypeScript row-composition strategy more closely
 
 ## Remaining gaps
 
-1. Finish the last `PiModelSelector` row/layout polish against TypeScript.
+1. Finish the last `PiModelSelector` row/top-section polish against TypeScript.
 2. Finish remaining settings/theme parity that still depends on wider CLI surface adoption.
 3. Add pending queue / compaction queue parity.
 4. Finish footer edge cases and any remaining provider/git/cwd display drift.

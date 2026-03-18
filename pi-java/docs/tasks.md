@@ -42,12 +42,12 @@ Updated: 2026-03-18
   - Session selector parity is substantially advanced.
   - Settings/theme parity is substantially advanced.
   - Footer parity is substantially advanced.
-  - Model selector parity is active and is the current hotspot.
+  - Model selector parity is active and is now down to the last row/top-section polish after compact-row truncation alignment.
 - Phase 9 (package sources / distribution): not started.
 
 ## Current next slices
 
-1. Finish the remaining `PiModelSelector` row and layout polish against the TypeScript behavior.
+1. Finish the remaining `PiModelSelector` row and top-section polish against the TypeScript behavior.
 2. Finish settings/theme parity that still depends on wider CLI surface adoption and package-source discovery.
 3. Add pending queue / compaction queue parity.
 4. Finish the remaining footer parity edge cases.

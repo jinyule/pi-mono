@@ -121,7 +121,11 @@ public final class SelectList implements Component {
         var display = item.displayValue();
         var selectedPrefix = theme.selectedPrefix(SELECTED_PREFIX);
         var plainPrefix = "  ";
-        var prefix = selected ? selectedPrefix : plainPrefix;
+        var prefix = selected ? SELECTED_PREFIX : plainPrefix;
+        if (!theme.rightAlignDescription()) {
+            var availableWidth = Math.max(1, width - TerminalText.visibleWidth(prefix));
+            return renderCompactItem(display, description, selected, selectedPrefix, plainPrefix, availableWidth);
+        }
         var availableWidth = Math.max(1, width - TerminalText.visibleWidth(prefix) - 2);
         var itemLayout = layoutItem(display, description, availableWidth, theme.rightAlignDescription());
 
@@ -141,21 +145,39 @@ public final class SelectList implements Component {
         return plainPrefix + TerminalText.truncateToWidth(display, availableWidth, "");
     }
 
+    private String renderCompactItem(
+        String display,
+        String description,
+        boolean selected,
+        String selectedPrefix,
+        String plainPrefix,
+        int availableWidth
+    ) {
+        var truncatedDisplay = TerminalText.truncateToWidth(display, availableWidth, "");
+        var remainingWidth = Math.max(0, availableWidth - TerminalText.visibleWidth(truncatedDisplay));
+        var truncatedDescription = "";
+        if (description != null && remainingWidth > 1) {
+            truncatedDescription = TerminalText.truncateToWidth(description, remainingWidth - 1, "");
+        }
+
+        if (selected) {
+            if (!truncatedDescription.isEmpty()) {
+                return selectedPrefix
+                    + theme.selectedText(truncatedDisplay)
+                    + theme.selectedDescription(" " + truncatedDescription);
+            }
+            return selectedPrefix + theme.selectedText(truncatedDisplay);
+        }
+
+        if (!truncatedDescription.isEmpty()) {
+            return plainPrefix + truncatedDisplay + theme.description(" " + truncatedDescription);
+        }
+        return plainPrefix + truncatedDisplay;
+    }
+
     private static ItemLayout layoutItem(String display, String description, int availableWidth, boolean rightAlignDescription) {
         if (description == null || availableWidth <= 0) {
             return null;
-        }
-        if (!rightAlignDescription) {
-            var descriptionVisibleWidth = TerminalText.visibleWidth(description);
-            var gapWidth = 1;
-            var maxDescriptionWidth = Math.max(1, availableWidth - gapWidth - 1);
-            var descriptionWidth = Math.min(descriptionVisibleWidth, maxDescriptionWidth);
-            var maxDisplayWidth = Math.max(1, availableWidth - gapWidth - descriptionWidth);
-            var truncatedDisplay = TerminalText.truncateToWidth(display, maxDisplayWidth, "");
-            var actualDisplayWidth = TerminalText.visibleWidth(truncatedDisplay);
-            descriptionWidth = Math.max(1, Math.min(descriptionVisibleWidth, availableWidth - actualDisplayWidth - gapWidth));
-            var truncatedDescription = TerminalText.truncateToWidth(description, descriptionWidth, "");
-            return new ItemLayout(truncatedDisplay, " ".repeat(gapWidth), truncatedDescription);
         }
 
         var gapWidth = 2;

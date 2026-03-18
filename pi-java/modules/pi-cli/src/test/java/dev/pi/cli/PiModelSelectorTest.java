@@ -7,18 +7,38 @@ import dev.pi.tui.EditorKeybindings;
 import dev.pi.tui.TerminalText;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 
 class PiModelSelectorTest {
+    private static final String SELECTED_PREFIX = "\u2192 ";
+    private static final String CHECKMARK = "\u2713";
+
     @Test
     void rendersCurrentModelFirstWithSelectedModelName() {
         var selector = new PiModelSelector(
             new PiInteractiveSession.ModelSelection(
                 List.of(
-                    new PiInteractiveSession.SelectableModel(1, "anthropic", "claude-3-7-sonnet", "Claude 3.7 Sonnet", "high", false, true, 200_000),
-                    new PiInteractiveSession.SelectableModel(0, "openai", "gpt-5", "GPT-5", "minimal", true, true, 400_000)
+                    new PiInteractiveSession.SelectableModel(
+                        1,
+                        "anthropic",
+                        "claude-3-7-sonnet",
+                        "Claude 3.7 Sonnet",
+                        "high",
+                        false,
+                        true,
+                        200_000
+                    ),
+                    new PiInteractiveSession.SelectableModel(
+                        0,
+                        "openai",
+                        "gpt-5",
+                        "GPT-5",
+                        "minimal",
+                        true,
+                        true,
+                        400_000
+                    )
                 ),
                 List.of()
             ),
@@ -40,7 +60,7 @@ class PiModelSelectorTest {
         assertThat(lines).noneMatch(line -> line.contains("\u001b[1;36mgpt-5"));
         assertThat(lines).anyMatch(line -> line.contains("\u001b[90m") && line.contains("[openai]"));
         assertThat(lines.stream().map(PiModelSelectorTest::stripAnsi))
-            .anyMatch(line -> Pattern.compile("^→ gpt-5 \\[openai\\] ✓").matcher(line).find());
+            .anyMatch(line -> line.startsWith(SELECTED_PREFIX + "gpt-5 [openai] " + CHECKMARK));
         assertThat(lines).noneMatch(line -> line.contains("\u001b[1mSelected:"));
         assertThat(lines).noneMatch(line -> line.contains("\u001b[90mopenai/"));
         assertThat(lines).noneMatch(line -> line.contains("\u001b[1mgpt-5"));
@@ -58,8 +78,26 @@ class PiModelSelectorTest {
         var selector = new PiModelSelector(
             new PiInteractiveSession.ModelSelection(
                 List.of(
-                    new PiInteractiveSession.SelectableModel(1, "anthropic", "claude-3-7-sonnet", "Claude 3.7 Sonnet", "high", false, true, 200_000),
-                    new PiInteractiveSession.SelectableModel(0, "openai", "gpt-5", "GPT-5", "minimal", true, true, 400_000)
+                    new PiInteractiveSession.SelectableModel(
+                        1,
+                        "anthropic",
+                        "claude-3-7-sonnet",
+                        "Claude 3.7 Sonnet",
+                        "high",
+                        false,
+                        true,
+                        200_000
+                    ),
+                    new PiInteractiveSession.SelectableModel(
+                        0,
+                        "openai",
+                        "gpt-5",
+                        "GPT-5",
+                        "minimal",
+                        true,
+                        true,
+                        400_000
+                    )
                 ),
                 List.of()
             ),
@@ -84,7 +122,16 @@ class PiModelSelectorTest {
                     new PiInteractiveSession.SelectableModel(0, "openai", "gpt-5", "GPT-5", "minimal", true, true, 400_000),
                     new PiInteractiveSession.SelectableModel(1, "google", "gemini-2.5-pro", "Gemini 2.5 Pro", "high", false, true, 1_000_000)
                 ),
-                List.of(new PiInteractiveSession.SelectableModel(2, "anthropic", "claude-3-7-sonnet", "Claude 3.7 Sonnet", "high", false, true, 200_000))
+                List.of(new PiInteractiveSession.SelectableModel(
+                    2,
+                    "anthropic",
+                    "claude-3-7-sonnet",
+                    "Claude 3.7 Sonnet",
+                    "high",
+                    false,
+                    true,
+                    200_000
+                ))
             ),
             selectedIndex::set,
             () -> {
@@ -137,6 +184,34 @@ class PiModelSelectorTest {
     }
 
     @Test
+    void keepsFullModelIdBeforeProviderMetadataAtNarrowWidths() {
+        var selector = new PiModelSelector(
+            new PiInteractiveSession.ModelSelection(
+                List.of(new PiInteractiveSession.SelectableModel(
+                    0,
+                    "openai",
+                    "gpt-5-mini",
+                    "GPT-5 Mini",
+                    "minimal",
+                    true,
+                    true,
+                    400_000
+                )),
+                List.of()
+            ),
+            ignored -> {
+            },
+            () -> {
+            },
+            () -> {
+            }
+        );
+
+        assertThat(selector.render(12).stream().map(PiModelSelectorTest::stripAnsi))
+            .contains(SELECTED_PREFIX + "gpt-5-mini");
+    }
+
+    @Test
     void rendersConfiguredKeybindingHints() {
         var previous = EditorKeybindings.global();
         try {
@@ -148,7 +223,16 @@ class PiModelSelectorTest {
             var selector = new PiModelSelector(
                 new PiInteractiveSession.ModelSelection(
                     List.of(new PiInteractiveSession.SelectableModel(0, "openai", "gpt-5", "GPT-5", "minimal", true, true, 400_000)),
-                    List.of(new PiInteractiveSession.SelectableModel(1, "anthropic", "claude-3-7-sonnet", "Claude 3.7 Sonnet", "high", false, true, 200_000))
+                    List.of(new PiInteractiveSession.SelectableModel(
+                        1,
+                        "anthropic",
+                        "claude-3-7-sonnet",
+                        "Claude 3.7 Sonnet",
+                        "high",
+                        false,
+                        true,
+                        200_000
+                    ))
                 ),
                 ignored -> {
                 },
@@ -306,7 +390,16 @@ class PiModelSelectorTest {
             new PiInteractiveSession.ModelSelection(
                 List.of(
                     new PiInteractiveSession.SelectableModel(0, "openai", "gpt-5", "GPT-5", "minimal", true, true, 400_000),
-                    new PiInteractiveSession.SelectableModel(1, "anthropic", "claude-3-7-sonnet", "Claude 3.7 Sonnet", "high", false, true, 200_000)
+                    new PiInteractiveSession.SelectableModel(
+                        1,
+                        "anthropic",
+                        "claude-3-7-sonnet",
+                        "Claude 3.7 Sonnet",
+                        "high",
+                        false,
+                        true,
+                        200_000
+                    )
                 ),
                 List.of()
             ),
@@ -325,7 +418,7 @@ class PiModelSelectorTest {
         assertThat(lines).noneMatch(line -> line.contains("\u001b[90manthropic/"));
         assertThat(lines).noneMatch(line -> line.contains("\u001b[1mclaude-3-7-sonnet"));
         assertThat(lines.stream().map(PiModelSelectorTest::stripAnsi))
-            .anyMatch(line -> Pattern.compile("^→ claude-3-7-sonnet \\[anthropic\\]").matcher(line).find());
+            .anyMatch(line -> line.startsWith(SELECTED_PREFIX + "claude-3-7-sonnet [anthropic]"));
         assertThat(lines).anyMatch(line -> line.contains("\u001b[90m  Model Name: Claude 3.7 Sonnet"));
     }
 

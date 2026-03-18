@@ -204,6 +204,51 @@ class SelectListTest {
     }
 
     @Test
+    void compactDescriptionsPreferFullLabelAtNarrowWidths() {
+        var theme = new SelectListTheme() {
+            @Override
+            public String selectedPrefix(String text) {
+                return text;
+            }
+
+            @Override
+            public String selectedText(String text) {
+                return text;
+            }
+
+            @Override
+            public boolean rightAlignDescription() {
+                return false;
+            }
+
+            @Override
+            public String description(String text) {
+                return text;
+            }
+
+            @Override
+            public String scrollInfo(String text) {
+                return text;
+            }
+
+            @Override
+            public String noMatch(String text) {
+                return text;
+            }
+        };
+        var list = new SelectList(
+            List.of(new SelectItem("alpha", "Alpha task", "[openai]")),
+            5,
+            theme
+        );
+
+        var line = list.render(12).getFirst();
+
+        assertThat(line).isEqualTo("\u2192 Alpha task");
+        assertThat(TerminalText.visibleWidth(line)).isEqualTo(12);
+    }
+
+    @Test
     void expandsDescriptionWhenLabelIsShort() {
         var list = new SelectList(
             List.of(new SelectItem("alpha", "Alpha", "/workspace/project/path · 2 msg · 1m")),
