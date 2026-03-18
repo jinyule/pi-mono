@@ -322,12 +322,6 @@ public final class PiModelSelector implements Component, Focusable {
         texts.add(model.provider() + "/" + model.modelId());
         texts.add(model.modelId());
         texts.add(model.provider());
-        if (model.modelName() != null && !model.modelName().isBlank() && !model.modelName().equals(model.modelId())) {
-            texts.add(model.modelName());
-        }
-        if (model.reasoning()) {
-            texts.add("thinking " + model.thinkingLevel());
-        }
         return texts;
     }
 

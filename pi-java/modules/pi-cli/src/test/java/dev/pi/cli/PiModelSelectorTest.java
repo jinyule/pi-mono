@@ -166,7 +166,7 @@ class PiModelSelectorTest {
     }
 
     @Test
-    void filterAndSortModelsMatchesProviderAndModelName() {
+    void filterAndSortModelsMatchesProviderAndModelId() {
         var models = PiModelSelector.filterAndSortModels(
             List.of(
                 new PiInteractiveSession.SelectableModel(0, "openai", "gpt-5", "GPT-5", "minimal", true, true, 400_000),
@@ -191,6 +191,17 @@ class PiModelSelectorTest {
         assertThat(providerMatches)
             .extracting(PiInteractiveSession.SelectableModel::modelId)
             .containsExactly("gpt-5");
+    }
+
+    @Test
+    void filterAndSortModelsDoesNotMatchDisplayNameOrThinkingMetadata() {
+        var models = List.of(
+            new PiInteractiveSession.SelectableModel(0, "openai", "gpt-5", "Flagship Frontier", "minimal", true, true, 400_000),
+            new PiInteractiveSession.SelectableModel(1, "anthropic", "claude-3-7-sonnet", "Assistant Model", "high", false, true, 200_000)
+        );
+
+        assertThat(PiModelSelector.filterAndSortModels(models, "flagship")).isEmpty();
+        assertThat(PiModelSelector.filterAndSortModels(models, "minimal")).isEmpty();
     }
 
     @Test
