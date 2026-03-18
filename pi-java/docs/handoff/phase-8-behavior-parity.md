@@ -102,6 +102,7 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - current-model checkmark reordered after provider badge
 - tokenized fuzzy search now matches against the combined `modelId + provider` text, aligning with the TypeScript `fuzzyFilter` behavior
 - alphanumeric swap fallback is now mirrored for model search queries like `5gpt -> gpt-5`
+- search selection now stays on the first filtered result instead of snapping back to the current model after each query change
 
 ## Latest completed slices
 
@@ -121,6 +122,7 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - working tree slice: compact selector rows now give full width to the model label before truncating provider metadata, matching the TypeScript row-composition strategy more closely
 - working tree slice: model selector scope hints now render all configured bindings instead of only the first one, matching the TypeScript key-hint formatter more closely
 - working tree slice: model selector search now uses tokenized fuzzy matching over `modelId + provider`, including alphanumeric swap fallback, matching the TypeScript fuzzy filter more closely
+- working tree slice: model selector now preserves the active filtered-row selection across search updates instead of re-selecting the current model each time
 
 ## Remaining gaps
 

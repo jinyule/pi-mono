@@ -65,6 +65,7 @@ public final class PiModelSelector implements Component, Focusable {
     private Scope scope;
     private SelectList models;
     private List<PiInteractiveSession.SelectableModel> visibleModels = List.of();
+    private int selectedIndex;
     private boolean focused;
 
     public PiModelSelector(
@@ -123,6 +124,7 @@ public final class PiModelSelector implements Component, Focusable {
         var keybindings = EditorKeybindings.global();
         if (keybindings.matches(data, EditorAction.SESSION_SCOPE_TOGGLE) && !scopedModels.isEmpty()) {
             scope = scope == Scope.ALL ? Scope.SCOPED : Scope.ALL;
+            selectedIndex = 0;
             rebuildList();
             requestRender.run();
             return;
@@ -157,10 +159,14 @@ public final class PiModelSelector implements Component, Focusable {
         visibleModels = activeModels();
         var items = visibleModels.stream().map(PiModelSelector::toSelectItem).toList();
         models = new SelectList(items, Math.min(MAX_VISIBLE_MODELS, Math.max(1, items.size())), THEME);
-        models.setOnSelectionChange(ignored -> requestRender.run());
+        selectedIndex = Math.max(0, Math.min(selectedIndex, Math.max(0, items.size() - 1)));
+        models.setOnSelectionChange(item -> {
+            selectedIndex = Math.max(0, items.indexOf(item));
+            requestRender.run();
+        });
         models.setOnSelect(item -> onSelect.accept(decodeIndex(item.value())));
         models.setOnCancel(onCancel);
-        models.setSelectedIndex(selectedIndex(visibleModels));
+        models.setSelectedIndex(selectedIndex);
     }
 
     private List<PiInteractiveSession.SelectableModel> activeModels() {
@@ -220,15 +226,6 @@ public final class PiModelSelector implements Component, Focusable {
         }
         matches.sort((left, right) -> Double.compare(left.score(), right.score()));
         return matches.stream().map(ModelSearchMatch::model).toList();
-    }
-
-    private static int selectedIndex(List<PiInteractiveSession.SelectableModel> models) {
-        for (var index = 0; index < models.size(); index += 1) {
-            if (models.get(index).current()) {
-                return index;
-            }
-        }
-        return 0;
     }
 
     private static String encodeValue(String label, int index) {

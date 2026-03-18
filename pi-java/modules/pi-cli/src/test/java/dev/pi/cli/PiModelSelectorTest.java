@@ -399,6 +399,32 @@ class PiModelSelectorTest {
     }
 
     @Test
+    void keepsFirstSearchResultSelectedInsteadOfJumpingBackToCurrentModel() {
+        var selectedIndex = new AtomicInteger(-1);
+        var selector = new PiModelSelector(
+            new PiInteractiveSession.ModelSelection(
+                List.of(
+                    new PiInteractiveSession.SelectableModel(0, "openai", "mini-gpt-5", "Mini GPT-5", "minimal", true, true, 200_000),
+                    new PiInteractiveSession.SelectableModel(1, "openai", "gpt-5", "GPT-5", "minimal", false, true, 400_000)
+                ),
+                List.of()
+            ),
+            selectedIndex::set,
+            () -> {
+            },
+            () -> {
+            }
+        );
+
+        for (var character : "gpt-5".toCharArray()) {
+            selector.handleInput(String.valueOf(character));
+        }
+        selector.handleInput("\r");
+
+        assertThat(selectedIndex.get()).isEqualTo(1);
+    }
+
+    @Test
     void rendersModelSpecificNoMatchCopy() {
         var selector = new PiModelSelector(
             new PiInteractiveSession.ModelSelection(

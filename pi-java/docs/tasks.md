@@ -42,7 +42,7 @@ Updated: 2026-03-18
   - Session selector parity is substantially advanced.
   - Settings/theme parity is substantially advanced.
   - Footer parity is substantially advanced.
-  - Model selector parity is active and is now down to the last top-section and minor row polish after compact-row truncation, multi-key scope-hint alignment, and TypeScript-style tokenized fuzzy search alignment.
+  - Model selector parity is active and is now down to the last top-section and minor row polish after compact-row truncation, multi-key scope-hint alignment, TypeScript-style tokenized fuzzy search alignment, and selection-retention parity while searching.
 - Phase 9 (package sources / distribution): not started.
 
 ## Current next slices
