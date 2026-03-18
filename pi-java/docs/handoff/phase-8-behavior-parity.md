@@ -100,6 +100,8 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - compact metadata layout
 - compact-row truncation now preserves the full model id before provider metadata at narrow widths
 - current-model checkmark reordered after provider badge
+- tokenized fuzzy search now matches against the combined `modelId + provider` text, aligning with the TypeScript `fuzzyFilter` behavior
+- alphanumeric swap fallback is now mirrored for model search queries like `5gpt -> gpt-5`
 
 ## Latest completed slices
 
@@ -118,6 +120,7 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - `cb44def3` `feat(pi-java): reorder model selector checkmark`
 - working tree slice: compact selector rows now give full width to the model label before truncating provider metadata, matching the TypeScript row-composition strategy more closely
 - working tree slice: model selector scope hints now render all configured bindings instead of only the first one, matching the TypeScript key-hint formatter more closely
+- working tree slice: model selector search now uses tokenized fuzzy matching over `modelId + provider`, including alphanumeric swap fallback, matching the TypeScript fuzzy filter more closely
 
 ## Remaining gaps
 

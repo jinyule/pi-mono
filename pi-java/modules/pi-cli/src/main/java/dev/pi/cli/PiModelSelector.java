@@ -207,31 +207,18 @@ public final class PiModelSelector implements Component, Focusable {
             return sortModels(models);
         }
 
-        var normalizedQuery = query.trim().toLowerCase(Locale.ROOT);
+        var tokens = searchTokens(query);
+        if (tokens.isEmpty()) {
+            return sortModels(models);
+        }
         var matches = new ArrayList<ModelSearchMatch>();
         for (var model : models) {
-            var score = searchScore(model, normalizedQuery);
+            var score = searchScore(model, tokens);
             if (score != null) {
                 matches.add(new ModelSearchMatch(model, score));
             }
         }
-        matches.sort((left, right) -> {
-            var scoreCompare = Integer.compare(left.score(), right.score());
-            if (scoreCompare != 0) {
-                return scoreCompare;
-            }
-            if (left.model().current() && !right.model().current()) {
-                return -1;
-            }
-            if (!left.model().current() && right.model().current()) {
-                return 1;
-            }
-            var providerCompare = left.model().provider().compareToIgnoreCase(right.model().provider());
-            if (providerCompare != 0) {
-                return providerCompare;
-            }
-            return 0;
-        });
+        matches.sort((left, right) -> Double.compare(left.score(), right.score()));
         return matches.stream().map(ModelSearchMatch::model).toList();
     }
 
@@ -280,85 +267,168 @@ public final class PiModelSelector implements Component, Focusable {
         return PiCliAnsi.muted("  Model Name: " + model.modelName());
     }
 
-    private static Integer searchScore(PiInteractiveSession.SelectableModel model, String query) {
-        Integer bestScore = null;
-        for (var text : searchTexts(model)) {
-            var score = searchTextScore(text, query);
-            if (score != null && (bestScore == null || score < bestScore)) {
-                bestScore = score;
+    private static Double searchScore(PiInteractiveSession.SelectableModel model, List<String> tokens) {
+        var totalScore = 0.0;
+        var text = searchText(model);
+        for (var token : tokens) {
+            var match = fuzzyMatch(token, text);
+            if (!match.matches()) {
+                return null;
+            }
+            totalScore += match.score();
+        }
+        return totalScore;
+    }
+
+    private static List<String> searchTokens(String query) {
+        var tokens = new ArrayList<String>();
+        for (var token : query.trim().toLowerCase(Locale.ROOT).split("\\s+")) {
+            if (!token.isBlank()) {
+                tokens.add(token);
             }
         }
-        return bestScore;
+        return tokens;
     }
 
-    private static List<String> searchTexts(PiInteractiveSession.SelectableModel model) {
-        var texts = new ArrayList<String>();
-        texts.add(model.provider() + "/" + model.modelId());
-        texts.add(model.modelId());
-        texts.add(model.provider());
-        return texts;
+    private static String searchText(PiInteractiveSession.SelectableModel model) {
+        return model.modelId() + " " + model.provider();
     }
 
-    private static Integer searchTextScore(String text, String query) {
+    private static FuzzySearchMatch fuzzyMatch(String query, String text) {
+        var normalizedQuery = query.toLowerCase(Locale.ROOT);
         var normalizedText = text.toLowerCase(Locale.ROOT);
-        if (normalizedText.equals(query)) {
-            return 0;
+        var primaryMatch = fuzzyMatchNormalized(normalizedQuery, normalizedText);
+        if (primaryMatch.matches()) {
+            return primaryMatch;
         }
-        if (normalizedText.startsWith(query)) {
-            return 10;
+        var swappedQuery = swapAlphaNumericQuery(normalizedQuery);
+        if (swappedQuery == null) {
+            return primaryMatch;
         }
-        var boundaryIndex = wordBoundaryIndex(normalizedText, query);
-        if (boundaryIndex >= 0) {
-            return 20 + boundaryIndex;
+        var swappedMatch = fuzzyMatchNormalized(swappedQuery, normalizedText);
+        if (!swappedMatch.matches()) {
+            return primaryMatch;
         }
-        var containsIndex = normalizedText.indexOf(query);
-        if (containsIndex >= 0) {
-            return 40 + containsIndex;
+        return new FuzzySearchMatch(true, swappedMatch.score() + 5.0);
+    }
+
+    private static FuzzySearchMatch fuzzyMatchNormalized(String query, String text) {
+        if (query.isEmpty()) {
+            return new FuzzySearchMatch(true, 0.0);
         }
-        var fuzzyScore = fuzzyTokenScore(query, normalizedText);
-        if (fuzzyScore >= 0) {
-            return 200 + fuzzyScore;
+        if (query.length() > text.length()) {
+            return new FuzzySearchMatch(false, 0.0);
+        }
+
+        var queryIndex = 0;
+        var score = 0.0;
+        var lastMatchIndex = -1;
+        var consecutiveMatches = 0;
+
+        for (var textIndex = 0; textIndex < text.length() && queryIndex < query.length(); textIndex += 1) {
+            if (text.charAt(textIndex) != query.charAt(queryIndex)) {
+                continue;
+            }
+            var isWordBoundary = textIndex == 0 || isWordBoundary(text.charAt(textIndex - 1));
+            if (lastMatchIndex == textIndex - 1) {
+                consecutiveMatches += 1;
+                score -= consecutiveMatches * 5.0;
+            } else {
+                consecutiveMatches = 0;
+                if (lastMatchIndex >= 0) {
+                    score += (textIndex - lastMatchIndex - 1) * 2.0;
+                }
+            }
+            if (isWordBoundary) {
+                score -= 10.0;
+            }
+            score += textIndex * 0.1;
+            lastMatchIndex = textIndex;
+            queryIndex += 1;
+        }
+
+        if (queryIndex < query.length()) {
+            return new FuzzySearchMatch(false, 0.0);
+        }
+        return new FuzzySearchMatch(true, score);
+    }
+
+    private static boolean isWordBoundary(char character) {
+        return Character.isWhitespace(character)
+            || character == '-'
+            || character == '_'
+            || character == '.'
+            || character == '/'
+            || character == ':';
+    }
+
+    private static String swapAlphaNumericQuery(String query) {
+        var splitIndex = leadingRunLength(query);
+        if (splitIndex <= 0 || splitIndex >= query.length()) {
+            return null;
+        }
+        var left = query.substring(0, splitIndex);
+        var right = query.substring(splitIndex);
+        if (isLowercaseLetters(left) && isDigits(right)) {
+            return right + left;
+        }
+        if (isDigits(left) && isLowercaseLetters(right)) {
+            return right + left;
         }
         return null;
     }
 
-    private static int wordBoundaryIndex(String text, String query) {
-        var index = text.indexOf(query);
-        while (index >= 0) {
-            if (index == 0 || !Character.isLetterOrDigit(text.charAt(index - 1))) {
-                return index;
-            }
-            index = text.indexOf(query, index + 1);
+    private static int leadingRunLength(String text) {
+        if (text.isEmpty()) {
+            return 0;
         }
-        return -1;
-    }
-
-    private static int fuzzySubsequenceScore(String query, String text) {
-        var score = 0;
-        var previousIndex = -1;
-        for (var queryIndex = 0; queryIndex < query.length(); queryIndex += 1) {
-            var match = text.indexOf(query.charAt(queryIndex), previousIndex + 1);
-            if (match < 0) {
-                return -1;
-            }
-            score += previousIndex < 0 ? match : match - previousIndex - 1;
-            previousIndex = match;
+        var firstIsDigit = Character.isDigit(text.charAt(0));
+        var firstIsLetter = isLowercaseLetter(text.charAt(0));
+        if (!firstIsDigit && !firstIsLetter) {
+            return 0;
         }
-        return score;
-    }
-
-    private static int fuzzyTokenScore(String query, String text) {
-        var bestScore = Integer.MAX_VALUE;
-        for (var token : text.split("[^a-z0-9]+")) {
-            if (token.isBlank()) {
+        var index = 1;
+        while (index < text.length()) {
+            var character = text.charAt(index);
+            if (firstIsDigit && Character.isDigit(character)) {
+                index += 1;
                 continue;
             }
-            var score = fuzzySubsequenceScore(query, token);
-            if (score >= 0 && score < bestScore) {
-                bestScore = score;
+            if (firstIsLetter && isLowercaseLetter(character)) {
+                index += 1;
+                continue;
+            }
+            break;
+        }
+        return index;
+    }
+
+    private static boolean isDigits(String text) {
+        if (text.isEmpty()) {
+            return false;
+        }
+        for (var index = 0; index < text.length(); index += 1) {
+            if (!Character.isDigit(text.charAt(index))) {
+                return false;
             }
         }
-        return bestScore == Integer.MAX_VALUE ? -1 : bestScore;
+        return true;
+    }
+
+    private static boolean isLowercaseLetters(String text) {
+        if (text.isEmpty()) {
+            return false;
+        }
+        for (var index = 0; index < text.length(); index += 1) {
+            if (!isLowercaseLetter(text.charAt(index))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean isLowercaseLetter(char character) {
+        return character >= 'a' && character <= 'z';
     }
     private static List<String> styleWrappedLines(String text, int width, UnaryOperator<String> style) {
         return TerminalText.wrapText(text, Math.max(1, width)).stream()
@@ -368,7 +438,13 @@ public final class PiModelSelector implements Component, Focusable {
 
     private record ModelSearchMatch(
         PiInteractiveSession.SelectableModel model,
-        int score
+        double score
+    ) {
+    }
+
+    private record FuzzySearchMatch(
+        boolean matches,
+        double score
     ) {
     }
 }
