@@ -289,17 +289,10 @@ public final class PiModelSelector implements Component, Focusable {
     }
 
     private static List<String> selectedDetailLines(PiInteractiveSession.SelectableModel model) {
-        var lines = new ArrayList<String>();
-        if (model.modelName() != null && !model.modelName().isBlank() && !model.modelName().equals(model.modelId())) {
-            lines.add(detailField("Model Name", model.modelName()));
+        if (model.modelName() == null || model.modelName().isBlank()) {
+            return List.of();
         }
-        if (model.reasoning()) {
-            lines.add(detailField("Thinking", model.thinkingLevel()));
-        }
-        if (model.contextWindow() > 0) {
-            lines.add(detailField("Context", formatContextWindow(model.contextWindow())));
-        }
-        return List.copyOf(lines);
+        return List.of(detailField("Model Name", model.modelName()));
     }
 
     private static String detailField(String label, String value) {
@@ -385,18 +378,6 @@ public final class PiModelSelector implements Component, Focusable {
             }
         }
         return bestScore == Integer.MAX_VALUE ? -1 : bestScore;
-    }
-
-    private static String formatContextWindow(int contextWindow) {
-        if (contextWindow < 1_000) {
-            return contextWindow + " ctx";
-        }
-        if (contextWindow < 1_000_000) {
-            var value = contextWindow / 1_000.0;
-            var formatted = value >= 100 ? Integer.toString((int) Math.round(value)) : String.format(Locale.ROOT, "%.0f", value);
-            return formatted + "k ctx";
-        }
-        return String.format(Locale.ROOT, "%.1fM ctx", contextWindow / 1_000_000.0);
     }
 
     private static String keyLabel(EditorAction action) {

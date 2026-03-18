@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 
 class PiModelSelectorTest {
     @Test
-    void rendersCurrentModelFirstWithRicherMetadata() {
+    void rendersCurrentModelFirstWithSelectedModelName() {
         var selector = new PiModelSelector(
             new PiInteractiveSession.ModelSelection(
                 List.of(
@@ -42,10 +42,8 @@ class PiModelSelectorTest {
         assertThat(lines).anyMatch(line -> line.contains("\u001b[1mgpt-5"));
         assertThat(lines).anyMatch(line -> line.contains("\u001b[1mModel Name:"));
         assertThat(lines).anyMatch(line -> line.contains("\u001b[90mGPT-5"));
-        assertThat(lines).anyMatch(line -> line.contains("\u001b[1mThinking:"));
-        assertThat(lines).anyMatch(line -> line.contains("\u001b[90mminimal"));
-        assertThat(lines).anyMatch(line -> line.contains("\u001b[1mContext:"));
-        assertThat(lines).anyMatch(line -> line.contains("\u001b[90m400k ctx"));
+        assertThat(lines).noneMatch(line -> line.contains("\u001b[1mThinking:"));
+        assertThat(lines).noneMatch(line -> line.contains("\u001b[1mContext:"));
         assertThat(lines).anyMatch(line -> line.contains("\u001b[32m\u2713"));
         assertThat(lines).anyMatch(line -> line.contains("\u2500\u2500\u2500\u2500"));
         assertThat(lines.getLast()).contains("\u2500\u2500\u2500\u2500");
