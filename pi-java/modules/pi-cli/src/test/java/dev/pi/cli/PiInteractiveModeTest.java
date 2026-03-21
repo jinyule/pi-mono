@@ -144,6 +144,37 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void stylesHeaderKeyHintsWithSharedKeyFormatter() {
+        var session = new FakeSession();
+        var terminal = new RecordingTerminal(100, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+        var previousApp = PiAppKeybindings.global();
+        try {
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(
+                PiAppAction.INTERRUPT, java.util.List.of("alt+x", "ctrl+c"),
+                PiAppAction.CLEAR, java.util.List.of("alt+c"),
+                PiAppAction.EXIT, java.util.List.of("alt+q"),
+                PiAppAction.SELECT_MODEL, java.util.List.of("alt+l", "ctrl+l"),
+                PiAppAction.EXPAND_TOOLS, java.util.List.of("alt+h"),
+                PiAppAction.TOGGLE_THINKING, java.util.List.of("alt+t"),
+                PiAppAction.PASTE_IMAGE, java.util.List.of("alt+z")
+            )));
+
+            mode.start();
+            waitFor(() -> terminal.output().contains("paste image"));
+
+            assertThat(terminal.output())
+                .contains("\u001b[2;37malt+x/ctrl+c\u001b[0m\u001b[90m interrupt\u001b[0m")
+                .contains("\u001b[90m \u2022 \u001b[0m")
+                .contains("\u001b[2;37malt+l/ctrl+l\u001b[0m\u001b[90m model\u001b[0m")
+                .contains("\u001b[2;37malt+z\u001b[0m\u001b[90m paste image\u001b[0m");
+        } finally {
+            PiAppKeybindings.setGlobal(previousApp);
+            mode.stop();
+        }
+    }
+
+    @Test
     void handlesCopySlashCommand() {
         var session = new FakeSession();
         var terminal = new VirtualTerminal(60, 12);

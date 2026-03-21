@@ -248,23 +248,19 @@ public final class PiInteractiveMode implements AutoCloseable {
         if (terminal.rows() >= 14) {
             lines.add(renderHeaderHintLine(
                 terminal.columns(),
-                "%s interrupt • %s clear • %s twice exit • %s empty exit".formatted(
-                    appKeyDisplay(PiAppAction.INTERRUPT, "interrupt"),
-                    appKeyDisplay(PiAppAction.CLEAR, "clear"),
-                    appKeyDisplay(PiAppAction.CLEAR, "clear"),
-                    appKeyDisplay(PiAppAction.EXIT, "exit")
-                )
+                PiCliKeyHints.rawHint(appKeyDisplay(PiAppAction.INTERRUPT, "interrupt"), "interrupt"),
+                PiCliKeyHints.rawHint(appKeyDisplay(PiAppAction.CLEAR, "clear"), "clear"),
+                PiCliKeyHints.rawHint(appKeyDisplay(PiAppAction.CLEAR, "clear"), "twice exit"),
+                PiCliKeyHints.rawHint(appKeyDisplay(PiAppAction.EXIT, "exit"), "empty exit")
             ));
         }
         if (terminal.rows() >= 16) {
             lines.add(renderHeaderHintLine(
                 terminal.columns(),
-                "%s model • %s tools • %s thinking • %s paste image".formatted(
-                    appKeyDisplay(PiAppAction.SELECT_MODEL, "select-model"),
-                    appKeyDisplay(PiAppAction.EXPAND_TOOLS, "expand-tools"),
-                    appKeyDisplay(PiAppAction.TOGGLE_THINKING, "toggle-thinking"),
-                    appKeyDisplay(PiAppAction.PASTE_IMAGE, "paste-image")
-                )
+                PiCliKeyHints.rawHint(appKeyDisplay(PiAppAction.SELECT_MODEL, "select-model"), "model"),
+                PiCliKeyHints.rawHint(appKeyDisplay(PiAppAction.EXPAND_TOOLS, "expand-tools"), "tools"),
+                PiCliKeyHints.rawHint(appKeyDisplay(PiAppAction.TOGGLE_THINKING, "toggle-thinking"), "thinking"),
+                PiCliKeyHints.rawHint(appKeyDisplay(PiAppAction.PASTE_IMAGE, "paste-image"), "paste image")
             ));
         }
         return String.join("\n", lines);
@@ -1151,8 +1147,12 @@ public final class PiInteractiveMode implements AutoCloseable {
         renderState(session.state());
     }
 
-    private static String renderHeaderHintLine(int width, String text) {
-        return PiCliAnsi.dim(TerminalText.truncateToWidth(text, Math.max(1, width), "..."));
+    private static String renderHeaderHintLine(int width, String... segments) {
+        return TerminalText.truncateToWidth(
+            String.join(PiCliAnsi.muted(" \u2022 "), java.util.List.of(segments)),
+            Math.max(1, width),
+            "..."
+        );
     }
 
     private void appendResourceSection(
