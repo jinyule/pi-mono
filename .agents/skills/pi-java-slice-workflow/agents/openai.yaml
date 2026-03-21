@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pi Java Workflow"
+  short_description: "Validated incremental workflow for pi-java slices."
+  default_prompt: "Use $pi-java-slice-workflow to continue the next pi-java slice in this repository."
