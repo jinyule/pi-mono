@@ -1149,7 +1149,7 @@ class PiInteractiveModeTest {
             var viewport = String.join("\n", terminal.getViewport());
             assertThat(viewport).contains("Queued follow-up");
             assertThat(viewport).contains("Follow-up: Queued");
-            assertThat(viewport).contains("alt+up/ctrl+y to edit queued messages");
+            assertThat(viewport).contains("alt+up/ctrl+y to edit all queued messages");
             assertThat(session.prompts).doesNotContain("Queued");
         } finally {
             PiAppKeybindings.setGlobal(previousApp);
@@ -1173,11 +1173,11 @@ class PiInteractiveModeTest {
             terminal.sendInput("Queued");
             terminal.sendInput("\u001b\r");
 
-            waitFor(() -> terminal.output().contains("to edit queued messages"));
+            waitFor(() -> terminal.output().contains("to edit all queued messages"));
             assertThat(terminal.output())
                 .contains("\u001b[90m↳ \u001b[0m")
                 .contains("\u001b[2;37malt+up/ctrl+y\u001b[0m")
-                .contains("\u001b[90m to edit queued messages\u001b[0m");
+                .contains("\u001b[90m to edit all queued messages\u001b[0m");
         } finally {
             PiAppKeybindings.setGlobal(previousApp);
             mode.stop();
@@ -1198,7 +1198,7 @@ class PiInteractiveModeTest {
         var viewport = String.join("\n", terminal.getViewport());
         assertThat(viewport).contains("Queued steering message");
         assertThat(viewport).contains("Steering: Queued");
-        assertThat(viewport).contains("alt+up to edit queued messages");
+        assertThat(viewport).contains("alt+up to edit all queued messages");
         assertThat(session.prompts).doesNotContain("Queued");
 
         mode.stop();
@@ -1245,7 +1245,7 @@ class PiInteractiveModeTest {
             terminal.sendInput("\u001bp");
 
             var viewport = String.join("\n", terminal.getViewport());
-            assertThat(viewport).contains("Restored 2 queued messages");
+            assertThat(viewport).contains("Restored 2 queued messages to editor");
             assertThat(viewport).contains("Queued one");
             assertThat(viewport).contains("Queued two");
             assertThat(viewport).contains("draft");
@@ -1270,7 +1270,7 @@ class PiInteractiveModeTest {
             mode.start();
             terminal.sendInput("\u001bp");
 
-            assertThat(String.join("\n", terminal.getViewport())).contains("No queued messages");
+            assertThat(String.join("\n", terminal.getViewport())).contains("No queued messages to restore");
         } finally {
             PiAppKeybindings.setGlobal(previousApp);
             mode.stop();
