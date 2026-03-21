@@ -157,7 +157,7 @@ public final class SelectList implements Component {
         var remainingWidth = Math.max(0, availableWidth - TerminalText.visibleWidth(truncatedDisplay));
         var truncatedDescription = "";
         if (description != null && remainingWidth > 1) {
-            truncatedDescription = TerminalText.truncateToWidth(description, remainingWidth - 1, "");
+            truncatedDescription = theme.compactDescription(description, remainingWidth - 1);
         }
 
         if (selected) {

@@ -107,6 +107,7 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - alphanumeric swap fallback is now mirrored for model search queries like `5gpt -> gpt-5`
 - search selection now stays on the first filtered result instead of snapping back to the current model after each query change
 - top-section scope summary and hint now truncate cleanly at narrow widths instead of overflowing the terminal
+- current-model checkmark now stays visible when compact row metadata must truncate at narrow widths
 
 ## Latest completed slices
 
@@ -128,21 +129,22 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - working tree slice: model selector search now uses tokenized fuzzy matching over `modelId + provider`, including alphanumeric swap fallback, matching the TypeScript fuzzy filter more closely
 - working tree slice: model selector now preserves the active filtered-row selection across search updates instead of re-selecting the current model each time
 - working tree slice: model selector top-section lines now truncate to terminal width, avoiding scope-summary and key-hint overflow in narrow layouts
+- working tree slice: compact model-selector rows now preserve the trailing current-model checkmark instead of chopping it off with provider metadata at narrow widths
 - working tree slice: interactive header hints and queued-message dequeue hints now render all configured app bindings instead of only the first one
 - working tree slice: queued-message dequeue hints now use shared key-hint styling, matching the selector hint hierarchy more closely
 - working tree slice: startup header hints now use shared key-hint styling, matching the queued-message and selector hint hierarchy more closely
 
 ## Remaining gaps
 
-1. Finish the last `PiModelSelector` minor row polish against TypeScript.
-2. Finish remaining settings/theme parity that still depends on wider CLI surface adoption.
-3. Add pending queue / compaction queue parity.
+1. Finish the last `PiModelSelector` edge-case polish against TypeScript.
+2. Add pending queue / compaction queue parity.
+3. Finish remaining settings/theme parity that still depends on wider CLI surface adoption.
 4. Finish footer edge cases and any remaining provider/git/cwd display drift.
 5. Close out the phase and hand off to phase 9.
 
 ## Recommended next slice
 
-Continue with the remaining `PiModelSelector` list-row/layout polish first. That is the smallest active gap and the current continuity point.
+Continue with the remaining `PiModelSelector` edge-case polish first if another selector-specific drift is visible; otherwise move to pending queue / compaction queue parity.
 
 ## Validation used during phase 8
 

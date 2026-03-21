@@ -43,14 +43,14 @@ Updated: 2026-03-18
   - Settings/theme parity is substantially advanced.
   - Footer parity is substantially advanced.
   - Interactive app key-hint parity continues to advance, including multi-binding rendering and shared key-hint styling in both startup header and queued-message hints.
-  - Model selector parity is active and is now down to the last minor row polish after compact-row truncation, multi-key scope-hint alignment, TypeScript-style tokenized fuzzy search alignment, selection-retention parity while searching, and top-section width handling at narrow terminal sizes.
+  - Model selector parity is active and is now down to the last minor edge-case polish after compact-row truncation, multi-key scope-hint alignment, TypeScript-style tokenized fuzzy search alignment, selection-retention parity while searching, top-section width handling at narrow terminal sizes, and current-checkmark preservation in truncated rows.
 - Phase 9 (package sources / distribution): not started.
 
 ## Current next slices
 
-1. Finish the remaining `PiModelSelector` top-section and minor row polish against the TypeScript behavior.
-2. Finish settings/theme parity that still depends on wider CLI surface adoption and package-source discovery.
-3. Add pending queue / compaction queue parity.
+1. Finish the remaining `PiModelSelector` edge-case polish against the TypeScript behavior.
+2. Add pending queue / compaction queue parity.
+3. Finish settings/theme parity that still depends on wider CLI surface adoption and package-source discovery.
 4. Finish the remaining footer parity edge cases.
 5. Start phase 9 package-source and distribution work.
 

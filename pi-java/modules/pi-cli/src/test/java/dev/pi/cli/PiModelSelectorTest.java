@@ -213,6 +213,36 @@ class PiModelSelectorTest {
     }
 
     @Test
+    void preservesCurrentCheckmarkWhenProviderMetadataIsTruncated() {
+        var selector = new PiModelSelector(
+            new PiInteractiveSession.ModelSelection(
+                List.of(new PiInteractiveSession.SelectableModel(
+                    0,
+                    "openai",
+                    "gpt-5",
+                    "GPT-5",
+                    "minimal",
+                    true,
+                    true,
+                    400_000
+                )),
+                List.of()
+            ),
+            ignored -> {
+            },
+            () -> {
+            },
+            () -> {
+            }
+        );
+
+        var lines = selector.render(14).stream().map(PiModelSelectorTest::stripAnsi).toList();
+
+        assertThat(lines).anyMatch(line -> line.contains(CHECKMARK));
+        assertThat(lines).noneMatch(line -> line.contains("[ope"));
+    }
+
+    @Test
     void rendersConfiguredKeybindingHints() {
         var previous = EditorKeybindings.global();
         try {

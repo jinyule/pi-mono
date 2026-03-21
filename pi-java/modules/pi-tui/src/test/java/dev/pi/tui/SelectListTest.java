@@ -322,4 +322,53 @@ class SelectListTest {
         assertThat(line).contains("<desc>");
         assertThat(line).endsWith("</desc>");
     }
+
+    @Test
+    void usesThemeCompactDescriptionOverride() {
+        var theme = new SelectListTheme() {
+            @Override
+            public String selectedPrefix(String text) {
+                return text;
+            }
+
+            @Override
+            public String selectedText(String text) {
+                return text;
+            }
+
+            @Override
+            public boolean rightAlignDescription() {
+                return false;
+            }
+
+            @Override
+            public String compactDescription(String text, int width) {
+                return "X";
+            }
+
+            @Override
+            public String description(String text) {
+                return text;
+            }
+
+            @Override
+            public String scrollInfo(String text) {
+                return text;
+            }
+
+            @Override
+            public String noMatch(String text) {
+                return text;
+            }
+        };
+        var list = new SelectList(
+            List.of(new SelectItem("alpha", "Alpha", "[openai] X")),
+            5,
+            theme
+        );
+
+        var line = list.render(12).getFirst();
+
+        assertThat(line).isEqualTo("\u2192 Alpha X");
+    }
 }

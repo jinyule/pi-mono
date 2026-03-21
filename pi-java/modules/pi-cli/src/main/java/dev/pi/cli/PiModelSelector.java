@@ -41,6 +41,11 @@ public final class PiModelSelector implements Component, Focusable {
         }
 
         @Override
+        public String compactDescription(String text, int width) {
+            return truncateMetadata(text, width);
+        }
+
+        @Override
         public String scrollInfo(String text) {
             return PiCliAnsi.muted(text);
         }
@@ -262,6 +267,37 @@ public final class PiModelSelector implements Component, Focusable {
             return null;
         }
         return PiCliAnsi.muted("  Model Name: " + model.modelName());
+    }
+
+    private static String truncateMetadata(String text, int width) {
+        if (text == null || text.isBlank() || width <= 0) {
+            return "";
+        }
+        if (TerminalText.visibleWidth(text) <= width) {
+            return text;
+        }
+        var splitIndex = text.lastIndexOf(' ');
+        if (splitIndex < 0) {
+            return TerminalText.truncateToWidth(text, width, "");
+        }
+        var head = text.substring(0, splitIndex).stripTrailing();
+        var tail = text.substring(splitIndex + 1).trim();
+        if (tail.isEmpty()) {
+            return TerminalText.truncateToWidth(text, width, "");
+        }
+        var tailWidth = TerminalText.visibleWidth(tail);
+        if (tailWidth >= width) {
+            return TerminalText.truncateToWidth(tail, width, "");
+        }
+        var headWidth = width - tailWidth - 1;
+        if (headWidth < 3) {
+            return tail;
+        }
+        var truncatedHead = TerminalText.truncateToWidth(head, headWidth, "...");
+        if (truncatedHead.isBlank()) {
+            return tail;
+        }
+        return truncatedHead + " " + tail;
     }
 
     private static String truncateLine(String text, int width) {
