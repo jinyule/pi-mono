@@ -21,6 +21,17 @@ description: Continue ongoing pi-java implementation and parity work in this rep
 - Keep the write set tight. Do not bundle unrelated cleanup into the same slice.
 - If the current phase is nearly done, finish the last small gap before switching phases.
 
+## Switch phases deliberately
+
+- Treat the active phase handoff as the source of truth for what comes next.
+- Do not jump from phase 8 to phase 9 just because phase 9 is defined. Finish the smallest active phase-8 gap first when the remaining work is still local parity polish.
+- Switch from phase 8 to phase 9 only when the remaining phase-8 items are no longer the current continuity point, or when the active handoff explicitly says to start package-source or distribution work.
+- When closing a phase:
+  - mark the phase status clearly in `pi-java/docs/tasks.md`
+  - record the closing state in the current phase handoff
+  - start the next phase from a new smallest slice instead of bundling "phase close + next phase implementation" into one large change
+- If there is doubt about whether to switch phases, stay on the current phase and finish one more small slice.
+
 ## Implement
 
 - Keep Java changes aligned with existing repo style and current module boundaries.
