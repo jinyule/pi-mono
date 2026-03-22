@@ -357,6 +357,43 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void keepsExactSeventyPercentContextUsageMuted() {
+        var session = new FakeSession()
+            .withContextWindow(10)
+            .withLatestAssistantUsage(3, 4, 7);
+        var terminal = new RecordingTerminal(100, 14);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        waitFor(() -> terminal.output().contains("70.0%/10 (auto)"));
+
+        assertThat(terminal.output())
+            .contains("\u001b[90m70.0%/10 (auto)\u001b[0m")
+            .doesNotContain("\u001b[33m70.0%/10 (auto)\u001b[0m")
+            .doesNotContain("\u001b[31m70.0%/10 (auto)\u001b[0m");
+
+        mode.stop();
+    }
+
+    @Test
+    void keepsExactNinetyPercentContextUsageInWarningState() {
+        var session = new FakeSession()
+            .withContextWindow(10)
+            .withLatestAssistantUsage(4, 5, 9);
+        var terminal = new RecordingTerminal(100, 14);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        waitFor(() -> terminal.output().contains("90.0%/10 (auto)"));
+
+        assertThat(terminal.output())
+            .contains("\u001b[33m90.0%/10 (auto)\u001b[0m")
+            .doesNotContain("\u001b[31m90.0%/10 (auto)\u001b[0m");
+
+        mode.stop();
+    }
+
+    @Test
     void preservesModelSummaryInNarrowFooter() {
         var session = new FakeSession().withContextWindow(16);
         var terminal = new VirtualTerminal(24, 14);
@@ -2076,6 +2113,32 @@ class PiInteractiveModeTest {
                     dev.pi.ai.model.StopReason.STOP,
                     null,
                     2L
+                ));
+            } catch (Exception exception) {
+                throw new AssertionError(exception);
+            }
+            syncState();
+            return this;
+        }
+
+        private FakeSession withLatestAssistantUsage(int inputTokens, int outputTokens, int totalTokens) {
+            try {
+                sessionManager.appendMessage(new Message.AssistantMessage(
+                    List.of(new TextContent("Usage marker", null)),
+                    state.model().api(),
+                    state.model().provider(),
+                    state.model().id(),
+                    new Usage(
+                        inputTokens,
+                        outputTokens,
+                        0,
+                        0,
+                        totalTokens,
+                        new Usage.Cost(0.0, 0.0, 0.0, 0.0, 0.0)
+                    ),
+                    dev.pi.ai.model.StopReason.STOP,
+                    null,
+                    System.currentTimeMillis()
                 ));
             } catch (Exception exception) {
                 throw new AssertionError(exception);

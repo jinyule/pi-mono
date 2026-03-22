@@ -47,6 +47,7 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - middle truncation
 - git-branch display and watcher
 - parenthesized provider badges for multi-provider model summaries
+- strict `>70` / `>90` context-usage color thresholds
 
 ### Interactive app keybindings
 
@@ -160,6 +161,7 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - working tree slice: model-cycle status now drops the provider prefix and prefers `model.name`, matching the TypeScript `Switched to <name|id>` copy more closely
 - working tree slice: model-cycle fallback copy now distinguishes scoped-vs-global single-model states, matching the TypeScript behavior more closely
 - working tree slice: footer model summaries now use TypeScript-style parenthesized provider badges instead of `provider/model`
+- working tree slice: footer context-usage coloring now stays muted at exactly `70.0%` and warning-colored at exactly `90.0%`, matching the TypeScript `>70` / `>90` threshold logic
 - working tree slice: tree navigation success now uses the TypeScript `Navigated to selected point` wording
 - working tree slice: selecting the current tree node now uses the TypeScript `Already at this point` wording instead of reporting a navigation success
 - working tree slice: empty `/tree` now uses the TypeScript `No entries in session` wording

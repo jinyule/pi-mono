@@ -41,7 +41,7 @@ Updated: 2026-03-18
 - Phase 8 (behavior parity): in progress.
   - Session selector parity is substantially advanced.
   - Settings/theme parity is substantially advanced.
-  - Footer parity is substantially advanced, including TypeScript-style parenthesized provider badges in multi-provider model summaries.
+  - Footer parity is substantially advanced, including TypeScript-style parenthesized provider badges in multi-provider model summaries and strict `>70` / `>90` context-usage color thresholds.
   - Interactive queue/key-hint parity continues to advance, including shared key-hint styling, TypeScript-aligned dequeue copy in queued-message hints and restore statuses, muted queued-message status lines, and narrow-width queued-line truncation instead of wrapping.
   - Interactive command/status copy continues to converge, including TypeScript-aligned tree-navigation success wording, tree current-point wording, tree empty-state wording, fork-selector success wording, reload success wording, reload warning-state wording, reload streaming-warning wording, unsupported-thinking wording, new-session success wording, and empty-compaction warning wording.
   - Model selector parity is active and is now down to the last minor edge-case polish after compact-row truncation, multi-key scope-hint alignment, TypeScript-style tokenized fuzzy search alignment, selection-retention parity while searching, top-section width handling at narrow terminal sizes, current-checkmark preservation in truncated rows, TypeScript-style `Model: <id>` status copy after selection, TypeScript-style providerless model-cycle status copy with model-name preference, and scoped-vs-global single-model fallback copy.

@@ -459,10 +459,10 @@ public final class PiInteractiveMode implements AutoCloseable {
         if (autoCompactionEnabled) {
             plain += " (auto)";
         }
-        if (contextUsage.percent() != null && contextUsage.percent() >= 90.0) {
+        if (contextUsage.percent() != null && contextUsage.percent() > 90.0) {
             return new FooterSegment(plain, PiCliAnsi.error(plain));
         }
-        if (contextUsage.percent() != null && contextUsage.percent() >= 70.0) {
+        if (contextUsage.percent() != null && contextUsage.percent() > 70.0) {
             return new FooterSegment(plain, PiCliAnsi.warning(plain));
         }
         return new FooterSegment(plain, PiCliAnsi.muted(plain));
