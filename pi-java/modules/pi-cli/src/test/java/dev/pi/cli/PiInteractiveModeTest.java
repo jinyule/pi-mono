@@ -441,7 +441,7 @@ class PiInteractiveModeTest {
         terminal.sendInput("/compact");
         terminal.sendInput("\r");
 
-        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Compacted context")));
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("?/16 (auto)")));
 
         var viewport = terminal.getViewport();
         var footerTail = String.join("\n", viewport.subList(Math.max(0, viewport.size() - 8), viewport.size()));
@@ -678,7 +678,19 @@ class PiInteractiveModeTest {
         terminal.sendInput("/compact Focus on latest work");
         terminal.sendInput("\r");
 
-        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Compacted context")));
+        waitFor(() -> {
+            if (session.state().messages().isEmpty()) {
+                return false;
+            }
+            var firstMessage = session.state().messages().getFirst();
+            if (!(firstMessage instanceof AgentMessage.UserMessage compactedSummary)) {
+                return false;
+            }
+            if (compactedSummary.content().isEmpty() || !(compactedSummary.content().getFirst() instanceof TextContent textContent)) {
+                return false;
+            }
+            return textContent.text().contains("Focus on latest work");
+        });
 
         assertThat(session.prompts).containsExactly("Hello", "Second");
         var compactedSummary = (AgentMessage.UserMessage) session.state().messages().getFirst();
@@ -687,7 +699,7 @@ class PiInteractiveModeTest {
             .contains("[User]: Hello")
             .contains("[Assistant]: Ack: Hello");
         assertThat(String.join("\n", terminal.getViewport()))
-            .contains("Compacted context");
+            .doesNotContain("Compacted context");
 
         mode.stop();
     }

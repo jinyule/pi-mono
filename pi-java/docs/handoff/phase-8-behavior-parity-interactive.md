@@ -51,6 +51,7 @@ Status: in progress
 - startup compaction wording
 - new-session success wording
 - empty-compaction warning wording
+- manual compaction now relies on the compaction summary itself instead of a separate `Compacted context` success banner
 
 ## Recent interactive slices
 
@@ -61,6 +62,7 @@ Status: in progress
 - `90e3ab19` `feat(pi-java): align footer usage thresholds`
 - `/reload` success now uses `Reloaded extensions, skills, prompts, themes`, matching the current TypeScript wording
 - queued follow-up and steering submissions now rely on the queued-message panel instead of separate `Queued ...` success status lines
+- manual compaction success now relies on the compaction summary message instead of a separate `Compacted context` status line
 
 ## Next smallest slice
 
