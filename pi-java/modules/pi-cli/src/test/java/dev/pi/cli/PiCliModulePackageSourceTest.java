@@ -94,6 +94,70 @@ class PiCliModulePackageSourceTest {
         );
     }
 
+    @Test
+    void createDefaultSessionLoadsThemesFromInstalledProjectNpmPackageSources() throws Exception {
+        var cwd = tempDir.resolve("workspace");
+        var installedPackage = cwd.resolve(".pi").resolve("npm").resolve("node_modules").resolve("@acme").resolve("theme-pack");
+        Files.createDirectories(installedPackage.resolve("themes"));
+        Files.writeString(installedPackage.resolve("themes").resolve("npm-theme.json"), """
+            {
+              "name": "npm-theme",
+              "colors": {
+                "accent": "#112233",
+                "muted": 244,
+                "warning": "#ffcc00",
+                "success": 46,
+                "error": 196
+              }
+            }
+            """);
+        Files.createDirectories(cwd.resolve(".pi"));
+        Files.writeString(
+            cwd.resolve(".pi").resolve("settings.json"),
+            """
+            {
+              "packages": [
+                "npm:@acme/theme-pack"
+              ]
+            }
+            """,
+            StandardCharsets.UTF_8
+        );
+
+        var session = createSession(cwd, List.of("--print"));
+
+        assertThat(session.settingsSelection().availableThemes()).contains("npm-theme", "dark", "light");
+    }
+
+    @Test
+    void createDefaultSessionExposesExtensionPathsFromInstalledProjectGitPackageSources() throws Exception {
+        var cwd = tempDir.resolve("workspace");
+        var installedPackage = cwd.resolve(".pi").resolve("git").resolve("github.com").resolve("acme").resolve("extension-pack");
+        Files.createDirectories(installedPackage.resolve("dist").resolve("extensions"));
+        Files.writeString(installedPackage.resolve("dist").resolve("extensions").resolve("git-demo.jar"), "");
+        Files.createDirectories(cwd.resolve(".pi"));
+        Files.writeString(
+            cwd.resolve(".pi").resolve("settings.json"),
+            """
+            {
+              "packages": [
+                {
+                  "source": "git:https://github.com/acme/extension-pack.git",
+                  "extensions": ["dist/extensions/git-demo.jar"]
+                }
+              ]
+            }
+            """,
+            StandardCharsets.UTF_8
+        );
+
+        var session = createSession(cwd, List.of("--print"));
+
+        assertThat(session.startupResources().extensionPaths()).containsExactly(
+            installedPackage.resolve("dist").resolve("extensions").resolve("git-demo.jar").toAbsolutePath().normalize().toString()
+        );
+    }
+
     private PiInteractiveSession createSession(Path cwd, List<String> argv) throws Exception {
         var module = new PiCliModule(
             cwd,

@@ -61,13 +61,53 @@ class PackageSourceDiscoveryTest {
     }
 
     @Test
-    void ignoresRemotePackageSourcesUntilJavaPackageInstallationExists() {
-        var discovery = new PackageSourceDiscovery(tempDir.resolve("workspace"), tempDir.resolve("agent"));
+    void resolvesInstalledProjectNpmPackages() throws Exception {
+        var cwd = tempDir.resolve("workspace");
+        var agentDir = tempDir.resolve("agent");
+        var installedPackage = cwd.resolve(".pi").resolve("npm").resolve("node_modules").resolve("@acme").resolve("theme-pack");
+        Files.createDirectories(installedPackage.resolve("dist").resolve("themes"));
+        Files.writeString(installedPackage.resolve("dist").resolve("themes").resolve("ocean.json"), "{}");
+        var discovery = new PackageSourceDiscovery(cwd, agentDir);
 
         assertThat(discovery.resolve(
-            List.of(new PackageSource("npm:@scope/theme-pack")),
-            List.of(new PackageSource("git:https://example.com/acme/pkg.git")),
+            List.of(),
+            List.of(new PackageSource("npm:@acme/theme-pack@1.2.3", List.of(), List.of(), List.of(), List.of("dist/themes"))),
             PackageSourceDiscovery.ResourceType.THEMES
-        )).isEmpty();
+        )).containsExactly(installedPackage.resolve("dist").resolve("themes").toAbsolutePath().normalize());
+    }
+
+    @Test
+    void resolvesInstalledGlobalNpmPackagesWhenRootIsKnown() throws Exception {
+        var cwd = tempDir.resolve("workspace");
+        var agentDir = tempDir.resolve("agent");
+        var globalNpmRoot = tempDir.resolve("global-node-modules");
+        var installedPackage = globalNpmRoot.resolve("@acme").resolve("theme-pack");
+        Files.createDirectories(installedPackage.resolve("themes"));
+        Files.writeString(installedPackage.resolve("themes").resolve("midnight.json"), "{}");
+
+        var discovery = new PackageSourceDiscovery(cwd, agentDir, globalNpmRoot);
+
+        assertThat(discovery.resolve(
+            List.of(new PackageSource("npm:@acme/theme-pack")),
+            List.of(),
+            PackageSourceDiscovery.ResourceType.THEMES
+        )).containsExactly(installedPackage.resolve("themes").toAbsolutePath().normalize());
+    }
+
+    @Test
+    void resolvesInstalledGitPackages() throws Exception {
+        var cwd = tempDir.resolve("workspace");
+        var agentDir = tempDir.resolve("agent");
+        var installedPackage = agentDir.resolve("git").resolve("github.com").resolve("acme").resolve("theme-pack");
+        Files.createDirectories(installedPackage.resolve("dist").resolve("themes"));
+        Files.writeString(installedPackage.resolve("dist").resolve("themes").resolve("git-theme.json"), "{}");
+
+        var discovery = new PackageSourceDiscovery(cwd, agentDir);
+
+        assertThat(discovery.resolve(
+            List.of(new PackageSource("git:https://github.com/acme/theme-pack.git@v1", List.of(), List.of(), List.of(), List.of("dist/themes"))),
+            List.of(),
+            PackageSourceDiscovery.ResourceType.THEMES
+        )).containsExactly(installedPackage.resolve("dist").resolve("themes").toAbsolutePath().normalize());
     }
 }

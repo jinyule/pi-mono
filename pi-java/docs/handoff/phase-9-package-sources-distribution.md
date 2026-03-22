@@ -44,10 +44,16 @@ Add the missing Java-side packaging surface that phase 8 deliberately deferred:
   - scope-relative package-source path resolution
   - project package-source themes showing up in `settings`
   - project package-source extensions showing up in startup resources
+- Extended `PackageSourceDiscovery` so remote package sources now resolve already-installed package roots too:
+  - project `npm:` packages under `<cwd>/.pi/npm/node_modules/...`
+  - global `npm:` packages under the detected global `npm root -g`
+  - project/global `git:` packages under the same `.../.pi/git/<host>/<path>` layout as the TypeScript app
+- Added tests for installed project/global npm package roots and installed git package roots.
+- Added CLI tests proving installed project `npm:` theme packages and installed project `git:` extension packages now affect startup behavior.
 
 ## Next smallest slice
 
-Carry package-source discovery past local paths: detect already-installed `npm:` / `git:` package roots and start feeding discovered skill/prompt/theme resources into the Java CLI surfaces that already exist.
+Start consuming discovered package resources beyond raw paths: wire skill/prompt/theme resource surfaces into the Java CLI paths that already exist, instead of stopping at startup path discovery.
 
 ## Validation
 

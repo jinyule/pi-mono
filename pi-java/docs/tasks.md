@@ -52,11 +52,12 @@ Updated: 2026-03-22
   - Typed settings support for `packages` and `enabledModels` is now in place in `pi-session`, including round-trip persistence for plain package-source strings and filtered package-source objects.
   - Local package sources now participate in Java-side startup discovery for themes and extensions, using the same scope-relative base directories as the TypeScript app (`~/.pi/agent` for global settings, `<cwd>/.pi` for project settings).
   - Theme package sources are also re-read on session reload, so settings-file changes can add or remove custom themes without restarting the CLI.
-  - Remote `npm:` / `git:` package sources are still config-only for now; actual installed-package discovery and auth-backed package management remain later phase-9 work.
+  - Already-installed `npm:` / `git:` package sources now participate in Java-side theme/extension discovery too, using the same installed-root layout as the TypeScript app for project packages and git packages.
+  - Package installation and auth-backed package management are still later phase-9 work; Java currently discovers what is already on disk.
 
 ## Current next slices
 
-1. Extend package-source discovery beyond local paths: installed `npm:` / `git:` package roots plus resource-backed skill/prompt/theme surfaces.
+1. Start consuming discovered package resources beyond raw paths: wire skill/prompt/theme resource surfaces into the Java CLI flows that already exist.
 2. Add Java-side auth storage and interactive `/login` / `/logout`.
 3. Wire `enabledModels` into saved scoped-model selection and `/scoped-models`.
 4. Decide whether Java should keep synchronous compaction or grow TypeScript-style async compaction queueing.
