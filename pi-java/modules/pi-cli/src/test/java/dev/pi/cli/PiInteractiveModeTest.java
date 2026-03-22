@@ -553,14 +553,14 @@ class PiInteractiveModeTest {
 
         terminal.sendInput("\r");
 
-        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Forked to new session")));
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Branched to new session")));
         terminal.sendInput("!");
         terminal.sendInput("\r");
 
         assertThat(session.prompts).containsExactly("Hello", "!Hello");
         assertThat(session.sessionId()).isNotEqualTo(originalSessionId);
         assertThat(String.join("\n", terminal.getViewport()))
-            .contains("Forked to new session")
+            .contains("Branched to new session")
             .contains("Assistant: Ack: !Hello")
             .doesNotContain("You: Hello\n\nAssistant: Ack: Hello");
 

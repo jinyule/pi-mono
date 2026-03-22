@@ -770,7 +770,7 @@ public final class PiInteractiveMode implements AutoCloseable {
         try {
             var result = session.fork(entryId);
             input.setValue(result.selectedText() == null ? "" : result.selectedText());
-            manualStatus = "Forked to new session";
+            manualStatus = "Branched to new session";
         } catch (RuntimeException exception) {
             manualStatus = "Error: " + rootMessage(exception);
         }
