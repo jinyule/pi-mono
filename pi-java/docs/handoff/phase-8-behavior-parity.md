@@ -111,6 +111,7 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - search selection now stays on the first filtered result instead of snapping back to the current model after each query change
 - top-section scope summary and hint now truncate cleanly at narrow widths instead of overflowing the terminal
 - current-model checkmark now stays visible when compact row metadata must truncate at narrow widths
+- selector completion status now matches the TypeScript `Model: <id>` copy instead of the older Java-specific `Selected provider/model` wording
 
 ## Latest completed slices
 
@@ -139,6 +140,7 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - working tree slice: dequeue hint and restore status copy now match the TypeScript wording for queued-message editing and restore feedback
 - working tree slice: queued steering/follow-up status lines now use muted ANSI styling, matching the TypeScript pending-message display hierarchy more closely
 - working tree slice: queued steering/follow-up lines now truncate to the available status width instead of wrapping, matching the TypeScript `TruncatedText` behavior more closely
+- working tree slice: model-selector completion status now uses the TypeScript `Model: <id>` copy instead of the older Java-specific selection wording
 
 ## Remaining gaps
 

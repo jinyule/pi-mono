@@ -1338,7 +1338,7 @@ class PiInteractiveModeTest {
             terminal.sendInput("\r");
 
             waitFor(() -> "claude-3-7-sonnet".equals(session.lastModelIdChange));
-            assertThat(String.join("\n", terminal.getViewport())).contains("Selected anthropic/claude-3-7-sonnet");
+            assertThat(String.join("\n", terminal.getViewport())).contains("Model: claude-3-7-sonnet");
         } finally {
             PiAppKeybindings.setGlobal(previousApp);
             mode.stop();
