@@ -147,6 +147,7 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - working tree slice: model-cycle status now drops the provider prefix and prefers `model.name`, matching the TypeScript `Switched to <name|id>` copy more closely
 - working tree slice: model-cycle fallback copy now distinguishes scoped-vs-global single-model states, matching the TypeScript behavior more closely
 - working tree slice: footer model summaries now use TypeScript-style parenthesized provider badges instead of `provider/model`
+- working tree slice: tree navigation success now uses the TypeScript `Navigated to selected point` wording
 
 ## Remaining gaps
 

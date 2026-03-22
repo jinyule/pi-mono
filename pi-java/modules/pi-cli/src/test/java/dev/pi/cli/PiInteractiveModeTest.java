@@ -483,13 +483,13 @@ class PiInteractiveModeTest {
         terminal.sendInput("\u001b[A");
         terminal.sendInput("\r");
 
-        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Moved to selected tree entry")));
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Navigated to selected point")));
         terminal.sendInput("!");
         terminal.sendInput("\r");
 
         assertThat(session.prompts).containsExactly("Hello", "!Hello");
         assertThat(String.join("\n", terminal.getViewport()))
-            .contains("Moved to selected tree entry")
+            .contains("Navigated to selected point")
             .contains("Assistant: Ack: !Hello")
             .doesNotContain("You: Hello\n\nAssistant: Ack: Hello");
 

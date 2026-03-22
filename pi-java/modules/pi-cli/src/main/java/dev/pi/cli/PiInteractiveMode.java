@@ -756,7 +756,7 @@ public final class PiInteractiveMode implements AutoCloseable {
         try {
             var result = session.navigateTree(targetId);
             input.setValue(result.editorText() == null ? "" : result.editorText());
-            manualStatus = "Moved to selected tree entry";
+            manualStatus = "Navigated to selected point";
         } catch (RuntimeException exception) {
             manualStatus = "Error: " + rootMessage(exception);
         }
