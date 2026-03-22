@@ -216,14 +216,14 @@ class PiInteractiveModeTest {
     @Test
     void handlesSessionSlashCommand() {
         var session = new FakeSession().withSessionName("Scratch").withMessageHistory("Hello");
-        var terminal = new VirtualTerminal(120, 40);
+        var terminal = new VirtualTerminal(120, 100);
         var mode = new PiInteractiveMode(session, terminal);
 
         mode.start();
         terminal.sendInput("/session");
         terminal.sendInput("\r");
 
-        assertThat(String.join("\n", terminal.getViewport()))
+        assertThat(String.join("\n", terminal.getScrollBuffer()))
             .contains("Session Info")
             .contains("Name: Scratch")
             .contains("File: In-memory")
@@ -237,20 +237,43 @@ class PiInteractiveModeTest {
     @Test
     void handlesHotkeysSlashCommand() {
         var session = new FakeSession();
-        var terminal = new VirtualTerminal(120, 80);
+        var terminal = new VirtualTerminal(120, 100);
         var mode = new PiInteractiveMode(session, terminal);
 
         mode.start();
         terminal.sendInput("/hotkeys");
         terminal.sendInput("\r");
 
-        assertThat(String.join("\n", terminal.getViewport()))
+        assertThat(String.join("\n", terminal.getScrollBuffer()))
             .contains("Keyboard Shortcuts")
             .contains("Navigation")
             .contains("Editing")
             .contains("Other")
             .contains("Enter - Send message")
+            .contains("Backspace - Delete character backwards")
+            .contains("Tab - Path completion / accept autocomplete")
             .contains("Ctrl+L - Open model selector");
+
+        mode.stop();
+    }
+
+    @Test
+    void sessionAndHotkeysCommandsPersistInTranscriptOrder() {
+        var session = new FakeSession().withSessionName("Scratch").withMessageHistory("Hello");
+        var terminal = new VirtualTerminal(120, 100);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("/session");
+        terminal.sendInput("\r");
+        terminal.sendInput("/hotkeys");
+        terminal.sendInput("\r");
+
+        var scrollback = String.join("\n", terminal.getScrollBuffer());
+        assertThat(scrollback).contains("Assistant: Ack: Hello");
+        assertThat(scrollback).contains("Session Info");
+        assertThat(scrollback).contains("Keyboard Shortcuts");
+        assertThat(scrollback.indexOf("Session Info")).isLessThan(scrollback.indexOf("Keyboard Shortcuts"));
 
         mode.stop();
     }

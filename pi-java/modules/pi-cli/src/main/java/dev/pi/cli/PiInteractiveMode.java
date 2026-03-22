@@ -23,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -55,6 +56,8 @@ public final class PiInteractiveMode implements AutoCloseable {
     private long lastEscapeTimeMillis;
     private boolean expandToolDetails;
     private final List<ImageContent> pendingImages = new ArrayList<>();
+    private final List<TranscriptNote> transcriptNotes = new ArrayList<>();
+    private long transcriptNoteSequence;
 
     public PiInteractiveMode(PiInteractiveSession session) {
         this(session, new ProcessTerminal());
@@ -308,10 +311,24 @@ public final class PiInteractiveMode implements AutoCloseable {
     }
 
     private String renderTranscript(AgentState state) {
-        var lines = new ArrayList<String>();
         var hideThinking = session.settingsSelection().hideThinkingBlock();
+        var entries = new ArrayList<TranscriptEntry>();
+        long order = 0;
         for (var message : state.messages()) {
-            lines.add(PiMessageRenderer.renderMessage(message, hideThinking, expandToolDetails));
+            entries.add(new TranscriptEntry(
+                message.timestamp(),
+                order,
+                PiMessageRenderer.renderMessage(message, hideThinking, expandToolDetails)
+            ));
+            order += 1;
+        }
+        for (var note : transcriptNotes) {
+            entries.add(new TranscriptEntry(note.timestamp(), 1_000_000L + note.sequence(), note.text()));
+        }
+        entries.sort(Comparator.comparingLong(TranscriptEntry::timestamp).thenComparingLong(TranscriptEntry::order));
+        var lines = new ArrayList<String>();
+        for (var entry : entries) {
+            lines.add(entry.text());
         }
         if (state.isStreaming() && state.streamMessage() != null) {
             lines.add(PiMessageRenderer.renderStreamingMessage(state.streamMessage(), hideThinking, expandToolDetails));
@@ -859,6 +876,7 @@ public final class PiInteractiveMode implements AutoCloseable {
         }
         try {
             var result = session.navigateTree(targetId);
+            clearTranscriptNotes();
             input.setValue(result.editorText() == null ? "" : result.editorText());
             manualStatus = "Navigated to selected point";
         } catch (RuntimeException exception) {
@@ -873,6 +891,7 @@ public final class PiInteractiveMode implements AutoCloseable {
     private void selectForkEntry(String entryId, dev.pi.tui.OverlayHandle overlay) {
         try {
             var result = session.fork(entryId);
+            clearTranscriptNotes();
             input.setValue(result.selectedText() == null ? "" : result.selectedText());
             updateTerminalTitle();
             manualStatus = "Branched to new session";
@@ -906,6 +925,7 @@ public final class PiInteractiveMode implements AutoCloseable {
         }
         try {
             session.compact(customInstructions);
+            clearTranscriptNotes();
             manualStatus = null;
         } catch (RuntimeException exception) {
             var message = rootMessage(exception);
@@ -953,7 +973,8 @@ public final class PiInteractiveMode implements AutoCloseable {
 
     private void handleSessionCommand() {
         try {
-            manualStatus = formatSessionStats(session.sessionStats(), session.sessionName());
+            manualStatus = null;
+            appendTranscriptNote(formatSessionStats(session.sessionStats(), session.sessionName()));
         } catch (RuntimeException exception) {
             manualStatus = "Error: " + rootMessage(exception);
         }
@@ -961,7 +982,8 @@ public final class PiInteractiveMode implements AutoCloseable {
     }
 
     private void handleHotkeysCommand() {
-        manualStatus = formatHotkeys();
+        manualStatus = null;
+        appendTranscriptNote(formatHotkeys());
         renderState(session.state());
     }
 
@@ -988,6 +1010,18 @@ public final class PiInteractiveMode implements AutoCloseable {
             current = current.getCause();
         }
         return current.getMessage() == null ? current.getClass().getSimpleName() : current.getMessage();
+    }
+
+    private void appendTranscriptNote(String text) {
+        if (text == null || text.isBlank()) {
+            return;
+        }
+        transcriptNotes.add(new TranscriptNote(System.currentTimeMillis(), transcriptNoteSequence, text));
+        transcriptNoteSequence += 1;
+    }
+
+    private void clearTranscriptNotes() {
+        transcriptNotes.clear();
     }
 
     private void updateTerminalTitle() {
@@ -1143,6 +1177,7 @@ public final class PiInteractiveMode implements AutoCloseable {
     private void handleResumeCommand() {
         try {
             session.resume().toCompletableFuture().join();
+            clearTranscriptNotes();
             manualStatus = "Resumed session";
         } catch (RuntimeException exception) {
             manualStatus = "Error: " + rootMessage(exception);
@@ -1269,6 +1304,7 @@ public final class PiInteractiveMode implements AutoCloseable {
     private void handleNewSessionCommand() {
         try {
             session.newSession();
+            clearTranscriptNotes();
             input.setValue("");
             pendingImages.clear();
             updateTerminalTitle();
@@ -1498,17 +1534,19 @@ public final class PiInteractiveMode implements AutoCloseable {
         lines.add("Editing");
         lines.add(editorKeyDisplay(dev.pi.tui.EditorAction.SUBMIT, "enter") + " - Send message");
         lines.add(editorKeyDisplay(dev.pi.tui.EditorAction.NEW_LINE, "alt+enter") + " - New line");
+        lines.add(editorKeyDisplay(dev.pi.tui.EditorAction.DELETE_CHAR_BACKWARD, "backspace") + " - Delete character backwards");
+        lines.add(editorKeyDisplay(dev.pi.tui.EditorAction.DELETE_CHAR_FORWARD, "delete") + " - Delete character forwards");
         lines.add(editorKeyDisplay(dev.pi.tui.EditorAction.DELETE_WORD_BACKWARD, "ctrl+w") + " - Delete word backwards");
         lines.add(editorKeyDisplay(dev.pi.tui.EditorAction.DELETE_WORD_FORWARD, "alt+d") + " - Delete word forwards");
         lines.add(editorKeyDisplay(dev.pi.tui.EditorAction.DELETE_TO_LINE_START, "ctrl+u") + " - Delete to start of line");
         lines.add(editorKeyDisplay(dev.pi.tui.EditorAction.DELETE_TO_LINE_END, "ctrl+k") + " - Delete to end of line");
-        lines.add(editorKeyDisplay(dev.pi.tui.EditorAction.YANK, "ctrl+y") + " - Paste deleted text");
-        lines.add(editorKeyDisplay(dev.pi.tui.EditorAction.YANK_POP, "alt+y") + " - Cycle pasted text");
+        lines.add(editorKeyDisplay(dev.pi.tui.EditorAction.YANK, "ctrl+y") + " - Paste the most-recently-deleted text");
+        lines.add(editorKeyDisplay(dev.pi.tui.EditorAction.YANK_POP, "alt+y") + " - Cycle through deleted text after pasting");
         lines.add(editorKeyDisplay(dev.pi.tui.EditorAction.UNDO, "ctrl+-") + " - Undo");
         lines.add("");
         lines.add("Other");
-        lines.add(editorKeyDisplay(dev.pi.tui.EditorAction.SESSION_SCOPE_TOGGLE, "tab") + " - Accept autocomplete / toggle selector scope");
-        lines.add(capitalizeKey(appKeyDisplay(PiAppAction.INTERRUPT, "escape")) + " - Interrupt / cancel");
+        lines.add(editorKeyDisplay(dev.pi.tui.EditorAction.SESSION_SCOPE_TOGGLE, "tab") + " - Path completion / accept autocomplete");
+        lines.add(capitalizeKey(appKeyDisplay(PiAppAction.INTERRUPT, "escape")) + " - Cancel autocomplete / abort streaming");
         lines.add(capitalizeKey(appKeyDisplay(PiAppAction.CLEAR, "ctrl+c")) + " - Clear editor");
         lines.add(capitalizeKey(appKeyDisplay(PiAppAction.EXIT, "ctrl+d")) + " - Exit when editor is empty");
         lines.add(capitalizeKey(appKeyDisplay(PiAppAction.SUSPEND, "ctrl+z")) + " - Suspend");
@@ -1516,10 +1554,10 @@ public final class PiInteractiveMode implements AutoCloseable {
         lines.add(capitalizeKey(appKeyDisplay(PiAppAction.CYCLE_MODEL_FORWARD, "ctrl+p")) + " - Cycle models forward");
         lines.add(capitalizeKey(appKeyDisplay(PiAppAction.CYCLE_MODEL_BACKWARD, "shift+ctrl+p")) + " - Cycle models backward");
         lines.add(capitalizeKey(appKeyDisplay(PiAppAction.SELECT_MODEL, "ctrl+l")) + " - Open model selector");
-        lines.add(capitalizeKey(appKeyDisplay(PiAppAction.EXPAND_TOOLS, "ctrl+o")) + " - Toggle tool details");
-        lines.add(capitalizeKey(appKeyDisplay(PiAppAction.TOGGLE_THINKING, "ctrl+t")) + " - Toggle thinking blocks");
-        lines.add(capitalizeKey(appKeyDisplay(PiAppAction.EXTERNAL_EDITOR, "ctrl+g")) + " - Open external editor");
-        lines.add(capitalizeKey(appKeyDisplay(PiAppAction.FOLLOW_UP, "alt+enter")) + " - Queue follow-up");
+        lines.add(capitalizeKey(appKeyDisplay(PiAppAction.EXPAND_TOOLS, "ctrl+o")) + " - Toggle tool output expansion");
+        lines.add(capitalizeKey(appKeyDisplay(PiAppAction.TOGGLE_THINKING, "ctrl+t")) + " - Toggle thinking block visibility");
+        lines.add(capitalizeKey(appKeyDisplay(PiAppAction.EXTERNAL_EDITOR, "ctrl+g")) + " - Edit message in external editor");
+        lines.add(capitalizeKey(appKeyDisplay(PiAppAction.FOLLOW_UP, "alt+enter")) + " - Queue follow-up message");
         lines.add(capitalizeKey(appKeyDisplay(PiAppAction.DEQUEUE, "alt+up")) + " - Restore queued messages");
         lines.add(capitalizeKey(appKeyDisplay(PiAppAction.PASTE_IMAGE, "ctrl+v")) + " - Paste image from clipboard");
         appendConfiguredAppHotkey(lines, PiAppAction.NEW_SESSION, "New session");
@@ -1631,5 +1669,19 @@ public final class PiInteractiveMode implements AutoCloseable {
             return normalized;
         }
         return normalized.substring(slashIndex + 1);
+    }
+
+    private record TranscriptNote(
+        long timestamp,
+        long sequence,
+        String text
+    ) {
+    }
+
+    private record TranscriptEntry(
+        long timestamp,
+        long order,
+        String text
+    ) {
     }
 }
