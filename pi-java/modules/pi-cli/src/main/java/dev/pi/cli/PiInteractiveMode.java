@@ -504,7 +504,7 @@ public final class PiInteractiveMode implements AutoCloseable {
         var providerPrefix = availableProviderCount > 1
             && state.model().provider() != null
             && !state.model().provider().isBlank()
-            ? state.model().provider() + "/"
+            ? "(" + state.model().provider() + ") "
             : "";
         var modelLabel = state.model().id();
         var providerWidth = TerminalText.visibleWidth(providerPrefix);

@@ -440,7 +440,7 @@ class PiInteractiveModeTest {
         mode.start();
         waitFor(() -> terminal.output().contains("test-model"));
 
-        assertThat(terminal.output()).contains("\u001b[90mopenai/\u001b[0m\u001b[1mtest-model\u001b[0m");
+        assertThat(terminal.output()).contains("\u001b[90m(openai) \u001b[0m\u001b[1mtest-model\u001b[0m");
 
         mode.stop();
     }
@@ -455,7 +455,7 @@ class PiInteractiveModeTest {
         waitFor(() -> terminal.output().contains("test-model"));
 
         assertThat(terminal.output())
-            .doesNotContain("\u001b[90mopenai/\u001b[0m")
+            .doesNotContain("\u001b[90m(openai) \u001b[0m")
             .contains("\u001b[1mtest-model\u001b[0m");
 
         mode.stop();
