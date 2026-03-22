@@ -1185,6 +1185,22 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void stylesQueuedMessageLinesAsMuted() {
+        var session = new FakeSession().withStreaming(true);
+        var terminal = new RecordingTerminal(100, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("Queued");
+        terminal.sendInput("\r");
+
+        waitFor(() -> terminal.output().contains("Steering: Queued"));
+        assertThat(terminal.output()).contains("\u001b[90mSteering: Queued\u001b[0m");
+
+        mode.stop();
+    }
+
+    @Test
     void submitQueuesSteeringWhileStreaming() {
         var session = new FakeSession().withStreaming(true);
         var terminal = new VirtualTerminal(100, 16);

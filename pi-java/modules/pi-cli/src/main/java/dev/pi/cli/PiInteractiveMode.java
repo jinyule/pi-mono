@@ -299,10 +299,10 @@ public final class PiInteractiveMode implements AutoCloseable {
         var queuedFollowUps = session.queuedFollowUps();
         if (!queuedSteering.isEmpty() || !queuedFollowUps.isEmpty()) {
             for (var message : queuedSteering) {
-                lines.add("Steering: " + message);
+                lines.add(PiCliAnsi.muted("Steering: " + message));
             }
             for (var message : queuedFollowUps) {
-                lines.add("Follow-up: " + message);
+                lines.add(PiCliAnsi.muted("Follow-up: " + message));
             }
             lines.add(PiCliAnsi.muted("↳ ") + PiCliKeyHints.appHint(PiAppAction.DEQUEUE, "to edit all queued messages"));
         }

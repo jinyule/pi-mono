@@ -64,6 +64,7 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - startup header hints now use shared key-hint ANSI layering instead of dimming the whole line as one block
 - queued-message dequeue hints now use the shared `PiCliKeyHints.appHint` ANSI layering instead of plain text concatenation
 - dequeue-related copy now matches TypeScript more closely: `edit all queued messages`, `No queued messages to restore`, and `Restored ... to editor`
+- queued steering/follow-up status lines now use muted ANSI styling, matching the TypeScript pending-message display hierarchy more closely
 
 ### Settings and themes
 
@@ -135,6 +136,7 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - working tree slice: queued-message dequeue hints now use shared key-hint styling, matching the selector hint hierarchy more closely
 - working tree slice: startup header hints now use shared key-hint styling, matching the queued-message and selector hint hierarchy more closely
 - working tree slice: dequeue hint and restore status copy now match the TypeScript wording for queued-message editing and restore feedback
+- working tree slice: queued steering/follow-up status lines now use muted ANSI styling, matching the TypeScript pending-message display hierarchy more closely
 
 ## Remaining gaps
 
