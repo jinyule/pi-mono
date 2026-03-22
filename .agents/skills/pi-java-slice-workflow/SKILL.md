@@ -44,6 +44,7 @@ description: Continue ongoing pi-java implementation and parity work in this rep
 - Update `pi-java/docs/tasks.md` after each completed slice.
 - Append the slice result to the relevant phase file under `pi-java/docs/handoff/`.
 - Keep the handoff incremental. If a handoff file becomes too long or noisy, continue in split phase files rather than growing a monolithic handoff.
+- If a handoff markdown file grows past 100 lines, split it. Turn the parent handoff file into an index that points to the split files, and continue incremental updates in the split files instead of extending the oversized file.
 - Record enough detail for the next slice: what changed, what was validated, and what the next smallest step is.
 
 ## Validate
