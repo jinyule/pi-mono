@@ -196,7 +196,7 @@ public final class PiInteractiveMode implements AutoCloseable {
         if ("/model".equals(trimmed) || trimmed.startsWith("/model ")) {
             input.setValue("");
             var searchTerm = trimmed.length() == 6 ? null : trimmed.substring(7).trim();
-            handleSelectModelCommand(searchTerm == null || searchTerm.isBlank() ? null : searchTerm);
+            handleModelCommand(searchTerm == null || searchTerm.isBlank() ? null : searchTerm);
             return;
         }
         if ("/settings".equals(trimmed)) {
@@ -679,6 +679,19 @@ public final class PiInteractiveMode implements AutoCloseable {
         handleSelectModelCommand(null);
     }
 
+    private void handleModelCommand(String searchTerm) {
+        if (searchTerm == null || searchTerm.isBlank()) {
+            handleSelectModelCommand(null);
+            return;
+        }
+        var exactMatch = findExactModelMatch(session.modelSelection(), searchTerm);
+        if (exactMatch != null) {
+            selectModelEntry(exactMatch.index(), null);
+            return;
+        }
+        handleSelectModelCommand(searchTerm);
+    }
+
     private void handleSelectModelCommand(String initialSearchInput) {
         var selection = session.modelSelection();
         if (selection.allModels().isEmpty() && selection.scopedModels().isEmpty()) {
@@ -721,6 +734,40 @@ public final class PiInteractiveMode implements AutoCloseable {
                 OverlayMargin.uniform(1)
             )
         ));
+    }
+
+    private static PiInteractiveSession.SelectableModel findExactModelMatch(
+        PiInteractiveSession.ModelSelection selection,
+        String searchTerm
+    ) {
+        var term = searchTerm == null ? "" : searchTerm.trim().toLowerCase(Locale.ROOT);
+        if (term.isBlank()) {
+            return null;
+        }
+        String targetProvider = null;
+        var targetModelId = term;
+        var slashIndex = term.indexOf('/');
+        if (slashIndex >= 0) {
+            targetProvider = term.substring(0, slashIndex).trim();
+            targetModelId = term.substring(slashIndex + 1).trim();
+        }
+        if (targetModelId.isBlank()) {
+            return null;
+        }
+        var candidates = selection.scopedModels().isEmpty() ? selection.allModels() : selection.scopedModels();
+        PiInteractiveSession.SelectableModel match = null;
+        for (var candidate : candidates) {
+            var idMatches = candidate.modelId().toLowerCase(Locale.ROOT).equals(targetModelId);
+            var providerMatches = targetProvider == null || candidate.provider().toLowerCase(Locale.ROOT).equals(targetProvider);
+            if (!idMatches || !providerMatches) {
+                continue;
+            }
+            if (match != null) {
+                return null;
+            }
+            match = candidate;
+        }
+        return match;
     }
 
     private void handleSettingsCommand() {

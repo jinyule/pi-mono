@@ -1648,6 +1648,27 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void slashModelCommandSelectsExactMatchDirectly() {
+        var session = new FakeSession().withSelectableModels(List.of(
+            new PiInteractiveSession.SelectableModel(0, "openai", "gpt-5", "minimal", true),
+            new PiInteractiveSession.SelectableModel(1, "anthropic", "claude-3-7-sonnet", "high", false)
+        ));
+        var terminal = new VirtualTerminal(100, 18);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("/model claude-3-7-sonnet");
+        terminal.sendInput("\r");
+
+        waitFor(() -> "claude-3-7-sonnet".equals(session.lastModelIdChange));
+        assertThat(String.join("\n", terminal.getViewport()))
+            .contains("Model: claude-3-7-sonnet")
+            .doesNotContain("Only showing models with configured API keys");
+
+        mode.stop();
+    }
+
+    @Test
     void showsStatusWhenNoModelsAreAvailableForSelector() {
         var session = new FakeSession().withSelectableModels(List.of());
         var terminal = new VirtualTerminal(100, 18);

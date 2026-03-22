@@ -69,6 +69,7 @@ Status: in progress
 - providerless model-cycle status copy with model-name preference
 - scoped-vs-global single-model fallback copy
 - `/model` slash command now opens the selector, and `/model <term>` now opens it with the initial search applied
+- exact `/model <term>` matches now select directly instead of always opening the selector first
 
 ## Recent selector/settings slices
 
@@ -79,7 +80,8 @@ Status: in progress
 - `12116f86` `feat(pi-java): clamp model selector header width`
 - `cde4d6c7` `feat(pi-java): preserve current model marker in compact rows`
 - `/model` is now wired in the Java interactive mode, and `/model <term>` now pre-filters the selector the same way the TypeScript flow does before any exact-match shortcut handling
+- exact `/model <term>` hits now short-circuit straight to selection, matching the TypeScript behavior more closely
 
 ## Next smallest slice
 
-Finish the last visible `PiModelSelector` edge-case polish, with exact-match `/model <term>` selection still a likely next slice. If no clear selector drift remains after that, switch to pending queue / compaction queue parity.
+Finish the last visible `PiModelSelector` edge-case polish. If no clear selector drift remains after that, switch to pending queue / compaction queue parity.
