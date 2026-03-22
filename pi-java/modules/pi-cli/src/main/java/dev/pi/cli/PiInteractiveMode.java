@@ -817,6 +817,11 @@ public final class PiInteractiveMode implements AutoCloseable {
     }
 
     private void handleReloadCommand() {
+        if (session.state().isStreaming()) {
+            manualStatus = "Wait for the current response to finish before reloading.";
+            renderState(session.state());
+            return;
+        }
         try {
             var result = session.reload();
             reloadDiagnostics = formatReloadDiagnostics(result);

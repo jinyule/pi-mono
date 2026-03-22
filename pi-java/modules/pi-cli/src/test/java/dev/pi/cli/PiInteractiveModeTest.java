@@ -699,6 +699,24 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void showsReloadStreamingWarningWithoutCallingReload() {
+        var session = new FakeSession().withStreaming(true);
+        var terminal = new VirtualTerminal(80, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("/reload");
+        terminal.sendInput("\r");
+
+        assertThat(String.join("\n", terminal.getViewport()))
+            .contains("Wait for the current response to finish before reloading.")
+            .doesNotContain("Error: Wait for the current response to finish before reloading");
+        assertThat(session.reloadCount).isZero();
+
+        mode.stop();
+    }
+
+    @Test
     void hidesThinkingBlocksWhenSettingIsEnabled() {
         var session = new FakeSession()
             .withAssistantThinkingMessage("Reason through options", "Final answer")
