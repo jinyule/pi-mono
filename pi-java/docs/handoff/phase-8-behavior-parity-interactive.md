@@ -38,6 +38,7 @@ Status: in progress
 - queued steering/follow-up lines truncate to the available status width instead of wrapping
 - queued follow-up and steering submissions no longer add extra success banners; the queue display itself now carries that feedback, matching the TypeScript behavior more closely
 - clipboard-image paste now silently does nothing when no image is available or clipboard access fails, matching the TypeScript no-op behavior on those paths
+- successful clipboard-image paste now relies on the existing attached-image indicator instead of adding a separate success status line
 
 ## Interactive command and status copy
 
@@ -69,6 +70,7 @@ Status: in progress
 - `/copy` with no assistant output now shows `No agent messages to copy yet.` directly, matching the TypeScript wording
 - clipboard-image paste now leaves the current status untouched when no image is available or clipboard access throws, matching the TypeScript no-op behavior for those edge cases
 - external-editor success now leaves the status line untouched and just updates the editor content, matching the TypeScript behavior more closely
+- clipboard-image paste success now leaves the status line untouched and relies on `Attached images: N` for feedback, matching the TypeScript "no extra banner" behavior more closely
 
 ## Next smallest slice
 

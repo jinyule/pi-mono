@@ -1137,9 +1137,7 @@ public final class PiInteractiveMode implements AutoCloseable {
                 return;
             }
             pendingImages.add(image);
-            manualStatus = pendingImages.size() == 1
-                ? "Attached image from clipboard"
-                : "Attached %d images from clipboard".formatted(pendingImages.size());
+            manualStatus = null;
         } catch (RuntimeException exception) {
             return;
         }

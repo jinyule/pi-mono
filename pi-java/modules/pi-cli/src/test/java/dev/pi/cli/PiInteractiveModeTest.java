@@ -1091,8 +1091,10 @@ class PiInteractiveModeTest {
             mode.start();
             terminal.sendInput("\u001bz");
 
-            waitFor(() -> String.join("\n", terminal.getViewport()).contains("Attached image from clipboard"));
-            assertThat(String.join("\n", terminal.getViewport())).contains("Attached images: 1");
+            waitFor(() -> String.join("\n", terminal.getViewport()).contains("Attached images: 1"));
+            assertThat(String.join("\n", terminal.getViewport()))
+                .contains("Attached images: 1")
+                .doesNotContain("Attached image from clipboard");
             terminal.sendInput("\r");
 
             waitFor(() -> !session.promptMessages.isEmpty());
@@ -1127,14 +1129,15 @@ class PiInteractiveModeTest {
             mode.start();
             terminal.sendInput("\u001bz");
 
-            waitFor(() -> String.join("\n", terminal.getViewport()).contains("Attached image from clipboard"));
+            waitFor(() -> String.join("\n", terminal.getViewport()).contains("Attached images: 1"));
             terminal.sendInput("\r");
 
             assertThat(session.promptMessages).isEmpty();
             assertThat(session.steeringMessages).isEmpty();
             assertThat(String.join("\n", terminal.getViewport()))
                 .contains("Error: Image attachments are not supported while streaming")
-                .contains("Attached images: 1");
+                .contains("Attached images: 1")
+                .doesNotContain("Attached image from clipboard");
         } finally {
             PiAppKeybindings.setGlobal(previousApp);
             mode.stop();
