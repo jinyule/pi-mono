@@ -820,13 +820,7 @@ public final class PiInteractiveMode implements AutoCloseable {
         try {
             var result = session.reload();
             reloadDiagnostics = formatReloadDiagnostics(result);
-            var warningCount = result.settingsErrors().size()
-                + result.resourceErrors().size()
-                + result.themeWarnings().size()
-                + result.extensionWarnings().size();
-            manualStatus = warningCount == 0
-                ? "Reloaded extensions, prompts, themes, and settings"
-                : "Reloaded with %d warning%s".formatted(warningCount, warningCount == 1 ? "" : "s");
+            manualStatus = "Reloaded extensions, prompts, themes, and settings";
         } catch (RuntimeException exception) {
             manualStatus = "Error: " + rootMessage(exception);
         }

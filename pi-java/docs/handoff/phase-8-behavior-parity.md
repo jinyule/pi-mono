@@ -75,6 +75,7 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - tree empty-state wording
 - fork-selector success wording
 - reload success wording
+- reload warning-state wording
 - new-session success wording
 - empty-compaction warning wording
 
@@ -162,6 +163,7 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - working tree slice: empty `/tree` now uses the TypeScript `No entries in session` wording
 - working tree slice: fork selection success now uses the TypeScript `Branched to new session` wording
 - working tree slice: reload success now uses user-facing `Reloaded extensions, prompts, themes, and settings` wording instead of the older Java-specific resource phrasing
+- working tree slice: reload now keeps the same success status even when warnings are present, matching the TypeScript pattern of surfacing warning details separately via diagnostics
 - working tree slice: new-session success now uses the TypeScript-style `New session started` wording instead of the older `Started new session`
 - working tree slice: `/compact` with fewer than two messages now short-circuits with the TypeScript `Nothing to compact (no messages yet)` warning instead of entering compaction
 

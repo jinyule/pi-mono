@@ -129,14 +129,14 @@ class PiInteractiveModeTest {
 
             mode.start();
 
-            assertThat(String.join("\n", terminal.getViewport()))
-                .contains("alt+x/ctrl+c interrupt")
-                .contains("alt+c clear")
-                .contains("alt+q empty exit")
-                .contains("alt+l/ctrl+l model")
-                .contains("alt+h tools")
-                .contains("alt+t thinking")
-                .contains("alt+z paste image");
+        assertThat(String.join("\n", terminal.getViewport()))
+            .contains("alt+x/ctrl+c interrupt")
+            .contains("alt+c clear")
+            .contains("alt+q empty exit")
+            .contains("alt+l/ctrl+l model")
+            .contains("alt+h tools")
+            .contains("alt+t thinking")
+            .contains("alt+z paste image");
         } finally {
             PiAppKeybindings.setGlobal(previousApp);
             mode.stop();
@@ -163,11 +163,11 @@ class PiInteractiveModeTest {
             mode.start();
             waitFor(() -> terminal.output().contains("paste image"));
 
-            assertThat(terminal.output())
-                .contains("\u001b[2;37malt+x/ctrl+c\u001b[0m\u001b[90m interrupt\u001b[0m")
-                .contains("\u001b[90m \u2022 \u001b[0m")
-                .contains("\u001b[2;37malt+l/ctrl+l\u001b[0m\u001b[90m model\u001b[0m")
-                .contains("\u001b[2;37malt+z\u001b[0m\u001b[90m paste image\u001b[0m");
+        assertThat(terminal.output())
+            .contains("\u001b[2;37malt+x/ctrl+c\u001b[0m\u001b[90m interrupt\u001b[0m")
+            .contains("\u001b[90m \u2022 \u001b[0m")
+            .contains("\u001b[2;37malt+l/ctrl+l\u001b[0m\u001b[90m model\u001b[0m")
+            .contains("\u001b[2;37malt+z\u001b[0m\u001b[90m paste image\u001b[0m");
         } finally {
             PiAppKeybindings.setGlobal(previousApp);
             mode.stop();
@@ -688,9 +688,12 @@ class PiInteractiveModeTest {
         terminal.sendInput("/reload");
         terminal.sendInput("\r");
 
-        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Reloaded with 1 warning")));
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Reloaded extensions, prompts, themes, and settings")));
 
-        assertThat(String.join("\n", terminal.getViewport())).contains("Reloaded with 1 warning");
+        assertThat(String.join("\n", terminal.getViewport()))
+            .contains("Reloaded extensions, prompts, themes, and settings")
+            .contains("[Reload warnings]")
+            .contains("extension: reload-plugin.jar: broken extension");
 
         mode.stop();
     }
