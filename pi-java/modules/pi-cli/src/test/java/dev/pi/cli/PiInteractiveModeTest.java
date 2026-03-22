@@ -1327,7 +1327,7 @@ class PiInteractiveModeTest {
 
             waitFor(() -> session.followUps.contains("Queued"));
             var viewport = String.join("\n", terminal.getViewport());
-            assertThat(viewport).contains("Queued follow-up");
+            assertThat(viewport).doesNotContain("Queued follow-up");
             assertThat(viewport).contains("Follow-up: Queued");
             assertThat(viewport).contains("alt+up/ctrl+y to edit all queued messages");
             assertThat(session.prompts).doesNotContain("Queued");
@@ -1411,7 +1411,7 @@ class PiInteractiveModeTest {
 
         waitFor(() -> session.steeringMessages.contains("Queued"));
         var viewport = String.join("\n", terminal.getViewport());
-        assertThat(viewport).contains("Queued steering message");
+        assertThat(viewport).doesNotContain("Queued steering message");
         assertThat(viewport).contains("Steering: Queued");
         assertThat(viewport).contains("alt+up to edit all queued messages");
         assertThat(session.prompts).doesNotContain("Queued");

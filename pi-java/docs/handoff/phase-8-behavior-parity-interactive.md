@@ -36,6 +36,7 @@ Status: in progress
 - dequeue hint and restore status copy now matches the TypeScript wording
 - queued steering/follow-up status lines use muted ANSI styling
 - queued steering/follow-up lines truncate to the available status width instead of wrapping
+- queued follow-up and steering submissions no longer add extra success banners; the queue display itself now carries that feedback, matching the TypeScript behavior more closely
 
 ## Interactive command and status copy
 
@@ -59,6 +60,7 @@ Status: in progress
 - `4ce5c7c0` `feat(pi-java): align reload streaming warning`
 - `90e3ab19` `feat(pi-java): align footer usage thresholds`
 - `/reload` success now uses `Reloaded extensions, skills, prompts, themes`, matching the current TypeScript wording
+- queued follow-up and steering submissions now rely on the queued-message panel instead of separate `Queued ...` success status lines
 
 ## Next smallest slice
 

@@ -1123,7 +1123,7 @@ public final class PiInteractiveMode implements AutoCloseable {
         try {
             session.followUp(text).toCompletableFuture().join();
             input.setValue("");
-            manualStatus = "Queued follow-up";
+            manualStatus = null;
         } catch (RuntimeException exception) {
             manualStatus = "Error: " + rootMessage(exception);
         }
@@ -1151,7 +1151,7 @@ public final class PiInteractiveMode implements AutoCloseable {
         try {
             session.steer(text).toCompletableFuture().join();
             input.setValue("");
-            manualStatus = "Queued steering message";
+            manualStatus = null;
         } catch (RuntimeException exception) {
             manualStatus = "Error: " + rootMessage(exception);
         }
