@@ -742,6 +742,45 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void showsCompactionCancelledWithoutErrorPrefix() {
+        var session = new FakeSession()
+            .withMessageHistory("Hello")
+            .withCompactionFailure(new IllegalStateException("Compaction cancelled"));
+        var terminal = new VirtualTerminal(100, 20);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("/compact");
+        terminal.sendInput("\r");
+
+        assertThat(String.join("\n", terminal.getViewport()))
+            .contains("Compaction cancelled")
+            .doesNotContain("Error: Compaction cancelled")
+            .doesNotContain("Compaction failed:");
+
+        mode.stop();
+    }
+
+    @Test
+    void showsCompactionFailureWithSpecificPrefix() {
+        var session = new FakeSession()
+            .withMessageHistory("Hello")
+            .withCompactionFailure(new IllegalStateException("Disk full"));
+        var terminal = new VirtualTerminal(100, 20);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("/compact");
+        terminal.sendInput("\r");
+
+        assertThat(String.join("\n", terminal.getViewport()))
+            .contains("Compaction failed: Disk full")
+            .doesNotContain("Error: Disk full");
+
+        mode.stop();
+    }
+
+    @Test
     void handlesReloadSlashCommand() {
         var session = new FakeSession();
         var terminal = new VirtualTerminal(80, 16);
@@ -1749,6 +1788,7 @@ class PiInteractiveModeTest {
         private List<SelectableModel> selectableModels = List.of();
         private List<SelectableModel> scopedSelectableModels = List.of();
         private DequeueResult dequeueResult = new DequeueResult("", 0);
+        private RuntimeException compactionFailure;
         private AgentState state = new AgentState(
             "",
             new Model(
@@ -2155,6 +2195,9 @@ class PiInteractiveModeTest {
 
         @Override
         public CompactionResult compact(String customInstructions) {
+            if (compactionFailure != null) {
+                throw compactionFailure;
+            }
             try {
                 var result = PiCompactor.compact(sessionManager, customInstructions);
                 syncState();
@@ -2385,6 +2428,11 @@ class PiInteractiveModeTest {
 
         private FakeSession withDequeuedMessages(String editorText, int restoredCount) {
             this.dequeueResult = new DequeueResult(editorText, restoredCount);
+            return this;
+        }
+
+        private FakeSession withCompactionFailure(RuntimeException compactionFailure) {
+            this.compactionFailure = compactionFailure;
             return this;
         }
 

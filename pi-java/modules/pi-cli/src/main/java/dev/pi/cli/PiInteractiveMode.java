@@ -873,7 +873,10 @@ public final class PiInteractiveMode implements AutoCloseable {
             session.compact(customInstructions);
             manualStatus = null;
         } catch (RuntimeException exception) {
-            manualStatus = "Error: " + rootMessage(exception);
+            var message = rootMessage(exception);
+            manualStatus = "Compaction cancelled".equals(message)
+                ? "Compaction cancelled"
+                : "Compaction failed: " + message;
         }
         renderState(session.state());
     }
