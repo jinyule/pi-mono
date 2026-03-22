@@ -1479,6 +1479,29 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void handlesNewSlashCommand() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(100, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("Hello");
+        terminal.sendInput("\r");
+        var originalSessionId = session.sessionId();
+
+        terminal.sendInput("/new");
+        terminal.sendInput("\r");
+
+        waitFor(() -> !originalSessionId.equals(session.sessionId()));
+        assertThat(String.join("\n", terminal.getViewport()))
+            .contains("New session started")
+            .contains("session: " + session.sessionId())
+            .doesNotContain("You: Hello");
+
+        mode.stop();
+    }
+
+    @Test
     void stylesQueuedMessageHintWithSharedKeyHintFormatter() {
         var session = new FakeSession().withStreaming(true);
         var terminal = new RecordingTerminal(100, 16);
