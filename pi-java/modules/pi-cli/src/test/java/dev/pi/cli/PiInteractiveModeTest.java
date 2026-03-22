@@ -1201,6 +1201,25 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void truncatesQueuedMessageLinesInsteadOfWrappingThem() {
+        var session = new FakeSession().withStreaming(true);
+        var terminal = new VirtualTerminal(26, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("Queued message that should not wrap");
+        terminal.sendInput("\r");
+
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> stripAnsi(line).contains("Steering:")));
+
+        var viewport = terminal.getViewport().stream().map(PiInteractiveModeTest::stripAnsi).toList();
+        assertThat(viewport).anyMatch(line -> line.contains("Steering: Queued mess..."));
+        assertThat(viewport).noneMatch(line -> line.contains("age that should not wrap"));
+
+        mode.stop();
+    }
+
+    @Test
     void submitQueuesSteeringWhileStreaming() {
         var session = new FakeSession().withStreaming(true);
         var terminal = new VirtualTerminal(100, 16);
@@ -2127,5 +2146,9 @@ class PiInteractiveModeTest {
             }
         }
         throw new AssertionError("condition not met");
+    }
+
+    private static String stripAnsi(String text) {
+        return text.replaceAll("\\u001B\\[[;\\d]*m", "");
     }
 }

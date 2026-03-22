@@ -299,12 +299,12 @@ public final class PiInteractiveMode implements AutoCloseable {
         var queuedFollowUps = session.queuedFollowUps();
         if (!queuedSteering.isEmpty() || !queuedFollowUps.isEmpty()) {
             for (var message : queuedSteering) {
-                lines.add(PiCliAnsi.muted("Steering: " + message));
+                lines.add(truncateStatusLine(PiCliAnsi.muted("Steering: " + message)));
             }
             for (var message : queuedFollowUps) {
-                lines.add(PiCliAnsi.muted("Follow-up: " + message));
+                lines.add(truncateStatusLine(PiCliAnsi.muted("Follow-up: " + message)));
             }
-            lines.add(PiCliAnsi.muted("↳ ") + PiCliKeyHints.appHint(PiAppAction.DEQUEUE, "to edit all queued messages"));
+            lines.add(truncateStatusLine(PiCliAnsi.muted("↳ ") + PiCliKeyHints.appHint(PiAppAction.DEQUEUE, "to edit all queued messages")));
         }
         return String.join("\n", lines);
     }
@@ -1153,6 +1153,10 @@ public final class PiInteractiveMode implements AutoCloseable {
             Math.max(1, width),
             "..."
         );
+    }
+
+    private String truncateStatusLine(String text) {
+        return TerminalText.truncateToWidth(text, Math.max(1, terminal.columns() - 2), "...");
     }
 
     private void appendResourceSection(
