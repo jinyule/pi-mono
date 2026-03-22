@@ -53,14 +53,17 @@ Updated: 2026-03-22
   - Local package sources now participate in Java-side startup discovery for themes and extensions, using the same scope-relative base directories as the TypeScript app (`~/.pi/agent` for global settings, `<cwd>/.pi` for project settings).
   - Theme package sources are also re-read on session reload, so settings-file changes can add or remove custom themes without restarting the CLI.
   - Already-installed `npm:` / `git:` package sources now participate in Java-side theme/extension discovery too, using the same installed-root layout as the TypeScript app for project packages and git packages.
+  - Startup resource surfaces now carry discovered skill and prompt paths too, so package-source resources and extension-declared resources show up in the Java CLI instead of stopping at raw path discovery.
+  - Extension-declared themes now also feed the Java-side theme list at startup and on reload.
+  - Session shutdown now closes extension runtime handles, so package-source and extension tests do not leak locked files.
   - Package installation and auth-backed package management are still later phase-9 work; Java currently discovers what is already on disk.
 
 ## Current next slices
 
-1. Start consuming discovered package resources beyond raw paths: wire skill/prompt/theme resource surfaces into the Java CLI flows that already exist.
-2. Add Java-side auth storage and interactive `/login` / `/logout`.
-3. Wire `enabledModels` into saved scoped-model selection and `/scoped-models`.
-4. Decide whether Java should keep synchronous compaction or grow TypeScript-style async compaction queueing.
+1. Add Java-side auth storage and interactive `/login` / `/logout`.
+2. Wire `enabledModels` into saved scoped-model selection and `/scoped-models`.
+3. Decide whether Java should keep synchronous compaction or grow TypeScript-style async compaction queueing.
+4. Start defining phase-9 packaging/distribution outputs once auth and package management basics exist.
 
 ## Milestones
 
@@ -97,6 +100,7 @@ Updated: 2026-03-22
 Most recent routine validation commands:
 
 ```bash
+.\gradlew.bat :pi-session:test :pi-cli:test --no-daemon
 .\gradlew.bat :pi-cli:test --no-daemon
 .\gradlew.bat :pi-tui:test --no-daemon
 .\gradlew.bat :pi-tui:test :pi-cli:test --no-daemon

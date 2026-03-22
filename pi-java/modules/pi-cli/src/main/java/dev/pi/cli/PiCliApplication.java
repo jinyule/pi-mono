@@ -53,12 +53,12 @@ public final class PiCliApplication {
         } catch (Exception exception) {
             return CompletableFuture.failedFuture(exception);
         }
-        return switch (args.mode()) {
+        return closeSessionAfter(session, switch (args.mode()) {
             case INTERACTIVE -> interactiveHandler.run(args, session);
             case PRINT -> printHandler.run(args, session);
             case JSON -> jsonHandler.run(args, session);
             case RPC -> rpcHandler.run(args, session);
-        };
+        });
     }
 
     @FunctionalInterface
@@ -89,6 +89,28 @@ public final class PiCliApplication {
     @FunctionalInterface
     public interface ModeHandler {
         CompletionStage<Void> run(PiCliArgs args, PiInteractiveSession session);
+    }
+
+    private static CompletionStage<Void> closeSessionAfter(PiInteractiveSession session, CompletionStage<Void> stage) {
+        var result = new CompletableFuture<Void>();
+        stage.whenComplete((ignored, throwable) -> {
+            try {
+                session.close();
+                if (throwable != null) {
+                    result.completeExceptionally(throwable);
+                } else {
+                    result.complete(null);
+                }
+            } catch (Exception closeException) {
+                if (throwable != null) {
+                    throwable.addSuppressed(closeException);
+                    result.completeExceptionally(throwable);
+                } else {
+                    result.completeExceptionally(closeException);
+                }
+            }
+        });
+        return result;
     }
 
     public static final class Builder {

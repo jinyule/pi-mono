@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 
-public interface PiInteractiveSession {
+public interface PiInteractiveSession extends AutoCloseable {
     String sessionId();
 
     AgentState state();
@@ -168,6 +168,10 @@ public interface PiInteractiveSession {
 
     default ReloadResult reload() {
         throw new UnsupportedOperationException("Reload is not available");
+    }
+
+    @Override
+    default void close() throws Exception {
     }
 
     record TreeNavigationResult(
@@ -346,16 +350,28 @@ public interface PiInteractiveSession {
     record StartupResources(
         List<String> contextFiles,
         List<String> extensionPaths,
+        List<String> skillPaths,
+        List<String> promptPaths,
         List<String> customThemes
     ) {
+        public StartupResources(
+            List<String> contextFiles,
+            List<String> extensionPaths,
+            List<String> customThemes
+        ) {
+            this(contextFiles, extensionPaths, List.of(), List.of(), customThemes);
+        }
+
         public StartupResources {
             contextFiles = List.copyOf(contextFiles);
             extensionPaths = List.copyOf(extensionPaths);
+            skillPaths = List.copyOf(skillPaths);
+            promptPaths = List.copyOf(promptPaths);
             customThemes = List.copyOf(customThemes);
         }
 
         public static StartupResources empty() {
-            return new StartupResources(List.of(), List.of(), List.of());
+            return new StartupResources(List.of(), List.of(), List.of(), List.of(), List.of());
         }
     }
 

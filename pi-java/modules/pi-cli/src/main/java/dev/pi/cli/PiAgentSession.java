@@ -47,11 +47,15 @@ public final class PiAgentSession implements PiInteractiveSession {
     private final String appendSystemPrompt;
     private final ReloadAction reloadAction;
     private final ThemeReloadAction themeReloadAction;
+    private final StartupResourcePathsReloadAction startupResourcePathsReloadAction;
+    private final CloseAction closeAction;
     private final List<CycleModel> cycleModels;
     private final boolean scopedCycleModels;
     private final int availableProviderCount;
     private final List<Model> modelSelectorModels;
     private final List<String> extensionPaths;
+    private volatile List<String> skillPaths;
+    private volatile List<String> promptPaths;
     private volatile List<String> customThemes;
     private volatile List<CycleModel> modelSelectionTargets = List.of();
 
@@ -64,11 +68,15 @@ public final class PiAgentSession implements PiInteractiveSession {
         String appendSystemPrompt,
         ReloadAction reloadAction,
         ThemeReloadAction themeReloadAction,
+        StartupResourcePathsReloadAction startupResourcePathsReloadAction,
+        CloseAction closeAction,
         List<CycleModel> cycleModels,
         boolean scopedCycleModels,
         int availableProviderCount,
         List<Model> modelSelectorModels,
         List<String> extensionPaths,
+        List<String> skillPaths,
+        List<String> promptPaths,
         List<String> customThemes
     ) {
         this.sdkSession = Objects.requireNonNull(sdkSession, "sdkSession");
@@ -79,11 +87,15 @@ public final class PiAgentSession implements PiInteractiveSession {
         this.appendSystemPrompt = appendSystemPrompt;
         this.reloadAction = reloadAction;
         this.themeReloadAction = themeReloadAction;
+        this.startupResourcePathsReloadAction = startupResourcePathsReloadAction;
+        this.closeAction = closeAction;
         this.cycleModels = List.copyOf(Objects.requireNonNullElse(cycleModels, List.of()));
         this.scopedCycleModels = scopedCycleModels;
         this.availableProviderCount = Math.max(1, availableProviderCount);
         this.modelSelectorModels = List.copyOf(Objects.requireNonNullElse(modelSelectorModels, List.of()));
         this.extensionPaths = List.copyOf(Objects.requireNonNullElse(extensionPaths, List.of()));
+        this.skillPaths = List.copyOf(Objects.requireNonNullElse(skillPaths, List.of()));
+        this.promptPaths = List.copyOf(Objects.requireNonNullElse(promptPaths, List.of()));
         this.customThemes = List.copyOf(Objects.requireNonNullElse(customThemes, List.of()));
     }
 
@@ -296,7 +308,7 @@ public final class PiAgentSession implements PiInteractiveSession {
         var contextFiles = instructionResources.contextFiles().stream()
             .map(instructionFile -> instructionFile.path().toString())
             .toList();
-        return new StartupResources(contextFiles, extensionPaths, customThemes);
+        return new StartupResources(contextFiles, extensionPaths, skillPaths, promptPaths, customThemes);
     }
 
     @Override
@@ -648,8 +660,27 @@ public final class PiAgentSession implements PiInteractiveSession {
             }
         }
 
+        if (startupResourcePathsReloadAction != null) {
+            try {
+                var result = startupResourcePathsReloadAction.reload();
+                skillPaths = result.skillPaths();
+                promptPaths = result.promptPaths();
+            } catch (Exception exception) {
+                var updatedWarnings = new ArrayList<String>(extensionWarnings);
+                updatedWarnings.add(rootMessage(exception));
+                extensionWarnings = List.copyOf(updatedWarnings);
+            }
+        }
+
         sdkSession.updateSystemPrompt(systemPrompt, appendSystemPrompt, instructionResources);
         return new ReloadResult(settingsErrors, resourceErrors, themeWarnings, extensionWarnings);
+    }
+
+    @Override
+    public void close() throws Exception {
+        if (closeAction != null) {
+            closeAction.close();
+        }
     }
 
     public List<SessionPersistenceError> drainPersistenceErrors() {
@@ -728,6 +759,16 @@ public final class PiAgentSession implements PiInteractiveSession {
         ThemeReloadResult reload() throws Exception;
     }
 
+    @FunctionalInterface
+    public interface StartupResourcePathsReloadAction {
+        StartupResourcePaths reload() throws Exception;
+    }
+
+    @FunctionalInterface
+    public interface CloseAction {
+        void close() throws Exception;
+    }
+
     public record ThemeReloadResult(
         List<String> availableThemes,
         List<String> warnings
@@ -735,6 +776,16 @@ public final class PiAgentSession implements PiInteractiveSession {
         public ThemeReloadResult {
             availableThemes = List.copyOf(Objects.requireNonNull(availableThemes, "availableThemes"));
             warnings = List.copyOf(Objects.requireNonNull(warnings, "warnings"));
+        }
+    }
+
+    public record StartupResourcePaths(
+        List<String> skillPaths,
+        List<String> promptPaths
+    ) {
+        public StartupResourcePaths {
+            skillPaths = List.copyOf(Objects.requireNonNull(skillPaths, "skillPaths"));
+            promptPaths = List.copyOf(Objects.requireNonNull(promptPaths, "promptPaths"));
         }
     }
 
@@ -758,6 +809,8 @@ public final class PiAgentSession implements PiInteractiveSession {
         private String appendSystemPrompt;
         private ReloadAction reloadAction;
         private ThemeReloadAction themeReloadAction;
+        private StartupResourcePathsReloadAction startupResourcePathsReloadAction;
+        private CloseAction closeAction;
         private ThinkingLevel thinkingLevel;
         private List<AgentTool<?>> tools = List.of();
         private AgentLoopConfig.MessageConverter convertToLlm;
@@ -775,6 +828,8 @@ public final class PiAgentSession implements PiInteractiveSession {
         private int availableProviderCount = 1;
         private List<Model> modelSelectorModels = List.of();
         private List<String> extensionPaths = List.of();
+        private List<String> skillPaths = List.of();
+        private List<String> promptPaths = List.of();
         private List<String> customThemes = List.of();
 
         private Builder(
@@ -816,6 +871,16 @@ public final class PiAgentSession implements PiInteractiveSession {
 
         public Builder themeReloadAction(ThemeReloadAction themeReloadAction) {
             this.themeReloadAction = themeReloadAction;
+            return this;
+        }
+
+        public Builder startupResourcePathsReloadAction(StartupResourcePathsReloadAction startupResourcePathsReloadAction) {
+            this.startupResourcePathsReloadAction = startupResourcePathsReloadAction;
+            return this;
+        }
+
+        public Builder closeAction(CloseAction closeAction) {
+            this.closeAction = closeAction;
             return this;
         }
 
@@ -908,6 +973,16 @@ public final class PiAgentSession implements PiInteractiveSession {
             return this;
         }
 
+        public Builder skillPaths(List<String> skillPaths) {
+            this.skillPaths = skillPaths == null ? List.of() : List.copyOf(skillPaths);
+            return this;
+        }
+
+        public Builder promptPaths(List<String> promptPaths) {
+            this.promptPaths = promptPaths == null ? List.of() : List.copyOf(promptPaths);
+            return this;
+        }
+
         public Builder customThemes(List<String> customThemes) {
             this.customThemes = customThemes == null ? List.of() : List.copyOf(customThemes);
             return this;
@@ -949,11 +1024,15 @@ public final class PiAgentSession implements PiInteractiveSession {
                 appendSystemPrompt,
                 reloadAction,
                 themeReloadAction,
+                startupResourcePathsReloadAction,
+                closeAction,
                 cycleModels,
                 scopedCycleModels,
                 availableProviderCount,
                 modelSelectorModels,
                 extensionPaths,
+                skillPaths,
+                promptPaths,
                 customThemes
             );
         }

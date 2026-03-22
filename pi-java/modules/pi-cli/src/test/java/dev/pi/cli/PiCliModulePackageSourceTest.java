@@ -13,6 +13,9 @@ import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.jar.JarEntry;
+import java.util.jar.JarOutputStream;
+import javax.tools.ToolProvider;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -61,8 +64,11 @@ class PiCliModulePackageSourceTest {
         );
 
         var session = createSession(cwd, List.of("--print"));
-
-        assertThat(session.settingsSelection().availableThemes()).contains("package-theme", "dark", "light");
+        try {
+            assertThat(session.settingsSelection().availableThemes()).contains("package-theme", "dark", "light");
+        } finally {
+            session.close();
+        }
     }
 
     @Test
@@ -88,10 +94,49 @@ class PiCliModulePackageSourceTest {
         );
 
         var session = createSession(cwd, List.of("--print"));
+        try {
+            assertThat(session.startupResources().extensionPaths()).containsExactly(
+                packageRoot.resolve("dist").resolve("extensions").resolve("demo.jar").toAbsolutePath().normalize().toString()
+            );
+        } finally {
+            session.close();
+        }
+    }
 
-        assertThat(session.startupResources().extensionPaths()).containsExactly(
-            packageRoot.resolve("dist").resolve("extensions").resolve("demo.jar").toAbsolutePath().normalize().toString()
+    @Test
+    void createDefaultSessionListsSkillsAndPromptsFromProjectPackageSources() throws Exception {
+        var cwd = tempDir.resolve("workspace");
+        var packageRoot = tempDir.resolve("resource-pack");
+        Files.createDirectories(cwd.resolve(".pi"));
+        Files.createDirectories(packageRoot.resolve("dist").resolve("skills"));
+        Files.createDirectories(packageRoot.resolve("dist").resolve("prompts"));
+        Files.writeString(
+            cwd.resolve(".pi").resolve("settings.json"),
+            """
+            {
+              "packages": [
+                {
+                  "source": "%s",
+                  "skills": ["dist/skills"],
+                  "prompts": ["dist/prompts"]
+                }
+              ]
+            }
+            """.formatted(escapeJson(packageRoot.toString())),
+            StandardCharsets.UTF_8
         );
+
+        var session = createSession(cwd, List.of("--print"));
+        try {
+            assertThat(session.startupResources().skillPaths()).containsExactly(
+                packageRoot.resolve("dist").resolve("skills").toAbsolutePath().normalize().toString()
+            );
+            assertThat(session.startupResources().promptPaths()).containsExactly(
+                packageRoot.resolve("dist").resolve("prompts").toAbsolutePath().normalize().toString()
+            );
+        } finally {
+            session.close();
+        }
     }
 
     @Test
@@ -125,8 +170,11 @@ class PiCliModulePackageSourceTest {
         );
 
         var session = createSession(cwd, List.of("--print"));
-
-        assertThat(session.settingsSelection().availableThemes()).contains("npm-theme", "dark", "light");
+        try {
+            assertThat(session.settingsSelection().availableThemes()).contains("npm-theme", "dark", "light");
+        } finally {
+            session.close();
+        }
     }
 
     @Test
@@ -152,10 +200,71 @@ class PiCliModulePackageSourceTest {
         );
 
         var session = createSession(cwd, List.of("--print"));
+        try {
+            assertThat(session.startupResources().extensionPaths()).containsExactly(
+                installedPackage.resolve("dist").resolve("extensions").resolve("git-demo.jar").toAbsolutePath().normalize().toString()
+            );
+        } finally {
+            session.close();
+        }
+    }
 
-        assertThat(session.startupResources().extensionPaths()).containsExactly(
-            installedPackage.resolve("dist").resolve("extensions").resolve("git-demo.jar").toAbsolutePath().normalize().toString()
-        );
+    @Test
+    void createDefaultSessionConsumesExtensionDeclaredSkillsPromptsAndThemes() throws Exception {
+        var cwd = tempDir.resolve("workspace");
+        Files.createDirectories(cwd.resolve(".pi"));
+        var jarPath = compileExtensionJar("""
+            package fixture.extension;
+
+            import dev.pi.extension.spi.ExtensionApi;
+            import dev.pi.extension.spi.PiExtension;
+            import dev.pi.extension.spi.ResourcesDiscoverEvent;
+            import dev.pi.extension.spi.ResourcesDiscoverResult;
+            import java.util.List;
+            import java.util.concurrent.CompletableFuture;
+
+            public final class ResourcePlugin implements PiExtension {
+                @Override
+                public String id() {
+                    return "resource-plugin";
+                }
+
+                @Override
+                public void register(ExtensionApi api) {
+                    api.on(ResourcesDiscoverEvent.class, (event, context) -> CompletableFuture.completedFuture(
+                        new ResourcesDiscoverResult(List.of("skills"), List.of("prompts"), List.of("themes"))
+                    ));
+                }
+            }
+            """);
+        Files.createDirectories(jarPath.getParent().resolve("skills"));
+        Files.createDirectories(jarPath.getParent().resolve("prompts"));
+        Files.createDirectories(jarPath.getParent().resolve("themes"));
+        Files.writeString(jarPath.getParent().resolve("themes").resolve("extension-theme.json"), """
+            {
+              "name": "extension-theme",
+              "colors": {
+                "accent": "#112233",
+                "muted": 244,
+                "warning": "#ffcc00",
+                "success": 46,
+                "error": 196
+              }
+            }
+            """);
+
+        var session = createSession(cwd, List.of("--print", "--extension", jarPath.toString()));
+        try {
+            assertThat(session.startupResources().skillPaths()).containsExactly(
+                jarPath.getParent().resolve("skills").toAbsolutePath().normalize().toString()
+            );
+            assertThat(session.startupResources().promptPaths()).containsExactly(
+                jarPath.getParent().resolve("prompts").toAbsolutePath().normalize().toString()
+            );
+            assertThat(session.settingsSelection().availableThemes()).contains("extension-theme", "dark", "light");
+        } finally {
+            session.close();
+        }
     }
 
     private PiInteractiveSession createSession(Path cwd, List<String> argv) throws Exception {
@@ -197,5 +306,48 @@ class PiCliModulePackageSourceTest {
 
     private static String escapeJson(String value) {
         return value.replace("\\", "\\\\");
+    }
+
+    private Path compileExtensionJar(String source) throws Exception {
+        var compiler = ToolProvider.getSystemJavaCompiler();
+        assertThat(compiler).as("JDK compiler").isNotNull();
+
+        var sourceRoot = tempDir.resolve("src-extension");
+        var classesRoot = tempDir.resolve("classes-extension");
+        Files.createDirectories(sourceRoot);
+        Files.createDirectories(classesRoot);
+
+        var className = "fixture.extension.ResourcePlugin";
+        var sourcePath = sourceRoot.resolve(className.replace('.', '/') + ".java");
+        Files.createDirectories(sourcePath.getParent());
+        Files.writeString(sourcePath, source, StandardCharsets.UTF_8);
+
+        var exitCode = compiler.run(
+            null,
+            null,
+            null,
+            "-classpath",
+            System.getProperty("java.class.path"),
+            "-d",
+            classesRoot.toString(),
+            sourcePath.toString()
+        );
+        assertThat(exitCode).isZero();
+
+        var jarPath = tempDir.resolve("resource-plugin.jar");
+        try (var output = new JarOutputStream(Files.newOutputStream(jarPath))) {
+            try (var paths = Files.walk(classesRoot)) {
+                for (var classFile : paths.filter(Files::isRegularFile).toList()) {
+                    var entryName = classesRoot.relativize(classFile).toString().replace('\\', '/');
+                    output.putNextEntry(new JarEntry(entryName));
+                    output.write(Files.readAllBytes(classFile));
+                    output.closeEntry();
+                }
+            }
+            output.putNextEntry(new JarEntry("META-INF/services/dev.pi.extension.spi.PiExtension"));
+            output.write((className + "\n").getBytes(StandardCharsets.UTF_8));
+            output.closeEntry();
+        }
+        return jarPath;
     }
 }

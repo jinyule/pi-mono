@@ -5,10 +5,16 @@ import dev.pi.ai.PiAiClient;
 import dev.pi.ai.model.Model;
 import dev.pi.ai.model.ThinkingLevel;
 import dev.pi.ai.registry.ModelRegistry;
+import dev.pi.extension.spi.ExtensionContext;
+import dev.pi.extension.spi.ExtensionEventFailure;
+import dev.pi.extension.spi.ExtensionResourceDiscoveryResult;
+import dev.pi.extension.spi.ExtensionRuntimeSnapshot;
 import dev.pi.extension.spi.ExtensionRuntime;
+import dev.pi.extension.spi.ResourcesDiscoverEvent;
 import dev.pi.session.InstructionResourceLoader;
 import dev.pi.session.PackageSourceDiscovery;
 import dev.pi.session.SettingsManager;
+import dev.pi.session.SessionManager;
 import dev.pi.tui.EditorKeybindings;
 import dev.pi.tui.ProcessTerminal;
 import dev.pi.tui.Terminal;
@@ -24,6 +30,7 @@ import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 public final class PiCliModule {
@@ -214,22 +221,9 @@ public final class PiCliModule {
         var sessionManager = new PiCliSessionResolver(cwd).resolve(args);
         var settingsManager = SettingsManager.create(cwd);
         var packageSourceDiscovery = new PackageSourceDiscovery(cwd);
-        var themeLoader = new PiCliThemeLoader(cwd);
-        var themePaths = mergePaths(
-            args.noThemes() ? List.of() : packageSourceDiscovery.resolve(
-                settingsManager.getGlobalPackages(),
-                settingsManager.getProjectPackages(),
-                PackageSourceDiscovery.ResourceType.THEMES
-            ),
-            args.themes()
-        );
-        var loadedThemes = themeLoader.load(themePaths, args.noThemes());
-        PiCliAnsi.setRegisteredThemes(loadedThemes.palettes());
-        var instructionLoader = new InstructionResourceLoader(cwd);
-        instructionLoader.reload();
         var extensionSources = args.noExtensions()
             ? List.<Path>of()
-            : mergePaths(
+            : mergePaths(cwd,
                 packageSourceDiscovery.resolve(
                     settingsManager.getGlobalPackages(),
                     settingsManager.getProjectPackages(),
@@ -240,10 +234,33 @@ public final class PiCliModule {
         var extensionRuntime = extensionSources.isEmpty()
             ? null
             : new ExtensionRuntime(extensionSources);
+        var extensionResourcesRef = new AtomicReference<>(extensionRuntime == null
+            ? DiscoveredExtensionResources.empty()
+            : discoverExtensionResources(
+                extensionRuntime.snapshot(),
+                sessionManager,
+                settingsManager,
+                ResourcesDiscoverEvent.Reason.STARTUP
+            ));
+        var themeLoader = new PiCliThemeLoader(cwd);
+        var loadedThemes = themeLoader.load(
+            resolveThemePaths(args, settingsManager, packageSourceDiscovery, extensionResourcesRef.get()),
+            args.noThemes()
+        );
+        PiCliAnsi.setRegisteredThemes(loadedThemes.palettes());
+        var instructionLoader = new InstructionResourceLoader(cwd);
+        instructionLoader.reload();
         var scopedCycleModels = resolveScopedCycleModels(args.modelPatterns(), aiClient.modelRegistry());
         var cycleModels = resolveCycleModels(args, aiClient.modelRegistry(), scopedCycleModels);
         var model = resolveModel(args, aiClient.modelRegistry(), scopedCycleModels, settingsManager);
         var initialThinkingLevel = resolveInitialThinkingLevel(args, scopedCycleModels);
+        var listedResources = resolveStartupResourcePaths(
+            args,
+            settingsManager,
+            packageSourceDiscovery,
+            extensionRuntime,
+            extensionResourcesRef.get()
+        );
 
         var builder = PiAgentSession.builder(
             model,
@@ -261,48 +278,158 @@ public final class PiCliModule {
             .cycleModels(cycleModels, !args.modelPatterns().isEmpty() && !scopedCycleModels.isEmpty())
             .modelSelectorModels(allModels(aiClient.modelRegistry()))
             .customThemes(loadedThemes.availableThemes())
-            .extensionPaths(extensionRuntime == null
-                ? List.of()
-                : extensionRuntime.sources().stream().map(Path::toString).toList())
+            .extensionPaths(listedResources.extensionPaths())
+            .skillPaths(listedResources.skillPaths())
+            .promptPaths(listedResources.promptPaths())
             .themeReloadAction(() -> {
-                var reloadedThemes = themeLoader.load(
-                    mergePaths(
-                        args.noThemes() ? List.of() : packageSourceDiscovery.resolve(
-                            settingsManager.getGlobalPackages(),
-                            settingsManager.getProjectPackages(),
-                            PackageSourceDiscovery.ResourceType.THEMES
-                        ),
-                        args.themes()
-                    ),
-                    args.noThemes()
-                );
+                var reloadedThemes = themeLoader.load(resolveThemePaths(
+                    args,
+                    settingsManager,
+                    packageSourceDiscovery,
+                    extensionResourcesRef.get()
+                ), args.noThemes());
                 PiCliAnsi.setRegisteredThemes(reloadedThemes.palettes());
                 return new PiAgentSession.ThemeReloadResult(
                     reloadedThemes.availableThemes(),
                     reloadedThemes.warnings()
                 );
+            })
+            .startupResourcePathsReloadAction(() -> {
+                var refreshed = resolveStartupResourcePaths(
+                    args,
+                    settingsManager,
+                    packageSourceDiscovery,
+                    extensionRuntime,
+                    extensionResourcesRef.get()
+                );
+                return new PiAgentSession.StartupResourcePaths(
+                    refreshed.skillPaths(),
+                    refreshed.promptPaths()
+                );
+            })
+            .closeAction(() -> {
+                if (extensionRuntime != null) {
+                    extensionRuntime.close();
+                }
             });
         if (extensionRuntime != null) {
-            builder.reloadAction(() -> extensionRuntime.reload().failures().stream().map(PiCliModule::formatExtensionFailure).toList());
+            builder.reloadAction(() -> {
+                var snapshot = extensionRuntime.reload();
+                var discovered = discoverExtensionResources(
+                    snapshot,
+                    sessionManager,
+                    settingsManager,
+                    ResourcesDiscoverEvent.Reason.RELOAD
+                );
+                extensionResourcesRef.set(discovered);
+                return discovered.warnings();
+            });
         }
         return builder.build();
     }
 
-    private static List<Path> mergePaths(List<Path> discovered, List<Path> explicit) {
-        var merged = new java.util.LinkedHashSet<Path>();
-        for (var path : discovered == null ? List.<Path>of() : discovered) {
-            if (path == null) {
-                continue;
-            }
-            merged.add(path.toAbsolutePath().normalize());
+    private List<Path> resolveThemePaths(
+        PiCliArgs args,
+        SettingsManager settingsManager,
+        PackageSourceDiscovery packageSourceDiscovery,
+        DiscoveredExtensionResources extensionResources
+    ) {
+        if (args.noThemes()) {
+            return mergePaths(cwd, args.themes());
         }
-        for (var path : explicit == null ? List.<Path>of() : explicit) {
-            if (path == null) {
-                continue;
+        return mergePaths(
+            cwd,
+            packageSourceDiscovery.resolve(
+                settingsManager.getGlobalPackages(),
+                settingsManager.getProjectPackages(),
+                PackageSourceDiscovery.ResourceType.THEMES
+            ),
+            extensionResources.themePaths(),
+            args.themes()
+        );
+    }
+
+    private StartupResourceListing resolveStartupResourcePaths(
+        PiCliArgs args,
+        SettingsManager settingsManager,
+        PackageSourceDiscovery packageSourceDiscovery,
+        ExtensionRuntime extensionRuntime,
+        DiscoveredExtensionResources extensionResources
+    ) {
+        var extensionPaths = extensionRuntime == null
+            ? List.<String>of()
+            : extensionRuntime.sources().stream().map(Path::toString).toList();
+        var skillPaths = args.noSkills()
+            ? List.<String>of()
+            : mergePaths(
+                cwd,
+                packageSourceDiscovery.resolve(
+                    settingsManager.getGlobalPackages(),
+                    settingsManager.getProjectPackages(),
+                    PackageSourceDiscovery.ResourceType.SKILLS
+                ),
+                extensionResources.skillPaths(),
+                args.skills()
+            ).stream().map(Path::toString).toList();
+        var promptPaths = args.noPromptTemplates()
+            ? List.<String>of()
+            : mergePaths(
+                cwd,
+                packageSourceDiscovery.resolve(
+                    settingsManager.getGlobalPackages(),
+                    settingsManager.getProjectPackages(),
+                    PackageSourceDiscovery.ResourceType.PROMPTS
+                ),
+                extensionResources.promptPaths(),
+                args.promptTemplates()
+            ).stream().map(Path::toString).toList();
+        return new StartupResourceListing(extensionPaths, skillPaths, promptPaths);
+    }
+
+    private static DiscoveredExtensionResources discoverExtensionResources(
+        ExtensionRuntimeSnapshot snapshot,
+        SessionManager sessionManager,
+        SettingsManager settingsManager,
+        ResourcesDiscoverEvent.Reason reason
+    ) {
+        if (snapshot == null || !snapshot.resourceDiscovery().hasHandlers()) {
+            return DiscoveredExtensionResources.fromResult(
+                new ExtensionResourceDiscoveryResult(List.of(), List.of(), List.of(), List.of()),
+                snapshot == null ? List.of() : snapshot.failures().stream().map(PiCliModule::formatExtensionFailure).toList()
+            );
+        }
+        var result = snapshot.resourceDiscovery().discover(
+            new ResourcesDiscoverEvent(Path.of(sessionManager.header().cwd()), reason),
+            new PiCliExtensionContext(Path.of(sessionManager.header().cwd()), sessionManager, settingsManager)
+        ).toCompletableFuture().join();
+        var warnings = new ArrayList<String>();
+        for (var failure : snapshot.failures()) {
+            warnings.add(formatExtensionFailure(failure));
+        }
+        for (var failure : result.failures()) {
+            warnings.add(formatExtensionEventFailure(failure));
+        }
+        return DiscoveredExtensionResources.fromResult(result, warnings);
+    }
+
+    @SafeVarargs
+    private static List<Path> mergePaths(Path cwd, List<Path>... pathGroups) {
+        var merged = new java.util.LinkedHashSet<Path>();
+        for (var pathGroup : pathGroups) {
+            for (var path : pathGroup == null ? List.<Path>of() : pathGroup) {
+                if (path == null) {
+                    continue;
+                }
+                merged.add(normalizePath(cwd, path));
             }
-            merged.add(path.toAbsolutePath().normalize());
         }
         return List.copyOf(merged);
+    }
+
+    private static Path normalizePath(Path cwd, Path path) {
+        return path.isAbsolute()
+            ? path.toAbsolutePath().normalize()
+            : cwd.resolve(path).toAbsolutePath().normalize();
     }
 
     static Model resolveModel(PiCliArgs args, ModelRegistry registry, List<PiAgentSession.CycleModel> scopedCycleModels) {
@@ -516,6 +643,10 @@ public final class PiCliModule {
         return "%s: %s".formatted(failure.source().getFileName(), failure.message());
     }
 
+    private static String formatExtensionEventFailure(ExtensionEventFailure failure) {
+        return "%s: %s".formatted(failure.extensionId(), rootMessage(failure.cause()));
+    }
+
     private static CompletionStage<Void> appendLine(Appendable output, String text) {
         try {
             output.append(text);
@@ -536,5 +667,62 @@ public final class PiCliModule {
             Runtime.getRuntime().removeShutdownHook(shutdownHook);
         } catch (IllegalStateException | IllegalArgumentException ignored) {
         }
+    }
+
+    private static String rootMessage(Throwable throwable) {
+        var current = throwable;
+        while (current.getCause() != null && current.getCause() != current) {
+            current = current.getCause();
+        }
+        return current.getMessage() == null ? current.getClass().getSimpleName() : current.getMessage();
+    }
+
+    private record StartupResourceListing(
+        List<String> extensionPaths,
+        List<String> skillPaths,
+        List<String> promptPaths
+    ) {
+        private StartupResourceListing {
+            extensionPaths = List.copyOf(extensionPaths);
+            skillPaths = List.copyOf(skillPaths);
+            promptPaths = List.copyOf(promptPaths);
+        }
+    }
+
+    private record DiscoveredExtensionResources(
+        List<Path> skillPaths,
+        List<Path> promptPaths,
+        List<Path> themePaths,
+        List<String> warnings
+    ) {
+        private DiscoveredExtensionResources {
+            skillPaths = List.copyOf(skillPaths);
+            promptPaths = List.copyOf(promptPaths);
+            themePaths = List.copyOf(themePaths);
+            warnings = List.copyOf(warnings);
+        }
+
+        private static DiscoveredExtensionResources empty() {
+            return new DiscoveredExtensionResources(List.of(), List.of(), List.of(), List.of());
+        }
+
+        private static DiscoveredExtensionResources fromResult(
+            ExtensionResourceDiscoveryResult result,
+            List<String> warnings
+        ) {
+            return new DiscoveredExtensionResources(
+                result.skillPaths().stream().map(dev.pi.extension.spi.ExtensionResourcePath::resolvedPath).toList(),
+                result.promptPaths().stream().map(dev.pi.extension.spi.ExtensionResourcePath::resolvedPath).toList(),
+                result.themePaths().stream().map(dev.pi.extension.spi.ExtensionResourcePath::resolvedPath).toList(),
+                warnings
+            );
+        }
+    }
+
+    private record PiCliExtensionContext(
+        Path cwd,
+        SessionManager sessionManager,
+        SettingsManager settingsManager
+    ) implements ExtensionContext {
     }
 }

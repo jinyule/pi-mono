@@ -33,8 +33,14 @@ class PiAgentSessionStartupResourcesTest {
             )
         )
             .streamFunction(fakeAssistant("ready"))
+            .skillPaths(List.of("/workspace/project/skills/demo"))
+            .promptPaths(List.of("/workspace/project/prompts/main.md"))
             .customThemes(List.of("midnight"))
             .extensionPaths(List.of("/workspace/project/ext/demo.jar"))
+            .startupResourcePathsReloadAction(() -> new PiAgentSession.StartupResourcePaths(
+                List.of("/workspace/project/skills/reloaded"),
+                List.of("/workspace/project/prompts/reloaded.md")
+            ))
             .themeReloadAction(() -> new PiAgentSession.ThemeReloadResult(
                 List.of("sunrise"),
                 List.of("theme warning")
@@ -43,11 +49,15 @@ class PiAgentSessionStartupResourcesTest {
 
         assertThat(session.startupResources().contextFiles()).containsExactly(agentsPath);
         assertThat(session.startupResources().extensionPaths()).containsExactly("/workspace/project/ext/demo.jar");
+        assertThat(session.startupResources().skillPaths()).containsExactly("/workspace/project/skills/demo");
+        assertThat(session.startupResources().promptPaths()).containsExactly("/workspace/project/prompts/main.md");
         assertThat(session.startupResources().customThemes()).containsExactly("midnight");
 
         var reloadResult = session.reload();
 
         assertThat(reloadResult.themeWarnings()).containsExactly("theme warning");
+        assertThat(session.startupResources().skillPaths()).containsExactly("/workspace/project/skills/reloaded");
+        assertThat(session.startupResources().promptPaths()).containsExactly("/workspace/project/prompts/reloaded.md");
         assertThat(session.startupResources().customThemes()).containsExactly("sunrise");
     }
 

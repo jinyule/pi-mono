@@ -28,6 +28,8 @@ class PiInteractiveModeResourceListingTest {
             .withStartupResources(new PiInteractiveSession.StartupResources(
                 List.of("/workspace/project/AGENTS.md"),
                 List.of("/workspace/project/ext/demo.jar"),
+                List.of("/workspace/project/.pi/skills/demo"),
+                List.of("/workspace/project/.pi/prompts/review.md"),
                 List.of("midnight")
             ));
         var terminal = new FakeTerminal(100, 18);
@@ -42,6 +44,10 @@ class PiInteractiveModeResourceListingTest {
             assertThat(output).contains("AGENTS.md");
             assertThat(output).contains("[Extensions]");
             assertThat(output).contains("demo.jar");
+            assertThat(output).contains("[Skills]");
+            assertThat(output).contains("skills/demo");
+            assertThat(output).contains("[Prompts]");
+            assertThat(output).contains("prompts/review.md");
             assertThat(output).contains("[Themes]");
             assertThat(output).contains("midnight");
         } finally {
@@ -56,6 +62,8 @@ class PiInteractiveModeResourceListingTest {
             .withStartupResources(new PiInteractiveSession.StartupResources(
                 List.of("/workspace/project/AGENTS.md"),
                 List.of("/workspace/project/ext/demo.jar"),
+                List.of("/workspace/project/.pi/skills/demo"),
+                List.of("/workspace/project/.pi/prompts/review.md"),
                 List.of("midnight")
             ));
         var terminal = new FakeTerminal(100, 18);
@@ -68,6 +76,8 @@ class PiInteractiveModeResourceListingTest {
             var output = terminal.output();
             assertThat(output).doesNotContain("[Context]");
             assertThat(output).doesNotContain("[Extensions]");
+            assertThat(output).doesNotContain("[Skills]");
+            assertThat(output).doesNotContain("[Prompts]");
             assertThat(output).doesNotContain("[Themes]");
         } finally {
             mode.stop();
@@ -81,6 +91,8 @@ class PiInteractiveModeResourceListingTest {
             .withStartupResources(new PiInteractiveSession.StartupResources(
                 List.of("/workspace/project/AGENTS.md"),
                 List.of("/workspace/project/ext/demo.jar"),
+                List.of("/workspace/project/.pi/skills/demo"),
+                List.of("/workspace/project/.pi/prompts/review.md"),
                 List.of("midnight")
             ))
             .withReloadResult(new PiInteractiveSession.ReloadResult(

@@ -50,14 +50,22 @@ Add the missing Java-side packaging surface that phase 8 deliberately deferred:
   - project/global `git:` packages under the same `.../.pi/git/<host>/<path>` layout as the TypeScript app
 - Added tests for installed project/global npm package roots and installed git package roots.
 - Added CLI tests proving installed project `npm:` theme packages and installed project `git:` extension packages now affect startup behavior.
+- Extended Java-side startup resources so discovered `skills` and `prompts` now flow through to the CLI resource surfaces instead of stopping at raw path discovery.
+- Extended Java-side extension resource discovery wiring so extension-declared `skills`, `prompts`, and `themes` now affect startup resources and the available theme list.
+- Added CLI-focused tests covering:
+  - project package-source `skills` / `prompts` surfacing in startup resources
+  - extension-declared `skills` / `prompts` surfacing in startup resources
+  - extension-declared themes surfacing in the settings theme list
+- Added session/application close wiring so extension runtimes are released after use instead of leaving JAR handles open.
 
 ## Next smallest slice
 
-Start consuming discovered package resources beyond raw paths: wire skill/prompt/theme resource surfaces into the Java CLI paths that already exist, instead of stopping at startup path discovery.
+Add Java-side auth storage and interactive `/login` / `/logout`, so package management and future distribution flows have the same baseline account surface as the TypeScript app.
 
 ## Validation
 
 ```bash
+.\gradlew.bat :pi-cli:test --no-daemon
 .\gradlew.bat :pi-session:test :pi-cli:test --no-daemon
 npm.cmd run check
 ```

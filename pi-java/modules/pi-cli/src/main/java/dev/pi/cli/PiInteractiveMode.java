@@ -403,6 +403,8 @@ public final class PiInteractiveMode implements AutoCloseable {
             var startupResources = session.startupResources();
             appendResourceSection(sections, "Context", startupResources.contextFiles(), true);
             appendResourceSection(sections, "Extensions", startupResources.extensionPaths(), true);
+            appendResourceSection(sections, "Skills", startupResources.skillPaths(), true);
+            appendResourceSection(sections, "Prompts", startupResources.promptPaths(), true);
             appendResourceSection(sections, "Themes", startupResources.customThemes(), false);
         }
         if (reloadDiagnostics != null && !reloadDiagnostics.isBlank()) {

@@ -11,7 +11,7 @@ This file is the entry point only. Detailed handoff is split under `pi-java/docs
 - Phase 8 (behavior parity) is complete.
 - Phase 9 (package sources / distribution) is active.
 
-The current implementation hotspot is phase 9 package-source and settings work.
+The current implementation hotspot is phase 9 package-source follow-through and upcoming auth work.
 
 ## Read order
 
@@ -28,6 +28,7 @@ The current implementation hotspot is phase 9 package-source and settings work.
 Most recently repeated validation commands:
 
 ```bash
+.\gradlew.bat :pi-session:test :pi-cli:test --no-daemon
 .\gradlew.bat :pi-cli:test --no-daemon
 .\gradlew.bat :pi-tui:test --no-daemon
 .\gradlew.bat :pi-tui:test :pi-cli:test --no-daemon
