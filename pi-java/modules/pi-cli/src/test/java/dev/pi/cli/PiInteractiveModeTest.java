@@ -747,6 +747,32 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void resetsTerminalTitleAfterForkingNewSession() {
+        var session = new FakeSession();
+        var terminal = new RecordingTerminal(100, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("Hello");
+        terminal.sendInput("\r");
+        terminal.sendInput("/name Scratch");
+        terminal.sendInput("\r");
+        assertThat(terminal.title()).isEqualTo("pi-java - Scratch - workspace");
+        terminal.sendInput("Second");
+        terminal.sendInput("\r");
+
+        terminal.sendInput("/fork");
+        terminal.sendInput("\r");
+        terminal.sendInput("\u001b[A");
+        terminal.sendInput("\r");
+
+        waitFor(() -> "pi-java - workspace".equals(terminal.title()));
+        assertThat(terminal.title()).isEqualTo("pi-java - workspace");
+
+        mode.stop();
+    }
+
+    @Test
     void usesAppKeybindingForForkOverlay() {
         var session = new FakeSession();
         var terminal = new VirtualTerminal(80, 16);
