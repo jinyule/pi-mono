@@ -1017,7 +1017,7 @@ public final class PiInteractiveMode implements AutoCloseable {
     private void handleCycleModelForwardCommand() {
         try {
             var result = session.cycleModelForward();
-            manualStatus = result == null ? "Only one model available" : formatModelCycleStatus(result);
+            manualStatus = result == null ? onlyOneModelMessage() : formatModelCycleStatus(result);
         } catch (RuntimeException exception) {
             manualStatus = "Error: " + rootMessage(exception);
         }
@@ -1027,7 +1027,7 @@ public final class PiInteractiveMode implements AutoCloseable {
     private void handleCycleModelBackwardCommand() {
         try {
             var result = session.cycleModelBackward();
-            manualStatus = result == null ? "Only one model available" : formatModelCycleStatus(result);
+            manualStatus = result == null ? onlyOneModelMessage() : formatModelCycleStatus(result);
         } catch (RuntimeException exception) {
             manualStatus = "Error: " + rootMessage(exception);
         }
@@ -1232,6 +1232,12 @@ public final class PiInteractiveMode implements AutoCloseable {
 
     private static String formatModelSelectionStatus(PiInteractiveSession.ModelCycleResult result) {
         return "Model: " + result.modelId();
+    }
+
+    private String onlyOneModelMessage() {
+        return session.modelSelection().scopedModels().isEmpty()
+            ? "Only one model available"
+            : "Only one model in scope";
     }
 
     private Runnable createSuspendAction() {

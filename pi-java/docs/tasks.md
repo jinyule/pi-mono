@@ -43,7 +43,7 @@ Updated: 2026-03-18
   - Settings/theme parity is substantially advanced.
   - Footer parity is substantially advanced.
   - Interactive queue/key-hint parity continues to advance, including shared key-hint styling, TypeScript-aligned dequeue copy in queued-message hints and restore statuses, muted queued-message status lines, and narrow-width queued-line truncation instead of wrapping.
-  - Model selector parity is active and is now down to the last minor edge-case polish after compact-row truncation, multi-key scope-hint alignment, TypeScript-style tokenized fuzzy search alignment, selection-retention parity while searching, top-section width handling at narrow terminal sizes, current-checkmark preservation in truncated rows, TypeScript-style `Model: <id>` status copy after selection, and TypeScript-style providerless model-cycle status copy with model-name preference.
+  - Model selector parity is active and is now down to the last minor edge-case polish after compact-row truncation, multi-key scope-hint alignment, TypeScript-style tokenized fuzzy search alignment, selection-retention parity while searching, top-section width handling at narrow terminal sizes, current-checkmark preservation in truncated rows, TypeScript-style `Model: <id>` status copy after selection, TypeScript-style providerless model-cycle status copy with model-name preference, and scoped-vs-global single-model fallback copy.
 - Phase 9 (package sources / distribution): not started.
 
 ## Current next slices

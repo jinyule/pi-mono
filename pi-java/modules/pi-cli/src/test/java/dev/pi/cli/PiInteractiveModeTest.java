@@ -1074,6 +1074,31 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void cycleModelShowsScopedAvailabilityMessage() {
+        var session = new FakeSession()
+            .withSelectableModels(List.of(new PiInteractiveSession.SelectableModel(0, "openai", "gpt-5", "GPT-5", "minimal", true, true, 400_000)))
+            .withScopedSelectableModels(List.of(new PiInteractiveSession.SelectableModel(0, "openai", "gpt-5", "GPT-5", "minimal", true, true, 400_000)))
+            .withSingleModelOnly(true);
+        var terminal = new VirtualTerminal(100, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+        var previousApp = PiAppKeybindings.global();
+        try {
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(
+                PiAppAction.CYCLE_MODEL_FORWARD,
+                java.util.List.of("ctrl+p")
+            )));
+
+            mode.start();
+            terminal.sendInput("\u0010");
+
+            assertThat(String.join("\n", terminal.getViewport())).contains("Only one model in scope");
+        } finally {
+            PiAppKeybindings.setGlobal(previousApp);
+            mode.stop();
+        }
+    }
+
+    @Test
     void usesAppKeybindingForToggleThinking() {
         var session = new FakeSession().withAssistantThinkingMessage("Reason through options", "Final answer");
         var terminal = new VirtualTerminal(100, 16);
@@ -1416,6 +1441,7 @@ class PiInteractiveModeTest {
         private String lastThinkingLevelChange;
         private String lastModelIdChange;
         private String lastModelProviderChange;
+        private boolean singleModelOnly;
         private boolean streaming;
         private List<String> reloadWarnings = List.of();
         private final List<String> steeringMessages = new ArrayList<>();
@@ -1423,6 +1449,7 @@ class PiInteractiveModeTest {
         private final List<String> queuedSteeringMessages = new ArrayList<>();
         private final List<String> queuedFollowUps = new ArrayList<>();
         private List<SelectableModel> selectableModels = List.of();
+        private List<SelectableModel> scopedSelectableModels = List.of();
         private DequeueResult dequeueResult = new DequeueResult("", 0);
         private AgentState state = new AgentState(
             "",
@@ -1622,6 +1649,9 @@ class PiInteractiveModeTest {
 
         @Override
         public ModelCycleResult cycleModelForward() {
+            if (singleModelOnly) {
+                return null;
+            }
             var nextModel = new Model(
                 "next-model",
                 "Next Model",
@@ -1644,6 +1674,9 @@ class PiInteractiveModeTest {
 
         @Override
         public ModelCycleResult cycleModelBackward() {
+            if (singleModelOnly) {
+                return null;
+            }
             var previousModel = new Model(
                 "previous-model",
                 "Previous Model",
@@ -1685,6 +1718,11 @@ class PiInteractiveModeTest {
         @Override
         public List<SelectableModel> selectableModels() {
             return selectableModels;
+        }
+
+        @Override
+        public ModelSelection modelSelection() {
+            return new ModelSelection(selectableModels, scopedSelectableModels);
         }
 
         @Override
@@ -2028,6 +2066,16 @@ class PiInteractiveModeTest {
 
         private FakeSession withSelectableModels(List<SelectableModel> selectableModels) {
             this.selectableModels = List.copyOf(selectableModels);
+            return this;
+        }
+
+        private FakeSession withScopedSelectableModels(List<SelectableModel> scopedSelectableModels) {
+            this.scopedSelectableModels = List.copyOf(scopedSelectableModels);
+            return this;
+        }
+
+        private FakeSession withSingleModelOnly(boolean singleModelOnly) {
+            this.singleModelOnly = singleModelOnly;
             return this;
         }
 

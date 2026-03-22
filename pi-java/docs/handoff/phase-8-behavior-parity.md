@@ -113,6 +113,7 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - current-model checkmark now stays visible when compact row metadata must truncate at narrow widths
 - selector completion status now matches the TypeScript `Model: <id>` copy instead of the older Java-specific `Selected provider/model` wording
 - model-cycle status now drops the Java-specific provider prefix and prefers `model.name` over `model.id`, matching the TypeScript `Switched to <name|id>` wording more closely
+- model-cycle fallback copy now distinguishes `Only one model in scope` from `Only one model available`, matching the TypeScript scoped/global behavior
 
 ## Latest completed slices
 
@@ -143,6 +144,7 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - working tree slice: queued steering/follow-up lines now truncate to the available status width instead of wrapping, matching the TypeScript `TruncatedText` behavior more closely
 - working tree slice: model-selector completion status now uses the TypeScript `Model: <id>` copy instead of the older Java-specific selection wording
 - working tree slice: model-cycle status now drops the provider prefix and prefers `model.name`, matching the TypeScript `Switched to <name|id>` copy more closely
+- working tree slice: model-cycle fallback copy now distinguishes scoped-vs-global single-model states, matching the TypeScript behavior more closely
 
 ## Remaining gaps
 
