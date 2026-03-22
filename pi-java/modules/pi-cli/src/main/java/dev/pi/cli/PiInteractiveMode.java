@@ -209,6 +209,11 @@ public final class PiInteractiveMode implements AutoCloseable {
             handleNewSessionCommand();
             return;
         }
+        if ("/resume".equals(trimmed)) {
+            input.setValue("");
+            handleResumeCommand();
+            return;
+        }
         if ("/exit".equals(trimmed) || "/quit".equals(trimmed)) {
             input.setValue("");
             requestExit();

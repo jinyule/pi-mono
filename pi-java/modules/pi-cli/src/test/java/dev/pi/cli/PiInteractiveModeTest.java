@@ -1502,6 +1502,22 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void handlesResumeSlashCommand() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(80, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("/resume");
+        terminal.sendInput("\r");
+
+        waitFor(() -> session.resumeCount == 1);
+        assertThat(String.join("\n", terminal.getViewport())).contains("Resumed session");
+
+        mode.stop();
+    }
+
+    @Test
     void stylesQueuedMessageHintWithSharedKeyHintFormatter() {
         var session = new FakeSession().withStreaming(true);
         var terminal = new RecordingTerminal(100, 16);
