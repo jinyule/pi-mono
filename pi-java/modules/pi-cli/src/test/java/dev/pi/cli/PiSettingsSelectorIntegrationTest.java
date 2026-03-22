@@ -32,16 +32,16 @@ class PiSettingsSelectorIntegrationTest {
         terminal.sendInput("/settings");
         terminal.sendInput("\r");
 
-        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Settings")));
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Auto-compact")));
         assertThat(String.join("\n", terminal.getViewport()))
-            .contains("Settings")
             .contains("Auto-compact")
+            .contains("\u2500\u2500\u2500\u2500")
             .contains("(auto)");
 
         terminal.sendInput(" ");
         terminal.sendInput("\u001b");
 
-        waitFor(() -> !String.join("\n", terminal.getViewport()).contains("Settings"));
+        waitFor(() -> !String.join("\n", terminal.getViewport()).contains("Auto-compact"));
         waitFor(() -> !String.join("\n", terminal.getViewport()).contains("(auto)"));
         assertThat(session.updatedSettings).containsExactly("autocompact=false");
 
@@ -313,14 +313,8 @@ class PiSettingsSelectorIntegrationTest {
                 }
             );
 
-            assertThat(String.join("\n", selector.render(90)))
-                .contains("\u001b[90mType to search. \u001b[0m")
-                .contains("\u001b[2;37mctrl+j\u001b[0m")
-                .contains("\u001b[90m changes\u001b[0m")
-                .contains("\u001b[2;37mspace\u001b[0m")
-                .contains("\u001b[90m changes.\u001b[0m")
-                .contains("\u001b[2;37malt+x\u001b[0m")
-                .contains("\u001b[90m cancels.\u001b[0m")
+        assertThat(String.join("\n", selector.render(90)))
+                .contains("\u2500\u2500\u2500\u2500")
                 .contains("\u001b[90m  Type to search \u00b7 \u001b[0m")
                 .contains("\u001b[2;37mctrl+j/space\u001b[0m")
                 .contains("\u001b[90m to change \u00b7 \u001b[0m")

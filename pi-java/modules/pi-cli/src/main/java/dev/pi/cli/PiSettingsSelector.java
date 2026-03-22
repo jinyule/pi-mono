@@ -178,17 +178,9 @@ public final class PiSettingsSelector implements Component, Focusable {
     @Override
     public List<String> render(int width) {
         var lines = new ArrayList<String>();
-        lines.add(PiCliAnsi.bold("Settings"));
-        lines.add(
-            PiCliAnsi.muted("Type to search. ")
-                + PiCliKeyHints.editorHint(EditorAction.SUBMIT, "changes")
-                + PiCliAnsi.muted(" or ")
-                + PiCliKeyHints.rawHint("space", "changes.")
-                + PiCliAnsi.muted(" ")
-                + PiCliKeyHints.editorHint(EditorAction.SELECT_CANCEL, "cancels.")
-        );
-        lines.add("");
+        lines.add(PiCliAnsi.borderMuted("\u2500".repeat(Math.max(1, width))));
         lines.addAll(settingsList.render(width));
+        lines.add(PiCliAnsi.borderMuted("\u2500".repeat(Math.max(1, width))));
         return List.copyOf(lines);
     }
 

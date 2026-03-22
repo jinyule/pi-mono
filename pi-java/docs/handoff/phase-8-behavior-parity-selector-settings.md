@@ -38,6 +38,7 @@ Status: in progress
 - hardware cursor and clear-on-shrink settings
 - TypeScript-style descriptions for steering, follow-up, transport, and quiet-startup
 - theme submenu now omits the extra `(current)` marker, matching the TypeScript selector more closely
+- settings selector now drops the Java-only `Settings` title and top help sentence, and uses TypeScript-style border-only framing
 - custom theme loader and hot reload
 - startup resource listing
 - broader custom theme core token support
@@ -83,6 +84,7 @@ Status: in progress
 - `/model` is now wired in the Java interactive mode, and `/model <term>` now pre-filters the selector the same way the TypeScript flow does before any exact-match shortcut handling
 - exact `/model <term>` hits now short-circuit straight to selection, matching the TypeScript behavior more closely
 - theme submenu options no longer add a Java-only `(current)` description, matching the TypeScript selector more closely
+- settings selector now relies on the built-in settings list hint row plus top/bottom borders, instead of the Java-only title and extra top instruction sentence
 
 ## Next smallest slice
 
