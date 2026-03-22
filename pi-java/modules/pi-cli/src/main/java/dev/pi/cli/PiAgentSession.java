@@ -316,6 +316,7 @@ public final class PiAgentSession implements PiInteractiveSession {
             return new ModelCycleResult(
                 next.model().provider(),
                 next.model().id(),
+                next.model().name(),
                 effectiveThinkingLevel == null ? "off" : effectiveThinkingLevel.value(),
                 scopedCycleModels
             );
@@ -325,6 +326,7 @@ public final class PiAgentSession implements PiInteractiveSession {
         return new ModelCycleResult(
             next.model().provider(),
             next.model().id(),
+            next.model().name(),
             nextThinkingLevel == null ? "off" : nextThinkingLevel.value(),
             scopedCycleModels
         );
@@ -901,6 +903,7 @@ public final class PiAgentSession implements PiInteractiveSession {
         return new ModelCycleResult(
             next.model().provider(),
             next.model().id(),
+            next.model().name(),
             nextThinkingLevel == null ? "off" : nextThinkingLevel.value(),
             scopedCycleModels
         );

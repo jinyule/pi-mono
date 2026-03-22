@@ -1017,7 +1017,7 @@ class PiInteractiveModeTest {
 
             waitFor(() -> "next-model".equals(session.lastModelIdChange));
             assertThat(String.join("\n", terminal.getViewport()))
-                .contains("Switched to next-model")
+                .contains("Switched to Next Model")
                 .contains("model: openai/next-model");
         } finally {
             PiAppKeybindings.setGlobal(previousApp);
@@ -1042,7 +1042,7 @@ class PiInteractiveModeTest {
 
             waitFor(() -> "previous-model".equals(session.lastModelIdChange));
             assertThat(String.join("\n", terminal.getViewport()))
-                .contains("Switched to previous-model")
+                .contains("Switched to Previous Model")
                 .contains("model: openai/previous-model");
         } finally {
             PiAppKeybindings.setGlobal(previousApp);
@@ -1639,7 +1639,7 @@ class PiInteractiveModeTest {
             state = state.withModel(nextModel);
             lastModelIdChange = nextModel.id();
             emitState();
-            return new ModelCycleResult(nextModel.provider(), nextModel.id(), "off", false);
+            return new ModelCycleResult(nextModel.provider(), nextModel.id(), nextModel.name(), "off", false);
         }
 
         @Override
@@ -1661,7 +1661,7 @@ class PiInteractiveModeTest {
             state = state.withModel(previousModel);
             lastModelIdChange = previousModel.id();
             emitState();
-            return new ModelCycleResult(previousModel.provider(), previousModel.id(), "off", false);
+            return new ModelCycleResult(previousModel.provider(), previousModel.id(), previousModel.name(), "off", false);
         }
 
         @Override
@@ -1714,7 +1714,7 @@ class PiInteractiveModeTest {
             lastModelProviderChange = selected.provider();
             lastModelIdChange = selected.modelId();
             emitState();
-            return new ModelCycleResult(selected.provider(), selected.modelId(), selected.thinkingLevel(), true);
+            return new ModelCycleResult(selected.provider(), selected.modelId(), selected.modelName(), selected.thinkingLevel(), true);
         }
 
         @Override

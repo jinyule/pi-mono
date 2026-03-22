@@ -186,9 +186,17 @@ public interface PiInteractiveSession {
     record ModelCycleResult(
         String provider,
         String modelId,
+        String modelName,
         String thinkingLevel,
         boolean scoped
     ) {
+        public ModelCycleResult(String provider, String modelId, String thinkingLevel, boolean scoped) {
+            this(provider, modelId, modelId, thinkingLevel, scoped);
+        }
+
+        public ModelCycleResult {
+            modelName = modelName == null || modelName.isBlank() ? modelId : modelName;
+        }
     }
 
     record SelectableModel(
