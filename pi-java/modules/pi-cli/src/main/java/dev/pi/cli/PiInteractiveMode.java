@@ -1044,6 +1044,8 @@ public final class PiInteractiveMode implements AutoCloseable {
     private void handleCycleThinkingLevelCommand() {
         try {
             manualStatus = "Thinking level: " + session.cycleThinkingLevel();
+        } catch (UnsupportedOperationException exception) {
+            manualStatus = "Current model does not support thinking";
         } catch (RuntimeException exception) {
             manualStatus = "Error: " + rootMessage(exception);
         }

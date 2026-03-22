@@ -1133,6 +1133,31 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void showsUnsupportedThinkingStatusForNonReasoningModels() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(100, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+        var previousApp = PiAppKeybindings.global();
+        try {
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(
+                PiAppAction.CYCLE_THINKING_LEVEL,
+                java.util.List.of("shift+tab")
+            )));
+
+            mode.start();
+            terminal.sendInput("\u001b[Z");
+
+            waitFor(() -> String.join("\n", terminal.getViewport()).contains("Current model does not support thinking"));
+            assertThat(String.join("\n", terminal.getViewport()))
+                .contains("Current model does not support thinking")
+                .doesNotContain("Error: Thinking level is not available for current model");
+        } finally {
+            PiAppKeybindings.setGlobal(previousApp);
+            mode.stop();
+        }
+    }
+
+    @Test
     void cycleModelShowsScopedAvailabilityMessage() {
         var session = new FakeSession()
             .withSelectableModels(List.of(new PiInteractiveSession.SelectableModel(0, "openai", "gpt-5", "GPT-5", "minimal", true, true, 400_000)))
