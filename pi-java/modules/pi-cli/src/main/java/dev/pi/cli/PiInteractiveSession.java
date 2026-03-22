@@ -61,6 +61,18 @@ public interface PiInteractiveSession extends AutoCloseable {
         throw new UnsupportedOperationException("Model selector is not available");
     }
 
+    default ScopedModelsSelection scopedModelsSelection() {
+        return new ScopedModelsSelection(List.of(), List.of(), false);
+    }
+
+    default void updateScopedModels(List<String> enabledModelIds) {
+        throw new UnsupportedOperationException("Scoped model selection is not available");
+    }
+
+    default void saveScopedModels(List<String> enabledModelIds) {
+        throw new UnsupportedOperationException("Scoped model selection is not available");
+    }
+
     default SettingsSelection settingsSelection() {
         return new SettingsSelection(
             false,
@@ -306,6 +318,17 @@ public interface PiInteractiveSession extends AutoCloseable {
         public ModelSelection {
             allModels = List.copyOf(allModels);
             scopedModels = List.copyOf(scopedModels);
+        }
+    }
+
+    record ScopedModelsSelection(
+        List<SelectableModel> allModels,
+        List<String> enabledModelIds,
+        boolean hasFilter
+    ) {
+        public ScopedModelsSelection {
+            allModels = List.copyOf(allModels);
+            enabledModelIds = List.copyOf(enabledModelIds);
         }
     }
 

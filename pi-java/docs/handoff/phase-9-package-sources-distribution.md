@@ -73,10 +73,21 @@ Add the missing Java-side packaging surface that phase 8 deliberately deferred:
   - module wiring from auth storage into default sessions
   - interactive slash-command behavior for login/logout
 - Added masked-input support to the shared TUI input so secrets are not echoed in plain text during the login prompt.
+- Added saved scoped-model support on the Java side:
+  - startup now restores `enabledModels` from settings when `--models` was not passed
+  - saved scoped models now narrow Java model cycling, model selection, and initial model choice
+  - Java interactive mode now supports `/scoped-models`
+  - the selector updates session scope immediately and persists to settings on save
+  - the selector now supports search, toggle, enable-all, clear, and save shortcuts
+- Added focused tests for:
+  - session-only scoped-model updates and persisted saves in `PiAgentSession`
+  - saved-scope startup resolution in `PiCliModule`
+  - interactive `/scoped-models` empty-state command path
+  - selector toggle/save and clear/enable-all behavior
 
 ## Next smallest slice
 
-Wire `enabledModels` into saved scoped-model selection and `/scoped-models`, so Java gets the same persisted model-scope surface that phase 8 deferred.
+Start phase-9 package management work so Java can install or refresh configured package sources instead of only discovering what is already on disk.
 
 ## Validation
 

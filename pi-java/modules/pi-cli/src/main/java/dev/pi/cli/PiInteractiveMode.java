@@ -245,6 +245,11 @@ public final class PiInteractiveMode implements AutoCloseable {
             handleModelCommand(searchTerm == null || searchTerm.isBlank() ? null : searchTerm);
             return;
         }
+        if ("/scoped-models".equals(trimmed)) {
+            input.setValue("");
+            handleScopedModelsCommand();
+            return;
+        }
         if ("/login".equals(trimmed) || trimmed.startsWith("/login ")) {
             input.setValue("");
             handleLoginCommand(trimmed);
@@ -913,6 +918,44 @@ public final class PiInteractiveMode implements AutoCloseable {
                 OverlayMargin.uniform(1)
             )
         ));
+    }
+
+    private void handleScopedModelsCommand() {
+        var selection = session.scopedModelsSelection();
+        if (selection.allModels().isEmpty()) {
+            manualStatus = "No models available";
+            renderState(session.state());
+            return;
+        }
+        var overlayRef = new AtomicReference<dev.pi.tui.OverlayHandle>();
+        var selector = new PiScopedModelsSelector(
+            selection,
+            enabledIds -> {
+                try {
+                    manualStatus = null;
+                    session.updateScopedModels(enabledIds);
+                    renderState(session.state());
+                } catch (RuntimeException exception) {
+                    manualStatus = "Error: " + rootMessage(exception);
+                    renderState(session.state());
+                }
+            },
+            enabledIds -> {
+                try {
+                    session.saveScopedModels(enabledIds);
+                    manualStatus = "Model selection saved to settings";
+                    renderState(session.state());
+                } catch (RuntimeException exception) {
+                    manualStatus = "Error: " + rootMessage(exception);
+                    renderState(session.state());
+                }
+            },
+            () -> {
+                hideOverlay(overlayRef.get());
+                renderState(session.state());
+            }
+        );
+        overlayRef.set(showCenteredOverlay(selector, 72, 14));
     }
 
     private void handleLoginCommand(String text) {

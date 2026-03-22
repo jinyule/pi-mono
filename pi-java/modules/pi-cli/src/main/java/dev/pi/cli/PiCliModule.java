@@ -280,7 +280,10 @@ public final class PiCliModule {
         PiCliAnsi.setRegisteredThemes(loadedThemes.palettes());
         var instructionLoader = new InstructionResourceLoader(cwd);
         instructionLoader.reload();
-        var scopedCycleModels = resolveScopedCycleModels(args.modelPatterns(), aiClient.modelRegistry());
+        var configuredModelPatterns = args.modelPatterns().isEmpty()
+            ? settingsManager.getEnabledModels()
+            : args.modelPatterns();
+        var scopedCycleModels = resolveScopedCycleModels(configuredModelPatterns, aiClient.modelRegistry());
         var cycleModels = resolveCycleModels(args, aiClient.modelRegistry(), scopedCycleModels);
         var model = resolveModel(args, aiClient.modelRegistry(), scopedCycleModels, settingsManager);
         var initialThinkingLevel = resolveInitialThinkingLevel(args, scopedCycleModels);
@@ -507,7 +510,13 @@ public final class PiCliModule {
             throw new IllegalStateException("Model id %s is ambiguous; pass --provider as well".formatted(args.model()));
         }
 
-        if (!args.modelPatterns().isEmpty() && !scopedCycleModels.isEmpty()) {
+        if (!scopedCycleModels.isEmpty()) {
+            if (settingsManager != null) {
+                var defaultModel = resolveDefaultModel(registry, settingsManager);
+                if (defaultModel != null && scopedCycleModels.stream().anyMatch(candidate -> sameModel(candidate.model(), defaultModel))) {
+                    return defaultModel;
+                }
+            }
             return scopedCycleModels.getFirst().model();
         }
 
@@ -564,7 +573,7 @@ public final class PiCliModule {
         Objects.requireNonNull(args, "args");
         Objects.requireNonNull(registry, "registry");
         Objects.requireNonNull(scopedCycleModels, "scopedCycleModels");
-        if (!args.modelPatterns().isEmpty() && !scopedCycleModels.isEmpty()) {
+        if (!scopedCycleModels.isEmpty()) {
             return scopedCycleModels;
         }
         return allModels(registry).stream()

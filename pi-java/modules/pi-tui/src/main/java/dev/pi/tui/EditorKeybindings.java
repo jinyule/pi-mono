@@ -31,6 +31,9 @@ public final class EditorKeybindings {
         Map.entry(EditorAction.SESSION_PATH_TOGGLE, List.of("ctrl+p")),
         Map.entry(EditorAction.SESSION_DELETE, List.of("ctrl+d")),
         Map.entry(EditorAction.SESSION_RENAME, List.of("ctrl+r")),
+        Map.entry(EditorAction.MODEL_SCOPE_ENABLE_ALL, List.of("ctrl+a")),
+        Map.entry(EditorAction.MODEL_SCOPE_CLEAR_ALL, List.of("ctrl+x")),
+        Map.entry(EditorAction.MODEL_SCOPE_SAVE, List.of("ctrl+s")),
         Map.entry(EditorAction.YANK, List.of("ctrl+y")),
         Map.entry(EditorAction.YANK_POP, List.of("alt+y")),
         Map.entry(EditorAction.UNDO, List.of("ctrl+-"))

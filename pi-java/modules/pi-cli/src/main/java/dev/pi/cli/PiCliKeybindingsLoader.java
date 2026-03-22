@@ -40,7 +40,10 @@ final class PiCliKeybindingsLoader {
         Map.entry("toggleSessionSort", EditorAction.SESSION_SORT_TOGGLE),
         Map.entry("toggleSessionPath", EditorAction.SESSION_PATH_TOGGLE),
         Map.entry("deleteSession", EditorAction.SESSION_DELETE),
-        Map.entry("renameSession", EditorAction.SESSION_RENAME)
+        Map.entry("renameSession", EditorAction.SESSION_RENAME),
+        Map.entry("enableAllScopedModels", EditorAction.MODEL_SCOPE_ENABLE_ALL),
+        Map.entry("clearScopedModels", EditorAction.MODEL_SCOPE_CLEAR_ALL),
+        Map.entry("saveScopedModels", EditorAction.MODEL_SCOPE_SAVE)
     );
     private static final Map<String, PiAppAction> APP_ACTION_ALIASES = Map.ofEntries(
         Map.entry("interrupt", PiAppAction.INTERRUPT),

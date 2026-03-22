@@ -51,8 +51,8 @@ public final class PiAgentSession implements PiInteractiveSession {
     private final ThemeReloadAction themeReloadAction;
     private final StartupResourcePathsReloadAction startupResourcePathsReloadAction;
     private final CloseAction closeAction;
-    private final List<CycleModel> cycleModels;
-    private final boolean scopedCycleModels;
+    private volatile List<CycleModel> cycleModels;
+    private volatile boolean scopedCycleModels;
     private final int availableProviderCount;
     private final List<Model> modelSelectorModels;
     private final List<String> extensionPaths;
@@ -406,6 +406,25 @@ public final class PiAgentSession implements PiInteractiveSession {
         }
         modelSelectionTargets = List.copyOf(targets);
         return new ModelSelection(allModels, scopedModels);
+    }
+
+    @Override
+    public ScopedModelsSelection scopedModelsSelection() {
+        var selection = modelSelection();
+        var enabledIds = scopedCycleModels
+            ? cycleModels.stream().map(PiAgentSession::fullModelId).toList()
+            : List.<String>of();
+        return new ScopedModelsSelection(selection.allModels(), enabledIds, scopedCycleModels);
+    }
+
+    @Override
+    public void updateScopedModels(List<String> enabledModelIds) {
+        applyScopedModels(enabledModelIds, false);
+    }
+
+    @Override
+    public void saveScopedModels(List<String> enabledModelIds) {
+        applyScopedModels(enabledModelIds, true);
     }
 
     @Override
@@ -1193,6 +1212,98 @@ public final class PiAgentSession implements PiInteractiveSession {
         return Objects.equals(left.provider(), right.provider()) && Objects.equals(left.id(), right.id());
     }
 
+    private void applyScopedModels(List<String> enabledModelIds, boolean persist) {
+        var allTargets = uniqueSelectorModels();
+        if (allTargets.isEmpty()) {
+            cycleModels = List.of();
+            scopedCycleModels = false;
+            if (persist) {
+                settingsManager.setEnabledModels(List.of());
+            }
+            return;
+        }
+
+        var normalizedIds = normalizeScopedModelIds(enabledModelIds, allTargets);
+        if (normalizedIds.isEmpty() || normalizedIds.size() >= allTargets.size()) {
+            cycleModels = allTargets;
+            scopedCycleModels = false;
+            if (persist) {
+                settingsManager.setEnabledModels(List.of());
+            }
+            return;
+        }
+
+        var currentThinkingLevel = sdkSession.state().thinkingLevel();
+        var byId = new LinkedHashMap<String, CycleModel>();
+        for (var target : allTargets) {
+            byId.put(fullModelId(target), target);
+        }
+
+        var nextScopedModels = new ArrayList<CycleModel>();
+        for (var id : normalizedIds) {
+            var target = byId.get(id);
+            if (target == null) {
+                continue;
+            }
+            nextScopedModels.add(new CycleModel(
+                target.model(),
+                resolveScopedThinkingLevel(id, currentThinkingLevel)
+            ));
+        }
+
+        if (nextScopedModels.isEmpty() || nextScopedModels.size() >= allTargets.size()) {
+            cycleModels = allTargets;
+            scopedCycleModels = false;
+            if (persist) {
+                settingsManager.setEnabledModels(List.of());
+            }
+            return;
+        }
+
+        cycleModels = List.copyOf(nextScopedModels);
+        scopedCycleModels = true;
+        if (persist) {
+            settingsManager.setEnabledModels(normalizedIds);
+        }
+    }
+
+    private List<String> normalizeScopedModelIds(List<String> enabledModelIds, List<CycleModel> allTargets) {
+        if (enabledModelIds == null || enabledModelIds.isEmpty()) {
+            return List.of();
+        }
+        var availableIds = allTargets.stream().map(PiAgentSession::fullModelId).toList();
+        var availableSet = new LinkedHashSet<>(availableIds);
+        var normalized = new ArrayList<String>();
+        for (var id : enabledModelIds) {
+            if (id == null || id.isBlank()) {
+                continue;
+            }
+            var trimmed = id.trim();
+            if (!availableSet.contains(trimmed) || normalized.contains(trimmed)) {
+                continue;
+            }
+            normalized.add(trimmed);
+        }
+        return List.copyOf(normalized);
+    }
+
+    private ThinkingLevel resolveScopedThinkingLevel(String id, ThinkingLevel currentThinkingLevel) {
+        for (var cycleModel : cycleModels) {
+            if (fullModelId(cycleModel).equals(id) && cycleModel.thinkingLevel() != null) {
+                return cycleModel.thinkingLevel();
+            }
+        }
+        var model = uniqueSelectorModels().stream()
+            .map(CycleModel::model)
+            .filter(candidate -> fullModelId(candidate).equals(id))
+            .findFirst()
+            .orElse(null);
+        if (model == null || !model.reasoning()) {
+            return null;
+        }
+        return currentThinkingLevel;
+    }
+
     private List<String> knownProviders() {
         var providers = new LinkedHashSet<String>();
         for (var model : modelSelectorModels) {
@@ -1203,6 +1314,14 @@ public final class PiAgentSession implements PiInteractiveSession {
         }
         providers.add(sdkSession.state().model().provider());
         return List.copyOf(providers);
+    }
+
+    private static String fullModelId(CycleModel cycleModel) {
+        return fullModelId(cycleModel.model());
+    }
+
+    private static String fullModelId(Model model) {
+        return model.provider() + "/" + model.id();
     }
 
     private static String normalizeProvider(String provider) {
