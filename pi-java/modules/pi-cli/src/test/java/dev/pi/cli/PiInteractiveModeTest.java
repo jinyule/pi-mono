@@ -997,8 +997,8 @@ class PiInteractiveModeTest {
             terminal.sendInput("\u001bg");
 
             assertThat(String.join("\n", terminal.getViewport()))
-                .contains("Loaded text from external editor (flattened to single line)")
-                .contains("> draft next line");
+                .contains("> draft next line")
+                .doesNotContain("Loaded text from external editor");
 
             terminal.sendInput("\r");
 

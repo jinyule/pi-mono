@@ -54,6 +54,7 @@ Status: in progress
 - empty-compaction warning wording
 - manual compaction now relies on the compaction summary itself instead of a separate `Compacted context` success banner
 - `/copy` empty-state now uses the plain `No agent messages to copy yet.` wording instead of adding an extra `Error:` prefix
+- successful external-editor loads no longer add `Loaded text from external editor...` status lines; the editor content change itself now carries the feedback, matching the TypeScript behavior more closely
 
 ## Recent interactive slices
 
@@ -67,6 +68,7 @@ Status: in progress
 - manual compaction success now relies on the compaction summary message instead of a separate `Compacted context` status line
 - `/copy` with no assistant output now shows `No agent messages to copy yet.` directly, matching the TypeScript wording
 - clipboard-image paste now leaves the current status untouched when no image is available or clipboard access throws, matching the TypeScript no-op behavior for those edge cases
+- external-editor success now leaves the status line untouched and just updates the editor content, matching the TypeScript behavior more closely
 
 ## Next smallest slice
 

@@ -995,9 +995,6 @@ public final class PiInteractiveMode implements AutoCloseable {
             if (editedText != null) {
                 var normalizedText = normalizeExternalEditorText(editedText);
                 replaceInputValue(normalizedText);
-                manualStatus = normalizedText.equals(stripTrailingSingleLineBreak(editedText))
-                    ? "Loaded text from external editor"
-                    : "Loaded text from external editor (flattened to single line)";
             } else {
                 manualStatus = null;
             }
