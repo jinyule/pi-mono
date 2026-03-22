@@ -1099,13 +1099,15 @@ class PiInteractiveModeTest {
 
             waitFor(() -> String.join("\n", terminal.getViewport()).contains("Details:"));
             assertThat(String.join("\n", terminal.getViewport()))
-                .contains("Tool details: expanded")
+                .doesNotContain("Tool details: expanded")
                 .contains("\"path\" : \"README.md\"");
 
             terminal.sendInput("\u001bh");
 
-            waitFor(() -> String.join("\n", terminal.getViewport()).contains("Tool details: collapsed"));
-            assertThat(String.join("\n", terminal.getViewport())).doesNotContain("Details:");
+            waitFor(() -> !String.join("\n", terminal.getViewport()).contains("Details:"));
+            assertThat(String.join("\n", terminal.getViewport()))
+                .doesNotContain("Tool details: collapsed")
+                .doesNotContain("Details:");
         } finally {
             PiAppKeybindings.setGlobal(previousApp);
             mode.stop();

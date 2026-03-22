@@ -1151,7 +1151,6 @@ public final class PiInteractiveMode implements AutoCloseable {
 
     private void handleToggleToolDetailsCommand() {
         expandToolDetails = !expandToolDetails;
-        manualStatus = "Tool details: " + (expandToolDetails ? "expanded" : "collapsed");
         renderState(session.state());
     }
 
