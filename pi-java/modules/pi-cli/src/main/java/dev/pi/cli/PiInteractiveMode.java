@@ -184,6 +184,11 @@ public final class PiInteractiveMode implements AutoCloseable {
             handleSessionCommand();
             return;
         }
+        if ("/changelog".equals(trimmed)) {
+            input.setValue("");
+            handleChangelogCommand();
+            return;
+        }
         if ("/hotkeys".equals(trimmed)) {
             input.setValue("");
             handleHotkeysCommand();
@@ -975,6 +980,16 @@ public final class PiInteractiveMode implements AutoCloseable {
         try {
             manualStatus = null;
             appendTranscriptNote(formatSessionStats(session.sessionStats(), session.sessionName()));
+        } catch (RuntimeException exception) {
+            manualStatus = "Error: " + rootMessage(exception);
+        }
+        renderState(session.state());
+    }
+
+    private void handleChangelogCommand() {
+        try {
+            manualStatus = null;
+            appendTranscriptNote(PiChangelog.render(session.cwd()));
         } catch (RuntimeException exception) {
             manualStatus = "Error: " + rootMessage(exception);
         }

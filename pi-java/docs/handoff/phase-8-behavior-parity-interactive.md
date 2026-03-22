@@ -82,6 +82,7 @@ Status: in progress
 - `/session` now shows session name, storage location, message counts, tool counts, and accumulated token/cost totals from the real session state instead of only ad hoc debug data
 - `/hotkeys` now shows a keyboard-shortcut summary built from the configured editor/app bindings, so custom keymaps surface through the interactive help instead of a hard-coded list
 - `/session` and `/hotkeys` now append persistent transcript panels instead of only using the transient status line, and `/hotkeys` now lists the full set of Java-supported editing keys that were previously omitted
+- `/changelog` now renders a persistent `What's New` panel from the nearest available `packages/coding-agent/CHANGELOG.md` (or fallback `CHANGELOG.md`) instead of having no Java-side command at all
 - queued follow-up and steering submissions now rely on the queued-message panel instead of separate `Queued ...` success status lines
 - manual compaction success now relies on the compaction summary message instead of a separate `Compacted context` status line
 - `/compact` failures now distinguish `Compaction cancelled` from `Compaction failed: ...`, instead of falling back to the generic `Error: ...` prefix

@@ -235,6 +235,44 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void handlesChangelogSlashCommand() throws Exception {
+        var repoDir = tempDir.resolve("repo");
+        var changelogPath = repoDir.resolve("packages").resolve("coding-agent").resolve("CHANGELOG.md");
+        java.nio.file.Files.createDirectories(changelogPath.getParent());
+        java.nio.file.Files.writeString(
+            changelogPath,
+            """
+            ## [0.2.0] - 2026-03-22
+
+            ### Added
+            - First change
+
+            ## [0.1.0] - 2026-03-20
+
+            ### Fixed
+            - Older change
+            """,
+            java.nio.charset.StandardCharsets.UTF_8
+        );
+
+        var session = new FakeSession().withCwd(repoDir.toString());
+        var terminal = new VirtualTerminal(120, 100);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("/changelog");
+        terminal.sendInput("\r");
+
+        var scrollback = String.join("\n", terminal.getScrollBuffer());
+        assertThat(scrollback).contains("What's New");
+        assertThat(scrollback).contains("## [0.2.0]");
+        assertThat(scrollback).contains("## [0.1.0]");
+        assertThat(scrollback.indexOf("## [0.2.0]")).isLessThan(scrollback.indexOf("## [0.1.0]"));
+
+        mode.stop();
+    }
+
+    @Test
     void handlesHotkeysSlashCommand() {
         var session = new FakeSession();
         var terminal = new VirtualTerminal(120, 100);
