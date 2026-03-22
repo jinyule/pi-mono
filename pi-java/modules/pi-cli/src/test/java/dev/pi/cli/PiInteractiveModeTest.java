@@ -195,6 +195,25 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void showsPlainCopyEmptyStateWithoutErrorPrefix() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(80, 12);
+        var copied = new StringBuilder();
+        var mode = new PiInteractiveMode(session, terminal, new PiCopyCommand(session, copied::append));
+
+        mode.start();
+        terminal.sendInput("/copy");
+        terminal.sendInput("\r");
+
+        assertThat(String.join("\n", terminal.getViewport()))
+            .contains("No agent messages to copy yet.")
+            .doesNotContain("Error: No agent messages to copy yet.");
+        assertThat(copied).hasToString("");
+
+        mode.stop();
+    }
+
+    @Test
     void rendersFooterUsageAndModelInfo() {
         var session = new FakeSession().withContextWindow(16);
         var terminal = new VirtualTerminal(80, 14);

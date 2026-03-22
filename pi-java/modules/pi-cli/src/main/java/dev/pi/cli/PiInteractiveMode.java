@@ -584,7 +584,10 @@ public final class PiInteractiveMode implements AutoCloseable {
             copyCommand.copyLastAssistantMessage();
             manualStatus = "Copied last agent message to clipboard";
         } catch (RuntimeException exception) {
-            manualStatus = "Error: " + rootMessage(exception);
+            var message = rootMessage(exception);
+            manualStatus = "No agent messages to copy yet.".equals(message)
+                ? message
+                : "Error: " + message;
         }
         renderState(session.state());
     }
