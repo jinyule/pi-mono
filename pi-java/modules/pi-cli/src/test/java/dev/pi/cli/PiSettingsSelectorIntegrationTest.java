@@ -68,6 +68,25 @@ class PiSettingsSelectorIntegrationTest {
     }
 
     @Test
+    void settingsSelectorShowsThinkingLevelForNonReasoningModels() {
+        var session = new FakeSettingsSession();
+        var terminal = new VirtualTerminal(90, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("/settings");
+        terminal.sendInput("\r");
+
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Thinking level")));
+
+        assertThat(String.join("\n", terminal.getViewport()))
+            .contains("Thinking level")
+            .contains("off");
+
+        mode.stop();
+    }
+
+    @Test
     void settingsSelectorSelectsThinkingLevelFromSubmenu() {
         var updates = new CopyOnWriteArrayList<String>();
         var selector = new PiSettingsSelector(

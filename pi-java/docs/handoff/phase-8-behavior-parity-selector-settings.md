@@ -39,6 +39,7 @@ Status: in progress
 - TypeScript-style descriptions for steering, follow-up, transport, and quiet-startup
 - theme submenu now omits the extra `(current)` marker, matching the TypeScript selector more closely
 - settings selector now drops the Java-only `Settings` title and top help sentence, and uses TypeScript-style border-only framing
+- settings selector now keeps `Thinking level` visible even for non-reasoning models, matching the TypeScript `off`-only behavior
 - custom theme loader and hot reload
 - startup resource listing
 - broader custom theme core token support
@@ -85,6 +86,7 @@ Status: in progress
 - exact `/model <term>` hits now short-circuit straight to selection, matching the TypeScript behavior more closely
 - theme submenu options no longer add a Java-only `(current)` description, matching the TypeScript selector more closely
 - settings selector now relies on the built-in settings list hint row plus top/bottom borders, instead of the Java-only title and extra top instruction sentence
+- non-reasoning models now still show `Thinking level` with `off`, matching the TypeScript selector instead of hiding the setting completely
 
 ## Next smallest slice
 

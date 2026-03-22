@@ -74,26 +74,27 @@ public final class PiSettingsSelector implements Component, Focusable {
             List.of("sse", "websocket", "auto"),
             null
         ));
-        if (settings.reasoningAvailable()) {
-            items.add(new SettingItem(
-                "thinking",
-                "Thinking level",
-                "Reasoning depth for the current model",
-                settings.thinkingLevel(),
-                List.of(),
-                (currentValue, done) -> new SelectSubmenu(
-                    "Thinking Level",
-                    "Select reasoning depth for thinking-capable models",
-                    settings.availableThinkingLevels().stream()
-                        .map(level -> new SelectItem(level, level, thinkingDescription(level)))
-                        .toList(),
-                    currentValue,
-                    done::accept,
-                    () -> done.accept(null),
-                    null
-                )
-            ));
-        }
+        var availableThinkingLevels = settings.availableThinkingLevels().isEmpty()
+            ? List.of("off")
+            : settings.availableThinkingLevels();
+        items.add(new SettingItem(
+            "thinking",
+            "Thinking level",
+            "Reasoning depth for the current model",
+            settings.thinkingLevel(),
+            List.of(),
+            (currentValue, done) -> new SelectSubmenu(
+                "Thinking Level",
+                "Select reasoning depth for thinking-capable models",
+                availableThinkingLevels.stream()
+                    .map(level -> new SelectItem(level, level, thinkingDescription(level)))
+                    .toList(),
+                currentValue,
+                done::accept,
+                () -> done.accept(null),
+                null
+            )
+        ));
         items.add(new SettingItem(
             "hide-thinking",
             "Hide thinking",
