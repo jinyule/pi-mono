@@ -150,6 +150,10 @@ public interface PiInteractiveSession {
         return null;
     }
 
+    default String setSessionName(String name) {
+        throw new UnsupportedOperationException("Session naming is not available");
+    }
+
     default StartupResources startupResources() {
         return StartupResources.empty();
     }

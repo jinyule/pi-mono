@@ -222,6 +222,20 @@ public final class PiAgentSession implements PiInteractiveSession {
     }
 
     @Override
+    public String setSessionName(String name) {
+        var normalized = name == null ? "" : name.trim();
+        if (normalized.isBlank()) {
+            throw new IllegalArgumentException("Session name must not be empty");
+        }
+        try {
+            sessionManager().appendSessionInfo(normalized);
+            return normalized;
+        } catch (IOException exception) {
+            throw new IllegalStateException("Failed to persist session name", exception);
+        }
+    }
+
+    @Override
     public StartupResources startupResources() {
         var contextFiles = instructionResources.contextFiles().stream()
             .map(instructionFile -> instructionFile.path().toString())

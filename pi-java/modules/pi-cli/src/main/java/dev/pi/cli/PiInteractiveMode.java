@@ -134,7 +134,7 @@ public final class PiInteractiveMode implements AutoCloseable {
         }
         started = true;
         manualStatus = startupStatus();
-        terminal.setTitle("pi-java interactive");
+        updateTerminalTitle();
         stateSubscription = session.subscribeState(this::renderState);
         gitBranchWatcher = PiGitBranchWatcher.start(session.cwd(), () -> renderState(session.state()));
         tui.start();
@@ -174,6 +174,11 @@ public final class PiInteractiveMode implements AutoCloseable {
         if ("/copy".equals(trimmed)) {
             input.setValue("");
             handleCopyCommand();
+            return;
+        }
+        if ("/name".equals(trimmed) || trimmed.startsWith("/name ")) {
+            input.setValue("");
+            handleNameCommand(trimmed);
             return;
         }
         if ("/tree".equals(trimmed)) {
@@ -916,6 +921,25 @@ public final class PiInteractiveMode implements AutoCloseable {
         renderState(session.state());
     }
 
+    private void handleNameCommand(String text) {
+        var name = text == null ? "" : text.replaceFirst("^/name\\s*", "").trim();
+        if (name.isBlank()) {
+            var currentName = session.sessionName();
+            manualStatus = currentName == null || currentName.isBlank()
+                ? "Usage: /name <name>"
+                : "Session name: " + currentName.trim();
+            renderState(session.state());
+            return;
+        }
+        try {
+            manualStatus = "Session name set: " + session.setSessionName(name);
+            updateTerminalTitle();
+        } catch (RuntimeException exception) {
+            manualStatus = "Error: " + rootMessage(exception);
+        }
+        renderState(session.state());
+    }
+
     private void handleDebugCommand() {
         try {
             var debugLogPath = debugLogPath();
@@ -939,6 +963,16 @@ public final class PiInteractiveMode implements AutoCloseable {
             current = current.getCause();
         }
         return current.getMessage() == null ? current.getClass().getSimpleName() : current.getMessage();
+    }
+
+    private void updateTerminalTitle() {
+        var cwdName = terminalTitleCwd(session.cwd());
+        var sessionName = session.sessionName();
+        if (sessionName != null && !sessionName.isBlank()) {
+            terminal.setTitle("pi-java - " + sessionName.trim() + " - " + cwdName);
+            return;
+        }
+        terminal.setTitle("pi-java - " + cwdName);
     }
 
     private Path debugLogPath() {
@@ -1444,5 +1478,20 @@ public final class PiInteractiveMode implements AutoCloseable {
             return text.substring(0, text.length() - 1);
         }
         return text;
+    }
+
+    private static String terminalTitleCwd(String cwd) {
+        var normalized = cwd == null ? "" : cwd.trim().replace('\\', '/');
+        while (normalized.endsWith("/")) {
+            normalized = normalized.substring(0, normalized.length() - 1);
+        }
+        if (normalized.isBlank()) {
+            return "interactive";
+        }
+        var slashIndex = normalized.lastIndexOf('/');
+        if (slashIndex < 0 || slashIndex == normalized.length() - 1) {
+            return normalized;
+        }
+        return normalized.substring(slashIndex + 1);
     }
 }

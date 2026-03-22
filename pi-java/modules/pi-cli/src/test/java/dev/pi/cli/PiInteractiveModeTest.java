@@ -214,6 +214,71 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void handlesNameSlashCommand() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(100, 15);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("/name Scratch");
+        terminal.sendInput("\r");
+
+        assertThat(session.sessionName()).isEqualTo("Scratch");
+        assertThat(String.join("\n", terminal.getViewport()))
+            .contains("Session name set: Scratch")
+            .contains("/workspace • Scratch");
+
+        mode.stop();
+    }
+
+    @Test
+    void showsCurrentSessionNameWhenNameCommandHasNoArgument() {
+        var session = new FakeSession().withSessionName("Scratch");
+        var terminal = new VirtualTerminal(100, 15);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("/name");
+        terminal.sendInput("\r");
+
+        assertThat(String.join("\n", terminal.getViewport())).contains("Session name: Scratch");
+
+        mode.stop();
+    }
+
+    @Test
+    void showsNameUsageWhenNoSessionNameExists() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(100, 15);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("/name");
+        terminal.sendInput("\r");
+
+        assertThat(String.join("\n", terminal.getViewport())).contains("Usage: /name <name>");
+
+        mode.stop();
+    }
+
+    @Test
+    void updatesTerminalTitleWhenSessionNameChanges() {
+        var session = new FakeSession();
+        var terminal = new RecordingTerminal(100, 15);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        assertThat(terminal.title()).isEqualTo("pi-java - workspace");
+
+        terminal.sendInput("/name Scratch");
+        terminal.sendInput("\r");
+
+        assertThat(terminal.title()).isEqualTo("pi-java - Scratch - workspace");
+
+        mode.stop();
+    }
+
+    @Test
     void rendersFooterUsageAndModelInfo() {
         var session = new FakeSession().withContextWindow(16);
         var terminal = new VirtualTerminal(80, 14);
@@ -2059,6 +2124,17 @@ class PiInteractiveModeTest {
         }
 
         @Override
+        public String setSessionName(String name) {
+            try {
+                sessionManager.appendSessionInfo(name);
+                emitState();
+                return sessionName();
+            } catch (Exception exception) {
+                throw new AssertionError(exception);
+            }
+        }
+
+        @Override
         public ModelCycleResult cycleModelForward() {
             if (singleModelOnly) {
                 return null;
@@ -2583,6 +2659,7 @@ class PiInteractiveModeTest {
         private final int rows;
         private final List<String> writes = new CopyOnWriteArrayList<>();
         private volatile InputHandler inputHandler;
+        private volatile String title;
 
         private RecordingTerminal(int columns, int rows) {
             this.columns = columns;
@@ -2614,6 +2691,11 @@ class PiInteractiveModeTest {
             return rows;
         }
 
+        @Override
+        public void setTitle(String title) {
+            this.title = title;
+        }
+
         private void sendInput(String data) {
             if (inputHandler != null) {
                 inputHandler.onInput(data);
@@ -2622,6 +2704,10 @@ class PiInteractiveModeTest {
 
         private String output() {
             return String.join("", writes);
+        }
+
+        private String title() {
+            return title;
         }
     }
 
