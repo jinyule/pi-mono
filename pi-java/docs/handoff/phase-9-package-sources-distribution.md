@@ -57,14 +57,31 @@ Add the missing Java-side packaging surface that phase 8 deliberately deferred:
   - extension-declared `skills` / `prompts` surfacing in startup resources
   - extension-declared themes surfacing in the settings theme list
 - Added session/application close wiring so extension runtimes are released after use instead of leaving JAR handles open.
+- Added `dev.pi.session.AuthStorage` as a real `auth.json` store for Java:
+  - persists `api_key` credentials
+  - reads existing `oauth` credentials and uses their `access` token
+  - uses the same `~/.pi/agent/auth.json` location by default
+- Wired auth storage into Java session creation so saved credentials now flow into request auth automatically.
+- Added Java interactive `/login` and `/logout` support:
+  - `/login <provider> <token>` saves a provider token directly
+  - `/logout <provider>` removes saved credentials directly
+  - bare `/login` and `/logout` now open provider-selection overlays
+  - bare `/login <provider>` now opens a hidden-input prompt for the token
+- Added focused tests for:
+  - auth storage persistence and OAuth-entry loading
+  - session-level credential usage during requests
+  - module wiring from auth storage into default sessions
+  - interactive slash-command behavior for login/logout
+- Added masked-input support to the shared TUI input so secrets are not echoed in plain text during the login prompt.
 
 ## Next smallest slice
 
-Add Java-side auth storage and interactive `/login` / `/logout`, so package management and future distribution flows have the same baseline account surface as the TypeScript app.
+Wire `enabledModels` into saved scoped-model selection and `/scoped-models`, so Java gets the same persisted model-scope surface that phase 8 deferred.
 
 ## Validation
 
 ```bash
+.\gradlew.bat :pi-session:test :pi-tui:test :pi-cli:test --no-daemon
 .\gradlew.bat :pi-cli:test --no-daemon
 .\gradlew.bat :pi-session:test :pi-cli:test --no-daemon
 npm.cmd run check

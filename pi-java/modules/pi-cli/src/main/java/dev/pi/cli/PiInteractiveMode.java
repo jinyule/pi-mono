@@ -245,6 +245,16 @@ public final class PiInteractiveMode implements AutoCloseable {
             handleModelCommand(searchTerm == null || searchTerm.isBlank() ? null : searchTerm);
             return;
         }
+        if ("/login".equals(trimmed) || trimmed.startsWith("/login ")) {
+            input.setValue("");
+            handleLoginCommand(trimmed);
+            return;
+        }
+        if ("/logout".equals(trimmed) || trimmed.startsWith("/logout ")) {
+            input.setValue("");
+            handleLogoutCommand(trimmed);
+            return;
+        }
         if ("/export".equals(trimmed) || trimmed.startsWith("/export ")) {
             input.setValue("");
             handleExportCommand(trimmed);
@@ -905,6 +915,87 @@ public final class PiInteractiveMode implements AutoCloseable {
         ));
     }
 
+    private void handleLoginCommand(String text) {
+        var suffix = text == null ? "" : text.replaceFirst("^/login\\s*", "").trim();
+        if (suffix.isBlank()) {
+            showLoginSelector();
+            return;
+        }
+        var split = suffix.split("\\s+", 2);
+        var provider = normalizeProviderId(split[0]);
+        if (split.length < 2 || split[1].isBlank()) {
+            showSecretPrompt(provider);
+            return;
+        }
+        completeLogin(provider, split[1].trim(), null);
+    }
+
+    private void handleLogoutCommand(String text) {
+        var suffix = text == null ? "" : text.replaceFirst("^/logout\\s*", "").trim();
+        if (!suffix.isBlank()) {
+            completeLogout(normalizeProviderId(suffix), null);
+            return;
+        }
+        var selection = session.authSelection();
+        if (selection.loggedInProviders().isEmpty()) {
+            manualStatus = "No saved credentials. Use /login first.";
+            renderState(session.state());
+            return;
+        }
+        if (selection.loggedInProviders().size() == 1) {
+            completeLogout(selection.loggedInProviders().getFirst().providerId(), null);
+            return;
+        }
+        showLogoutSelector();
+    }
+
+    private void showLoginSelector() {
+        var selection = session.authSelection();
+        if (selection.allProviders().isEmpty()) {
+            manualStatus = "No providers available";
+            renderState(session.state());
+            return;
+        }
+        var overlayRef = new AtomicReference<dev.pi.tui.OverlayHandle>();
+        var selector = new PiAuthProviderSelector(
+            "Select provider to login:",
+            "No providers available",
+            selection.allProviders(),
+            provider -> showSecretPrompt(provider, overlayRef.get()),
+            () -> hideOverlay(overlayRef.get())
+        );
+        overlayRef.set(showCenteredOverlay(selector, 52, 10));
+    }
+
+    private void showLogoutSelector() {
+        var selection = session.authSelection();
+        var overlayRef = new AtomicReference<dev.pi.tui.OverlayHandle>();
+        var selector = new PiAuthProviderSelector(
+            "Select provider to logout:",
+            "No saved credentials. Use /login first.",
+            selection.loggedInProviders(),
+            provider -> completeLogout(provider, overlayRef.get()),
+            () -> hideOverlay(overlayRef.get())
+        );
+        overlayRef.set(showCenteredOverlay(selector, 52, 10));
+    }
+
+    private void showSecretPrompt(String provider) {
+        showSecretPrompt(provider, null);
+    }
+
+    private void showSecretPrompt(String provider, dev.pi.tui.OverlayHandle toHide) {
+        hideOverlay(toHide);
+        var overlayRef = new AtomicReference<dev.pi.tui.OverlayHandle>();
+        var prompt = new PiSecretPrompt(
+            "Enter credentials for " + provider,
+            "Paste the API key or token for " + provider + ". It will be saved for later requests.",
+            secret -> completeLogin(provider, secret, overlayRef.get()),
+            () -> hideOverlay(overlayRef.get())
+        );
+        overlayRef.set(showCenteredOverlay(prompt, 64, 9));
+    }
+
     private void selectTreeEntry(String targetId, dev.pi.tui.OverlayHandle overlay) {
         if (Objects.equals(targetId, session.leafId())) {
             manualStatus = "Already at this point";
@@ -1043,6 +1134,28 @@ public final class PiInteractiveMode implements AutoCloseable {
         renderState(session.state());
     }
 
+    private void completeLogin(String provider, String secret, dev.pi.tui.OverlayHandle overlay) {
+        try {
+            session.login(provider, secret);
+            manualStatus = "Saved credentials for " + provider;
+        } catch (RuntimeException exception) {
+            manualStatus = "Error: " + rootMessage(exception);
+        }
+        hideOverlay(overlay);
+        renderState(session.state());
+    }
+
+    private void completeLogout(String provider, dev.pi.tui.OverlayHandle overlay) {
+        try {
+            session.logout(provider);
+            manualStatus = "Logged out from " + provider;
+        } catch (RuntimeException exception) {
+            manualStatus = "Error: " + rootMessage(exception);
+        }
+        hideOverlay(overlay);
+        renderState(session.state());
+    }
+
     private void handleHotkeysCommand() {
         manualStatus = null;
         appendTranscriptNote(formatHotkeys());
@@ -1064,6 +1177,52 @@ public final class PiInteractiveMode implements AutoCloseable {
 
     private void requestExit() {
         close();
+    }
+
+    private dev.pi.tui.OverlayHandle showCenteredOverlay(Component component, int preferredWidth, int minimumHeight) {
+        var width = Math.max(40, Math.min(preferredWidth, terminal.columns() - 2));
+        var maxHeight = Math.max(minimumHeight, Math.floorDiv(terminal.rows(), 2));
+        return tui.showOverlay(
+            component,
+            new OverlayOptions(
+                width,
+                Math.max(40, Math.min(width, preferredWidth)),
+                maxHeight,
+                OverlayAnchor.CENTER,
+                0,
+                0,
+                null,
+                null,
+                OverlayMargin.uniform(1)
+            )
+        );
+    }
+
+    private static void hideOverlay(dev.pi.tui.OverlayHandle overlay) {
+        if (overlay != null) {
+            overlay.hide();
+        }
+    }
+
+    private String normalizeProviderId(String provider) {
+        var normalized = provider == null ? "" : provider.trim();
+        if (normalized.isBlank()) {
+            throw new IllegalArgumentException("Provider is required");
+        }
+        var authSelection = session.authSelection();
+        for (var candidate : authSelection.allProviders()) {
+            if (candidate.providerId().equalsIgnoreCase(normalized)
+                || candidate.displayName().equalsIgnoreCase(normalized)) {
+                return candidate.providerId();
+            }
+        }
+        for (var candidate : authSelection.loggedInProviders()) {
+            if (candidate.providerId().equalsIgnoreCase(normalized)
+                || candidate.displayName().equalsIgnoreCase(normalized)) {
+                return candidate.providerId();
+            }
+        }
+        return normalized;
     }
 
     private static String rootMessage(Throwable throwable) {

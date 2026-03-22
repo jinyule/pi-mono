@@ -11,6 +11,7 @@ import dev.pi.extension.spi.ExtensionResourceDiscoveryResult;
 import dev.pi.extension.spi.ExtensionRuntimeSnapshot;
 import dev.pi.extension.spi.ExtensionRuntime;
 import dev.pi.extension.spi.ResourcesDiscoverEvent;
+import dev.pi.session.AuthStorage;
 import dev.pi.session.InstructionResourceLoader;
 import dev.pi.session.PackageSourceDiscovery;
 import dev.pi.session.SettingsManager;
@@ -45,6 +46,7 @@ public final class PiCliModule {
     private final PiCliApplication.SessionFactory sessionFactory;
     private final Supplier<Terminal> terminalFactory;
     private final PiCliKeybindingsLoader keybindingsLoader;
+    private final AuthStorage authStorage;
     private final PiCliApplication application;
 
     public PiCliModule() {
@@ -57,7 +59,8 @@ public final class PiCliModule {
             PiAiClient.createDefault(),
             null,
             ProcessTerminal::new,
-            PiCliKeybindingsLoader.createDefault()
+            PiCliKeybindingsLoader.createDefault(),
+            AuthStorage.create()
         );
     }
 
@@ -71,7 +74,18 @@ public final class PiCliModule {
         PiCliApplication.SessionFactory sessionFactory,
         Supplier<Terminal> terminalFactory
     ) {
-        this(cwd, input, stdout, stderr, parser, aiClient, sessionFactory, terminalFactory, PiCliKeybindingsLoader.createDefault());
+        this(
+            cwd,
+            input,
+            stdout,
+            stderr,
+            parser,
+            aiClient,
+            sessionFactory,
+            terminalFactory,
+            PiCliKeybindingsLoader.createDefault(),
+            AuthStorage.create()
+        );
     }
 
     PiCliModule(
@@ -85,6 +99,21 @@ public final class PiCliModule {
         Supplier<Terminal> terminalFactory,
         PiCliKeybindingsLoader keybindingsLoader
     ) {
+        this(cwd, input, stdout, stderr, parser, aiClient, sessionFactory, terminalFactory, keybindingsLoader, AuthStorage.create());
+    }
+
+    PiCliModule(
+        Path cwd,
+        Reader input,
+        Appendable stdout,
+        Appendable stderr,
+        PiCliParser parser,
+        PiAiClient aiClient,
+        PiCliApplication.SessionFactory sessionFactory,
+        Supplier<Terminal> terminalFactory,
+        PiCliKeybindingsLoader keybindingsLoader,
+        AuthStorage authStorage
+    ) {
         this.cwd = Objects.requireNonNull(cwd, "cwd").toAbsolutePath().normalize();
         this.input = Objects.requireNonNull(input, "input");
         this.stdout = Objects.requireNonNull(stdout, "stdout");
@@ -93,6 +122,7 @@ public final class PiCliModule {
         this.aiClient = Objects.requireNonNull(aiClient, "aiClient");
         this.terminalFactory = Objects.requireNonNull(terminalFactory, "terminalFactory");
         this.keybindingsLoader = Objects.requireNonNull(keybindingsLoader, "keybindingsLoader");
+        this.authStorage = Objects.requireNonNull(authStorage, "authStorage");
         this.sessionFactory = sessionFactory == null ? this::createDefaultSession : sessionFactory;
         this.application = PiCliApplication.builder(this.sessionFactory)
             .parser(this.parser)
@@ -268,8 +298,12 @@ public final class PiCliModule {
             settingsManager,
             instructionLoader.resources()
         )
+            .authStorage(authStorage)
             .instructionResourceLoader(instructionLoader)
             .streamFunction(AgentLoopConfig.AssistantStreamFunction.fromClient(aiClient))
+            .apiKeyProvider(args.apiKey() == null || args.apiKey().isBlank()
+                ? provider -> java.util.concurrent.CompletableFuture.completedFuture(authStorage.getApiKey(provider))
+                : null)
             .systemPrompt(args.systemPrompt())
             .appendSystemPrompt(args.appendSystemPrompt())
             .thinkingLevel(initialThinkingLevel)

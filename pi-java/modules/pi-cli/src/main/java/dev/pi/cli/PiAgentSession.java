@@ -19,6 +19,7 @@ import dev.pi.ai.model.Usage;
 import dev.pi.ai.stream.Subscription;
 import dev.pi.sdk.CreateAgentSessionOptions;
 import dev.pi.sdk.PiSdkSession;
+import dev.pi.session.AuthStorage;
 import dev.pi.session.InstructionResourceLoader;
 import dev.pi.session.InstructionResources;
 import dev.pi.session.SessionEntry;
@@ -41,6 +42,7 @@ public final class PiAgentSession implements PiInteractiveSession {
 
     private final PiSdkSession sdkSession;
     private final SettingsManager settingsManager;
+    private final AuthStorage authStorage;
     private final InstructionResourceLoader instructionResourceLoader;
     private volatile InstructionResources instructionResources;
     private final String systemPrompt;
@@ -62,6 +64,7 @@ public final class PiAgentSession implements PiInteractiveSession {
     private PiAgentSession(
         PiSdkSession sdkSession,
         SettingsManager settingsManager,
+        AuthStorage authStorage,
         InstructionResourceLoader instructionResourceLoader,
         InstructionResources instructionResources,
         String systemPrompt,
@@ -81,6 +84,7 @@ public final class PiAgentSession implements PiInteractiveSession {
     ) {
         this.sdkSession = Objects.requireNonNull(sdkSession, "sdkSession");
         this.settingsManager = Objects.requireNonNull(settingsManager, "settingsManager");
+        this.authStorage = authStorage == null ? AuthStorage.inMemory() : authStorage;
         this.instructionResourceLoader = instructionResourceLoader;
         this.instructionResources = Objects.requireNonNull(instructionResources, "instructionResources");
         this.systemPrompt = systemPrompt;
@@ -118,6 +122,10 @@ public final class PiAgentSession implements PiInteractiveSession {
 
     public SettingsManager settingsManager() {
         return settingsManager;
+    }
+
+    public AuthStorage authStorage() {
+        return authStorage;
     }
 
     public InstructionResources instructionResources() {
@@ -677,6 +685,35 @@ public final class PiAgentSession implements PiInteractiveSession {
     }
 
     @Override
+    public AuthSelection authSelection() {
+        var providers = new LinkedHashMap<String, AuthProvider>();
+        for (var provider : knownProviders()) {
+            providers.put(provider, new AuthProvider(provider, displayNameForProvider(provider), authStorage.has(provider)));
+        }
+        for (var provider : authStorage.providers()) {
+            providers.put(provider, new AuthProvider(provider, displayNameForProvider(provider), true));
+        }
+        var allProviders = List.copyOf(providers.values());
+        var loggedInProviders = allProviders.stream().filter(AuthProvider::loggedIn).toList();
+        return new AuthSelection(allProviders, loggedInProviders);
+    }
+
+    @Override
+    public void login(String provider, String secret) {
+        var normalizedProvider = normalizeProvider(provider);
+        authStorage.setApiKey(normalizedProvider, secret);
+    }
+
+    @Override
+    public void logout(String provider) {
+        var normalizedProvider = normalizeProvider(provider);
+        if (!authStorage.has(normalizedProvider)) {
+            throw new IllegalStateException("No saved credentials for " + normalizedProvider);
+        }
+        authStorage.remove(normalizedProvider);
+    }
+
+    @Override
     public void close() throws Exception {
         if (closeAction != null) {
             closeAction.close();
@@ -803,6 +840,7 @@ public final class PiAgentSession implements PiInteractiveSession {
         private final SessionManager sessionManager;
         private final SettingsManager settingsManager;
         private final InstructionResources instructionResources;
+        private AuthStorage authStorage;
         private InstructionResourceLoader instructionResourceLoader;
         private AgentLoopConfig.AssistantStreamFunction streamFunction;
         private String systemPrompt;
@@ -842,6 +880,7 @@ public final class PiAgentSession implements PiInteractiveSession {
             this.sessionManager = Objects.requireNonNull(sessionManager, "sessionManager");
             this.settingsManager = Objects.requireNonNull(settingsManager, "settingsManager");
             this.instructionResources = Objects.requireNonNull(instructionResources, "instructionResources");
+            this.authStorage = AuthStorage.inMemory();
         }
 
         public Builder streamFunction(AgentLoopConfig.AssistantStreamFunction streamFunction) {
@@ -851,6 +890,11 @@ public final class PiAgentSession implements PiInteractiveSession {
 
         public Builder instructionResourceLoader(InstructionResourceLoader instructionResourceLoader) {
             this.instructionResourceLoader = instructionResourceLoader;
+            return this;
+        }
+
+        public Builder authStorage(AuthStorage authStorage) {
+            this.authStorage = authStorage == null ? AuthStorage.inMemory() : authStorage;
             return this;
         }
 
@@ -996,6 +1040,10 @@ public final class PiAgentSession implements PiInteractiveSession {
             var effectiveInstructionResources = instructionResourceLoader == null
                 ? instructionResources
                 : instructionResourceLoader.resources();
+            var effectiveApiKeyProvider = apiKeyProvider;
+            if ((apiKey == null || apiKey.isBlank()) && effectiveApiKeyProvider == null && authStorage != null) {
+                effectiveApiKeyProvider = provider -> java.util.concurrent.CompletableFuture.completedFuture(authStorage.getApiKey(provider));
+            }
             var options = CreateAgentSessionOptions.builder(model, streamFunction, sessionManager)
                 .settingsManager(settingsManager)
                 .instructionResources(effectiveInstructionResources)
@@ -1005,7 +1053,7 @@ public final class PiAgentSession implements PiInteractiveSession {
                 .tools(tools)
                 .convertToLlm(convertToLlm)
                 .transformContext(transformContext)
-                .apiKeyProvider(apiKeyProvider)
+                .apiKeyProvider(effectiveApiKeyProvider)
                 .apiKey(apiKey)
                 .transport(transport)
                 .cacheRetention(cacheRetention)
@@ -1018,6 +1066,7 @@ public final class PiAgentSession implements PiInteractiveSession {
             return new PiAgentSession(
                 PiSdkSession.create(options),
                 settingsManager,
+                authStorage,
                 instructionResourceLoader,
                 effectiveInstructionResources,
                 systemPrompt,
@@ -1142,6 +1191,35 @@ public final class PiAgentSession implements PiInteractiveSession {
 
     private static boolean sameModel(Model left, Model right) {
         return Objects.equals(left.provider(), right.provider()) && Objects.equals(left.id(), right.id());
+    }
+
+    private List<String> knownProviders() {
+        var providers = new LinkedHashSet<String>();
+        for (var model : modelSelectorModels) {
+            providers.add(model.provider());
+        }
+        for (var cycleModel : cycleModels) {
+            providers.add(cycleModel.model().provider());
+        }
+        providers.add(sdkSession.state().model().provider());
+        return List.copyOf(providers);
+    }
+
+    private static String normalizeProvider(String provider) {
+        if (provider == null || provider.isBlank()) {
+            throw new IllegalArgumentException("Provider is required");
+        }
+        return provider.trim();
+    }
+
+    private static String displayNameForProvider(String provider) {
+        return switch (provider) {
+            case "anthropic" -> "Anthropic";
+            case "openai" -> "OpenAI";
+            case "google" -> "Google";
+            case "bedrock" -> "AWS Bedrock";
+            default -> provider;
+        };
     }
 
     private CycleModel resolveModelSelectionTarget(int index) {

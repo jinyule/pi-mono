@@ -67,6 +67,19 @@ class InputTest {
     }
 
     @Test
+    void masksRenderedValueWhenConfigured() {
+        var input = new Input();
+        input.setValue("secret-token");
+        input.setMasked(true);
+
+        var line = input.render(24).getFirst();
+
+        assertThat(line).doesNotContain("secret-token");
+        assertThat(line).contains("\u001b[7m\u2022\u001b[27m");
+        assertThat(line).contains("\u2022\u2022\u2022");
+    }
+
+    @Test
     void escapeTriggersCallback() {
         var input = new Input();
         var escapeCount = new AtomicInteger();

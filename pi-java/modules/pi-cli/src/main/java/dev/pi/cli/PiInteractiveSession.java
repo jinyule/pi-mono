@@ -170,6 +170,18 @@ public interface PiInteractiveSession extends AutoCloseable {
         throw new UnsupportedOperationException("Reload is not available");
     }
 
+    default AuthSelection authSelection() {
+        return new AuthSelection(List.of(), List.of());
+    }
+
+    default void login(String provider, String secret) {
+        throw new UnsupportedOperationException("Login is not available");
+    }
+
+    default void logout(String provider) {
+        throw new UnsupportedOperationException("Logout is not available");
+    }
+
     @Override
     default void close() throws Exception {
     }
@@ -344,6 +356,27 @@ public interface PiInteractiveSession extends AutoCloseable {
             resourceErrors = List.copyOf(resourceErrors);
             themeWarnings = List.copyOf(themeWarnings);
             extensionWarnings = List.copyOf(extensionWarnings);
+        }
+    }
+
+    record AuthProvider(
+        String providerId,
+        String displayName,
+        boolean loggedIn
+    ) {
+        public AuthProvider {
+            providerId = providerId == null ? "" : providerId;
+            displayName = displayName == null || displayName.isBlank() ? providerId : displayName;
+        }
+    }
+
+    record AuthSelection(
+        List<AuthProvider> allProviders,
+        List<AuthProvider> loggedInProviders
+    ) {
+        public AuthSelection {
+            allProviders = List.copyOf(allProviders);
+            loggedInProviders = List.copyOf(loggedInProviders);
         }
     }
 

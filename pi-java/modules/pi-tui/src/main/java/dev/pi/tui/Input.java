@@ -10,6 +10,7 @@ public final class Input implements Component, Focusable {
     private int cursor;
     private boolean focused;
     private int paddingX;
+    private boolean masked;
     private String pasteBuffer = "";
     private boolean inPaste;
     private final KillRing killRing = new KillRing();
@@ -53,6 +54,10 @@ public final class Input implements Component, Focusable {
 
     public int getPaddingX() {
         return paddingX;
+    }
+
+    public void setMasked(boolean masked) {
+        this.masked = masked;
     }
 
     @Override
@@ -223,6 +228,11 @@ public final class Input implements Component, Focusable {
         var afterCursor = cursorDisplay < visibleText.length()
             ? visibleText.substring(Math.min(visibleText.length(), cursorDisplay + atCursor.length()))
             : "";
+        if (masked) {
+            beforeCursor = maskSegment(beforeCursor);
+            atCursor = cursorDisplay < visibleText.length() ? maskSegment(atCursor) : " ";
+            afterCursor = maskSegment(afterCursor);
+        }
         var marker = focused ? Tui.CURSOR_MARKER : "";
         var cursorChar = "\u001b[7m" + atCursor + "\u001b[27m";
         var textWithCursor = beforeCursor + marker + cursorChar + afterCursor;
@@ -438,6 +448,13 @@ public final class Input implements Component, Focusable {
 
     private static int nextCodePointEnd(String text, int cursor) {
         return text.offsetByCodePoints(cursor, 1);
+    }
+
+    private static String maskSegment(String text) {
+        if (text == null || text.isEmpty()) {
+            return "";
+        }
+        return "\u2022".repeat(text.codePointCount(0, text.length()));
     }
 
     public interface ValueHandler {
