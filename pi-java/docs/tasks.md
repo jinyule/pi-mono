@@ -48,13 +48,15 @@ Updated: 2026-03-22
   - Interactive slash-command parity now also includes `/session` session-info output with real message/token/cost totals, `/hotkeys` keyboard-shortcut output sourced from the configured editor/app bindings, `/changelog` changelog rendering from the nearest available coding-agent changelog file, `/export [path]` wiring onto the existing HTML exporter, and `/share` wiring onto GitHub gist sharing with TypeScript-style share/gist URLs.
   - Model selector parity was closed after compact-row truncation, multi-key scope-hint alignment, TypeScript-style tokenized fuzzy search alignment, selection-retention parity while searching, top-section width handling at narrow terminal sizes, current-checkmark preservation in truncated rows, TypeScript-style `Model: <id>` status copy after selection, TypeScript-style providerless model-cycle status copy with model-name preference, scoped-vs-global single-model fallback copy, `/model <term>` opening the selector with the initial search applied, and exact `/model <term>` hits selecting directly without opening the selector first.
   - Remaining TypeScript-only gaps (`/login`, `/logout`, true `/scoped-models`, and async compaction queueing) are now treated as phase 9 subsystem work rather than phase-8 polish.
-- Phase 9 (package sources / distribution): not started.
+- Phase 9 (package sources / distribution): in progress.
+  - Typed settings support for `packages` and `enabledModels` is now in place in `pi-session`, including round-trip persistence for plain package-source strings and filtered package-source objects.
+  - This establishes the config layer needed for later Java-side package discovery and `/scoped-models` support.
 
 ## Current next slices
 
-1. Start phase 9 package-source and distribution work.
+1. Wire settings-based package sources into actual extension / skill / prompt / theme discovery.
 2. Add Java-side auth storage and interactive `/login` / `/logout`.
-3. Add saved scoped-model selection and `/scoped-models`.
+3. Wire `enabledModels` into saved scoped-model selection and `/scoped-models`.
 4. Decide whether Java should keep synchronous compaction or grow TypeScript-style async compaction queueing.
 
 ## Milestones

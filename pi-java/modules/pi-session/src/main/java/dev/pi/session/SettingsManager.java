@@ -100,6 +100,26 @@ public final class SettingsManager {
         effectiveSettings = effectiveSettings.merge(overrides);
     }
 
+    public List<PackageSource> getPackages() {
+        return effectiveSettings.getPackageSources("/packages");
+    }
+
+    public void setPackages(List<PackageSource> packages) {
+        updateGlobal(settings -> settings.withPackageSources("packages", packages));
+    }
+
+    public void setProjectPackages(List<PackageSource> packages) {
+        updateProject(settings -> settings.withPackageSources("packages", packages));
+    }
+
+    public List<String> getEnabledModels() {
+        return effectiveSettings.getStringList("/enabledModels");
+    }
+
+    public void setEnabledModels(List<String> patterns) {
+        updateGlobal(settings -> settings.withStringList("enabledModels", patterns));
+    }
+
     public void updateGlobal(UnaryOperator<Settings> update) {
         globalSettings = updateScoped(SettingsScope.GLOBAL, update, globalSettings);
         effectiveSettings = globalSettings.merge(projectSettings);

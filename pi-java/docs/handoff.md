@@ -1,6 +1,6 @@
 # pi-java handoff
 
-Updated: 2026-03-18
+Updated: 2026-03-22
 
 This file is the entry point only. Detailed handoff is split under `pi-java/docs/handoff/`.
 
@@ -8,19 +8,20 @@ This file is the entry point only. Detailed handoff is split under `pi-java/docs
 
 - Phases 0 through 6 are complete.
 - Phase 7 (`pi-cli` / `pi-sdk`) is functionally complete.
-- Phase 8 (behavior parity) is active.
-- Phase 9 (package sources / distribution) has not started.
+- Phase 8 (behavior parity) is complete.
+- Phase 9 (package sources / distribution) is active.
 
-The current implementation hotspot is `PiModelSelector` parity work in phase 8.
+The current implementation hotspot is phase 9 package-source and settings work.
 
 ## Read order
 
 1. `pi-java/docs/tasks.md`
-2. `pi-java/docs/handoff/phase-8-behavior-parity.md`
-3. `pi-java/docs/handoff/phase-7-pi-cli-sdk.md`
-4. `pi-java/docs/handoff/phase-6-pi-tui.md`
-5. `pi-java/docs/handoff/archive-2026-03-10.md`
-6. `pi-java/docs/handoff/README.md`
+2. `pi-java/docs/handoff/phase-9-package-sources-distribution.md`
+3. `pi-java/docs/handoff/phase-8-behavior-parity.md`
+4. `pi-java/docs/handoff/phase-7-pi-cli-sdk.md`
+5. `pi-java/docs/handoff/phase-6-pi-tui.md`
+6. `pi-java/docs/handoff/archive-2026-03-10.md`
+7. `pi-java/docs/handoff/README.md`
 
 ## Verification
 

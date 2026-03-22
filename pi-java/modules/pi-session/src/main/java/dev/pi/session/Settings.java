@@ -1,6 +1,7 @@
 package dev.pi.session;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.ArrayList;
@@ -58,6 +59,22 @@ public final class Settings {
         return List.copyOf(values);
     }
 
+    public List<PackageSource> getPackageSources(String jsonPointer) {
+        var node = at(jsonPointer);
+        if (!node.isArray()) {
+            return List.of();
+        }
+
+        var values = new ArrayList<PackageSource>(node.size());
+        for (var element : node) {
+            try {
+                values.add(PackageSource.parse(element));
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+        return List.copyOf(values);
+    }
+
     public Settings merge(Settings overrides) {
         Objects.requireNonNull(overrides, "overrides");
         return new Settings(deepMerge(root.deepCopy(), overrides.root));
@@ -68,6 +85,42 @@ public final class Settings {
         var copy = root.deepCopy();
         mutator.accept(copy);
         return new Settings(copy);
+    }
+
+    public Settings withStringList(String fieldName, List<String> values) {
+        Objects.requireNonNull(fieldName, "fieldName");
+        return withMutations(root -> {
+            if (values == null) {
+                root.remove(fieldName);
+                return;
+            }
+
+            ArrayNode array = root.putArray(fieldName);
+            for (var value : values) {
+                if (value == null) {
+                    continue;
+                }
+                array.add(value);
+            }
+        });
+    }
+
+    public Settings withPackageSources(String fieldName, List<PackageSource> sources) {
+        Objects.requireNonNull(fieldName, "fieldName");
+        return withMutations(root -> {
+            if (sources == null) {
+                root.remove(fieldName);
+                return;
+            }
+
+            ArrayNode array = root.putArray(fieldName);
+            for (var source : sources) {
+                if (source == null) {
+                    continue;
+                }
+                array.add(source.toJsonNode());
+            }
+        });
     }
 
     private static ObjectNode deepMerge(ObjectNode base, ObjectNode overrides) {

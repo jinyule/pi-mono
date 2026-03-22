@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
@@ -218,5 +219,67 @@ class SettingsManagerTest {
             assertThat(error.error()).hasMessageContaining("Failed to parse settings JSON");
         });
         assertThat(manager.drainErrors()).isEmpty();
+    }
+
+    @Test
+    void exposesPackageSourcesAndEnabledModelsThroughTypedAccessors() {
+        var global = Settings.empty().withMutations(root -> {
+            root.withArray("packages").add("npm:@scope/global");
+            root.withArray("enabledModels").add("claude-sonnet").add("gpt-5");
+        });
+        var project = Settings.empty().withMutations(root -> root.withArray("packages").addObject()
+            .put("source", "git:https://example.com/acme/pkg.git")
+            .putArray("extensions")
+            .add("dist/extensions"));
+
+        var manager = SettingsManager.inMemory(global, project);
+
+        assertThat(manager.getPackages()).containsExactly(
+            new PackageSource("git:https://example.com/acme/pkg.git", List.of("dist/extensions"), List.of(), List.of(), List.of())
+        );
+        assertThat(manager.getEnabledModels()).containsExactly("claude-sonnet", "gpt-5");
+    }
+
+    @Test
+    void persistsPackageSourcesAndEnabledModelsInModernShape(@TempDir Path tempDir) throws IOException {
+        var cwd = tempDir.resolve("workspace");
+        var agentDir = tempDir.resolve("agent");
+        Files.createDirectories(cwd.resolve(".pi"));
+        Files.createDirectories(agentDir);
+
+        var manager = SettingsManager.create(cwd, agentDir);
+        manager.setPackages(List.of(
+            new PackageSource("npm:@scope/theme-pack"),
+            new PackageSource(
+                "git:https://example.com/acme/pkg.git",
+                List.of("dist/extensions"),
+                List.of("dist/skills"),
+                List.of(),
+                List.of("dist/themes")
+            )
+        ));
+        manager.setEnabledModels(List.of("claude-sonnet", "gpt-5"));
+
+        var persisted = Files.readString(agentDir.resolve("settings.json"), StandardCharsets.UTF_8);
+        assertThat(persisted).contains("\"packages\" : [");
+        assertThat(persisted).contains("\"npm:@scope/theme-pack\"");
+        assertThat(persisted).contains("\"source\" : \"git:https://example.com/acme/pkg.git\"");
+        assertThat(persisted).contains("\"extensions\" : [");
+        assertThat(persisted).contains("\"skills\" : [");
+        assertThat(persisted).contains("\"themes\" : [");
+        assertThat(persisted).contains("\"enabledModels\" : [");
+
+        var reloaded = SettingsManager.create(cwd, agentDir);
+        assertThat(reloaded.getPackages()).containsExactly(
+            new PackageSource("npm:@scope/theme-pack"),
+            new PackageSource(
+                "git:https://example.com/acme/pkg.git",
+                List.of("dist/extensions"),
+                List.of("dist/skills"),
+                List.of(),
+                List.of("dist/themes")
+            )
+        );
+        assertThat(reloaded.getEnabledModels()).containsExactly("claude-sonnet", "gpt-5");
     }
 }
