@@ -1,7 +1,7 @@
 # Phase 8 - behavior parity
 
 Updated: 2026-03-22
-Status: in progress
+Status: complete
 
 ## Goal
 
@@ -19,24 +19,27 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
   - app keybindings
   - interactive command/status copy
   - queue and compaction related parity
+- `phase-8-behavior-parity-closeout.md`
+  - final `/share` slice
+  - phase-close rationale
+  - deferred follow-on items
 
-## Current summary
+## Final summary
 
-- Session selector, settings/theme surface, and model selector are down to minor edge-case polish.
-- Interactive footer, queue hints, and command/status copy are substantially aligned.
-- Pending queue / compaction queue parity is still the next broader behavior gap once the remaining small copy and selector drifts are closed.
+- Session selector, settings/theme surface, model selector, interactive footer, queue hints, and interactive command/status copy are aligned for the current Java CLI/TUI surface.
+- `/share` is now wired in interactive mode, closing the last local command-surface parity gap that still fit phase 8.
+- The remaining TypeScript-only gaps need new auth, model-scope, or async-compaction subsystems, so they move forward as phase 9 work instead of blocking phase 8 closeout.
 
-## Remaining gaps
+## Deferred to phase 9
 
-1. Finish the last `PiModelSelector` edge-case polish against TypeScript.
-2. Add pending queue / compaction queue parity.
-3. Finish remaining settings/theme parity that still depends on wider CLI surface adoption.
-4. Finish footer edge cases and any remaining provider/git/cwd display drift.
-5. Close out the phase and hand off to phase 9.
+1. Add Java-side auth storage and interactive `/login` / `/logout`.
+2. Add saved scoped-model selection and `/scoped-models`.
+3. Decide whether Java should gain true async compaction queueing or keep synchronous compaction as an intentional product difference.
+4. Start package-source and distribution work.
 
 ## Recommended next slice
 
-Continue with the remaining `PiModelSelector` edge-case polish first if another selector-specific drift is visible; otherwise move to pending queue / compaction queue parity.
+Start phase 9 from one subsystem gap, not more phase-8 polish. Auth storage or scoped-model persistence are the cleanest first cuts.
 
 ## Validation used during phase 8
 

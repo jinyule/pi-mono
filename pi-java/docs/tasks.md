@@ -38,24 +38,24 @@ Updated: 2026-03-22
   - Commands and overlays: `list-models`, `--resume`, `--export`, `copy`, `tree`, `fork`, `compact`, `reload`.
   - Module wiring, startup/session bootstrap sharing, instruction-aware prompt composition, help/version, exit semantics.
   - Remaining UI and behavior polish is tracked in phase 8.
-- Phase 8 (behavior parity): in progress.
+- Phase 8 (behavior parity): complete.
   - Session selector parity is substantially advanced.
   - Settings/theme parity is substantially advanced, including removal of the extra theme-submenu `(current)` marker, removal of the Java-only settings title/top-help block in favor of TypeScript-style border-only framing, and retention of `Thinking level` for non-reasoning models with an `off`-only submenu.
   - Footer parity is substantially advanced, including TypeScript-style parenthesized provider badges in multi-provider model summaries and strict `>70` / `>90` context-usage color thresholds.
   - Interactive queue/key-hint parity continues to advance, including shared key-hint styling, TypeScript-aligned dequeue copy in queued-message hints and restore statuses, muted queued-message status lines, narrow-width queued-line truncation instead of wrapping, removal of extra queued follow-up / steering success banners in favor of the queue display itself, silent clipboard-image paste no-ops when no image is available or clipboard access fails, and removal of the extra clipboard-image success banner in favor of the attached-image indicator itself.
   - Interactive command/status copy continues to converge, including TypeScript-aligned tree-navigation success wording, tree current-point wording, tree empty-state wording, fork-selector success wording, reload success wording, reload warning-state wording, reload streaming-warning wording, unsupported-thinking wording, startup compaction wording, new-session success wording, `/new`, `/resume`, and `/debug` slash-command wiring, empty-compaction warning wording, compaction cancellation/failure wording, removal of the extra manual-compaction success banner in favor of the compaction summary itself, removal of the extra tool-details toggle banner in favor of the transcript change itself, plain `/copy` empty-state wording without an extra `Error:` prefix, and silent external-editor success paths without extra status banners.
   - Interactive command/status copy now also includes `/name` slash-command wiring, current-name lookup, session-name updates, terminal-title refresh on name changes, terminal-title reset when `/new` starts a fresh unnamed session, and terminal-title refresh after `/fork` when the chosen branch drops the later session name.
-  - Interactive slash-command parity now also includes `/session` session-info output with real message/token/cost totals, `/hotkeys` keyboard-shortcut output sourced from the configured editor/app bindings, `/changelog` changelog rendering from the nearest available coding-agent changelog file, and `/export [path]` wiring onto the existing HTML exporter, with the info panels rendered persistently in the transcript and export continuing to use TypeScript-style status feedback.
-  - Model selector parity is active and is now down to the last minor edge-case polish after compact-row truncation, multi-key scope-hint alignment, TypeScript-style tokenized fuzzy search alignment, selection-retention parity while searching, top-section width handling at narrow terminal sizes, current-checkmark preservation in truncated rows, TypeScript-style `Model: <id>` status copy after selection, TypeScript-style providerless model-cycle status copy with model-name preference, scoped-vs-global single-model fallback copy, `/model <term>` opening the selector with the initial search applied, and exact `/model <term>` hits selecting directly without opening the selector first.
+  - Interactive slash-command parity now also includes `/session` session-info output with real message/token/cost totals, `/hotkeys` keyboard-shortcut output sourced from the configured editor/app bindings, `/changelog` changelog rendering from the nearest available coding-agent changelog file, `/export [path]` wiring onto the existing HTML exporter, and `/share` wiring onto GitHub gist sharing with TypeScript-style share/gist URLs.
+  - Model selector parity was closed after compact-row truncation, multi-key scope-hint alignment, TypeScript-style tokenized fuzzy search alignment, selection-retention parity while searching, top-section width handling at narrow terminal sizes, current-checkmark preservation in truncated rows, TypeScript-style `Model: <id>` status copy after selection, TypeScript-style providerless model-cycle status copy with model-name preference, scoped-vs-global single-model fallback copy, `/model <term>` opening the selector with the initial search applied, and exact `/model <term>` hits selecting directly without opening the selector first.
+  - Remaining TypeScript-only gaps (`/login`, `/logout`, true `/scoped-models`, and async compaction queueing) are now treated as phase 9 subsystem work rather than phase-8 polish.
 - Phase 9 (package sources / distribution): not started.
 
 ## Current next slices
 
-1. Finish the remaining `PiModelSelector` edge-case polish against the TypeScript behavior.
-2. Add pending queue / compaction queue parity.
-3. Finish settings/theme parity that still depends on wider CLI surface adoption and package-source discovery.
-4. Finish the remaining footer parity edge cases.
-5. Start phase 9 package-source and distribution work.
+1. Start phase 9 package-source and distribution work.
+2. Add Java-side auth storage and interactive `/login` / `/logout`.
+3. Add saved scoped-model selection and `/scoped-models`.
+4. Decide whether Java should keep synchronous compaction or grow TypeScript-style async compaction queueing.
 
 ## Milestones
 

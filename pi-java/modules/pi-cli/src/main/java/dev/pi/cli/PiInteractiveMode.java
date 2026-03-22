@@ -34,6 +34,7 @@ public final class PiInteractiveMode implements AutoCloseable {
     private final Terminal terminal;
     private final Tui tui;
     private final PiCopyCommand copyCommand;
+    private final PiShareCommand shareCommand;
     private final PiClipboardImage clipboardImage;
     private final PiExternalEditor externalEditor;
     private final Runnable suspendAction;
@@ -109,9 +110,22 @@ public final class PiInteractiveMode implements AutoCloseable {
         PiExternalEditor externalEditor,
         Runnable suspendAction
     ) {
+        this(session, terminal, copyCommand, clipboardImage, externalEditor, suspendAction, new PiShareCommand(session));
+    }
+
+    PiInteractiveMode(
+        PiInteractiveSession session,
+        Terminal terminal,
+        PiCopyCommand copyCommand,
+        PiClipboardImage clipboardImage,
+        PiExternalEditor externalEditor,
+        Runnable suspendAction,
+        PiShareCommand shareCommand
+    ) {
         this.session = Objects.requireNonNull(session, "session");
         this.terminal = Objects.requireNonNull(terminal, "terminal");
         this.copyCommand = Objects.requireNonNull(copyCommand, "copyCommand");
+        this.shareCommand = Objects.requireNonNull(shareCommand, "shareCommand");
         this.clipboardImage = Objects.requireNonNull(clipboardImage, "clipboardImage");
         this.tui = new Tui(terminal, true);
         this.externalEditor = externalEditor == null ? PiExternalEditor.system(tui) : externalEditor;
@@ -177,6 +191,11 @@ public final class PiInteractiveMode implements AutoCloseable {
         if ("/copy".equals(trimmed)) {
             input.setValue("");
             handleCopyCommand();
+            return;
+        }
+        if ("/share".equals(trimmed)) {
+            input.setValue("");
+            handleShareCommand();
             return;
         }
         if ("/session".equals(trimmed)) {
@@ -655,6 +674,15 @@ public final class PiInteractiveMode implements AutoCloseable {
             manualStatus = "No agent messages to copy yet.".equals(message)
                 ? message
                 : "Error: " + message;
+        }
+        renderState(session.state());
+    }
+
+    private void handleShareCommand() {
+        try {
+            manualStatus = shareCommand.shareSession();
+        } catch (RuntimeException exception) {
+            manualStatus = rootMessage(exception);
         }
         renderState(session.state());
     }
