@@ -1017,7 +1017,7 @@ class PiInteractiveModeTest {
 
             waitFor(() -> "next-model".equals(session.lastModelIdChange));
             assertThat(String.join("\n", terminal.getViewport()))
-                .contains("Switched to openai/next-model")
+                .contains("Switched to next-model")
                 .contains("model: openai/next-model");
         } finally {
             PiAppKeybindings.setGlobal(previousApp);
@@ -1042,7 +1042,7 @@ class PiInteractiveModeTest {
 
             waitFor(() -> "previous-model".equals(session.lastModelIdChange));
             assertThat(String.join("\n", terminal.getViewport()))
-                .contains("Switched to openai/previous-model")
+                .contains("Switched to previous-model")
                 .contains("model: openai/previous-model");
         } finally {
             PiAppKeybindings.setGlobal(previousApp);

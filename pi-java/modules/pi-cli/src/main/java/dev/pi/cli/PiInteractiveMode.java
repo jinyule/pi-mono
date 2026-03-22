@@ -1223,7 +1223,7 @@ public final class PiInteractiveMode implements AutoCloseable {
     }
 
     private static String formatModelCycleStatus(PiInteractiveSession.ModelCycleResult result) {
-        var summary = "Switched to " + result.provider() + "/" + result.modelId();
+        var summary = "Switched to " + result.modelId();
         if (!"off".equals(result.thinkingLevel())) {
             return summary + " (thinking: " + result.thinkingLevel() + ")";
         }
