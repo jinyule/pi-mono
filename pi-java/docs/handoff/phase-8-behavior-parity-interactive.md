@@ -56,6 +56,8 @@ Status: in progress
 - `/resume` slash-command wiring
 - `/debug` slash-command wiring
 - `/name` slash-command wiring
+- `/session` slash-command wiring
+- `/hotkeys` slash-command wiring
 - empty-compaction warning wording
 - compaction cancellation and failure wording
 - manual compaction now relies on the compaction summary itself instead of a separate `Compacted context` success banner
@@ -77,6 +79,8 @@ Status: in progress
 - `/name` now sets the session name from the slash-command surface, shows `Session name: ...` when called without an argument on a named session, shows `Usage: /name <name>` when unnamed, and refreshes the terminal title to include the session name
 - after `/name` names a session, `/new` now resets the terminal title back to the plain cwd-based title instead of leaving the old session name behind
 - after `/name` names a session, `/fork` now also refreshes the terminal title so branching to an older unnamed point drops the later session name instead of leaving stale title text behind
+- `/session` now shows session name, storage location, message counts, tool counts, and accumulated token/cost totals from the real session state instead of only ad hoc debug data
+- `/hotkeys` now shows a keyboard-shortcut summary built from the configured editor/app bindings, so custom keymaps surface through the interactive help instead of a hard-coded list
 - queued follow-up and steering submissions now rely on the queued-message panel instead of separate `Queued ...` success status lines
 - manual compaction success now relies on the compaction summary message instead of a separate `Compacted context` status line
 - `/compact` failures now distinguish `Compaction cancelled` from `Compaction failed: ...`, instead of falling back to the generic `Error: ...` prefix

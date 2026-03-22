@@ -2,6 +2,7 @@ package dev.pi.cli;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import dev.pi.agent.runtime.AgentMessage;
 import dev.pi.agent.runtime.AgentLoopConfig;
 import dev.pi.ai.model.AssistantMessageEvent;
@@ -11,6 +12,7 @@ import dev.pi.ai.model.Model;
 import dev.pi.ai.model.StopReason;
 import dev.pi.ai.model.TextContent;
 import dev.pi.ai.model.ThinkingLevel;
+import dev.pi.ai.model.ToolCall;
 import dev.pi.ai.model.Transport;
 import dev.pi.ai.model.Usage;
 import dev.pi.ai.stream.AssistantMessageEventStream;
@@ -30,6 +32,63 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class PiAgentSessionTest {
+    @Test
+    void sessionStatsSummarizeMessagesAndUsage() {
+        var model = testModel();
+        var sessionManager = SessionManager.inMemory("/workspace");
+        try {
+            sessionManager.appendMessage(new Message.UserMessage(List.of(new TextContent("hello", null)), 100L));
+            sessionManager.appendMessage(new Message.AssistantMessage(
+                List.of(
+                    new TextContent("ack", null),
+                    new ToolCall("call-1", "read", JsonNodeFactory.instance.objectNode().put("path", "README.md"), null)
+                ),
+                model.api(),
+                model.provider(),
+                model.id(),
+                new Usage(10, 5, 2, 1, 18, new Usage.Cost(0.1, 0.2, 0.3, 0.4, 1.0)),
+                StopReason.STOP,
+                null,
+                200L
+            ));
+            sessionManager.appendMessage(new Message.ToolResultMessage(
+                "call-1",
+                "read",
+                List.of(new TextContent("README contents", null)),
+                JsonNodeFactory.instance.objectNode().put("ok", true),
+                false,
+                300L
+            ));
+        } catch (Exception exception) {
+            throw new AssertionError(exception);
+        }
+
+        var session = PiAgentSession.builder(
+            model,
+            sessionManager,
+            SettingsManager.inMemory(),
+            new InstructionResources(List.of(), "", List.of())
+        )
+            .streamFunction(fakeAssistant("Ack"))
+            .build();
+
+        var stats = session.sessionStats();
+
+        assertThat(stats.sessionFile()).isNull();
+        assertThat(stats.sessionId()).isEqualTo(sessionManager.sessionId());
+        assertThat(stats.userMessages()).isEqualTo(1);
+        assertThat(stats.assistantMessages()).isEqualTo(1);
+        assertThat(stats.toolCalls()).isEqualTo(1);
+        assertThat(stats.toolResults()).isEqualTo(1);
+        assertThat(stats.totalMessages()).isEqualTo(3);
+        assertThat(stats.tokens().input()).isEqualTo(10);
+        assertThat(stats.tokens().output()).isEqualTo(5);
+        assertThat(stats.tokens().cacheRead()).isEqualTo(2);
+        assertThat(stats.tokens().cacheWrite()).isEqualTo(1);
+        assertThat(stats.tokens().total()).isEqualTo(18);
+        assertThat(stats.cost()).isEqualTo(1.0);
+    }
+
     @Test
     void rehydratesSessionContextAndPersistsPromptedMessages() {
         var sessionManager = SessionManager.inMemory("/workspace");

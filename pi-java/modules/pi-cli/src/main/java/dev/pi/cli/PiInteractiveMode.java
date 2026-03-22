@@ -176,6 +176,16 @@ public final class PiInteractiveMode implements AutoCloseable {
             handleCopyCommand();
             return;
         }
+        if ("/session".equals(trimmed)) {
+            input.setValue("");
+            handleSessionCommand();
+            return;
+        }
+        if ("/hotkeys".equals(trimmed)) {
+            input.setValue("");
+            handleHotkeysCommand();
+            return;
+        }
         if ("/name".equals(trimmed) || trimmed.startsWith("/name ")) {
             input.setValue("");
             handleNameCommand(trimmed);
@@ -941,6 +951,20 @@ public final class PiInteractiveMode implements AutoCloseable {
         renderState(session.state());
     }
 
+    private void handleSessionCommand() {
+        try {
+            manualStatus = formatSessionStats(session.sessionStats(), session.sessionName());
+        } catch (RuntimeException exception) {
+            manualStatus = "Error: " + rootMessage(exception);
+        }
+        renderState(session.state());
+    }
+
+    private void handleHotkeysCommand() {
+        manualStatus = formatHotkeys();
+        renderState(session.state());
+    }
+
     private void handleDebugCommand() {
         try {
             var debugLogPath = debugLogPath();
@@ -1400,6 +1424,118 @@ public final class PiInteractiveMode implements AutoCloseable {
 
     private static String keyDisplay(List<String> keys, String fallback) {
         return keys.isEmpty() ? fallback : String.join("/", keys);
+    }
+
+    private static String editorKeyDisplay(dev.pi.tui.EditorAction action, String fallback) {
+        var keys = dev.pi.tui.EditorKeybindings.global().getKeys(action);
+        return capitalizeKey(keyDisplay(keys, fallback));
+    }
+
+    private static String capitalizeKey(String key) {
+        return java.util.Arrays.stream(key.split("/"))
+            .map(PiInteractiveMode::capitalizeChord)
+            .reduce((left, right) -> left + "/" + right)
+            .orElse(key);
+    }
+
+    private static String capitalizeChord(String key) {
+        return java.util.Arrays.stream(key.split("\\+"))
+            .map(part -> part.isEmpty() ? part : Character.toUpperCase(part.charAt(0)) + part.substring(1))
+            .reduce((left, right) -> left + "+" + right)
+            .orElse(key);
+    }
+
+    private static String formatSessionStats(PiInteractiveSession.SessionStats stats, String sessionName) {
+        var lines = new ArrayList<String>();
+        lines.add("Session Info");
+        lines.add("");
+        if (sessionName != null && !sessionName.isBlank()) {
+            lines.add("Name: " + sessionName.trim());
+        }
+        lines.add("File: " + (stats.sessionFile() == null || stats.sessionFile().isBlank()
+            ? "In-memory"
+            : shortenHomePath(stats.sessionFile())));
+        lines.add("ID: " + stats.sessionId());
+        lines.add("");
+        lines.add("Messages");
+        lines.add("User: " + stats.userMessages());
+        lines.add("Assistant: " + stats.assistantMessages());
+        lines.add("Tool Calls: " + stats.toolCalls());
+        lines.add("Tool Results: " + stats.toolResults());
+        lines.add("Total: " + stats.totalMessages());
+        lines.add("");
+        lines.add("Tokens");
+        lines.add("Input: " + stats.tokens().input());
+        lines.add("Output: " + stats.tokens().output());
+        if (stats.tokens().cacheRead() > 0) {
+            lines.add("Cache Read: " + stats.tokens().cacheRead());
+        }
+        if (stats.tokens().cacheWrite() > 0) {
+            lines.add("Cache Write: " + stats.tokens().cacheWrite());
+        }
+        lines.add("Total: " + stats.tokens().total());
+        if (stats.cost() > 0.0) {
+            lines.add("");
+            lines.add("Cost");
+            lines.add("Total: " + String.format(Locale.ROOT, "%.4f", stats.cost()));
+        }
+        return String.join("\n", lines);
+    }
+
+    private static String formatHotkeys() {
+        var lines = new ArrayList<String>();
+        lines.add("Keyboard Shortcuts");
+        lines.add("");
+        lines.add("Navigation");
+        lines.add("Arrow keys - Move cursor / browse history");
+        lines.add(editorKeyDisplay(dev.pi.tui.EditorAction.CURSOR_WORD_LEFT, "alt+left")
+            + " / "
+            + editorKeyDisplay(dev.pi.tui.EditorAction.CURSOR_WORD_RIGHT, "alt+right")
+            + " - Move by word");
+        lines.add(editorKeyDisplay(dev.pi.tui.EditorAction.CURSOR_LINE_START, "home") + " - Start of line");
+        lines.add(editorKeyDisplay(dev.pi.tui.EditorAction.CURSOR_LINE_END, "end") + " - End of line");
+        lines.add("");
+        lines.add("Editing");
+        lines.add(editorKeyDisplay(dev.pi.tui.EditorAction.SUBMIT, "enter") + " - Send message");
+        lines.add(editorKeyDisplay(dev.pi.tui.EditorAction.NEW_LINE, "alt+enter") + " - New line");
+        lines.add(editorKeyDisplay(dev.pi.tui.EditorAction.DELETE_WORD_BACKWARD, "ctrl+w") + " - Delete word backwards");
+        lines.add(editorKeyDisplay(dev.pi.tui.EditorAction.DELETE_WORD_FORWARD, "alt+d") + " - Delete word forwards");
+        lines.add(editorKeyDisplay(dev.pi.tui.EditorAction.DELETE_TO_LINE_START, "ctrl+u") + " - Delete to start of line");
+        lines.add(editorKeyDisplay(dev.pi.tui.EditorAction.DELETE_TO_LINE_END, "ctrl+k") + " - Delete to end of line");
+        lines.add(editorKeyDisplay(dev.pi.tui.EditorAction.YANK, "ctrl+y") + " - Paste deleted text");
+        lines.add(editorKeyDisplay(dev.pi.tui.EditorAction.YANK_POP, "alt+y") + " - Cycle pasted text");
+        lines.add(editorKeyDisplay(dev.pi.tui.EditorAction.UNDO, "ctrl+-") + " - Undo");
+        lines.add("");
+        lines.add("Other");
+        lines.add(editorKeyDisplay(dev.pi.tui.EditorAction.SESSION_SCOPE_TOGGLE, "tab") + " - Accept autocomplete / toggle selector scope");
+        lines.add(capitalizeKey(appKeyDisplay(PiAppAction.INTERRUPT, "escape")) + " - Interrupt / cancel");
+        lines.add(capitalizeKey(appKeyDisplay(PiAppAction.CLEAR, "ctrl+c")) + " - Clear editor");
+        lines.add(capitalizeKey(appKeyDisplay(PiAppAction.EXIT, "ctrl+d")) + " - Exit when editor is empty");
+        lines.add(capitalizeKey(appKeyDisplay(PiAppAction.SUSPEND, "ctrl+z")) + " - Suspend");
+        lines.add(capitalizeKey(appKeyDisplay(PiAppAction.CYCLE_THINKING_LEVEL, "shift+tab")) + " - Cycle thinking level");
+        lines.add(capitalizeKey(appKeyDisplay(PiAppAction.CYCLE_MODEL_FORWARD, "ctrl+p")) + " - Cycle models forward");
+        lines.add(capitalizeKey(appKeyDisplay(PiAppAction.CYCLE_MODEL_BACKWARD, "shift+ctrl+p")) + " - Cycle models backward");
+        lines.add(capitalizeKey(appKeyDisplay(PiAppAction.SELECT_MODEL, "ctrl+l")) + " - Open model selector");
+        lines.add(capitalizeKey(appKeyDisplay(PiAppAction.EXPAND_TOOLS, "ctrl+o")) + " - Toggle tool details");
+        lines.add(capitalizeKey(appKeyDisplay(PiAppAction.TOGGLE_THINKING, "ctrl+t")) + " - Toggle thinking blocks");
+        lines.add(capitalizeKey(appKeyDisplay(PiAppAction.EXTERNAL_EDITOR, "ctrl+g")) + " - Open external editor");
+        lines.add(capitalizeKey(appKeyDisplay(PiAppAction.FOLLOW_UP, "alt+enter")) + " - Queue follow-up");
+        lines.add(capitalizeKey(appKeyDisplay(PiAppAction.DEQUEUE, "alt+up")) + " - Restore queued messages");
+        lines.add(capitalizeKey(appKeyDisplay(PiAppAction.PASTE_IMAGE, "ctrl+v")) + " - Paste image from clipboard");
+        appendConfiguredAppHotkey(lines, PiAppAction.NEW_SESSION, "New session");
+        appendConfiguredAppHotkey(lines, PiAppAction.RESUME, "Resume");
+        appendConfiguredAppHotkey(lines, PiAppAction.TREE, "Open session tree");
+        appendConfiguredAppHotkey(lines, PiAppAction.FORK, "Open fork selector");
+        lines.add("/ - Slash commands");
+        return String.join("\n", lines);
+    }
+
+    private static void appendConfiguredAppHotkey(List<String> lines, PiAppAction action, String description) {
+        var keys = PiAppKeybindings.global().getKeys(action);
+        if (keys.isEmpty()) {
+            return;
+        }
+        lines.add(capitalizeKey(String.join("/", keys)) + " - " + description);
     }
 
     private static String formatModelCycleStatus(PiInteractiveSession.ModelCycleResult result) {

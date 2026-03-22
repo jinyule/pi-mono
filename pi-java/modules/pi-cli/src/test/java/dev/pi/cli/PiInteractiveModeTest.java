@@ -214,6 +214,48 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void handlesSessionSlashCommand() {
+        var session = new FakeSession().withSessionName("Scratch").withMessageHistory("Hello");
+        var terminal = new VirtualTerminal(120, 40);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("/session");
+        terminal.sendInput("\r");
+
+        assertThat(String.join("\n", terminal.getViewport()))
+            .contains("Session Info")
+            .contains("Name: Scratch")
+            .contains("File: In-memory")
+            .contains("User: 1")
+            .contains("Assistant: 1")
+            .contains("Total: 2");
+
+        mode.stop();
+    }
+
+    @Test
+    void handlesHotkeysSlashCommand() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(120, 80);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("/hotkeys");
+        terminal.sendInput("\r");
+
+        assertThat(String.join("\n", terminal.getViewport()))
+            .contains("Keyboard Shortcuts")
+            .contains("Navigation")
+            .contains("Editing")
+            .contains("Other")
+            .contains("Enter - Send message")
+            .contains("Ctrl+L - Open model selector");
+
+        mode.stop();
+    }
+
+    @Test
     void handlesNameSlashCommand() {
         var session = new FakeSession();
         var terminal = new VirtualTerminal(100, 15);
@@ -2177,6 +2219,59 @@ class PiInteractiveModeTest {
             } catch (Exception exception) {
                 throw new AssertionError(exception);
             }
+        }
+
+        @Override
+        public SessionStats sessionStats() {
+            var userMessages = 0;
+            var assistantMessages = 0;
+            var toolCalls = 0;
+            var toolResults = 0;
+            var totalInput = 0;
+            var totalOutput = 0;
+            var totalCacheRead = 0;
+            var totalCacheWrite = 0;
+            var totalCost = 0.0;
+
+            for (var message : state.messages()) {
+                if (message instanceof AgentMessage.UserMessage) {
+                    userMessages += 1;
+                    continue;
+                }
+                if (message instanceof AgentMessage.ToolResultMessage) {
+                    toolResults += 1;
+                    continue;
+                }
+                if (message instanceof AgentMessage.AssistantMessage assistantMessage) {
+                    assistantMessages += 1;
+                    toolCalls += (int) assistantMessage.content().stream()
+                        .filter(dev.pi.ai.model.ToolCall.class::isInstance)
+                        .count();
+                    totalInput += assistantMessage.usage().input();
+                    totalOutput += assistantMessage.usage().output();
+                    totalCacheRead += assistantMessage.usage().cacheRead();
+                    totalCacheWrite += assistantMessage.usage().cacheWrite();
+                    totalCost += assistantMessage.usage().cost().total();
+                }
+            }
+
+            return new SessionStats(
+                null,
+                sessionManager.sessionId(),
+                userMessages,
+                assistantMessages,
+                toolCalls,
+                toolResults,
+                state.messages().size(),
+                new TokenStats(
+                    totalInput,
+                    totalOutput,
+                    totalCacheRead,
+                    totalCacheWrite,
+                    totalInput + totalOutput + totalCacheRead + totalCacheWrite
+                ),
+                totalCost
+            );
         }
 
         @Override

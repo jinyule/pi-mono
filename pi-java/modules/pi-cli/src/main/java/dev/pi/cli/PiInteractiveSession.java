@@ -154,6 +154,10 @@ public interface PiInteractiveSession {
         throw new UnsupportedOperationException("Session naming is not available");
     }
 
+    default SessionStats sessionStats() {
+        throw new UnsupportedOperationException("Session stats are not available");
+    }
+
     default StartupResources startupResources() {
         return StartupResources.empty();
     }
@@ -288,6 +292,28 @@ public interface PiInteractiveSession {
     record DequeueResult(
         String editorText,
         int restoredCount
+    ) {
+    }
+
+    record SessionStats(
+        String sessionFile,
+        String sessionId,
+        int userMessages,
+        int assistantMessages,
+        int toolCalls,
+        int toolResults,
+        int totalMessages,
+        TokenStats tokens,
+        double cost
+    ) {
+    }
+
+    record TokenStats(
+        int input,
+        int output,
+        int cacheRead,
+        int cacheWrite,
+        int total
     ) {
     }
 

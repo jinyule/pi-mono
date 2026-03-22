@@ -13,6 +13,7 @@ import dev.pi.ai.model.StopReason;
 import dev.pi.ai.model.ThinkingBudgets;
 import dev.pi.ai.model.ThinkingLevel;
 import dev.pi.ai.model.TextContent;
+import dev.pi.ai.model.ToolCall;
 import dev.pi.ai.model.Transport;
 import dev.pi.ai.model.Usage;
 import dev.pi.ai.stream.Subscription;
@@ -233,6 +234,60 @@ public final class PiAgentSession implements PiInteractiveSession {
         } catch (IOException exception) {
             throw new IllegalStateException("Failed to persist session name", exception);
         }
+    }
+
+    @Override
+    public SessionStats sessionStats() {
+        var messages = sdkSession.state().messages();
+        var userMessages = 0;
+        var assistantMessages = 0;
+        var toolCalls = 0;
+        var toolResults = 0;
+        var totalInput = 0;
+        var totalOutput = 0;
+        var totalCacheRead = 0;
+        var totalCacheWrite = 0;
+        var totalCost = 0.0;
+
+        for (var message : messages) {
+            if (message instanceof AgentMessage.UserMessage) {
+                userMessages += 1;
+                continue;
+            }
+            if (message instanceof AgentMessage.ToolResultMessage) {
+                toolResults += 1;
+                continue;
+            }
+            if (message instanceof AgentMessage.AssistantMessage assistantMessage) {
+                assistantMessages += 1;
+                toolCalls += (int) assistantMessage.content().stream()
+                    .filter(ToolCall.class::isInstance)
+                    .count();
+                totalInput += assistantMessage.usage().input();
+                totalOutput += assistantMessage.usage().output();
+                totalCacheRead += assistantMessage.usage().cacheRead();
+                totalCacheWrite += assistantMessage.usage().cacheWrite();
+                totalCost += assistantMessage.usage().cost().total();
+            }
+        }
+
+        return new SessionStats(
+            sessionManager().sessionFile() == null ? null : sessionManager().sessionFile().toString(),
+            sessionId(),
+            userMessages,
+            assistantMessages,
+            toolCalls,
+            toolResults,
+            messages.size(),
+            new TokenStats(
+                totalInput,
+                totalOutput,
+                totalCacheRead,
+                totalCacheWrite,
+                totalInput + totalOutput + totalCacheRead + totalCacheWrite
+            ),
+            totalCost
+        );
     }
 
     @Override
