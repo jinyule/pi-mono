@@ -512,6 +512,29 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void selectingCurrentTreeEntryShowsAlreadyAtThisPoint() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(80, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("Hello");
+        terminal.sendInput("\r");
+        terminal.sendInput("/tree");
+        terminal.sendInput("\r");
+        terminal.sendInput("\r");
+
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Already at this point")));
+
+        assertThat(String.join("\n", terminal.getViewport()))
+            .contains("Already at this point")
+            .doesNotContain("Navigated to selected point");
+        assertThat(session.prompts).containsExactly("Hello");
+
+        mode.stop();
+    }
+
+    @Test
     void usesAppKeybindingForTreeOverlay() {
         var session = new FakeSession();
         var terminal = new VirtualTerminal(80, 16);

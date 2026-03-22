@@ -71,6 +71,7 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 ### Interactive command/status copy
 
 - tree navigation success wording
+- tree current-point wording
 - tree empty-state wording
 - fork-selector success wording
 - reload success wording
@@ -157,6 +158,7 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - working tree slice: model-cycle fallback copy now distinguishes scoped-vs-global single-model states, matching the TypeScript behavior more closely
 - working tree slice: footer model summaries now use TypeScript-style parenthesized provider badges instead of `provider/model`
 - working tree slice: tree navigation success now uses the TypeScript `Navigated to selected point` wording
+- working tree slice: selecting the current tree node now uses the TypeScript `Already at this point` wording instead of reporting a navigation success
 - working tree slice: empty `/tree` now uses the TypeScript `No entries in session` wording
 - working tree slice: fork selection success now uses the TypeScript `Branched to new session` wording
 - working tree slice: reload success now uses user-facing `Reloaded extensions, prompts, themes, and settings` wording instead of the older Java-specific resource phrasing

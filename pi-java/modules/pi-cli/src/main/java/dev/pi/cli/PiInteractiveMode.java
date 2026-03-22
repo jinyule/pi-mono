@@ -753,6 +753,14 @@ public final class PiInteractiveMode implements AutoCloseable {
     }
 
     private void selectTreeEntry(String targetId, dev.pi.tui.OverlayHandle overlay) {
+        if (Objects.equals(targetId, session.leafId())) {
+            manualStatus = "Already at this point";
+            if (overlay != null) {
+                overlay.hide();
+            }
+            renderState(session.state());
+            return;
+        }
         try {
             var result = session.navigateTree(targetId);
             input.setValue(result.editorText() == null ? "" : result.editorText());
