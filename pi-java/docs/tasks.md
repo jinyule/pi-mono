@@ -60,12 +60,13 @@ Updated: 2026-03-22
   - Interactive `/login` and `/logout` now work in Java: direct `/login <provider> <token>` and `/logout <provider>` are supported, plus selector/prompt overlays when arguments are omitted.
   - Saved credentials now flow into Java session requests automatically, and the login prompt uses hidden input instead of echoing the token in clear text.
   - Saved `enabledModels` now also work end-to-end in Java: startup restores them when `--models` is absent, model cycling respects the saved scope, and interactive `/scoped-models` now updates session scope immediately and persists it on save.
-  - Package installation and auth-backed package management are still later phase-9 work; Java currently discovers what is already on disk.
+  - Java now also has a package-management backend in `pi-session` for installing, updating, removing, and path-resolving configured local / `npm:` / `git:` sources.
+  - CLI command wiring and auth-backed package management are still later phase-9 work; Java currently has the backend but not the user-facing package command surface.
 
 ## Current next slices
 
-1. Start package-management plumbing so configured `npm:` / `git:` sources can be installed or refreshed from Java instead of only discovered after manual setup.
-2. Start defining phase-9 packaging/distribution outputs once package management basics exist.
+1. Wire `PackageSourceManager` into Java CLI package commands for install/remove/update/list.
+2. Start defining phase-9 packaging/distribution outputs once package-command basics exist.
 3. Decide whether Java should stay with token-entry `/login` or later add full browser-driven OAuth flows.
 
 ## Milestones
