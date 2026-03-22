@@ -453,6 +453,22 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void showsStartupCompactionStatusWhenSessionAlreadyContainsCompaction() {
+        var session = new FakeSession()
+            .withMessageHistory("Hello")
+            .withMessageHistory("Second");
+        session.compact(null);
+        var terminal = new VirtualTerminal(100, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+
+        assertThat(String.join("\n", terminal.getViewport())).contains("Session compacted 1 time");
+
+        mode.stop();
+    }
+
+    @Test
     void rendersReasoningThinkingLevelInFooter() {
         var session = new FakeSession().withReasoningModel("reasoning-model", ThinkingLevel.HIGH);
         var terminal = new RecordingTerminal(100, 14);

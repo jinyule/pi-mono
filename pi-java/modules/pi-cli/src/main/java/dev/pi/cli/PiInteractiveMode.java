@@ -129,6 +129,7 @@ public final class PiInteractiveMode implements AutoCloseable {
             return;
         }
         started = true;
+        manualStatus = startupStatus();
         terminal.setTitle("pi-java interactive");
         stateSubscription = session.subscribeState(this::renderState);
         gitBranchWatcher = PiGitBranchWatcher.start(session.cwd(), () -> renderState(session.state()));
@@ -842,6 +843,25 @@ public final class PiInteractiveMode implements AutoCloseable {
             current = current.getCause();
         }
         return current.getMessage() == null ? current.getClass().getSimpleName() : current.getMessage();
+    }
+
+    private String startupStatus() {
+        var compactionCount = compactionCount(session.tree());
+        if (compactionCount <= 0) {
+            return null;
+        }
+        return "Session compacted " + (compactionCount == 1 ? "1 time" : compactionCount + " times");
+    }
+
+    private static int compactionCount(List<dev.pi.session.SessionTreeNode> nodes) {
+        var count = 0;
+        for (var node : nodes) {
+            if (node.entry() instanceof dev.pi.session.SessionEntry.CompactionEntry) {
+                count += 1;
+            }
+            count += compactionCount(node.children());
+        }
+        return count;
     }
 
     private final class PromptInput implements Component, Focusable {

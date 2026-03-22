@@ -79,6 +79,7 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - reload warning-state wording
 - reload streaming-warning wording
 - unsupported-thinking wording
+- startup compaction wording
 - new-session success wording
 - empty-compaction warning wording
 
@@ -170,6 +171,7 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - working tree slice: reload now keeps the same success status even when warnings are present, matching the TypeScript pattern of surfacing warning details separately via diagnostics
 - working tree slice: `/reload` while streaming now uses the TypeScript-style warning copy directly instead of surfacing the lower-level reload exception as an `Error: ...` status
 - working tree slice: cycling thinking on a non-reasoning model now uses the TypeScript `Current model does not support thinking` status instead of surfacing the lower-level unsupported-operation error
+- working tree slice: startup now surfaces `Session compacted 1 time` / `N times` when the current session already contains compaction entries, matching the TypeScript startup status behavior
 - working tree slice: new-session success now uses the TypeScript-style `New session started` wording instead of the older `Started new session`
 - working tree slice: `/compact` with fewer than two messages now short-circuits with the TypeScript `Nothing to compact (no messages yet)` warning instead of entering compaction
 
