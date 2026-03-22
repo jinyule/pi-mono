@@ -104,6 +104,14 @@ public final class SettingsManager {
         return effectiveSettings.getPackageSources("/packages");
     }
 
+    public List<PackageSource> getGlobalPackages() {
+        return globalSettings.getPackageSources("/packages");
+    }
+
+    public List<PackageSource> getProjectPackages() {
+        return projectSettings.getPackageSources("/packages");
+    }
+
     public void setPackages(List<PackageSource> packages) {
         updateGlobal(settings -> settings.withPackageSources("packages", packages));
     }

@@ -7,6 +7,7 @@ import dev.pi.ai.model.ThinkingLevel;
 import dev.pi.ai.registry.ModelRegistry;
 import dev.pi.extension.spi.ExtensionRuntime;
 import dev.pi.session.InstructionResourceLoader;
+import dev.pi.session.PackageSourceDiscovery;
 import dev.pi.session.SettingsManager;
 import dev.pi.tui.EditorKeybindings;
 import dev.pi.tui.ProcessTerminal;
@@ -212,14 +213,33 @@ public final class PiCliModule {
     private PiInteractiveSession createDefaultSession(PiCliArgs args) throws Exception {
         var sessionManager = new PiCliSessionResolver(cwd).resolve(args);
         var settingsManager = SettingsManager.create(cwd);
+        var packageSourceDiscovery = new PackageSourceDiscovery(cwd);
         var themeLoader = new PiCliThemeLoader(cwd);
-        var loadedThemes = themeLoader.load(args.themes(), args.noThemes());
+        var themePaths = mergePaths(
+            args.noThemes() ? List.of() : packageSourceDiscovery.resolve(
+                settingsManager.getGlobalPackages(),
+                settingsManager.getProjectPackages(),
+                PackageSourceDiscovery.ResourceType.THEMES
+            ),
+            args.themes()
+        );
+        var loadedThemes = themeLoader.load(themePaths, args.noThemes());
         PiCliAnsi.setRegisteredThemes(loadedThemes.palettes());
         var instructionLoader = new InstructionResourceLoader(cwd);
         instructionLoader.reload();
-        var extensionRuntime = args.noExtensions() || args.extensions().isEmpty()
+        var extensionSources = args.noExtensions()
+            ? List.<Path>of()
+            : mergePaths(
+                packageSourceDiscovery.resolve(
+                    settingsManager.getGlobalPackages(),
+                    settingsManager.getProjectPackages(),
+                    PackageSourceDiscovery.ResourceType.EXTENSIONS
+                ),
+                args.extensions()
+            );
+        var extensionRuntime = extensionSources.isEmpty()
             ? null
-            : new ExtensionRuntime(args.extensions());
+            : new ExtensionRuntime(extensionSources);
         var scopedCycleModels = resolveScopedCycleModels(args.modelPatterns(), aiClient.modelRegistry());
         var cycleModels = resolveCycleModels(args, aiClient.modelRegistry(), scopedCycleModels);
         var model = resolveModel(args, aiClient.modelRegistry(), scopedCycleModels, settingsManager);
@@ -245,7 +265,17 @@ public final class PiCliModule {
                 ? List.of()
                 : extensionRuntime.sources().stream().map(Path::toString).toList())
             .themeReloadAction(() -> {
-                var reloadedThemes = themeLoader.load(args.themes(), args.noThemes());
+                var reloadedThemes = themeLoader.load(
+                    mergePaths(
+                        args.noThemes() ? List.of() : packageSourceDiscovery.resolve(
+                            settingsManager.getGlobalPackages(),
+                            settingsManager.getProjectPackages(),
+                            PackageSourceDiscovery.ResourceType.THEMES
+                        ),
+                        args.themes()
+                    ),
+                    args.noThemes()
+                );
                 PiCliAnsi.setRegisteredThemes(reloadedThemes.palettes());
                 return new PiAgentSession.ThemeReloadResult(
                     reloadedThemes.availableThemes(),
@@ -256,6 +286,23 @@ public final class PiCliModule {
             builder.reloadAction(() -> extensionRuntime.reload().failures().stream().map(PiCliModule::formatExtensionFailure).toList());
         }
         return builder.build();
+    }
+
+    private static List<Path> mergePaths(List<Path> discovered, List<Path> explicit) {
+        var merged = new java.util.LinkedHashSet<Path>();
+        for (var path : discovered == null ? List.<Path>of() : discovered) {
+            if (path == null) {
+                continue;
+            }
+            merged.add(path.toAbsolutePath().normalize());
+        }
+        for (var path : explicit == null ? List.<Path>of() : explicit) {
+            if (path == null) {
+                continue;
+            }
+            merged.add(path.toAbsolutePath().normalize());
+        }
+        return List.copyOf(merged);
     }
 
     static Model resolveModel(PiCliArgs args, ModelRegistry registry, List<PiAgentSession.CycleModel> scopedCycleModels) {

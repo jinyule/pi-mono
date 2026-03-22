@@ -234,6 +234,10 @@ class SettingsManagerTest {
 
         var manager = SettingsManager.inMemory(global, project);
 
+        assertThat(manager.getGlobalPackages()).containsExactly(new PackageSource("npm:@scope/global"));
+        assertThat(manager.getProjectPackages()).containsExactly(
+            new PackageSource("git:https://example.com/acme/pkg.git", List.of("dist/extensions"), List.of(), List.of(), List.of())
+        );
         assertThat(manager.getPackages()).containsExactly(
             new PackageSource("git:https://example.com/acme/pkg.git", List.of("dist/extensions"), List.of(), List.of(), List.of())
         );

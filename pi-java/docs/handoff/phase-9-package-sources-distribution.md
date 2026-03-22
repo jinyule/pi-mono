@@ -36,14 +36,22 @@ Add the missing Java-side packaging surface that phase 8 deliberately deferred:
   - `getEnabledModels()`
   - `setEnabledModels(...)`
 - Added tests for typed access and persisted JSON shape
+- Added `dev.pi.session.PackageSourceDiscovery` for scope-aware local package-source resolution.
+- Added `SettingsManager.getGlobalPackages()` and `SettingsManager.getProjectPackages()` so Java can discover both scopes instead of only the merged effective array.
+- Wired local package-source themes into CLI startup and theme reload.
+- Wired local package-source extensions into CLI startup extension discovery.
+- Added focused tests for:
+  - scope-relative package-source path resolution
+  - project package-source themes showing up in `settings`
+  - project package-source extensions showing up in startup resources
 
 ## Next smallest slice
 
-Wire package sources into actual Java-side discovery so settings-based package entries start affecting extension/skill/prompt/theme loading instead of being config-only.
+Carry package-source discovery past local paths: detect already-installed `npm:` / `git:` package roots and start feeding discovered skill/prompt/theme resources into the Java CLI surfaces that already exist.
 
 ## Validation
 
 ```bash
-.\gradlew.bat :pi-session:test --no-daemon
+.\gradlew.bat :pi-session:test :pi-cli:test --no-daemon
 npm.cmd run check
 ```

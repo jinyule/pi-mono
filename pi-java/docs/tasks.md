@@ -50,11 +50,13 @@ Updated: 2026-03-22
   - Remaining TypeScript-only gaps (`/login`, `/logout`, true `/scoped-models`, and async compaction queueing) are now treated as phase 9 subsystem work rather than phase-8 polish.
 - Phase 9 (package sources / distribution): in progress.
   - Typed settings support for `packages` and `enabledModels` is now in place in `pi-session`, including round-trip persistence for plain package-source strings and filtered package-source objects.
-  - This establishes the config layer needed for later Java-side package discovery and `/scoped-models` support.
+  - Local package sources now participate in Java-side startup discovery for themes and extensions, using the same scope-relative base directories as the TypeScript app (`~/.pi/agent` for global settings, `<cwd>/.pi` for project settings).
+  - Theme package sources are also re-read on session reload, so settings-file changes can add or remove custom themes without restarting the CLI.
+  - Remote `npm:` / `git:` package sources are still config-only for now; actual installed-package discovery and auth-backed package management remain later phase-9 work.
 
 ## Current next slices
 
-1. Wire settings-based package sources into actual extension / skill / prompt / theme discovery.
+1. Extend package-source discovery beyond local paths: installed `npm:` / `git:` package roots plus resource-backed skill/prompt/theme surfaces.
 2. Add Java-side auth storage and interactive `/login` / `/logout`.
 3. Wire `enabledModels` into saved scoped-model selection and `/scoped-models`.
 4. Decide whether Java should keep synchronous compaction or grow TypeScript-style async compaction queueing.
