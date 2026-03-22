@@ -1,0 +1,65 @@
+# Phase 8 - interactive parity
+
+Updated: 2026-03-22
+Status: in progress
+
+## Interactive footer
+
+- token, cost, and model summary
+- ANSI hierarchy
+- provider-aware model summary
+- context-window indicator
+- auto-compaction suffix
+- stale and idle context handling
+- cwd and session line
+- middle truncation
+- git-branch display and watcher
+- parenthesized provider badges for multi-provider model summaries
+- strict `>70` / `>90` context-usage color thresholds
+
+## Interactive app keybindings and queue hints
+
+- thinking-level cycle
+- model cycle forward/backward
+- new session
+- toggle thinking
+- clear
+- exit
+- expand tools
+- paste image
+- suspend
+- external editor
+- startup keybinding hints
+- startup and queued-message hints join all configured bindings with `/`
+- startup header hints use shared key-hint ANSI layering
+- queued-message dequeue hints use shared `PiCliKeyHints.appHint` styling
+- dequeue hint and restore status copy now matches the TypeScript wording
+- queued steering/follow-up status lines use muted ANSI styling
+- queued steering/follow-up lines truncate to the available status width instead of wrapping
+
+## Interactive command and status copy
+
+- tree navigation success wording
+- tree current-point wording
+- tree empty-state wording
+- fork-selector success wording
+- reload success wording
+- reload warning-state wording
+- reload streaming-warning wording
+- unsupported-thinking wording
+- startup compaction wording
+- new-session success wording
+- empty-compaction warning wording
+
+## Recent interactive slices
+
+- `626df759` `feat(pi-java): show startup compaction status`
+- `db882bae` `feat(pi-java): align reload status copy`
+- `c5cc4a27` `feat(pi-java): align reload warning status`
+- `4ce5c7c0` `feat(pi-java): align reload streaming warning`
+- `90e3ab19` `feat(pi-java): align footer usage thresholds`
+- `/reload` success now uses `Reloaded extensions, skills, prompts, themes`, matching the current TypeScript wording
+
+## Next smallest slice
+
+Move to pending queue / compaction queue parity unless another tiny footer or interactive copy drift is easier to close first.

@@ -826,7 +826,7 @@ public final class PiInteractiveMode implements AutoCloseable {
         try {
             var result = session.reload();
             reloadDiagnostics = formatReloadDiagnostics(result);
-            manualStatus = "Reloaded extensions, prompts, themes, and settings";
+            manualStatus = "Reloaded extensions, skills, prompts, themes";
         } catch (RuntimeException exception) {
             manualStatus = "Error: " + rootMessage(exception);
         }

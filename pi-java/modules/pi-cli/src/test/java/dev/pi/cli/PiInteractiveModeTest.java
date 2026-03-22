@@ -720,12 +720,12 @@ class PiInteractiveModeTest {
         terminal.sendInput("/reload");
         terminal.sendInput("\r");
 
-        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Reloaded extensions, prompts, themes, and settings")));
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Reloaded extensions, skills, prompts, themes")));
 
         assertThat(session.reloadCount).isEqualTo(1);
         assertThat(session.state().systemPrompt()).isEqualTo("Reloaded system prompt");
         assertThat(String.join("\n", terminal.getViewport()))
-            .contains("Reloaded extensions, prompts, themes, and settings");
+            .contains("Reloaded extensions, skills, prompts, themes");
 
         mode.stop();
     }
@@ -741,10 +741,10 @@ class PiInteractiveModeTest {
         terminal.sendInput("/reload");
         terminal.sendInput("\r");
 
-        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Reloaded extensions, prompts, themes, and settings")));
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Reloaded extensions, skills, prompts, themes")));
 
         assertThat(String.join("\n", terminal.getViewport()))
-            .contains("Reloaded extensions, prompts, themes, and settings")
+            .contains("Reloaded extensions, skills, prompts, themes")
             .contains("[Reload warnings]")
             .contains("extension: reload-plugin.jar: broken extension");
 

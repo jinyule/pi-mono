@@ -1,6 +1,6 @@
 # pi-java implementation tasks
 
-Updated: 2026-03-18
+Updated: 2026-03-22
 
 ## Working rules
 
@@ -99,4 +99,4 @@ npm.cmd run check
 ## Notes
 
 - The handoff docs were normalized on 2026-03-18 after prior encoding corruption.
-- The split handoff files under `pi-java/docs/handoff/` are now the authoritative continuation docs.
+- The split handoff files under `pi-java/docs/handoff/` are now the authoritative continuation docs, and each phase handoff should stay split once a single markdown file would exceed 100 lines.
