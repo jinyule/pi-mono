@@ -1142,6 +1142,72 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void ignoresMissingClipboardImageWithoutChangingStatus() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(100, 16);
+        var mode = new PiInteractiveMode(
+            session,
+            terminal,
+            new PiCopyCommand(session, text -> {
+            }),
+            () -> null
+        );
+        var previousApp = PiAppKeybindings.global();
+        try {
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(PiAppAction.PASTE_IMAGE, java.util.List.of("alt+z"))));
+
+            mode.start();
+            var before = String.join("\n", terminal.getViewport());
+
+            terminal.sendInput("\u001bz");
+
+            assertThat(String.join("\n", terminal.getViewport()))
+                .isEqualTo(before)
+                .doesNotContain("No image in clipboard")
+                .doesNotContain("Attached image from clipboard")
+                .doesNotContain("Attached images: 1");
+            assertThat(session.promptMessages).isEmpty();
+        } finally {
+            PiAppKeybindings.setGlobal(previousApp);
+            mode.stop();
+        }
+    }
+
+    @Test
+    void ignoresClipboardReadErrorsWithoutChangingStatus() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(100, 16);
+        var mode = new PiInteractiveMode(
+            session,
+            terminal,
+            new PiCopyCommand(session, text -> {
+            }),
+            () -> {
+                throw new IllegalStateException("clipboard unavailable");
+            }
+        );
+        var previousApp = PiAppKeybindings.global();
+        try {
+            PiAppKeybindings.setGlobal(new PiAppKeybindings(java.util.Map.of(PiAppAction.PASTE_IMAGE, java.util.List.of("alt+z"))));
+
+            mode.start();
+            var before = String.join("\n", terminal.getViewport());
+
+            terminal.sendInput("\u001bz");
+
+            assertThat(String.join("\n", terminal.getViewport()))
+                .isEqualTo(before)
+                .doesNotContain("clipboard unavailable")
+                .doesNotContain("Attached image from clipboard")
+                .doesNotContain("Attached images: 1");
+            assertThat(session.promptMessages).isEmpty();
+        } finally {
+            PiAppKeybindings.setGlobal(previousApp);
+            mode.stop();
+        }
+    }
+
+    @Test
     void usesAppKeybindingForResume() {
         var session = new FakeSession();
         var terminal = new VirtualTerminal(80, 16);

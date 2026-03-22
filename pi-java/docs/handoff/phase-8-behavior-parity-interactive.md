@@ -37,6 +37,7 @@ Status: in progress
 - queued steering/follow-up status lines use muted ANSI styling
 - queued steering/follow-up lines truncate to the available status width instead of wrapping
 - queued follow-up and steering submissions no longer add extra success banners; the queue display itself now carries that feedback, matching the TypeScript behavior more closely
+- clipboard-image paste now silently does nothing when no image is available or clipboard access fails, matching the TypeScript no-op behavior on those paths
 
 ## Interactive command and status copy
 
@@ -65,6 +66,7 @@ Status: in progress
 - queued follow-up and steering submissions now rely on the queued-message panel instead of separate `Queued ...` success status lines
 - manual compaction success now relies on the compaction summary message instead of a separate `Compacted context` status line
 - `/copy` with no assistant output now shows `No agent messages to copy yet.` directly, matching the TypeScript wording
+- clipboard-image paste now leaves the current status untouched when no image is available or clipboard access throws, matching the TypeScript no-op behavior for those edge cases
 
 ## Next smallest slice
 
