@@ -547,6 +547,40 @@ class PiModelSelectorTest {
         assertThat(lines).anyMatch(line -> line.contains("\u001b[90m  Model Name: Claude 3.7 Sonnet"));
     }
 
+    @Test
+    void appliesInitialSearchInputWhenProvided() {
+        var selector = new PiModelSelector(
+            new PiInteractiveSession.ModelSelection(
+                List.of(
+                    new PiInteractiveSession.SelectableModel(0, "openai", "gpt-5", "GPT-5", "minimal", true, true, 400_000),
+                    new PiInteractiveSession.SelectableModel(
+                        1,
+                        "anthropic",
+                        "claude-3-7-sonnet",
+                        "Claude 3.7 Sonnet",
+                        "high",
+                        false,
+                        true,
+                        200_000
+                    )
+                ),
+                List.of()
+            ),
+            "claude",
+            ignored -> {
+            },
+            () -> {
+            },
+            () -> {
+            }
+        );
+
+        var lines = selector.render(100);
+        assertThat(lines).anyMatch(line -> line.contains("claude-3-7-sonnet"));
+        assertThat(lines).noneMatch(line -> line.contains("gpt-5"));
+        assertThat(lines).noneMatch(line -> line.contains("No matching models"));
+    }
+
     private static String stripAnsi(String text) {
         return text.replaceAll("\\u001B\\[[;\\d]*m", "");
     }

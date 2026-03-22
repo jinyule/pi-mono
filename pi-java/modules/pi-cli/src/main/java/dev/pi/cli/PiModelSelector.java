@@ -79,6 +79,16 @@ public final class PiModelSelector implements Component, Focusable {
         Runnable onCancel,
         Runnable requestRender
     ) {
+        this(selection, null, onSelect, onCancel, requestRender);
+    }
+
+    public PiModelSelector(
+        PiInteractiveSession.ModelSelection selection,
+        String initialSearchInput,
+        IntConsumer onSelect,
+        Runnable onCancel,
+        Runnable requestRender
+    ) {
         Objects.requireNonNull(selection, "selection");
         this.onSelect = Objects.requireNonNull(onSelect, "onSelect");
         this.onCancel = Objects.requireNonNull(onCancel, "onCancel");
@@ -87,6 +97,9 @@ public final class PiModelSelector implements Component, Focusable {
         this.scopedModels = sortModels(selection.scopedModels());
         this.scope = this.scopedModels.isEmpty() ? Scope.ALL : Scope.SCOPED;
         this.search.setFocused(true);
+        if (initialSearchInput != null && !initialSearchInput.isBlank()) {
+            this.search.setValue(initialSearchInput);
+        }
         rebuildList();
     }
 

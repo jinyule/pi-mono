@@ -193,6 +193,12 @@ public final class PiInteractiveMode implements AutoCloseable {
             handleReloadCommand();
             return;
         }
+        if ("/model".equals(trimmed) || trimmed.startsWith("/model ")) {
+            input.setValue("");
+            var searchTerm = trimmed.length() == 6 ? null : trimmed.substring(7).trim();
+            handleSelectModelCommand(searchTerm == null || searchTerm.isBlank() ? null : searchTerm);
+            return;
+        }
         if ("/settings".equals(trimmed)) {
             input.setValue("");
             handleSettingsCommand();
@@ -670,6 +676,10 @@ public final class PiInteractiveMode implements AutoCloseable {
     }
 
     private void handleSelectModelCommand() {
+        handleSelectModelCommand(null);
+    }
+
+    private void handleSelectModelCommand(String initialSearchInput) {
         var selection = session.modelSelection();
         if (selection.allModels().isEmpty() && selection.scopedModels().isEmpty()) {
             manualStatus = "No models available";
@@ -685,6 +695,7 @@ public final class PiInteractiveMode implements AutoCloseable {
         var overlayRef = new AtomicReference<dev.pi.tui.OverlayHandle>();
         var selector = new PiModelSelector(
             selection,
+            initialSearchInput,
             index -> selectModelEntry(index, overlayRef.get()),
             () -> {
                 var overlay = overlayRef.get();

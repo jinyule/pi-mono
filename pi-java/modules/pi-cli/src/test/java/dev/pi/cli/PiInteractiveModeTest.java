@@ -1626,6 +1626,28 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void slashModelCommandOpensSelectorWithInitialSearch() {
+        var session = new FakeSession().withSelectableModels(List.of(
+            new PiInteractiveSession.SelectableModel(0, "openai", "gpt-5", "minimal", true),
+            new PiInteractiveSession.SelectableModel(1, "anthropic", "claude-3-7-sonnet", "high", false)
+        ));
+        var terminal = new VirtualTerminal(100, 18);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("/model claude");
+        terminal.sendInput("\r");
+
+        var viewport = String.join("\n", terminal.getViewport());
+        assertThat(viewport)
+            .contains("> claude")
+            .contains("claude-3-7-sonnet")
+            .doesNotContain("gpt-5");
+
+        mode.stop();
+    }
+
+    @Test
     void showsStatusWhenNoModelsAreAvailableForSelector() {
         var session = new FakeSession().withSelectableModels(List.of());
         var terminal = new VirtualTerminal(100, 18);
