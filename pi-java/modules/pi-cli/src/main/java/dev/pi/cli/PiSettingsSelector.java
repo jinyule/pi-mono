@@ -128,11 +128,7 @@ public final class PiSettingsSelector implements Component, Focusable {
                 "Theme",
                 "Select color theme",
                 settings.availableThemes().stream()
-                    .map(themeName -> new SelectItem(
-                        themeName,
-                        themeName,
-                        themeName.equals(currentValue) ? "(current)" : null
-                    ))
+                    .map(themeName -> new SelectItem(themeName, themeName, null))
                     .toList(),
                 currentValue,
                 done::accept,

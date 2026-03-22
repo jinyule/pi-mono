@@ -224,7 +224,7 @@ class PiSettingsSelectorIntegrationTest {
         assertThat(String.join("\n", selector.render(90)))
             .contains("Theme")
             .contains("Select color theme")
-            .contains("(current)");
+            .doesNotContain("(current)");
 
         selector.handleInput("\u001b[B");
         selector.handleInput("\u001b");

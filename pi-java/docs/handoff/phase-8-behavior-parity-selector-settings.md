@@ -37,6 +37,7 @@ Status: in progress
 - `Thinking level` submenu
 - hardware cursor and clear-on-shrink settings
 - TypeScript-style descriptions for steering, follow-up, transport, and quiet-startup
+- theme submenu now omits the extra `(current)` marker, matching the TypeScript selector more closely
 - custom theme loader and hot reload
 - startup resource listing
 - broader custom theme core token support
@@ -81,6 +82,7 @@ Status: in progress
 - `cde4d6c7` `feat(pi-java): preserve current model marker in compact rows`
 - `/model` is now wired in the Java interactive mode, and `/model <term>` now pre-filters the selector the same way the TypeScript flow does before any exact-match shortcut handling
 - exact `/model <term>` hits now short-circuit straight to selection, matching the TypeScript behavior more closely
+- theme submenu options no longer add a Java-only `(current)` description, matching the TypeScript selector more closely
 
 ## Next smallest slice
 
