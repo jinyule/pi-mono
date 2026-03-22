@@ -18,6 +18,10 @@ import dev.pi.tui.Terminal;
 import dev.pi.tui.TerminalText;
 import dev.pi.tui.Text;
 import dev.pi.tui.Tui;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -212,6 +216,11 @@ public final class PiInteractiveMode implements AutoCloseable {
         if ("/resume".equals(trimmed)) {
             input.setValue("");
             handleResumeCommand();
+            return;
+        }
+        if ("/debug".equals(trimmed)) {
+            input.setValue("");
+            handleDebugCommand();
             return;
         }
         if ("/exit".equals(trimmed) || "/quit".equals(trimmed)) {
@@ -907,6 +916,19 @@ public final class PiInteractiveMode implements AutoCloseable {
         renderState(session.state());
     }
 
+    private void handleDebugCommand() {
+        try {
+            var debugLogPath = debugLogPath();
+            var content = debugLogContent();
+            Files.createDirectories(debugLogPath.getParent());
+            Files.writeString(debugLogPath, content, StandardCharsets.UTF_8);
+            manualStatus = "Debug log written: " + debugLogPath;
+        } catch (IOException exception) {
+            manualStatus = "Error: " + rootMessage(exception);
+        }
+        renderState(session.state());
+    }
+
     private void requestExit() {
         close();
     }
@@ -917,6 +939,27 @@ public final class PiInteractiveMode implements AutoCloseable {
             current = current.getCause();
         }
         return current.getMessage() == null ? current.getClass().getSimpleName() : current.getMessage();
+    }
+
+    private Path debugLogPath() {
+        return Path.of(System.getProperty("user.home"), ".pi", "agent", "debug.log");
+    }
+
+    private String debugLogContent() {
+        var width = terminal.columns();
+        var height = terminal.rows();
+        var allLines = tui.render(width);
+        var lines = new ArrayList<String>();
+        lines.add("Debug output");
+        lines.add("Terminal: " + width + "x" + height);
+        lines.add("Total lines: " + allLines.size());
+        lines.add("");
+        lines.add("=== All rendered lines with visible widths ===");
+        for (var index = 0; index < allLines.size(); index += 1) {
+            var line = allLines.get(index);
+            lines.add("[" + index + "] (w=" + TerminalText.visibleWidth(line) + ") " + line);
+        }
+        return String.join(System.lineSeparator(), lines) + System.lineSeparator();
     }
 
     private String startupStatus() {

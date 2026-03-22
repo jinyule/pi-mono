@@ -54,6 +54,7 @@ Status: in progress
 - new-session success wording
 - `/new` slash-command wiring
 - `/resume` slash-command wiring
+- `/debug` slash-command wiring
 - empty-compaction warning wording
 - compaction cancellation and failure wording
 - manual compaction now relies on the compaction summary itself instead of a separate `Compacted context` success banner
@@ -71,6 +72,7 @@ Status: in progress
 - `/reload` success now uses `Reloaded extensions, skills, prompts, themes`, matching the current TypeScript wording
 - `/new` now starts a fresh session from the slash-command path too, matching the TypeScript command surface instead of only the app keybinding path
 - `/resume` now reaches the existing resume path from the slash-command surface too, matching the TypeScript command surface instead of only the app keybinding path
+- `/debug` now writes a debug snapshot to `~/.pi/agent/debug.log` from the slash-command surface, matching the TypeScript command surface closely enough to unblock troubleshooting
 - queued follow-up and steering submissions now rely on the queued-message panel instead of separate `Queued ...` success status lines
 - manual compaction success now relies on the compaction summary message instead of a separate `Compacted context` status line
 - `/compact` failures now distinguish `Compaction cancelled` from `Compaction failed: ...`, instead of falling back to the generic `Error: ...` prefix

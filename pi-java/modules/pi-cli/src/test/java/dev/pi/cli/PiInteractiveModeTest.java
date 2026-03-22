@@ -1518,6 +1518,38 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void handlesDebugSlashCommand() throws Exception {
+        var previousHome = System.getProperty("user.home");
+        System.setProperty("user.home", tempDir.toString());
+        try {
+            var session = new FakeSession();
+            var terminal = new VirtualTerminal(80, 16);
+            var mode = new PiInteractiveMode(session, terminal);
+
+            mode.start();
+            terminal.sendInput("/debug");
+            terminal.sendInput("\r");
+
+            var debugLog = tempDir.resolve(".pi").resolve("agent").resolve("debug.log");
+            waitFor(() -> java.nio.file.Files.exists(debugLog));
+
+            assertThat(java.nio.file.Files.readString(debugLog))
+                .contains("Debug output")
+                .contains("Terminal: 80x16")
+                .contains("pi-java interactive");
+            assertThat(String.join("\n", terminal.getViewport())).contains("Debug log written:");
+
+            mode.stop();
+        } finally {
+            if (previousHome == null) {
+                System.clearProperty("user.home");
+            } else {
+                System.setProperty("user.home", previousHome);
+            }
+        }
+    }
+
+    @Test
     void stylesQueuedMessageHintWithSharedKeyHintFormatter() {
         var session = new FakeSession().withStreaming(true);
         var terminal = new RecordingTerminal(100, 16);

@@ -139,7 +139,7 @@ public final class Tui {
         diffRenderer.render(lines, cursor, hasOverlay(), showHardwareCursor);
     }
 
-    List<String> render(int width) {
+    public List<String> render(int width) {
         var lines = new ArrayList<String>();
         for (var child : children) {
             lines.addAll(child.render(width));
