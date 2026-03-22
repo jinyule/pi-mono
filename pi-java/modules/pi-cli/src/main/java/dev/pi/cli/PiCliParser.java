@@ -52,6 +52,10 @@ public final class PiCliParser {
 
         Usage:
           pi [options] [@files...] [messages...]
+          pi install <source> [--local]
+          pi remove <source> [--local]
+          pi update [source]
+          pi list
 
         Options:
           --provider <name>              Provider name
@@ -84,6 +88,12 @@ public final class PiCliParser {
           --verbose                      Force verbose startup
           --help, -h                     Show this help
           --version, -v                  Show version
+
+        Package commands:
+          install                        Install a package source and save it to settings
+          remove                         Remove a package source and delete it from settings
+          update                         Refresh installed package sources
+          list                           Show configured user and project packages
         """;
 
     public PiCliArgs parse(String... arguments) {

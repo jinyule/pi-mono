@@ -23,5 +23,5 @@ Add the missing Java-side packaging surface that phase 8 deliberately deferred:
 ## Current continuity point
 
 - Saved model scope is now wired end-to-end in Java.
-- Java now also has package-management foundation in `pi-session`.
-- The next slice should wire that backend into real CLI package commands.
+- Java now has both the package-management backend and the basic CLI package commands.
+- The next slice should move from package basics into distribution/output work or auth-backed package management.

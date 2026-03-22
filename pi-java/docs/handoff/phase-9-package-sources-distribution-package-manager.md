@@ -17,14 +17,26 @@ Status: in progress
   - managed `git:` update and removal
   - local-path normalization when saving settings
   - pinned-source update skips
+- Wired the new backend into Java CLI package commands:
+  - `pi install <source> [--local]`
+  - `pi remove <source> [--local]`
+  - `pi update [source]`
+  - `pi list`
+- Added focused CLI tests for:
+  - install command calling the backend and saving settings
+  - list output for user/project packages
+  - invalid `--local` handling on unsupported commands
+  - module-level interception so package commands do not create interactive sessions
+- Updated `--help` text so these package commands now show up in Java CLI help too.
 
 ## Next smallest slice
 
-Wire `PackageSourceManager` into Java CLI package commands so Java can install, remove, update, and list configured packages from the command line instead of only providing the backend.
+Start phase-9 distribution/output work, or add auth-backed package management on top of the new command surface if package install flows need credentials before packaging can move forward.
 
 ## Validation
 
 ```bash
 .\gradlew.bat :pi-session:test --no-daemon
+.\\gradlew.bat :pi-session:test :pi-cli:test --no-daemon
 npm.cmd run check
 ```

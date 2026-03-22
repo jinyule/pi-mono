@@ -47,6 +47,7 @@ public final class PiCliModule {
     private final Supplier<Terminal> terminalFactory;
     private final PiCliKeybindingsLoader keybindingsLoader;
     private final AuthStorage authStorage;
+    private final Supplier<PiPackageCommand> packageCommandFactory;
     private final PiCliApplication application;
 
     public PiCliModule() {
@@ -60,7 +61,8 @@ public final class PiCliModule {
             null,
             ProcessTerminal::new,
             PiCliKeybindingsLoader.createDefault(),
-            AuthStorage.create()
+            AuthStorage.create(),
+            null
         );
     }
 
@@ -84,7 +86,8 @@ public final class PiCliModule {
             sessionFactory,
             terminalFactory,
             PiCliKeybindingsLoader.createDefault(),
-            AuthStorage.create()
+            AuthStorage.create(),
+            null
         );
     }
 
@@ -99,7 +102,7 @@ public final class PiCliModule {
         Supplier<Terminal> terminalFactory,
         PiCliKeybindingsLoader keybindingsLoader
     ) {
-        this(cwd, input, stdout, stderr, parser, aiClient, sessionFactory, terminalFactory, keybindingsLoader, AuthStorage.create());
+        this(cwd, input, stdout, stderr, parser, aiClient, sessionFactory, terminalFactory, keybindingsLoader, AuthStorage.create(), null);
     }
 
     PiCliModule(
@@ -114,6 +117,22 @@ public final class PiCliModule {
         PiCliKeybindingsLoader keybindingsLoader,
         AuthStorage authStorage
     ) {
+        this(cwd, input, stdout, stderr, parser, aiClient, sessionFactory, terminalFactory, keybindingsLoader, authStorage, null);
+    }
+
+    PiCliModule(
+        Path cwd,
+        Reader input,
+        Appendable stdout,
+        Appendable stderr,
+        PiCliParser parser,
+        PiAiClient aiClient,
+        PiCliApplication.SessionFactory sessionFactory,
+        Supplier<Terminal> terminalFactory,
+        PiCliKeybindingsLoader keybindingsLoader,
+        AuthStorage authStorage,
+        Supplier<PiPackageCommand> packageCommandFactory
+    ) {
         this.cwd = Objects.requireNonNull(cwd, "cwd").toAbsolutePath().normalize();
         this.input = Objects.requireNonNull(input, "input");
         this.stdout = Objects.requireNonNull(stdout, "stdout");
@@ -123,6 +142,9 @@ public final class PiCliModule {
         this.terminalFactory = Objects.requireNonNull(terminalFactory, "terminalFactory");
         this.keybindingsLoader = Objects.requireNonNull(keybindingsLoader, "keybindingsLoader");
         this.authStorage = Objects.requireNonNull(authStorage, "authStorage");
+        this.packageCommandFactory = packageCommandFactory == null
+            ? () -> new PiPackageCommand(this.cwd, this.stdout, this.stderr)
+            : packageCommandFactory;
         this.sessionFactory = sessionFactory == null ? this::createDefaultSession : sessionFactory;
         this.application = PiCliApplication.builder(this.sessionFactory)
             .parser(this.parser)
@@ -157,7 +179,8 @@ public final class PiCliModule {
         var loadedKeybindings = keybindingsLoader.load();
         EditorKeybindings.setGlobal(loadedKeybindings.editorKeybindings());
         PiAppKeybindings.setGlobal(loadedKeybindings.appKeybindings());
-        return application.run(argv);
+        return packageCommandFactory.get().runIfMatched(argv)
+            .thenCompose(handled -> handled ? CompletableFuture.completedFuture(null) : application.run(argv));
     }
 
     private CompletionStage<Void> runListModels(PiCliArgs args) {

@@ -61,12 +61,13 @@ Updated: 2026-03-22
   - Saved credentials now flow into Java session requests automatically, and the login prompt uses hidden input instead of echoing the token in clear text.
   - Saved `enabledModels` now also work end-to-end in Java: startup restores them when `--models` is absent, model cycling respects the saved scope, and interactive `/scoped-models` now updates session scope immediately and persists it on save.
   - Java now also has a package-management backend in `pi-session` for installing, updating, removing, and path-resolving configured local / `npm:` / `git:` sources.
-  - CLI command wiring and auth-backed package management are still later phase-9 work; Java currently has the backend but not the user-facing package command surface.
+  - Java CLI now exposes `install`, `remove`, `update`, and `list` package commands on top of that backend, including `--local` support for install/remove and help-text coverage.
+  - Auth-backed package management and distribution outputs are still later phase-9 work.
 
 ## Current next slices
 
-1. Wire `PackageSourceManager` into Java CLI package commands for install/remove/update/list.
-2. Start defining phase-9 packaging/distribution outputs once package-command basics exist.
+1. Start defining phase-9 packaging/distribution outputs now that package-command basics exist.
+2. Decide whether Java should add auth-backed package management before or alongside distribution work.
 3. Decide whether Java should stay with token-entry `/login` or later add full browser-driven OAuth flows.
 
 ## Milestones
