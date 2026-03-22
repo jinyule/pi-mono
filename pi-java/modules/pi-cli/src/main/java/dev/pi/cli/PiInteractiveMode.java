@@ -226,6 +226,11 @@ public final class PiInteractiveMode implements AutoCloseable {
             handleModelCommand(searchTerm == null || searchTerm.isBlank() ? null : searchTerm);
             return;
         }
+        if ("/export".equals(trimmed) || trimmed.startsWith("/export ")) {
+            input.setValue("");
+            handleExportCommand(trimmed);
+            return;
+        }
         if ("/settings".equals(trimmed)) {
             input.setValue("");
             handleSettingsCommand();
@@ -992,6 +997,18 @@ public final class PiInteractiveMode implements AutoCloseable {
             appendTranscriptNote(PiChangelog.render(session.cwd()));
         } catch (RuntimeException exception) {
             manualStatus = "Error: " + rootMessage(exception);
+        }
+        renderState(session.state());
+    }
+
+    private void handleExportCommand(String text) {
+        var outputPath = text != null && text.startsWith("/export ")
+            ? text.substring("/export ".length()).trim()
+            : null;
+        try {
+            manualStatus = "Session exported to: " + session.exportToHtml(outputPath == null || outputPath.isBlank() ? null : outputPath);
+        } catch (RuntimeException exception) {
+            manualStatus = "Failed to export session: " + rootMessage(exception);
         }
         renderState(session.state());
     }

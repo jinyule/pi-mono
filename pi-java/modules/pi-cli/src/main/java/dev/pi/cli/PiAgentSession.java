@@ -26,6 +26,7 @@ import dev.pi.session.SessionManager;
 import dev.pi.session.SessionTreeNode;
 import dev.pi.session.SettingsManager;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
@@ -296,6 +297,20 @@ public final class PiAgentSession implements PiInteractiveSession {
             .map(instructionFile -> instructionFile.path().toString())
             .toList();
         return new StartupResources(contextFiles, extensionPaths, customThemes);
+    }
+
+    @Override
+    public String exportToHtml(String outputPath) {
+        var sessionFile = sessionManager().sessionFile();
+        if (sessionFile == null) {
+            throw new IllegalStateException("Export is only available for persisted sessions");
+        }
+        try {
+            var resolvedOutput = outputPath == null || outputPath.isBlank() ? null : Path.of(outputPath);
+            return new PiExportCommand().export(sessionFile, resolvedOutput).toString();
+        } catch (IOException exception) {
+            throw new IllegalStateException("Failed to export session", exception);
+        }
     }
 
     @Override

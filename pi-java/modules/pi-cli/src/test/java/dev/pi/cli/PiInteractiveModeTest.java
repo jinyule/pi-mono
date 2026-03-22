@@ -235,6 +235,39 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void handlesExportSlashCommand() {
+        var session = new FakeSession().withExportedHtmlPath("/tmp/session.html");
+        var terminal = new VirtualTerminal(120, 40);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("/export out.html");
+        terminal.sendInput("\r");
+
+        assertThat(String.join("\n", terminal.getViewport())).contains("Session exported to: /tmp/session.html");
+        assertThat(session.lastExportOutputPath).isEqualTo("out.html");
+
+        mode.stop();
+    }
+
+    @Test
+    void showsExportFailureFromSlashCommand() {
+        var session = new FakeSession().withExportFailure(new IllegalStateException("Export is only available for persisted sessions"));
+        var terminal = new VirtualTerminal(120, 40);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("/export");
+        terminal.sendInput("\r");
+
+        assertThat(String.join("\n", terminal.getViewport()))
+            .contains("Failed to export session: Export is only available for persisted sessions");
+        assertThat(session.lastExportOutputPath).isNull();
+
+        mode.stop();
+    }
+
+    @Test
     void handlesChangelogSlashCommand() throws Exception {
         var repoDir = tempDir.resolve("repo");
         var changelogPath = repoDir.resolve("packages").resolve("coding-agent").resolve("CHANGELOG.md");
@@ -2075,6 +2108,9 @@ class PiInteractiveModeTest {
         private List<SelectableModel> scopedSelectableModels = List.of();
         private DequeueResult dequeueResult = new DequeueResult("", 0);
         private RuntimeException compactionFailure;
+        private RuntimeException exportFailure;
+        private String exportedHtmlPath = "/tmp/session.html";
+        private String lastExportOutputPath;
         private AgentState state = new AgentState(
             "",
             new Model(
@@ -2333,6 +2369,15 @@ class PiInteractiveModeTest {
                 ),
                 totalCost
             );
+        }
+
+        @Override
+        public String exportToHtml(String outputPath) {
+            if (exportFailure != null) {
+                throw exportFailure;
+            }
+            lastExportOutputPath = outputPath;
+            return exportedHtmlPath;
         }
 
         @Override
@@ -2783,6 +2828,16 @@ class PiInteractiveModeTest {
 
         private FakeSession withCompactionFailure(RuntimeException compactionFailure) {
             this.compactionFailure = compactionFailure;
+            return this;
+        }
+
+        private FakeSession withExportFailure(RuntimeException exportFailure) {
+            this.exportFailure = exportFailure;
+            return this;
+        }
+
+        private FakeSession withExportedHtmlPath(String exportedHtmlPath) {
+            this.exportedHtmlPath = exportedHtmlPath;
             return this;
         }
 

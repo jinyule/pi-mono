@@ -162,6 +162,10 @@ public interface PiInteractiveSession {
         return StartupResources.empty();
     }
 
+    default String exportToHtml(String outputPath) {
+        throw new UnsupportedOperationException("Export is not available");
+    }
+
     default ReloadResult reload() {
         throw new UnsupportedOperationException("Reload is not available");
     }
