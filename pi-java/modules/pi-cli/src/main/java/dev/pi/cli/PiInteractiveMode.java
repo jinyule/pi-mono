@@ -794,6 +794,11 @@ public final class PiInteractiveMode implements AutoCloseable {
     }
 
     private void handleCompactCommand(String customInstructions) {
+        if (session.state().messages().size() < 2) {
+            manualStatus = "Nothing to compact (no messages yet)";
+            renderState(session.state());
+            return;
+        }
         try {
             session.compact(customInstructions);
             manualStatus = "Compacted context";

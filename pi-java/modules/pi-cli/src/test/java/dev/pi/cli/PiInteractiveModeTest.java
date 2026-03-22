@@ -617,6 +617,24 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void showsNothingToCompactWhenSessionHasNoMessages() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(100, 20);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("/compact");
+        terminal.sendInput("\r");
+
+        assertThat(String.join("\n", terminal.getViewport()))
+            .contains("Nothing to compact (no messages yet)")
+            .doesNotContain("Compacted context");
+        assertThat(session.state().messages()).isEmpty();
+
+        mode.stop();
+    }
+
+    @Test
     void handlesReloadSlashCommand() {
         var session = new FakeSession();
         var terminal = new VirtualTerminal(80, 16);
