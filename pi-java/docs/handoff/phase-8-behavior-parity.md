@@ -68,6 +68,13 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - queued steering/follow-up status lines now use muted ANSI styling, matching the TypeScript pending-message display hierarchy more closely
 - queued steering/follow-up lines now truncate to the available status width instead of wrapping, matching the TypeScript `TruncatedText` behavior more closely
 
+### Interactive command/status copy
+
+- tree navigation success wording
+- tree empty-state wording
+- fork-selector success wording
+- reload success wording
+
 ### Settings and themes
 
 - settings selector baseline
@@ -150,6 +157,7 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - working tree slice: tree navigation success now uses the TypeScript `Navigated to selected point` wording
 - working tree slice: empty `/tree` now uses the TypeScript `No entries in session` wording
 - working tree slice: fork selection success now uses the TypeScript `Branched to new session` wording
+- working tree slice: reload success now uses user-facing `Reloaded extensions, prompts, themes, and settings` wording instead of the older Java-specific resource phrasing
 
 ## Remaining gaps
 

@@ -626,12 +626,12 @@ class PiInteractiveModeTest {
         terminal.sendInput("/reload");
         terminal.sendInput("\r");
 
-        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Reloaded settings, instruction resources, and extensions")));
+        waitFor(() -> terminal.getViewport().stream().anyMatch(line -> line.contains("Reloaded extensions, prompts, themes, and settings")));
 
         assertThat(session.reloadCount).isEqualTo(1);
         assertThat(session.state().systemPrompt()).isEqualTo("Reloaded system prompt");
         assertThat(String.join("\n", terminal.getViewport()))
-            .contains("Reloaded settings, instruction resources, and extensions");
+            .contains("Reloaded extensions, prompts, themes, and settings");
 
         mode.stop();
     }
