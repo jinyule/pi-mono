@@ -1246,6 +1246,7 @@ public final class PiInteractiveMode implements AutoCloseable {
             session.newSession();
             input.setValue("");
             pendingImages.clear();
+            updateTerminalTitle();
             manualStatus = "New session started";
         } catch (RuntimeException exception) {
             manualStatus = "Error: " + rootMessage(exception);

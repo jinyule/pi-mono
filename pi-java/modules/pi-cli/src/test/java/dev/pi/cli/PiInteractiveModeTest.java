@@ -279,6 +279,25 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void resetsTerminalTitleAfterStartingNewSession() {
+        var session = new FakeSession();
+        var terminal = new RecordingTerminal(100, 15);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("/name Scratch");
+        terminal.sendInput("\r");
+        assertThat(terminal.title()).isEqualTo("pi-java - Scratch - workspace");
+
+        terminal.sendInput("/new");
+        terminal.sendInput("\r");
+
+        assertThat(terminal.title()).isEqualTo("pi-java - workspace");
+
+        mode.stop();
+    }
+
+    @Test
     void rendersFooterUsageAndModelInfo() {
         var session = new FakeSession().withContextWindow(16);
         var terminal = new VirtualTerminal(80, 14);

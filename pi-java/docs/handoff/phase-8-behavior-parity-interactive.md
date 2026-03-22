@@ -75,6 +75,7 @@ Status: in progress
 - `/resume` now reaches the existing resume path from the slash-command surface too, matching the TypeScript command surface instead of only the app keybinding path
 - `/debug` now writes a debug snapshot to `~/.pi/agent/debug.log` from the slash-command surface, matching the TypeScript command surface closely enough to unblock troubleshooting
 - `/name` now sets the session name from the slash-command surface, shows `Session name: ...` when called without an argument on a named session, shows `Usage: /name <name>` when unnamed, and refreshes the terminal title to include the session name
+- after `/name` names a session, `/new` now resets the terminal title back to the plain cwd-based title instead of leaving the old session name behind
 - queued follow-up and steering submissions now rely on the queued-message panel instead of separate `Queued ...` success status lines
 - manual compaction success now relies on the compaction summary message instead of a separate `Compacted context` status line
 - `/compact` failures now distinguish `Compaction cancelled` from `Compaction failed: ...`, instead of falling back to the generic `Error: ...` prefix
