@@ -1160,7 +1160,7 @@ class PiInteractiveModeTest {
 
             waitFor(() -> !originalSessionId.equals(session.sessionId()));
             assertThat(String.join("\n", terminal.getViewport()))
-                .contains("Started new session")
+                .contains("New session started")
                 .contains("session: " + session.sessionId())
                 .doesNotContain("You: Hello");
         } finally {
