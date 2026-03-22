@@ -497,6 +497,21 @@ class PiInteractiveModeTest {
     }
 
     @Test
+    void showsTreeEmptyStateWhenNoEntriesExist() {
+        var session = new FakeSession();
+        var terminal = new VirtualTerminal(80, 16);
+        var mode = new PiInteractiveMode(session, terminal);
+
+        mode.start();
+        terminal.sendInput("/tree");
+        terminal.sendInput("\r");
+
+        assertThat(String.join("\n", terminal.getViewport())).contains("No entries in session");
+
+        mode.stop();
+    }
+
+    @Test
     void usesAppKeybindingForTreeOverlay() {
         var session = new FakeSession();
         var terminal = new VirtualTerminal(80, 16);

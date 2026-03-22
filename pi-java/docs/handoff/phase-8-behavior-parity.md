@@ -148,6 +148,7 @@ Bring the Java CLI/TUI behavior closer to the TypeScript reference after the mai
 - working tree slice: model-cycle fallback copy now distinguishes scoped-vs-global single-model states, matching the TypeScript behavior more closely
 - working tree slice: footer model summaries now use TypeScript-style parenthesized provider badges instead of `provider/model`
 - working tree slice: tree navigation success now uses the TypeScript `Navigated to selected point` wording
+- working tree slice: empty `/tree` now uses the TypeScript `No entries in session` wording
 
 ## Remaining gaps
 

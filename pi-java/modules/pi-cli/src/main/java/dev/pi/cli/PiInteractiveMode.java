@@ -591,7 +591,7 @@ public final class PiInteractiveMode implements AutoCloseable {
     private void handleTreeCommand() {
         var tree = session.tree();
         if (tree.isEmpty()) {
-            manualStatus = "No session history to navigate yet.";
+            manualStatus = "No entries in session";
             renderState(session.state());
             return;
         }
