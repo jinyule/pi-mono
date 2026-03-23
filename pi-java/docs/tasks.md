@@ -1,6 +1,6 @@
 # pi-java implementation tasks
 
-Updated: 2026-03-22
+Updated: 2026-03-23
 
 ## Working rules
 
@@ -62,11 +62,12 @@ Updated: 2026-03-22
   - Saved `enabledModels` now also work end-to-end in Java: startup restores them when `--models` is absent, model cycling respects the saved scope, and interactive `/scoped-models` now updates session scope immediately and persists it on save.
   - Java now also has a package-management backend in `pi-session` for installing, updating, removing, and path-resolving configured local / `npm:` / `git:` sources.
   - Java CLI now exposes `install`, `remove`, `update`, and `list` package commands on top of that backend, including `--local` support for install/remove and help-text coverage.
+  - Java now honors distribution path overrides instead of hardcoded defaults: agent-dir consumers respect `PI_CODING_AGENT_DIR`, packaged changelog lookup respects `PI_PACKAGE_DIR`, and changelog resolution now prefers the active workspace before falling back to the installed package tree.
   - Auth-backed package management and distribution outputs are still later phase-9 work.
 
 ## Current next slices
 
-1. Start defining phase-9 packaging/distribution outputs now that package-command basics exist.
+1. Start defining phase-9 packaging/distribution outputs now that path overrides and package-command basics exist.
 2. Decide whether Java should add auth-backed package management before or alongside distribution work.
 3. Decide whether Java should stay with token-entry `/login` or later add full browser-driven OAuth flows.
 

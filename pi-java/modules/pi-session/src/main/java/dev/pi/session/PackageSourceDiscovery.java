@@ -18,7 +18,7 @@ public final class PackageSourceDiscovery {
     private boolean globalNpmRootResolved;
 
     public PackageSourceDiscovery(Path cwd) {
-        this(cwd, Path.of(System.getProperty("user.home"), ".pi", "agent"));
+        this(cwd, PiAgentPaths.agentDir());
     }
 
     public PackageSourceDiscovery(Path cwd, Path agentDir) {

@@ -1,5 +1,6 @@
 package dev.pi.cli;
 
+import dev.pi.session.PiAgentPaths;
 import dev.pi.session.SessionManager;
 import dev.pi.session.SessionInfo;
 import java.io.IOException;
@@ -22,7 +23,7 @@ public final class PiCliSessionResolver {
     }
 
     public PiCliSessionResolver(Path cwd, SessionPicker sessionPicker) {
-        this(cwd, sessionPicker, Path.of(System.getProperty("user.home"), ".pi", "agent", "sessions"));
+        this(cwd, sessionPicker, PiAgentPaths.sessionsDir());
     }
 
     PiCliSessionResolver(Path cwd, SessionPicker sessionPicker, Path allSessionsRoot) {

@@ -19,7 +19,7 @@ public final class InstructionResourceLoader {
     private final List<ResourceLoadError> errors = new ArrayList<>();
 
     public InstructionResourceLoader(Path cwd) {
-        this(cwd, Path.of(System.getProperty("user.home"), ".pi", "agent"));
+        this(cwd, PiAgentPaths.agentDir());
     }
 
     public InstructionResourceLoader(Path cwd, Path agentDir) {

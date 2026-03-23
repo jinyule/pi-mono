@@ -29,7 +29,7 @@ public final class AuthStorage {
     }
 
     public static AuthStorage create() {
-        return create(Path.of(System.getProperty("user.home"), ".pi", "agent", "auth.json"));
+        return create(PiAgentPaths.agentDir().resolve("auth.json"));
     }
 
     public static AuthStorage create(Path authPath) {

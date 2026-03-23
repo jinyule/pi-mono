@@ -1,6 +1,6 @@
 # pi-java handoff
 
-Updated: 2026-03-22
+Updated: 2026-03-23
 
 This file is the entry point only. Detailed handoff is split under `pi-java/docs/handoff/`.
 
@@ -11,19 +11,20 @@ This file is the entry point only. Detailed handoff is split under `pi-java/docs
 - Phase 8 (behavior parity) is complete.
 - Phase 9 (package sources / distribution) is active.
 
-The current implementation hotspot is phase 9 distribution/auth follow-through now that package commands exist.
+The current implementation hotspot is phase 9 distribution follow-through now that package commands and path overrides exist.
 
 ## Read order
 
 1. `pi-java/docs/tasks.md`
 2. `pi-java/docs/handoff/phase-9-package-sources-distribution.md`
-3. `pi-java/docs/handoff/phase-9-package-sources-distribution-package-manager.md`
-4. `pi-java/docs/handoff/phase-9-package-sources-distribution-foundation.md`
-5. `pi-java/docs/handoff/phase-8-behavior-parity.md`
-6. `pi-java/docs/handoff/phase-7-pi-cli-sdk.md`
-7. `pi-java/docs/handoff/phase-6-pi-tui.md`
-8. `pi-java/docs/handoff/archive-2026-03-10.md`
-9. `pi-java/docs/handoff/README.md`
+3. `pi-java/docs/handoff/phase-9-package-sources-distribution-paths.md`
+4. `pi-java/docs/handoff/phase-9-package-sources-distribution-package-manager.md`
+5. `pi-java/docs/handoff/phase-9-package-sources-distribution-foundation.md`
+6. `pi-java/docs/handoff/phase-8-behavior-parity.md`
+7. `pi-java/docs/handoff/phase-7-pi-cli-sdk.md`
+8. `pi-java/docs/handoff/phase-6-pi-tui.md`
+9. `pi-java/docs/handoff/archive-2026-03-10.md`
+10. `pi-java/docs/handoff/README.md`
 
 ## Verification
 

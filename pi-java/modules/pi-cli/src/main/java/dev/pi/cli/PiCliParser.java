@@ -94,6 +94,10 @@ public final class PiCliParser {
           remove                         Remove a package source and delete it from settings
           update                         Refresh installed package sources
           list                           Show configured user and project packages
+
+        Environment:
+          PI_CODING_AGENT_DIR            Override ~/.pi/agent
+          PI_PACKAGE_DIR                 Override packaged changelog/docs root
         """;
 
     public PiCliArgs parse(String... arguments) {

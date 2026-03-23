@@ -2,6 +2,7 @@ package dev.pi.cli;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.pi.session.PiAgentPaths;
 import dev.pi.tui.EditorAction;
 import dev.pi.tui.EditorKeybindings;
 import java.io.IOException;
@@ -74,7 +75,7 @@ final class PiCliKeybindingsLoader {
     }
 
     static PiCliKeybindingsLoader createDefault() {
-        return new PiCliKeybindingsLoader(Path.of(System.getProperty("user.home"), ".pi", "agent"));
+        return new PiCliKeybindingsLoader(PiAgentPaths.agentDir());
     }
 
     LoadedKeybindings load() {

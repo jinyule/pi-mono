@@ -2,6 +2,7 @@ package dev.pi.cli;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.pi.session.PiAgentPaths;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,7 +25,7 @@ final class PiCliThemeLoader {
     private final Path agentDir;
 
     PiCliThemeLoader(Path cwd) {
-        this(cwd, Path.of(System.getProperty("user.home"), ".pi", "agent"));
+        this(cwd, PiAgentPaths.agentDir());
     }
 
     PiCliThemeLoader(Path cwd, Path agentDir) {

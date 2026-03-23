@@ -6,6 +6,7 @@ import dev.pi.ai.model.ImageContent;
 import dev.pi.ai.model.TextContent;
 import dev.pi.ai.model.UserContent;
 import dev.pi.ai.stream.Subscription;
+import dev.pi.session.PiAgentPaths;
 import dev.pi.tui.Component;
 import dev.pi.tui.Focusable;
 import dev.pi.tui.OverlayAnchor;
@@ -1299,7 +1300,7 @@ public final class PiInteractiveMode implements AutoCloseable {
     }
 
     private Path debugLogPath() {
-        return Path.of(System.getProperty("user.home"), ".pi", "agent", "debug.log");
+        return PiAgentPaths.debugLogPath();
     }
 
     private String debugLogContent() {

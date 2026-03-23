@@ -34,28 +34,7 @@ final class PiChangelog {
     }
 
     static Path resolve(String cwd) {
-        Path start;
-        try {
-            start = cwd == null || cwd.isBlank()
-                ? Path.of("").toAbsolutePath()
-                : Path.of(cwd).toAbsolutePath();
-        } catch (RuntimeException exception) {
-            start = Path.of("").toAbsolutePath();
-        }
-
-        var current = start;
-        while (current != null) {
-            var packageChangelog = current.resolve("packages").resolve("coding-agent").resolve("CHANGELOG.md");
-            if (Files.isRegularFile(packageChangelog)) {
-                return packageChangelog;
-            }
-            var rootChangelog = current.resolve("CHANGELOG.md");
-            if (Files.isRegularFile(rootChangelog)) {
-                return rootChangelog;
-            }
-            current = current.getParent();
-        }
-        return null;
+        return PiPackagePaths.changelogPath(cwd);
     }
 
     static List<Entry> parse(Path changelogPath) {

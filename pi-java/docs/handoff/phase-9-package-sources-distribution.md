@@ -1,6 +1,6 @@
 # Phase 9 - package sources and distribution
 
-Updated: 2026-03-22
+Updated: 2026-03-23
 Status: in progress
 
 This file is the phase-9 index. Detailed handoff is split to keep each file under 100 lines.
@@ -19,9 +19,11 @@ Add the missing Java-side packaging surface that phase 8 deliberately deferred:
 
 1. `pi-java/docs/handoff/phase-9-package-sources-distribution-foundation.md`
 2. `pi-java/docs/handoff/phase-9-package-sources-distribution-package-manager.md`
+3. `pi-java/docs/handoff/phase-9-package-sources-distribution-paths.md`
 
 ## Current continuity point
 
 - Saved model scope is now wired end-to-end in Java.
 - Java now has both the package-management backend and the basic CLI package commands.
-- The next slice should move from package basics into distribution/output work or auth-backed package management.
+- Java now honors `PI_CODING_AGENT_DIR` across default agent-dir consumers and honors `PI_PACKAGE_DIR` / workspace-first changelog resolution for distribution-facing resources.
+- The next slice should move from path/discovery follow-through into actual distribution/output work or auth-backed package management.

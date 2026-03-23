@@ -34,8 +34,7 @@ public final class SettingsManager {
 
     public static SettingsManager create(Path cwd) {
         Objects.requireNonNull(cwd, "cwd");
-        var agentDir = Path.of(System.getProperty("user.home"), ".pi", "agent");
-        return create(cwd, agentDir);
+        return create(cwd, PiAgentPaths.agentDir());
     }
 
     public static SettingsManager create(Path cwd, Path agentDir) {

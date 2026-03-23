@@ -26,7 +26,7 @@ public final class PackageSourceManager {
     public PackageSourceManager(Path cwd, SettingsManager settingsManager) {
         this(
             cwd,
-            Path.of(System.getProperty("user.home"), ".pi", "agent"),
+            PiAgentPaths.agentDir(),
             settingsManager,
             new ProcessCommandRunner(),
             null,

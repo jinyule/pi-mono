@@ -101,7 +101,7 @@ public final class SessionManager {
         Objects.requireNonNull(cwd, "cwd");
         var normalized = cwd.replaceFirst("^[\\\\/]+", "").replaceAll("[\\\\/:]", "-");
         var safePath = "--" + normalized + "--";
-        return Path.of(System.getProperty("user.home"), ".pi", "agent", "sessions", safePath);
+        return PiAgentPaths.sessionsDir().resolve(safePath);
     }
 
     public static Path findMostRecentSession(Path sessionDirectory) throws IOException {
