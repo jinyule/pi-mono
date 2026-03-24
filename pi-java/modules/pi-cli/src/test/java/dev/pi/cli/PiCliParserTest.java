@@ -107,4 +107,9 @@ class PiCliParserTest {
         assertThat(args.unmatchedArguments()).containsExactly("--custom-flag", "--another-flag");
         assertThat(args.messages()).containsExactly("value", "Hello");
     }
+
+    @Test
+    void helpTextMentionsConfigCommand() {
+        assertThat(parser.helpText()).contains("pi config").contains("config                         Configure package-provided resources");
+    }
 }

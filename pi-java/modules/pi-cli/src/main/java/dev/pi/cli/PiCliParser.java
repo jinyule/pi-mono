@@ -52,6 +52,7 @@ public final class PiCliParser {
 
         Usage:
           pi [options] [@files...] [messages...]
+          pi config
           pi install <source> [--local]
           pi remove <source> [--local]
           pi update [source]
@@ -90,6 +91,7 @@ public final class PiCliParser {
           --version, -v                  Show version
 
         Package commands:
+          config                         Configure package-provided resources
           install                        Install a package source and save it to settings
           remove                         Remove a package source and delete it from settings
           update                         Refresh installed package sources

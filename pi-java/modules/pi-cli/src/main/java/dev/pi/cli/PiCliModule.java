@@ -180,6 +180,7 @@ public final class PiCliModule {
         EditorKeybindings.setGlobal(loadedKeybindings.editorKeybindings());
         PiAppKeybindings.setGlobal(loadedKeybindings.appKeybindings());
         return packageCommandFactory.get().runIfMatched(argv)
+            .thenCompose(handled -> handled ? CompletableFuture.completedFuture(true) : new PiConfigCommand(cwd, stdout, terminalFactory).runIfMatched(argv))
             .thenCompose(handled -> handled ? CompletableFuture.completedFuture(null) : application.run(argv));
     }
 
