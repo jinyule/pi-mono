@@ -64,11 +64,12 @@ Updated: 2026-03-24
   - Java CLI now exposes `install`, `remove`, `update`, and `list` package commands on top of that backend, including `--local` support for install/remove and help-text coverage.
   - Java now honors distribution path overrides instead of hardcoded defaults: agent-dir consumers respect `PI_CODING_AGENT_DIR`, packaged changelog lookup respects `PI_PACKAGE_DIR`, and changelog resolution now prefers the active workspace before falling back to the installed package tree.
   - Java CLI now also exposes `config`, with a package-resource selector for enabling and disabling package-provided extensions, skills, prompts, and themes from configured sources.
+  - Java now auto-installs missing remote package sources during startup resource resolution and `config`, and project package entries now win over duplicate global entries for the same package identity.
   - Auth-backed package management and distribution outputs are still later phase-9 work.
 
 ## Current next slices
 
-1. Start defining phase-9 packaging/distribution outputs now that package commands, config, and path overrides exist.
+1. Start defining phase-9 packaging/distribution outputs now that startup/config package resolution is wired through.
 2. Decide whether Java should add auth-backed package management before or alongside distribution work.
 3. Decide whether Java should stay with token-entry `/login` or later add full browser-driven OAuth flows.
 

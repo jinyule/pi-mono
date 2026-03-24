@@ -274,7 +274,7 @@ public final class PiCliModule {
     private PiInteractiveSession createDefaultSession(PiCliArgs args) throws Exception {
         var sessionManager = new PiCliSessionResolver(cwd).resolve(args);
         var settingsManager = SettingsManager.create(cwd);
-        var packageSourceDiscovery = new PackageSourceDiscovery(cwd);
+        var packageSourceDiscovery = new PackageSourceDiscovery(cwd, settingsManager, !args.offline());
         var extensionSources = args.noExtensions()
             ? List.<Path>of()
             : mergePaths(cwd,

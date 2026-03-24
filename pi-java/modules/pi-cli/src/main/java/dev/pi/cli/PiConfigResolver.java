@@ -32,8 +32,9 @@ final class PiConfigResolver {
 
     List<ResourceGroup> resolve() {
         var groups = new ArrayList<ResourceGroup>();
-        resolveScope(settingsManager.getGlobalPackages(), Scope.USER, PackageSourceManager.Scope.GLOBAL, groups);
-        resolveScope(settingsManager.getProjectPackages(), Scope.PROJECT, PackageSourceManager.Scope.PROJECT, groups);
+        for (var entry : dedupePackages()) {
+            resolveScope(entry.packageSource(), entry.scope(), entry.managerScope(), groups);
+        }
         return List.copyOf(groups);
     }
 
@@ -58,31 +59,50 @@ final class PiConfigResolver {
         }
     }
 
-    private void resolveScope(
+    private List<ScopedPackageSource> dedupePackages() {
+        var deduped = new java.util.LinkedHashMap<String, ScopedPackageSource>();
+        addPackages(deduped, settingsManager.getProjectPackages(), Scope.PROJECT, PackageSourceManager.Scope.PROJECT);
+        addPackages(deduped, settingsManager.getGlobalPackages(), Scope.USER, PackageSourceManager.Scope.GLOBAL);
+        return List.copyOf(deduped.values());
+    }
+
+    private void addPackages(
+        java.util.LinkedHashMap<String, ScopedPackageSource> deduped,
         List<PackageSource> packageSources,
         Scope scope,
-        PackageSourceManager.Scope managerScope,
-        List<ResourceGroup> groups
+        PackageSourceManager.Scope managerScope
     ) {
         for (var packageSource : packageSources) {
             if (packageSource == null) {
                 continue;
             }
-            var packageRoot = packageSourceManager.getInstalledPath(packageSource.source(), managerScope);
-            if (packageRoot == null || !Files.exists(packageRoot)) {
-                continue;
-            }
+            deduped.putIfAbsent(
+                packageSourceManager.sourceIdentity(packageSource, managerScope),
+                new ScopedPackageSource(packageSource, scope, managerScope)
+            );
+        }
+    }
 
-            var sections = new ArrayList<ResourceSection>();
-            for (var type : ResourceType.values()) {
-                var items = resolveItems(packageRoot, packageSource, scope, type);
-                if (!items.isEmpty()) {
-                    sections.add(new ResourceSection(type, items));
-                }
+    private void resolveScope(
+        PackageSource packageSource,
+        Scope scope,
+        PackageSourceManager.Scope managerScope,
+        List<ResourceGroup> groups
+    ) {
+        var packageRoot = packageSourceManager.resolvePackageRoot(packageSource.source(), managerScope, true);
+        if (packageRoot == null || !Files.exists(packageRoot)) {
+            return;
+        }
+
+        var sections = new ArrayList<ResourceSection>();
+        for (var type : ResourceType.values()) {
+            var items = resolveItems(packageRoot, packageSource, scope, type);
+            if (!items.isEmpty()) {
+                sections.add(new ResourceSection(type, items));
             }
-            if (!sections.isEmpty()) {
-                groups.add(new ResourceGroup(packageSource.source(), scope, sections));
-            }
+        }
+        if (!sections.isEmpty()) {
+            groups.add(new ResourceGroup(packageSource.source(), scope, sections));
         }
     }
 
@@ -487,5 +507,12 @@ final class PiConfigResolver {
 
     private static String lowerFileName(Path path) {
         return path.getFileName().toString().toLowerCase(Locale.ROOT);
+    }
+
+    private record ScopedPackageSource(
+        PackageSource packageSource,
+        Scope scope,
+        PackageSourceManager.Scope managerScope
+    ) {
     }
 }

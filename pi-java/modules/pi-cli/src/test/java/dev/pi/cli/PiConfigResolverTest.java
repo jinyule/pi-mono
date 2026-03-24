@@ -7,6 +7,7 @@ import dev.pi.session.PackageSourceManager;
 import dev.pi.session.SettingsManager;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
@@ -75,6 +76,29 @@ class PiConfigResolverTest {
         assertThat(promptStates).containsEntry("prompts/system.md", true).containsEntry("prompts/ignore.md", false);
     }
 
+    @Test
+    void resolveInstallsMissingRemotePackagesAndPrefersProjectScope() throws Exception {
+        var cwd = tempDir.resolve("workspace");
+        var agentDir = tempDir.resolve("agent");
+        var globalNpmRoot = tempDir.resolve("global-node-modules");
+        var installedPackage = cwd.resolve(".pi").resolve("npm").resolve("node_modules").resolve("@acme").resolve("theme-pack");
+        var commandRunner = new FakeCommandRunner(installedPackage, globalNpmRoot);
+        var settingsManager = SettingsManager.create(cwd, agentDir);
+        settingsManager.setPackages(List.of(new PackageSource("npm:@acme/theme-pack")));
+        settingsManager.setProjectPackages(List.of(new PackageSource("npm:@acme/theme-pack")));
+        var manager = new PackageSourceManager(cwd, agentDir, settingsManager, commandRunner, globalNpmRoot);
+        var resolver = new PiConfigResolver(settingsManager, manager);
+
+        var groups = resolver.resolve();
+
+        assertThat(groups).singleElement().extracting(PiConfigResolver.ResourceGroup::scope).isEqualTo(PiConfigResolver.Scope.PROJECT);
+        assertThat(findSection(groups, PiConfigResolver.ResourceType.THEMES))
+            .singleElement()
+            .extracting(PiConfigResolver.ResourceItem::displayName)
+            .isEqualTo("themes/project.json");
+        assertThat(commandRunner.commands).anyMatch(command -> command.contains("npm.cmd install @acme/theme-pack"));
+    }
+
     private static List<PiConfigResolver.ResourceItem> findSection(
         List<PiConfigResolver.ResourceGroup> groups,
         PiConfigResolver.ResourceType type
@@ -87,5 +111,36 @@ class PiConfigResolverTest {
             }
         }
         throw new AssertionError("Missing section: " + type);
+    }
+
+    private static final class FakeCommandRunner implements PackageSourceManager.CommandRunner {
+        private final Path installedPackage;
+        private final Path globalNpmRoot;
+        private final List<String> commands = new ArrayList<>();
+
+        private FakeCommandRunner(Path installedPackage, Path globalNpmRoot) {
+            this.installedPackage = installedPackage;
+            this.globalNpmRoot = globalNpmRoot;
+        }
+
+        @Override
+        public void run(List<String> command, Path cwd) {
+            var joined = String.join(" ", command);
+            commands.add(joined);
+            if (joined.contains("npm.cmd install @acme/theme-pack")) {
+                try {
+                    Files.createDirectories(installedPackage.resolve("themes"));
+                    Files.writeString(installedPackage.resolve("themes").resolve("project.json"), "{}");
+                } catch (Exception exception) {
+                    throw new IllegalStateException(exception);
+                }
+            }
+        }
+
+        @Override
+        public String runCapture(List<String> command, Path cwd) {
+            commands.add(String.join(" ", command));
+            return globalNpmRoot.toString();
+        }
     }
 }

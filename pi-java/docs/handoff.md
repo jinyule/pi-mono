@@ -18,14 +18,15 @@ The current implementation hotspot is phase 9 distribution follow-through now th
 1. `pi-java/docs/tasks.md`
 2. `pi-java/docs/handoff/phase-9-package-sources-distribution.md`
 3. `pi-java/docs/handoff/phase-9-package-sources-distribution-config.md`
-4. `pi-java/docs/handoff/phase-9-package-sources-distribution-paths.md`
-5. `pi-java/docs/handoff/phase-9-package-sources-distribution-package-manager.md`
-6. `pi-java/docs/handoff/phase-9-package-sources-distribution-foundation.md`
-7. `pi-java/docs/handoff/phase-8-behavior-parity.md`
-8. `pi-java/docs/handoff/phase-7-pi-cli-sdk.md`
-9. `pi-java/docs/handoff/phase-6-pi-tui.md`
-10. `pi-java/docs/handoff/archive-2026-03-10.md`
-11. `pi-java/docs/handoff/README.md`
+4. `pi-java/docs/handoff/phase-9-package-sources-distribution-resolution.md`
+5. `pi-java/docs/handoff/phase-9-package-sources-distribution-paths.md`
+6. `pi-java/docs/handoff/phase-9-package-sources-distribution-package-manager.md`
+7. `pi-java/docs/handoff/phase-9-package-sources-distribution-foundation.md`
+8. `pi-java/docs/handoff/phase-8-behavior-parity.md`
+9. `pi-java/docs/handoff/phase-7-pi-cli-sdk.md`
+10. `pi-java/docs/handoff/phase-6-pi-tui.md`
+11. `pi-java/docs/handoff/archive-2026-03-10.md`
+12. `pi-java/docs/handoff/README.md`
 
 ## Verification
 

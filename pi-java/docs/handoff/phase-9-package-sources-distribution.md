@@ -21,6 +21,7 @@ Add the missing Java-side packaging surface that phase 8 deliberately deferred:
 2. `pi-java/docs/handoff/phase-9-package-sources-distribution-package-manager.md`
 3. `pi-java/docs/handoff/phase-9-package-sources-distribution-paths.md`
 4. `pi-java/docs/handoff/phase-9-package-sources-distribution-config.md`
+5. `pi-java/docs/handoff/phase-9-package-sources-distribution-resolution.md`
 
 ## Current continuity point
 
@@ -28,4 +29,5 @@ Add the missing Java-side packaging surface that phase 8 deliberately deferred:
 - Java now has both the package-management backend and the basic CLI package commands.
 - Java now honors `PI_CODING_AGENT_DIR` across default agent-dir consumers and honors `PI_PACKAGE_DIR` / workspace-first changelog resolution for distribution-facing resources.
 - Java now has a `config` command for toggling package-provided resources from configured package sources.
-- The next slice should move from config/path follow-through into actual distribution/output work or auth-backed package management.
+- Java now auto-installs missing remote package sources during startup resource resolution and `config`, and project package entries now override duplicate global entries.
+- The next slice should move from package resolution follow-through into actual distribution/output work or auth-backed package management.

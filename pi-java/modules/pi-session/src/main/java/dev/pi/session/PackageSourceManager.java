@@ -34,7 +34,16 @@ public final class PackageSourceManager {
         );
     }
 
-    PackageSourceManager(
+    public PackageSourceManager(
+        Path cwd,
+        Path agentDir,
+        SettingsManager settingsManager,
+        Path globalNpmRoot
+    ) {
+        this(cwd, agentDir, settingsManager, new ProcessCommandRunner(), globalNpmRoot, globalNpmRoot != null);
+    }
+
+    public PackageSourceManager(
         Path cwd,
         Path agentDir,
         SettingsManager settingsManager,
@@ -97,6 +106,10 @@ public final class PackageSourceManager {
     }
 
     public Path getInstalledPath(String source, Scope scope) {
+        return resolvePackageRoot(source, scope, false);
+    }
+
+    public Path resolvePackageRoot(String source, Scope scope, boolean installMissing) {
         Objects.requireNonNull(scope, "scope");
         var parsed = parseSource(source);
         Path path = switch (parsed) {
@@ -104,10 +117,18 @@ public final class PackageSourceManager {
             case GitSource gitSource -> resolveGitInstallPath(scope, gitSource);
             case LocalSource localSource -> resolvePathFromBase(localSource.path(), scope.baseDir(agentDir, projectBaseDir));
         };
-        if (path == null || !Files.exists(path)) {
+        if (path == null) {
             return null;
         }
-        return path.toAbsolutePath().normalize();
+        var normalized = path.toAbsolutePath().normalize();
+        if (Files.exists(normalized)) {
+            return normalized;
+        }
+        if (!installMissing || parsed instanceof LocalSource) {
+            return null;
+        }
+        install(source, scope);
+        return Files.exists(normalized) ? normalized : null;
     }
 
     public void install(String source, Scope scope) {
@@ -348,6 +369,10 @@ public final class PackageSourceManager {
         };
     }
 
+    public String sourceIdentity(PackageSource source, Scope scope) {
+        return sourceMatchKeyForSettings(source, scope);
+    }
+
     private String sourceMatchKeyForSettings(PackageSource source, Scope scope) {
         var parsed = parseSource(source.source());
         return switch (parsed) {
@@ -561,7 +586,7 @@ public final class PackageSourceManager {
         }
     }
 
-    interface CommandRunner {
+    public interface CommandRunner {
         void run(List<String> command, Path cwd);
 
         String runCapture(List<String> command, Path cwd);
