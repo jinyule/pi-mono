@@ -483,6 +483,10 @@ public final class PackageSourceManager {
             if (host != null && !host.isBlank()) {
                 candidates.add(host + path);
                 candidates.add(host);
+                var providerId = authProviderForNpmRegistryHost(host);
+                if (providerId != null) {
+                    candidates.add(providerId);
+                }
             }
         } catch (IllegalArgumentException ignored) {
         }
@@ -827,6 +831,16 @@ public final class PackageSourceManager {
             case "github.com", "www.github.com" -> "github";
             case "gitlab.com", "www.gitlab.com" -> "gitlab";
             default -> null;
+        };
+    }
+
+    private static String authProviderForNpmRegistryHost(String host) {
+        if (host == null || host.isBlank()) {
+            return null;
+        }
+        return switch (host.toLowerCase(Locale.ROOT)) {
+            case "npm.pkg.github.com" -> "github";
+            default -> authProviderForHost(host);
         };
     }
 

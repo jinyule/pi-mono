@@ -24,6 +24,9 @@ Status: active slice completed
   - full registry URL
   - `host/path`
   - bare host
+- Known package-host logins are also bridged automatically:
+  - `github` now backs `npm.pkg.github.com`
+  - `gitlab` now backs GitLab npm registry URLs on `gitlab.com`
 - If no registry mapping or no saved token exists, Java falls back to normal npm behavior unchanged.
 
 ## Validation

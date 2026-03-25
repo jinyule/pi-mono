@@ -48,7 +48,7 @@ class PackageSourceManagerTest {
         Files.writeString(cwd.resolve(".npmrc"), "@acme:registry=https://npm.pkg.github.com\n");
         var settingsManager = SettingsManager.create(cwd, agentDir);
         var authStorage = AuthStorage.inMemory();
-        authStorage.setApiKey("npm.pkg.github.com", "npm-private-token");
+        authStorage.setApiKey("github", "gh-private-token");
         var runner = new RecordingCommandRunner(tempDir.resolve("global-node-modules"));
         var manager = new PackageSourceManager(cwd, agentDir, settingsManager, runner, runner.globalNpmRoot(), authStorage);
 
@@ -61,7 +61,7 @@ class PackageSourceManagerTest {
                 assertThat(invocation.environment()).containsKey("NPM_CONFIG_USERCONFIG");
                 assertThat(invocation.userConfig())
                     .contains("@acme:registry=https://npm.pkg.github.com/")
-                    .contains("//npm.pkg.github.com/:_authToken=npm-private-token")
+                    .contains("//npm.pkg.github.com/:_authToken=gh-private-token")
                     .contains("always-auth=true");
             });
     }
@@ -75,7 +75,7 @@ class PackageSourceManagerTest {
         Files.writeString(cwd.resolve(".npmrc"), "@acme:registry=https://npm.pkg.github.com\n");
         var settingsManager = SettingsManager.create(cwd, agentDir);
         var authStorage = AuthStorage.inMemory();
-        authStorage.setApiKey("npm.pkg.github.com", "npm-private-token");
+        authStorage.setApiKey("github", "gh-private-token");
         var runner = new RecordingCommandRunner(tempDir.resolve("global-node-modules"));
         var manager = new PackageSourceManager(cwd, agentDir, settingsManager, runner, runner.globalNpmRoot(), authStorage);
 
@@ -89,8 +89,31 @@ class PackageSourceManagerTest {
                 assertThat(invocation.environment()).containsKey("NPM_CONFIG_USERCONFIG");
                 assertThat(invocation.userConfig())
                     .contains("@acme:registry=https://npm.pkg.github.com/")
-                    .contains("//npm.pkg.github.com/:_authToken=npm-private-token");
+                    .contains("//npm.pkg.github.com/:_authToken=gh-private-token");
             });
+    }
+
+    @Test
+    void installsProjectNpmSourceWithSavedGitlabCredentials() throws Exception {
+        var cwd = tempDir.resolve("workspace");
+        var agentDir = tempDir.resolve("agent");
+        Files.createDirectories(cwd);
+        Files.createDirectories(agentDir);
+        Files.writeString(cwd.resolve(".npmrc"), "@acme:registry=https://gitlab.com/api/v4/packages/npm/\n");
+        var settingsManager = SettingsManager.create(cwd, agentDir);
+        var authStorage = AuthStorage.inMemory();
+        authStorage.setApiKey("gitlab", "glpat-private-token");
+        var runner = new RecordingCommandRunner(tempDir.resolve("global-node-modules"));
+        var manager = new PackageSourceManager(cwd, agentDir, settingsManager, runner, runner.globalNpmRoot(), authStorage);
+
+        manager.install("npm:@acme/theme-pack", PackageSourceManager.Scope.PROJECT);
+
+        assertThat(runner.invocations())
+            .filteredOn(invocation -> invocation.command().size() >= 2 && "install".equals(invocation.command().get(1)))
+            .singleElement()
+            .satisfies(invocation -> assertThat(invocation.userConfig())
+                .contains("@acme:registry=https://gitlab.com/api/v4/packages/npm/")
+                .contains("//gitlab.com/api/v4/packages/npm/:_authToken=glpat-private-token"));
     }
 
     @Test

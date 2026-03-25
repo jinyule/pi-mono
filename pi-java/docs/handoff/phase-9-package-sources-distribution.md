@@ -44,6 +44,6 @@ Add the missing Java-side packaging surface that phase 8 deliberately deferred:
 - Java login selectors now surface GitHub and GitLab so users can save package-host tokens without typing provider ids from memory.
 - Java now also has direct CLI auth commands for login, logout, and listing saved credentials, so package-host auth can be managed without entering interactive mode first.
 - Java login now also reuses local package-host CLI sessions where possible: `gh auth token` is imported for GitHub, `glab auth token` is imported for GitLab, and both the CLI and interactive `/login` paths fall back to manual token entry only when local host auth is unavailable.
-- Java now also injects auth-backed private npm registry config during `npm:` package installs when the registry is discoverable from `.npmrc`, so project/global installs can reuse `auth.json` tokens for scoped package registries.
+- Java now also injects auth-backed private npm registry config during `npm:` package installs when the registry is discoverable from `.npmrc`, so project/global installs can reuse `auth.json` tokens for scoped package registries, including saved GitHub and GitLab login tokens.
 - Java now also assembles a release bundle directory with versioned artifacts, checksums, a manifest, and smoke-tested artifact verification.
 - The next slice should move back to installer packaging once WiX is available locally, or stay on auth UX if the package-host login flow needs more than token entry.
