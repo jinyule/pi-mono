@@ -8,6 +8,7 @@ import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.bundling.Zip
 import org.gradle.kotlin.dsl.the
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.security.MessageDigest
 
 description = "Command-line entrypoint and interactive/print/json/rpc mode orchestration."
@@ -18,6 +19,7 @@ val distributionDir = layout.buildDirectory.dir("dist")
 val generatedScriptsDir = layout.buildDirectory.dir("generated/dist-scripts")
 val jpackageInputDir = layout.buildDirectory.dir("jpackage/input")
 val jpackageOutputDir = layout.buildDirectory.dir("jpackage/image")
+val jpackageInstallerDir = layout.buildDirectory.dir("jpackage/installer")
 val releaseBundleDir = layout.buildDirectory.dir("release")
 val packagedAssetsRoot = rootProject.projectDir.parentFile.resolve("packages").resolve("coding-agent")
 val packagedReadme = packagedAssetsRoot.resolve("README.md")
@@ -219,6 +221,57 @@ tasks.register<Zip>("piAppImageZip") {
     from(jpackageOutputDir.map { it.dir("pi-java") })
 }
 
+tasks.register("piInstallerExe") {
+    group = "distribution"
+    description = "Builds a Windows installer when WiX is available, otherwise skips with a clear preflight message."
+    dependsOn("piAppImage")
+    inputs.dir(jpackageOutputDir.map { it.dir("pi-java") })
+    inputs.property("targetPlatform", if (isWindows) "windows" else "other")
+    inputs.property("wixToolchainAvailable", wixToolchainAvailable())
+    outputs.file(installerArtifactPath())
+
+    doLast {
+        if (!isWindows) {
+            delete(installerArtifactPath())
+            delete(jpackageInstallerDir)
+            logger.lifecycle("Skipping piInstallerExe: Windows installer packaging is only available on Windows.")
+            return@doLast
+        }
+        if (!wixToolchainAvailable()) {
+            delete(installerArtifactPath())
+            delete(jpackageInstallerDir)
+            logger.lifecycle("Skipping piInstallerExe: WiX toolchain not found. Install wix.exe or candle.exe/light.exe to build the installer.")
+            return@doLast
+        }
+
+        delete(jpackageInstallerDir)
+        jpackageInstallerDir.get().asFile.mkdirs()
+
+        val (exitCode, output) = runCommand(
+            "jpackage",
+            "--type", "exe",
+            "--dest", jpackageInstallerDir.get().asFile.absolutePath,
+            "--name", "pi-java",
+            "--app-image", jpackageOutputDir.get().dir("pi-java").asFile.absolutePath,
+            "--app-version", normalizedAppVersion,
+            "--vendor", "dev.pi",
+            "--description", "pi-java CLI",
+            "--win-console",
+            "--win-dir-chooser",
+            "--win-menu",
+            "--win-shortcut"
+        )
+        if (exitCode != 0) {
+            throw GradleException("jpackage installer build failed ($exitCode):\n$output")
+        }
+
+        val installerOutput = jpackageInstallerDir.get().asFile.listFiles()
+            ?.firstOrNull { it.isFile && it.extension.equals("exe", ignoreCase = true) && it.name != installerArtifactPath().name }
+            ?: throw GradleException("Expected jpackage installer output under ${jpackageInstallerDir.get().asFile}")
+        installerOutput.copyTo(installerArtifactPath(), overwrite = true)
+    }
+}
+
 fun sha256(file: java.io.File): String {
     val digest = MessageDigest.getInstance("SHA-256")
     file.inputStream().use { input ->
@@ -241,6 +294,46 @@ fun nativeLauncherPath(): java.io.File = jpackageOutputDir.get().dir("pi-java").
         else -> root.resolve("bin").resolve("pi-java")
     }
 }
+
+fun runCommand(vararg command: String): Pair<Int, String> {
+    val process = ProcessBuilder(*command)
+        .redirectErrorStream(true)
+        .start()
+    val output = process.inputStream.bufferedReader().use { it.readText() }
+    val exitCode = process.waitFor()
+    return exitCode to output
+}
+
+fun windowsCommandExists(name: String): Boolean {
+    if (!isWindows) {
+        return false
+    }
+    val candidateNames = if (name.contains('.')) {
+        listOf(name)
+    } else {
+        listOf(name, "$name.exe", "$name.cmd", "$name.bat")
+    }
+    return System.getenv("PATH")
+        .orEmpty()
+        .split(';')
+        .asSequence()
+        .map(String::trim)
+        .filter(String::isNotBlank)
+        .map { entry: String -> File(entry) }
+        .filter { directory: File -> directory.isDirectory }
+        .any { directory: File ->
+            candidateNames.any { candidate -> directory.resolve(candidate).isFile }
+        }
+}
+
+fun wixToolchainAvailable(): Boolean {
+    if (!isWindows) {
+        return false
+    }
+    return windowsCommandExists("wix.exe") || (windowsCommandExists("candle.exe") && windowsCommandExists("light.exe"))
+}
+
+fun installerArtifactPath(): java.io.File = jpackageInstallerDir.get().file("pi-java-installer-$releaseVersion.exe").asFile
 
 val piSmokeTestFatJar by tasks.registering(Exec::class) {
     group = "verification"
@@ -306,7 +399,7 @@ tasks.register("piSmokeTestArtifacts") {
 tasks.register("piReleaseBundle") {
     group = "distribution"
     description = "Builds a release bundle directory with versioned artifacts, checksums, and a manifest."
-    dependsOn(fatJar, "piDistZip", "piAppImageZip", "piSmokeTestArtifacts")
+    dependsOn(fatJar, "piDistZip", "piAppImageZip", "piSmokeTestArtifacts", "piInstallerExe")
     inputs.files(
         fatJar.flatMap { it.archiveFile },
         tasks.named<Zip>("piDistZip").flatMap { it.archiveFile },
@@ -323,7 +416,7 @@ tasks.register("piReleaseBundle") {
             fatJar.get().archiveFile.get().asFile to "pi-java-cli-$releaseVersion.jar",
             tasks.named<Zip>("piDistZip").get().archiveFile.get().asFile to tasks.named<Zip>("piDistZip").get().archiveFileName.get(),
             tasks.named<Zip>("piAppImageZip").get().archiveFile.get().asFile to tasks.named<Zip>("piAppImageZip").get().archiveFileName.get(),
-        )
+        ) + listOfNotNull(installerArtifactPath().takeIf { it.exists() }?.let { it to it.name })
 
         val bundledArtifacts = artifactMappings.map { (source, targetName) ->
             val target = releaseDir.resolve(targetName)

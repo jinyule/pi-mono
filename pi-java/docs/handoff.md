@@ -23,17 +23,18 @@ The current implementation hotspot is phase 9 release follow-through now that pa
 6. `pi-java/docs/handoff/phase-9-package-sources-distribution-auth-cli.md`
 7. `pi-java/docs/handoff/phase-9-package-sources-distribution-auth-npm.md`
 8. `pi-java/docs/handoff/phase-9-package-sources-distribution-release-bundle.md`
-9. `pi-java/docs/handoff/phase-9-package-sources-distribution-artifacts.md`
-10. `pi-java/docs/handoff/phase-9-package-sources-distribution-native-image.md`
-11. `pi-java/docs/handoff/phase-9-package-sources-distribution-packaged-assets.md`
-12. `pi-java/docs/handoff/phase-9-package-sources-distribution-paths.md`
-13. `pi-java/docs/handoff/phase-9-package-sources-distribution-package-manager.md`
-14. `pi-java/docs/handoff/phase-9-package-sources-distribution-foundation.md`
-15. `pi-java/docs/handoff/phase-8-behavior-parity.md`
-16. `pi-java/docs/handoff/phase-7-pi-cli-sdk.md`
-17. `pi-java/docs/handoff/phase-6-pi-tui.md`
-18. `pi-java/docs/handoff/archive-2026-03-10.md`
-19. `pi-java/docs/handoff/README.md`
+9. `pi-java/docs/handoff/phase-9-package-sources-distribution-installer-preflight.md`
+10. `pi-java/docs/handoff/phase-9-package-sources-distribution-artifacts.md`
+11. `pi-java/docs/handoff/phase-9-package-sources-distribution-native-image.md`
+12. `pi-java/docs/handoff/phase-9-package-sources-distribution-packaged-assets.md`
+13. `pi-java/docs/handoff/phase-9-package-sources-distribution-paths.md`
+14. `pi-java/docs/handoff/phase-9-package-sources-distribution-package-manager.md`
+15. `pi-java/docs/handoff/phase-9-package-sources-distribution-foundation.md`
+16. `pi-java/docs/handoff/phase-8-behavior-parity.md`
+17. `pi-java/docs/handoff/phase-7-pi-cli-sdk.md`
+18. `pi-java/docs/handoff/phase-6-pi-tui.md`
+19. `pi-java/docs/handoff/archive-2026-03-10.md`
+20. `pi-java/docs/handoff/README.md`
 
 ## Verification
 
