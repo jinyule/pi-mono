@@ -11,7 +11,7 @@ This file is the entry point only. Detailed handoff is split under `pi-java/docs
 - Phase 8 (behavior parity) is complete.
 - Phase 9 (package sources / distribution) is active.
 
-The current implementation hotspot is phase 9 release follow-through now that package auth, package commands, package config, release bundles, path overrides, and basic distribution outputs all exist.
+The current implementation hotspot is phase 9 release follow-through now that package auth, auth commands, package commands, package config, release bundles, path overrides, and basic distribution outputs all exist.
 
 ## Read order
 
@@ -20,18 +20,19 @@ The current implementation hotspot is phase 9 release follow-through now that pa
 3. `pi-java/docs/handoff/phase-9-package-sources-distribution-config.md`
 4. `pi-java/docs/handoff/phase-9-package-sources-distribution-resolution.md`
 5. `pi-java/docs/handoff/phase-9-package-sources-distribution-auth-packages.md`
-6. `pi-java/docs/handoff/phase-9-package-sources-distribution-release-bundle.md`
-7. `pi-java/docs/handoff/phase-9-package-sources-distribution-artifacts.md`
-8. `pi-java/docs/handoff/phase-9-package-sources-distribution-native-image.md`
-9. `pi-java/docs/handoff/phase-9-package-sources-distribution-packaged-assets.md`
-10. `pi-java/docs/handoff/phase-9-package-sources-distribution-paths.md`
-11. `pi-java/docs/handoff/phase-9-package-sources-distribution-package-manager.md`
-12. `pi-java/docs/handoff/phase-9-package-sources-distribution-foundation.md`
-13. `pi-java/docs/handoff/phase-8-behavior-parity.md`
-14. `pi-java/docs/handoff/phase-7-pi-cli-sdk.md`
-15. `pi-java/docs/handoff/phase-6-pi-tui.md`
-16. `pi-java/docs/handoff/archive-2026-03-10.md`
-17. `pi-java/docs/handoff/README.md`
+6. `pi-java/docs/handoff/phase-9-package-sources-distribution-auth-cli.md`
+7. `pi-java/docs/handoff/phase-9-package-sources-distribution-release-bundle.md`
+8. `pi-java/docs/handoff/phase-9-package-sources-distribution-artifacts.md`
+9. `pi-java/docs/handoff/phase-9-package-sources-distribution-native-image.md`
+10. `pi-java/docs/handoff/phase-9-package-sources-distribution-packaged-assets.md`
+11. `pi-java/docs/handoff/phase-9-package-sources-distribution-paths.md`
+12. `pi-java/docs/handoff/phase-9-package-sources-distribution-package-manager.md`
+13. `pi-java/docs/handoff/phase-9-package-sources-distribution-foundation.md`
+14. `pi-java/docs/handoff/phase-8-behavior-parity.md`
+15. `pi-java/docs/handoff/phase-7-pi-cli-sdk.md`
+16. `pi-java/docs/handoff/phase-6-pi-tui.md`
+17. `pi-java/docs/handoff/archive-2026-03-10.md`
+18. `pi-java/docs/handoff/README.md`
 
 ## Verification
 

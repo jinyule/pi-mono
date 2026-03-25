@@ -110,6 +110,10 @@ class PiCliParserTest {
 
     @Test
     void helpTextMentionsConfigCommand() {
-        assertThat(parser.helpText()).contains("pi config").contains("config                         Configure package-provided resources");
+        assertThat(parser.helpText())
+            .contains("pi login [provider] [token]")
+            .contains("pi logout [provider]")
+            .contains("pi auth list")
+            .contains("config                         Configure package-provided resources");
     }
 }

@@ -46,6 +46,39 @@ class PiCliModuleAuthTest {
             .containsExactly("anthropic");
     }
 
+    @Test
+    void authCommandsDoNotCreateInteractiveSessions() {
+        var authStorage = AuthStorage.create(tempDir.resolve("auth.json"));
+        var sessionCreated = new java.util.concurrent.atomic.AtomicBoolean(false);
+        var stdout = new StringBuilder();
+        var module = new PiCliModule(
+            tempDir,
+            new StringReader(""),
+            stdout,
+            new StringBuilder(),
+            new PiCliParser(),
+            testClient(),
+            args -> {
+                sessionCreated.set(true);
+                throw new AssertionError("session should not be created");
+            },
+            NoOpTerminal::new,
+            PiCliKeybindingsLoader.createDefault(),
+            authStorage
+        );
+
+        module.run("login", "github", "ghp-test-token").toCompletableFuture().join();
+        module.run("auth", "list").toCompletableFuture().join();
+        module.run("logout", "github").toCompletableFuture().join();
+
+        assertThat(sessionCreated.get()).isFalse();
+        assertThat(authStorage.has("github")).isFalse();
+        assertThat(stdout.toString())
+            .contains("Saved credentials for github")
+            .contains("github (GitHub)")
+            .contains("Removed credentials for github");
+    }
+
     private static PiInteractiveSession createSession(PiCliModule module, List<String> argv) throws Exception {
         Method method = PiCliModule.class.getDeclaredMethod("createDefaultSession", PiCliArgs.class);
         method.setAccessible(true);

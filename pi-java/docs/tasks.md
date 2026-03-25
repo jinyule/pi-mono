@@ -59,6 +59,7 @@ Updated: 2026-03-25
   - Java now has a real `auth.json` store for saved provider credentials, including write support for API keys/tokens and read support for existing OAuth entries written by the TypeScript app.
   - Interactive `/login` and `/logout` now work in Java: direct `/login <provider> <token>` and `/logout <provider>` are supported, plus selector/prompt overlays when arguments are omitted.
   - Saved credentials now flow into Java session requests automatically, and the login prompt uses hidden input instead of echoing the token in clear text.
+  - Java CLI now also supports non-interactive auth management through `pi login`, `pi logout`, and `pi auth list`, so saved credentials can be managed without entering interactive mode before installing private packages.
   - Saved `enabledModels` now also work end-to-end in Java: startup restores them when `--models` is absent, model cycling respects the saved scope, and interactive `/scoped-models` now updates session scope immediately and persists it on save.
   - Java now also has a package-management backend in `pi-session` for installing, updating, removing, and path-resolving configured local / `npm:` / `git:` sources.
   - Java CLI now exposes `install`, `remove`, `update`, and `list` package commands on top of that backend, including `--local` support for install/remove and help-text coverage.
@@ -75,7 +76,7 @@ Updated: 2026-03-25
 ## Current next slices
 
 1. Continue phase-9 distribution work from the runnable jar/dist/native-image outputs into installer packaging once the installer toolchain is available.
-2. Decide whether Java should stay with token-entry `/login` for package hosts or later add fuller browser-driven login flows.
+2. Decide whether Java should stay with token-entry login for package hosts or later add fuller browser-driven login flows.
 3. Decide whether phase 9 should add private npm registry auth, or stop at git-host package auth for now.
 
 ## Milestones

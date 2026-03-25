@@ -179,7 +179,8 @@ public final class PiCliModule {
         var loadedKeybindings = keybindingsLoader.load();
         EditorKeybindings.setGlobal(loadedKeybindings.editorKeybindings());
         PiAppKeybindings.setGlobal(loadedKeybindings.appKeybindings());
-        return packageCommandFactory.get().runIfMatched(argv)
+        return new PiAuthCommand(input, stdout, stderr, authStorage, aiClient.modelRegistry()).runIfMatched(argv)
+            .thenCompose(handled -> handled ? CompletableFuture.completedFuture(true) : packageCommandFactory.get().runIfMatched(argv))
             .thenCompose(handled -> handled ? CompletableFuture.completedFuture(true) : new PiConfigCommand(cwd, stdout, terminalFactory, authStorage).runIfMatched(argv))
             .thenCompose(handled -> handled ? CompletableFuture.completedFuture(null) : application.run(argv));
     }

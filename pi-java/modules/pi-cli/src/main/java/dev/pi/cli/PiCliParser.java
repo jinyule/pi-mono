@@ -52,6 +52,9 @@ public final class PiCliParser {
 
         Usage:
           pi [options] [@files...] [messages...]
+          pi login [provider] [token]
+          pi logout [provider]
+          pi auth list
           pi config
           pi install <source> [--local]
           pi remove <source> [--local]
@@ -91,6 +94,9 @@ public final class PiCliParser {
           --version, -v                  Show version
 
         Package commands:
+          login                          Save credentials for a provider
+          logout                         Remove saved credentials for a provider
+          auth list                      Show saved credentials
           config                         Configure package-provided resources
           install                        Install a package source and save it to settings
           remove                         Remove a package source and delete it from settings
