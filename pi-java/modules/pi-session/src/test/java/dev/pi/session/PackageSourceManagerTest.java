@@ -40,6 +40,60 @@ class PackageSourceManagerTest {
     }
 
     @Test
+    void installsProjectNpmSourceWithAuthBackedRegistryConfig() throws Exception {
+        var cwd = tempDir.resolve("workspace");
+        var agentDir = tempDir.resolve("agent");
+        Files.createDirectories(cwd);
+        Files.createDirectories(agentDir);
+        Files.writeString(cwd.resolve(".npmrc"), "@acme:registry=https://npm.pkg.github.com\n");
+        var settingsManager = SettingsManager.create(cwd, agentDir);
+        var authStorage = AuthStorage.inMemory();
+        authStorage.setApiKey("npm.pkg.github.com", "npm-private-token");
+        var runner = new RecordingCommandRunner(tempDir.resolve("global-node-modules"));
+        var manager = new PackageSourceManager(cwd, agentDir, settingsManager, runner, runner.globalNpmRoot(), authStorage);
+
+        manager.install("npm:@acme/theme-pack", PackageSourceManager.Scope.PROJECT);
+
+        assertThat(runner.invocations())
+            .filteredOn(invocation -> invocation.command().size() >= 2 && "install".equals(invocation.command().get(1)))
+            .singleElement()
+            .satisfies(invocation -> {
+                assertThat(invocation.environment()).containsKey("NPM_CONFIG_USERCONFIG");
+                assertThat(invocation.userConfig())
+                    .contains("@acme:registry=https://npm.pkg.github.com/")
+                    .contains("//npm.pkg.github.com/:_authToken=npm-private-token")
+                    .contains("always-auth=true");
+            });
+    }
+
+    @Test
+    void installsGlobalNpmSourceWithWorkspaceRegistryConfigAndSavedToken() throws Exception {
+        var cwd = tempDir.resolve("workspace");
+        var agentDir = tempDir.resolve("agent");
+        Files.createDirectories(cwd);
+        Files.createDirectories(agentDir);
+        Files.writeString(cwd.resolve(".npmrc"), "@acme:registry=https://npm.pkg.github.com\n");
+        var settingsManager = SettingsManager.create(cwd, agentDir);
+        var authStorage = AuthStorage.inMemory();
+        authStorage.setApiKey("npm.pkg.github.com", "npm-private-token");
+        var runner = new RecordingCommandRunner(tempDir.resolve("global-node-modules"));
+        var manager = new PackageSourceManager(cwd, agentDir, settingsManager, runner, runner.globalNpmRoot(), authStorage);
+
+        manager.install("npm:@acme/theme-pack", PackageSourceManager.Scope.GLOBAL);
+
+        assertThat(runner.invocations())
+            .filteredOn(invocation -> invocation.command().size() >= 2 && "install".equals(invocation.command().get(1)))
+            .singleElement()
+            .satisfies(invocation -> {
+                assertThat(invocation.command()).contains("-g", "@acme/theme-pack");
+                assertThat(invocation.environment()).containsKey("NPM_CONFIG_USERCONFIG");
+                assertThat(invocation.userConfig())
+                    .contains("@acme:registry=https://npm.pkg.github.com/")
+                    .contains("//npm.pkg.github.com/:_authToken=npm-private-token");
+            });
+    }
+
+    @Test
     void updatesAndRemovesManagedGitSource() throws Exception {
         var cwd = tempDir.resolve("workspace");
         var agentDir = tempDir.resolve("agent");
@@ -182,7 +236,7 @@ class PackageSourceManagerTest {
 
         @Override
         public void run(List<String> command, Path cwd, Map<String, String> environment) {
-            invocations.add(new Invocation(List.copyOf(command), cwd, Map.copyOf(environment)));
+            invocations.add(new Invocation(List.copyOf(command), cwd, Map.copyOf(environment), capturedUserConfig(environment)));
             try {
                 applySideEffects(command, cwd);
             } catch (IOException exception) {
@@ -197,11 +251,23 @@ class PackageSourceManagerTest {
 
         @Override
         public String runCapture(List<String> command, Path cwd, Map<String, String> environment) {
-            invocations.add(new Invocation(List.copyOf(command), cwd, Map.copyOf(environment)));
+            invocations.add(new Invocation(List.copyOf(command), cwd, Map.copyOf(environment), capturedUserConfig(environment)));
             if (command.size() >= 3 && "root".equals(command.get(1)) && "-g".equals(command.get(2))) {
                 return globalNpmRoot.toString();
             }
             return "";
+        }
+
+        private static String capturedUserConfig(Map<String, String> environment) {
+            var userConfig = environment.get("NPM_CONFIG_USERCONFIG");
+            if (userConfig == null || userConfig.isBlank()) {
+                return null;
+            }
+            try {
+                return Files.readString(Path.of(userConfig));
+            } catch (IOException exception) {
+                throw new IllegalStateException("Failed to read fake npm user config", exception);
+            }
         }
 
         private void applySideEffects(List<String> command, Path cwd) throws IOException {
@@ -284,6 +350,6 @@ class PackageSourceManagerTest {
         }
     }
 
-    private record Invocation(List<String> command, Path cwd, Map<String, String> environment) {
+    private record Invocation(List<String> command, Path cwd, Map<String, String> environment, String userConfig) {
     }
 }

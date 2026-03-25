@@ -2,10 +2,12 @@ package dev.pi.session;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -234,13 +236,14 @@ public final class PackageSourceManager {
     }
 
     private void installNpm(NpmSource source, Scope scope) {
+        var npmAuthConfig = npmAuthConfig(source);
         if (scope == Scope.GLOBAL) {
-            commandRunner.run(List.of(npmCommand(), "install", "-g", source.spec()), null);
+            runNpmCommand(List.of(npmCommand(), "install", "-g", source.spec()), null, npmAuthConfig);
             return;
         }
         var installRoot = projectBaseDir.resolve("npm");
         ensureNpmProject(installRoot);
-        commandRunner.run(List.of(npmCommand(), "install", source.spec(), "--prefix", installRoot.toString()), cwd);
+        runNpmCommand(List.of(npmCommand(), "install", source.spec(), "--prefix", installRoot.toString()), cwd, npmAuthConfig);
     }
 
     private void uninstallNpm(NpmSource source, Scope scope) {
@@ -360,6 +363,183 @@ public final class PackageSourceManager {
         } catch (IOException exception) {
             throw new IllegalStateException("Failed to prepare npm install root", exception);
         }
+    }
+
+    private void runNpmCommand(List<String> command, Path cwd, NpmAuthConfig authConfig) {
+        if (authConfig == null) {
+            commandRunner.run(command, cwd);
+            return;
+        }
+
+        var tempConfig = writeTempNpmUserConfig(authConfig);
+        try {
+            commandRunner.run(command, cwd, Map.of("NPM_CONFIG_USERCONFIG", tempConfig.toString()));
+        } finally {
+            try {
+                Files.deleteIfExists(tempConfig);
+            } catch (IOException ignored) {
+            }
+        }
+    }
+
+    private NpmAuthConfig npmAuthConfig(NpmSource source) {
+        var registry = npmRegistryFor(source);
+        if (registry == null) {
+            return null;
+        }
+        var token = npmRegistryToken(registry.registryUrl());
+        if (token == null || token.isBlank()) {
+            return null;
+        }
+
+        var lines = new ArrayList<String>();
+        if (registry.scope() == null) {
+            lines.add("registry=" + registry.registryUrl());
+        } else {
+            lines.add(registry.scope() + ":registry=" + registry.registryUrl());
+        }
+        lines.add(authTokenConfigKey(registry.registryUrl()) + "=" + token);
+        lines.add("always-auth=true");
+        return new NpmAuthConfig(List.copyOf(lines));
+    }
+
+    private Path writeTempNpmUserConfig(NpmAuthConfig authConfig) {
+        try {
+            var tempConfig = Files.createTempFile("pi-npm-auth-", ".npmrc");
+            Files.writeString(tempConfig, String.join(System.lineSeparator(), authConfig.lines()) + System.lineSeparator(), StandardCharsets.UTF_8);
+            return tempConfig;
+        } catch (IOException exception) {
+            throw new IllegalStateException("Failed to prepare npm auth config", exception);
+        }
+    }
+
+    private NpmRegistryConfig npmRegistryFor(NpmSource source) {
+        var npmrc = loadNpmrcConfig();
+        var scope = packageScope(source.name());
+        if (scope != null) {
+            var scopedRegistry = npmrc.scopedRegistries().get(scope);
+            if (scopedRegistry != null) {
+                return new NpmRegistryConfig(scope, scopedRegistry);
+            }
+        }
+        if (npmrc.defaultRegistry() != null) {
+            return new NpmRegistryConfig(null, npmrc.defaultRegistry());
+        }
+        return null;
+    }
+
+    private NpmrcConfig loadNpmrcConfig() {
+        String defaultRegistry = null;
+        var scopedRegistries = new LinkedHashMap<String, String>();
+        var configPaths = List.of(
+            Path.of(System.getProperty("user.home")).resolve(".npmrc"),
+            cwd.resolve(".npmrc")
+        );
+        for (var configPath : configPaths) {
+            if (!Files.exists(configPath)) {
+                continue;
+            }
+            try {
+                for (var rawLine : Files.readAllLines(configPath, StandardCharsets.UTF_8)) {
+                    var line = rawLine.trim();
+                    if (line.isBlank() || line.startsWith("#") || line.startsWith(";")) {
+                        continue;
+                    }
+                    var separatorIndex = line.indexOf('=');
+                    if (separatorIndex < 0) {
+                        continue;
+                    }
+                    var key = line.substring(0, separatorIndex).trim();
+                    var value = line.substring(separatorIndex + 1).trim();
+                    if ("registry".equals(key)) {
+                        defaultRegistry = normalizeRegistryUrl(value);
+                        continue;
+                    }
+                    if (key.startsWith("@") && key.endsWith(":registry")) {
+                        var scope = key.substring(0, key.length() - ":registry".length());
+                        var registryUrl = normalizeRegistryUrl(value);
+                        if (registryUrl != null) {
+                            scopedRegistries.put(scope, registryUrl);
+                        }
+                    }
+                }
+            } catch (IOException ignored) {
+            }
+        }
+        return new NpmrcConfig(defaultRegistry, Map.copyOf(scopedRegistries));
+    }
+
+    private String npmRegistryToken(String registryUrl) {
+        var normalizedRegistry = normalizeRegistryUrl(registryUrl);
+        if (normalizedRegistry == null) {
+            return null;
+        }
+        var candidates = new LinkedHashSet<String>();
+        candidates.add(normalizedRegistry);
+        try {
+            var uri = java.net.URI.create(normalizedRegistry);
+            var host = uri.getHost();
+            var path = normalizedRegistryPath(uri.getPath());
+            if (host != null && !host.isBlank()) {
+                candidates.add(host + path);
+                candidates.add(host);
+            }
+        } catch (IllegalArgumentException ignored) {
+        }
+        for (var candidate : candidates) {
+            var token = authStorage.getApiKey(candidate);
+            if (token != null && !token.isBlank()) {
+                return token;
+            }
+        }
+        return null;
+    }
+
+    private static String authTokenConfigKey(String registryUrl) {
+        var normalizedRegistry = normalizeRegistryUrl(registryUrl);
+        if (normalizedRegistry == null) {
+            throw new IllegalArgumentException("Registry URL is required");
+        }
+        try {
+            var uri = java.net.URI.create(normalizedRegistry);
+            var host = uri.getHost();
+            if (host == null || host.isBlank()) {
+                throw new IllegalArgumentException("Registry host is required");
+            }
+            return "//" + host + normalizedRegistryPath(uri.getPath()) + ":_authToken";
+        } catch (IllegalArgumentException exception) {
+            throw new IllegalArgumentException("Invalid registry URL: " + registryUrl, exception);
+        }
+    }
+
+    private static String normalizeRegistryUrl(String registryUrl) {
+        if (registryUrl == null || registryUrl.isBlank()) {
+            return null;
+        }
+        var trimmed = registryUrl.trim();
+        if (!trimmed.endsWith("/")) {
+            trimmed += "/";
+        }
+        return trimmed;
+    }
+
+    private static String normalizedRegistryPath(String path) {
+        if (path == null || path.isBlank() || "/".equals(path)) {
+            return "/";
+        }
+        var normalized = path.startsWith("/") ? path : "/" + path;
+        return normalized.endsWith("/") ? normalized : normalized + "/";
+    }
+
+    private static String packageScope(String packageName) {
+        if (packageName == null || !packageName.startsWith("@")) {
+            return null;
+        }
+        var slashIndex = packageName.indexOf('/');
+        if (slashIndex < 0) {
+            return null;
+        }
+        return packageName.substring(0, slashIndex);
     }
 
     private void ensureGitIgnore(Path dir) {
@@ -743,6 +923,21 @@ public final class PackageSourceManager {
     }
 
     private record NpmSource(String spec, String name, boolean pinned) implements ParsedSource {
+    }
+
+    private record NpmAuthConfig(List<String> lines) {
+        private NpmAuthConfig {
+            lines = List.copyOf(lines);
+        }
+    }
+
+    private record NpmRegistryConfig(String scope, String registryUrl) {
+    }
+
+    private record NpmrcConfig(String defaultRegistry, Map<String, String> scopedRegistries) {
+        private NpmrcConfig {
+            scopedRegistries = Map.copyOf(scopedRegistries);
+        }
     }
 
     private record GitSource(String repo, String host, String path, String ref, boolean pinned) implements ParsedSource {

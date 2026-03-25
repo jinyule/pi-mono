@@ -72,13 +72,14 @@ Updated: 2026-03-25
   - Saved auth tokens now also back private git package installs and updates across package commands, startup discovery, and `config`, and Java login selectors now expose GitHub and GitLab for that flow too.
   - `pi-cli` now also assembles a release bundle directory via `:pi-cli:piReleaseBundle`, including versioned jar/zip artifacts, `SHA256SUMS.txt`, `release-manifest.json`, and smoke-tested artifact verification through `:pi-cli:piSmokeTestArtifacts`.
   - Package-host login now also reuses local host CLI sessions where available: `pi login github` imports from `gh auth token`, `pi login gitlab` imports from `glab auth token`, and interactive `/login` follows the same import-first fallback before prompting for manual token entry.
+  - Java package installs now also support auth-backed private npm registries when registry mapping comes from `.npmrc`: project and global `npm:` installs inject `auth.json` tokens into a temporary npm user config keyed by the resolved registry host.
   - Windows installer packaging is still pending because this machine does not currently have the required WiX toolchain for `jpackage --type exe`.
 
 ## Current next slices
 
 1. Continue phase-9 distribution work from the runnable jar/dist/native-image outputs into installer packaging once the installer toolchain is available.
 2. Decide whether Java should stay with CLI-import/token-entry login for package hosts or later add fuller browser-driven login flows.
-3. Decide whether phase 9 should add private npm registry auth, or stop at git-host package auth for now.
+3. Decide whether phase 9 should stop at `.npmrc`-mapped private npm auth, or grow into fuller registry-login/config flows.
 
 ## Milestones
 
