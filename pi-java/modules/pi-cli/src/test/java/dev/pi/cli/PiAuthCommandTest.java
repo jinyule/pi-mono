@@ -34,6 +34,25 @@ class PiAuthCommandTest {
     }
 
     @Test
+    void loginImportsGithubCredentialsFromHostCliWhenTokenIsOmitted() {
+        var stdout = new StringBuilder();
+        var authStorage = AuthStorage.inMemory();
+        var command = new PiAuthCommand(
+            new StringReader(""),
+            stdout,
+            new StringBuilder(),
+            authStorage,
+            registryWithAnthropic(),
+            new PiHostCliAuth(ignored -> new PiHostCliAuth.CommandResult(0, "ghp-imported-token\n", ""))
+        );
+
+        command.runIfMatched("login", "github").toCompletableFuture().join();
+
+        assertThat(authStorage.getApiKey("github")).isEqualTo("ghp-imported-token");
+        assertThat(stdout.toString()).contains("Imported credentials for github from gh auth token");
+    }
+
+    @Test
     void loginPromptsForProviderAndSecretWhenOmitted() {
         var stdout = new StringBuilder();
         var authStorage = AuthStorage.inMemory();

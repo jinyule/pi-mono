@@ -112,6 +112,7 @@ class PiCliParserTest {
     void helpTextMentionsConfigCommand() {
         assertThat(parser.helpText())
             .contains("pi login [provider] [token]")
+            .contains("import from gh/glab")
             .contains("pi logout [provider]")
             .contains("pi auth list")
             .contains("config                         Configure package-provided resources");

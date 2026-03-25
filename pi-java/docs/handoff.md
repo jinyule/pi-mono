@@ -11,7 +11,7 @@ This file is the entry point only. Detailed handoff is split under `pi-java/docs
 - Phase 8 (behavior parity) is complete.
 - Phase 9 (package sources / distribution) is active.
 
-The current implementation hotspot is phase 9 release follow-through now that package auth, auth commands, package commands, package config, release bundles, path overrides, and basic distribution outputs all exist.
+The current implementation hotspot is phase 9 release follow-through now that package auth, auth commands, host-CLI auth import, package commands, package config, release bundles, path overrides, and basic distribution outputs all exist.
 
 ## Read order
 

@@ -94,7 +94,7 @@ public final class PiCliParser {
           --version, -v                  Show version
 
         Package commands:
-          login                          Save credentials for a provider
+          login                          Save credentials or import from gh/glab for package hosts
           logout                         Remove saved credentials for a provider
           auth list                      Show saved credentials
           config                         Configure package-provided resources

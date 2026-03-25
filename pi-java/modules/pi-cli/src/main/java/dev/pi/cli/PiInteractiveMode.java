@@ -38,6 +38,7 @@ public final class PiInteractiveMode implements AutoCloseable {
     private final PiShareCommand shareCommand;
     private final PiClipboardImage clipboardImage;
     private final PiExternalEditor externalEditor;
+    private final PiHostCliAuth hostCliAuth;
     private final Runnable suspendAction;
     private final Text header = new Text("", 0, 0, null);
     private final Text resources = new Text("", 1, 0, null);
@@ -123,6 +124,19 @@ public final class PiInteractiveMode implements AutoCloseable {
         Runnable suspendAction,
         PiShareCommand shareCommand
     ) {
+        this(session, terminal, copyCommand, clipboardImage, externalEditor, suspendAction, shareCommand, new PiHostCliAuth());
+    }
+
+    PiInteractiveMode(
+        PiInteractiveSession session,
+        Terminal terminal,
+        PiCopyCommand copyCommand,
+        PiClipboardImage clipboardImage,
+        PiExternalEditor externalEditor,
+        Runnable suspendAction,
+        PiShareCommand shareCommand,
+        PiHostCliAuth hostCliAuth
+    ) {
         this.session = Objects.requireNonNull(session, "session");
         this.terminal = Objects.requireNonNull(terminal, "terminal");
         this.copyCommand = Objects.requireNonNull(copyCommand, "copyCommand");
@@ -130,6 +144,7 @@ public final class PiInteractiveMode implements AutoCloseable {
         this.clipboardImage = Objects.requireNonNull(clipboardImage, "clipboardImage");
         this.tui = new Tui(terminal, true);
         this.externalEditor = externalEditor == null ? PiExternalEditor.system(tui) : externalEditor;
+        this.hostCliAuth = Objects.requireNonNull(hostCliAuth, "hostCliAuth");
         this.suspendAction = suspendAction == null ? createSuspendAction() : suspendAction;
         this.tui.addChild(header);
         this.tui.addChild(resources);
@@ -968,7 +983,7 @@ public final class PiInteractiveMode implements AutoCloseable {
         var split = suffix.split("\\s+", 2);
         var provider = normalizeProviderId(split[0]);
         if (split.length < 2 || split[1].isBlank()) {
-            showSecretPrompt(provider);
+            attemptImportedLoginOrPrompt(provider, null);
             return;
         }
         completeLogin(provider, split[1].trim(), null);
@@ -1005,7 +1020,7 @@ public final class PiInteractiveMode implements AutoCloseable {
             "Select provider to login:",
             "No providers available",
             selection.allProviders(),
-            provider -> showSecretPrompt(provider, overlayRef.get()),
+            provider -> attemptImportedLoginOrPrompt(provider, overlayRef.get()),
             () -> hideOverlay(overlayRef.get())
         );
         overlayRef.set(showCenteredOverlay(selector, 52, 10));
@@ -1038,6 +1053,15 @@ public final class PiInteractiveMode implements AutoCloseable {
             () -> hideOverlay(overlayRef.get())
         );
         overlayRef.set(showCenteredOverlay(prompt, 64, 9));
+    }
+
+    private void attemptImportedLoginOrPrompt(String provider, dev.pi.tui.OverlayHandle toHide) {
+        var imported = hostCliAuth.importFor(provider);
+        if (imported != null) {
+            completeImportedLogin(provider, imported, toHide);
+            return;
+        }
+        showSecretPrompt(provider, toHide);
     }
 
     private void selectTreeEntry(String targetId, dev.pi.tui.OverlayHandle overlay) {
@@ -1182,6 +1206,21 @@ public final class PiInteractiveMode implements AutoCloseable {
         try {
             session.login(provider, secret);
             manualStatus = "Saved credentials for " + provider;
+        } catch (RuntimeException exception) {
+            manualStatus = "Error: " + rootMessage(exception);
+        }
+        hideOverlay(overlay);
+        renderState(session.state());
+    }
+
+    private void completeImportedLogin(
+        String provider,
+        PiHostCliAuth.ImportedCredential imported,
+        dev.pi.tui.OverlayHandle overlay
+    ) {
+        try {
+            session.login(provider, imported.secret());
+            manualStatus = "Imported credentials for " + provider + " from " + imported.sourceDisplay();
         } catch (RuntimeException exception) {
             manualStatus = "Error: " + rootMessage(exception);
         }

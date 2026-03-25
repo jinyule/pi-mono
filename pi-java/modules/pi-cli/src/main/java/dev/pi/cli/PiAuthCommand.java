@@ -16,6 +16,7 @@ final class PiAuthCommand {
     private final Appendable stderr;
     private final AuthStorage authStorage;
     private final ModelRegistry modelRegistry;
+    private final PiHostCliAuth hostCliAuth;
 
     PiAuthCommand(
         Reader input,
@@ -24,11 +25,23 @@ final class PiAuthCommand {
         AuthStorage authStorage,
         ModelRegistry modelRegistry
     ) {
+        this(input, stdout, stderr, authStorage, modelRegistry, new PiHostCliAuth());
+    }
+
+    PiAuthCommand(
+        Reader input,
+        Appendable stdout,
+        Appendable stderr,
+        AuthStorage authStorage,
+        ModelRegistry modelRegistry,
+        PiHostCliAuth hostCliAuth
+    ) {
         this.input = input instanceof BufferedReader bufferedReader ? bufferedReader : new BufferedReader(Objects.requireNonNull(input, "input"));
         this.stdout = Objects.requireNonNull(stdout, "stdout");
         this.stderr = Objects.requireNonNull(stderr, "stderr");
         this.authStorage = Objects.requireNonNull(authStorage, "authStorage");
         this.modelRegistry = Objects.requireNonNull(modelRegistry, "modelRegistry");
+        this.hostCliAuth = Objects.requireNonNull(hostCliAuth, "hostCliAuth");
     }
 
     CompletionStage<Boolean> runIfMatched(String... argv) {
@@ -62,6 +75,12 @@ final class PiAuthCommand {
         }
 
         var secret = argv.length > 2 ? argv[2] : null;
+        var imported = secret == null || secret.isBlank() ? hostCliAuth.importFor(provider) : null;
+        if (imported != null) {
+            authStorage.setApiKey(provider, imported.secret());
+            appendLine(stdout, "Imported credentials for " + provider + " from " + imported.sourceDisplay());
+            return CompletableFuture.completedFuture(true);
+        }
         if (secret == null || secret.isBlank()) {
             secret = promptForSecret(provider);
         }
@@ -205,6 +224,7 @@ final class PiAuthCommand {
 
             Save credentials for a provider.
             If provider or token is omitted, pi will prompt for it.
+            For github and gitlab, omitting the token first tries gh/glab login.
             """;
     }
 

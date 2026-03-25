@@ -28,6 +28,28 @@ class PiInteractiveModeAuthTest {
     }
 
     @Test
+    void loginCommandImportsGithubCredentialsFromHostCli() throws Exception {
+        var session = new FakeSession();
+        var mode = new PiInteractiveMode(
+            session,
+            new NoOpTerminal(),
+            new PiCopyCommand(session, text -> {
+            }),
+            () -> null,
+            null,
+            null,
+            new PiShareCommand(session, new NoOpGhCli()),
+            new PiHostCliAuth(ignored -> new PiHostCliAuth.CommandResult(0, "ghp-imported-token\n", ""))
+        );
+
+        submit(mode, "/login github");
+
+        assertThat(session.loggedInProvider).isEqualTo("github");
+        assertThat(session.loggedInSecret).isEqualTo("ghp-imported-token");
+        assertThat(renderedStatus(mode)).contains("Imported credentials for github from gh auth token");
+    }
+
+    @Test
     void logoutWithoutSavedCredentialsShowsHelpfulStatus() throws Exception {
         var session = new FakeSession();
         var mode = new PiInteractiveMode(session, new NoOpTerminal());
@@ -126,15 +148,30 @@ class PiInteractiveModeAuthTest {
 
         @Override
         public AuthSelection authSelection() {
-            var provider = new AuthProvider("anthropic", "Anthropic", loggedInProvider != null);
-            var loggedIn = loggedInProvider == null ? List.<AuthProvider>of() : List.of(provider);
-            return new AuthSelection(List.of(provider), loggedIn);
+            var allProviders = List.of(
+                new AuthProvider("anthropic", "Anthropic", "anthropic".equals(loggedInProvider)),
+                new AuthProvider("github", "GitHub", "github".equals(loggedInProvider)),
+                new AuthProvider("gitlab", "GitLab", "gitlab".equals(loggedInProvider))
+            );
+            var loggedIn = allProviders.stream().filter(AuthProvider::loggedIn).toList();
+            return new AuthSelection(allProviders, loggedIn);
         }
 
         @Override
         public void login(String provider, String secret) {
             loggedInProvider = provider;
             loggedInSecret = secret;
+        }
+    }
+
+    private static final class NoOpGhCli implements PiShareCommand.GhCli {
+        @Override
+        public void requireAuthenticated() {
+        }
+
+        @Override
+        public String createSecretGist(java.nio.file.Path file) {
+            throw new UnsupportedOperationException("not used");
         }
     }
 
