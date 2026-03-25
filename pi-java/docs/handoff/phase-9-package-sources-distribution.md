@@ -24,6 +24,7 @@ Add the missing Java-side packaging surface that phase 8 deliberately deferred:
 5. `pi-java/docs/handoff/phase-9-package-sources-distribution-resolution.md`
 6. `pi-java/docs/handoff/phase-9-package-sources-distribution-artifacts.md`
 7. `pi-java/docs/handoff/phase-9-package-sources-distribution-native-image.md`
+8. `pi-java/docs/handoff/phase-9-package-sources-distribution-packaged-assets.md`
 
 ## Current continuity point
 
@@ -34,4 +35,5 @@ Add the missing Java-side packaging surface that phase 8 deliberately deferred:
 - Java now auto-installs missing remote package sources during startup resource resolution and `config`, and project package entries now override duplicate global entries.
 - Java now has its first runnable distribution outputs too: `:pi-cli:fatJar`, `:pi-cli:piDistDir`, and `:pi-cli:piDistZip`.
 - Java now also builds a native `jpackage` app-image and zip via `:pi-cli:piAppImage` and `:pi-cli:piAppImageZip`.
-- The next slice should build on those distribution outputs into installer packaging, broader bundled assets, or auth-backed package management.
+- Those distribution outputs now also carry the packaged `README.md`, `docs/`, and `examples/`, and Java now resolves those packaged asset roots explicitly via `PiPackagePaths`.
+- The next slice should build on those distribution outputs into installer packaging or auth-backed package management.

@@ -99,7 +99,7 @@ public final class PiCliParser {
 
         Environment:
           PI_CODING_AGENT_DIR            Override ~/.pi/agent
-          PI_PACKAGE_DIR                 Override packaged changelog/docs root
+          PI_PACKAGE_DIR                 Override packaged README/docs/examples/changelog root
         """;
 
     public PiCliArgs parse(String... arguments) {

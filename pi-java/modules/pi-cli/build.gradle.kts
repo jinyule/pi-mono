@@ -16,6 +16,10 @@ val distributionDir = layout.buildDirectory.dir("dist")
 val generatedScriptsDir = layout.buildDirectory.dir("generated/dist-scripts")
 val jpackageInputDir = layout.buildDirectory.dir("jpackage/input")
 val jpackageOutputDir = layout.buildDirectory.dir("jpackage/image")
+val packagedAssetsRoot = rootProject.projectDir.parentFile.resolve("packages").resolve("coding-agent")
+val packagedReadme = packagedAssetsRoot.resolve("README.md")
+val packagedDocs = packagedAssetsRoot.resolve("docs")
+val packagedExamples = packagedAssetsRoot.resolve("examples")
 val packagedChangelog = rootProject.projectDir.parentFile.resolve("packages").resolve("coding-agent").resolve("CHANGELOG.md")
 val normalizedAppVersion = project.version.toString().substringBefore('-')
 
@@ -124,6 +128,16 @@ tasks.register<Sync>("piDistDir") {
         into(".")
         rename { "CHANGELOG.md" }
     }
+    from(packagedReadme) {
+        into(".")
+        rename { "README.md" }
+    }
+    from(packagedDocs) {
+        into("docs")
+    }
+    from(packagedExamples) {
+        into("examples")
+    }
 }
 
 tasks.register<Zip>("piDistZip") {
@@ -169,6 +183,24 @@ tasks.register<Exec>("piAppImage") {
         "--vendor", "dev.pi",
         "--description", "pi-java CLI"
     )
+
+    doLast {
+        copy {
+            into(jpackageOutputDir.get().dir("pi-java"))
+            from(packagedChangelog) {
+                rename { "CHANGELOG.md" }
+            }
+            from(packagedReadme) {
+                rename { "README.md" }
+            }
+            from(packagedDocs) {
+                into("docs")
+            }
+            from(packagedExamples) {
+                into("examples")
+            }
+        }
+    }
 }
 
 tasks.register<Zip>("piAppImageZip") {
