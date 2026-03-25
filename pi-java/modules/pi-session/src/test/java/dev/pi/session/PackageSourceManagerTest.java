@@ -117,6 +117,125 @@ class PackageSourceManagerTest {
     }
 
     @Test
+    void installsProjectNpmSourceWithAuthTakenDirectlyFromNpmrc() throws Exception {
+        var cwd = tempDir.resolve("workspace");
+        var agentDir = tempDir.resolve("agent");
+        Files.createDirectories(cwd);
+        Files.createDirectories(agentDir);
+        Files.writeString(
+            cwd.resolve(".npmrc"),
+            """
+            @acme:registry=https://npm.pkg.github.com
+            //npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+            strict-ssl=false
+            """
+        );
+        var settingsManager = SettingsManager.create(cwd, agentDir);
+        var runner = new RecordingCommandRunner(tempDir.resolve("global-node-modules"));
+        var manager = new PackageSourceManager(cwd, agentDir, settingsManager, runner, runner.globalNpmRoot(), AuthStorage.inMemory());
+
+        manager.install("npm:@acme/theme-pack", PackageSourceManager.Scope.PROJECT);
+
+        assertThat(runner.invocations())
+            .filteredOn(invocation -> invocation.command().size() >= 2 && "install".equals(invocation.command().get(1)))
+            .singleElement()
+            .satisfies(invocation -> {
+                assertThat(invocation.environment()).containsKey("NPM_CONFIG_USERCONFIG");
+                assertThat(invocation.userConfig())
+                    .contains("@acme:registry=https://npm.pkg.github.com")
+                    .contains("//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}")
+                    .contains("strict-ssl=false");
+            });
+    }
+
+    @Test
+    void projectNpmrcAuthTakesPrecedenceOverSavedGithubCredentials() throws Exception {
+        var cwd = tempDir.resolve("workspace");
+        var agentDir = tempDir.resolve("agent");
+        Files.createDirectories(cwd);
+        Files.createDirectories(agentDir);
+        Files.writeString(
+            cwd.resolve(".npmrc"),
+            """
+            @acme:registry=https://npm.pkg.github.com
+            //npm.pkg.github.com/:_authToken=project-token
+            """
+        );
+        var settingsManager = SettingsManager.create(cwd, agentDir);
+        var authStorage = AuthStorage.inMemory();
+        authStorage.setApiKey("github", "saved-token");
+        var runner = new RecordingCommandRunner(tempDir.resolve("global-node-modules"));
+        var manager = new PackageSourceManager(cwd, agentDir, settingsManager, runner, runner.globalNpmRoot(), authStorage);
+
+        manager.install("npm:@acme/theme-pack", PackageSourceManager.Scope.PROJECT);
+
+        assertThat(runner.invocations())
+            .filteredOn(invocation -> invocation.command().size() >= 2 && "install".equals(invocation.command().get(1)))
+            .singleElement()
+            .satisfies(invocation -> {
+                assertThat(invocation.userConfig()).contains("//npm.pkg.github.com/:_authToken=project-token");
+                assertThat(invocation.userConfig()).doesNotContain("saved-token");
+            });
+    }
+
+    @Test
+    void installsGlobalNpmSourceWithWorkspaceNpmrcAuth() throws Exception {
+        var cwd = tempDir.resolve("workspace");
+        var agentDir = tempDir.resolve("agent");
+        Files.createDirectories(cwd);
+        Files.createDirectories(agentDir);
+        Files.writeString(
+            cwd.resolve(".npmrc"),
+            """
+            @acme:registry=https://npm.pkg.github.com
+            //npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+            """
+        );
+        var settingsManager = SettingsManager.create(cwd, agentDir);
+        var runner = new RecordingCommandRunner(tempDir.resolve("global-node-modules"));
+        var manager = new PackageSourceManager(cwd, agentDir, settingsManager, runner, runner.globalNpmRoot(), AuthStorage.inMemory());
+
+        manager.install("npm:@acme/theme-pack", PackageSourceManager.Scope.GLOBAL);
+
+        assertThat(runner.invocations())
+            .filteredOn(invocation -> invocation.command().size() >= 2 && "install".equals(invocation.command().get(1)))
+            .singleElement()
+            .satisfies(invocation -> {
+                assertThat(invocation.command()).contains("-g", "@acme/theme-pack");
+                assertThat(invocation.userConfig())
+                    .contains("@acme:registry=https://npm.pkg.github.com")
+                    .contains("//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}");
+            });
+    }
+
+    @Test
+    void installsUnscopedNpmSourceWithDefaultRegistryAuthFromNpmrc() throws Exception {
+        var cwd = tempDir.resolve("workspace");
+        var agentDir = tempDir.resolve("agent");
+        Files.createDirectories(cwd);
+        Files.createDirectories(agentDir);
+        Files.writeString(
+            cwd.resolve(".npmrc"),
+            """
+            registry=https://registry.acme.test/npm/
+            _authToken=${ACME_NPM_TOKEN}
+            """
+        );
+        var settingsManager = SettingsManager.create(cwd, agentDir);
+        var runner = new RecordingCommandRunner(tempDir.resolve("global-node-modules"));
+        var manager = new PackageSourceManager(cwd, agentDir, settingsManager, runner, runner.globalNpmRoot(), AuthStorage.inMemory());
+
+        manager.install("npm:theme-pack", PackageSourceManager.Scope.PROJECT);
+
+        assertThat(runner.invocations())
+            .filteredOn(invocation -> invocation.command().size() >= 2 && "install".equals(invocation.command().get(1)))
+            .singleElement()
+            .satisfies(invocation -> assertThat(invocation.userConfig())
+                .contains("registry=https://registry.acme.test/npm/")
+                .contains("_authToken=${ACME_NPM_TOKEN}"));
+    }
+
+    @Test
     void updatesAndRemovesManagedGitSource() throws Exception {
         var cwd = tempDir.resolve("workspace");
         var agentDir = tempDir.resolve("agent");

@@ -383,23 +383,36 @@ public final class PackageSourceManager {
     }
 
     private NpmAuthConfig npmAuthConfig(NpmSource source) {
-        var registry = npmRegistryFor(source);
+        var npmrc = loadNpmrcConfig();
+        var registry = npmRegistryFor(source, npmrc);
         if (registry == null) {
             return null;
         }
-        var token = npmRegistryToken(registry.registryUrl());
-        if (token == null || token.isBlank()) {
-            return null;
+
+        var lines = new ArrayList<>(npmrc.rawLines());
+        var normalizedRegistry = normalizeRegistryUrl(registry.registryUrl());
+        if (normalizedRegistry == null) {
+            return lines.isEmpty() ? null : new NpmAuthConfig(List.copyOf(lines));
+        }
+        if (registry.scope() == null) {
+            lines.add("registry=" + normalizedRegistry);
+        } else {
+            lines.add(registry.scope() + ":registry=" + normalizedRegistry);
         }
 
-        var lines = new ArrayList<String>();
-        if (registry.scope() == null) {
-            lines.add("registry=" + registry.registryUrl());
-        } else {
-            lines.add(registry.scope() + ":registry=" + registry.registryUrl());
+        if (!npmrc.hasAuthFor(registry.registryUrl())) {
+            var token = npmRegistryToken(registry.registryUrl());
+            if (token != null && !token.isBlank()) {
+                lines.add(authTokenConfigKey(registry.registryUrl()) + "=" + token);
+                if (!npmrc.hasAlwaysAuth()) {
+                    lines.add("always-auth=true");
+                }
+            }
         }
-        lines.add(authTokenConfigKey(registry.registryUrl()) + "=" + token);
-        lines.add("always-auth=true");
+
+        if (lines.isEmpty()) {
+            return null;
+        }
         return new NpmAuthConfig(List.copyOf(lines));
     }
 
@@ -413,8 +426,7 @@ public final class PackageSourceManager {
         }
     }
 
-    private NpmRegistryConfig npmRegistryFor(NpmSource source) {
-        var npmrc = loadNpmrcConfig();
+    private NpmRegistryConfig npmRegistryFor(NpmSource source, NpmrcConfig npmrc) {
         var scope = packageScope(source.name());
         if (scope != null) {
             var scopedRegistry = npmrc.scopedRegistries().get(scope);
@@ -431,6 +443,9 @@ public final class PackageSourceManager {
     private NpmrcConfig loadNpmrcConfig() {
         String defaultRegistry = null;
         var scopedRegistries = new LinkedHashMap<String, String>();
+        var rawLines = new ArrayList<String>();
+        var entries = new LinkedHashMap<String, String>();
+        boolean alwaysAuth = false;
         var configPaths = List.of(
             Path.of(System.getProperty("user.home")).resolve(".npmrc"),
             cwd.resolve(".npmrc")
@@ -441,6 +456,7 @@ public final class PackageSourceManager {
             }
             try {
                 for (var rawLine : Files.readAllLines(configPath, StandardCharsets.UTF_8)) {
+                    rawLines.add(rawLine);
                     var line = rawLine.trim();
                     if (line.isBlank() || line.startsWith("#") || line.startsWith(";")) {
                         continue;
@@ -451,6 +467,10 @@ public final class PackageSourceManager {
                     }
                     var key = line.substring(0, separatorIndex).trim();
                     var value = line.substring(separatorIndex + 1).trim();
+                    entries.put(key, value);
+                    if ("always-auth".equals(key) && "true".equalsIgnoreCase(value)) {
+                        alwaysAuth = true;
+                    }
                     if ("registry".equals(key)) {
                         defaultRegistry = normalizeRegistryUrl(value);
                         continue;
@@ -466,7 +486,7 @@ public final class PackageSourceManager {
             } catch (IOException ignored) {
             }
         }
-        return new NpmrcConfig(defaultRegistry, Map.copyOf(scopedRegistries));
+        return new NpmrcConfig(defaultRegistry, Map.copyOf(scopedRegistries), Map.copyOf(entries), List.copyOf(rawLines), alwaysAuth);
     }
 
     private String npmRegistryToken(String registryUrl) {
@@ -948,9 +968,33 @@ public final class PackageSourceManager {
     private record NpmRegistryConfig(String scope, String registryUrl) {
     }
 
-    private record NpmrcConfig(String defaultRegistry, Map<String, String> scopedRegistries) {
+    private record NpmrcConfig(
+        String defaultRegistry,
+        Map<String, String> scopedRegistries,
+        Map<String, String> entries,
+        List<String> rawLines,
+        boolean hasAlwaysAuth
+    ) {
         private NpmrcConfig {
             scopedRegistries = Map.copyOf(scopedRegistries);
+            entries = Map.copyOf(entries);
+            rawLines = List.copyOf(rawLines);
+        }
+
+        private boolean hasAuthFor(String registryUrl) {
+            var normalizedRegistry = normalizeRegistryUrl(registryUrl);
+            if (normalizedRegistry == null) {
+                return false;
+            }
+            var tokenKey = authTokenConfigKey(normalizedRegistry);
+            var prefix = tokenKey.substring(0, tokenKey.length() - ":_authToken".length());
+            return entries.containsKey(tokenKey)
+                || entries.containsKey(prefix + ":_auth")
+                || entries.containsKey(prefix + ":username")
+                || entries.containsKey(prefix + ":_password")
+                || entries.containsKey(prefix + ":password")
+                || entries.containsKey("_authToken")
+                || entries.containsKey("_auth");
         }
     }
 
