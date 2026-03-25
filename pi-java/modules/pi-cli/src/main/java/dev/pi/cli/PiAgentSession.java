@@ -39,6 +39,7 @@ import java.util.function.Consumer;
 
 public final class PiAgentSession implements PiInteractiveSession {
     private static final List<String> AVAILABLE_THINKING_LEVELS = List.of("off", "minimal", "low", "medium", "high", "xhigh");
+    private static final List<String> PACKAGE_AUTH_PROVIDERS = List.of("github", "gitlab");
 
     private final PiSdkSession sdkSession;
     private final SettingsManager settingsManager;
@@ -1306,6 +1307,7 @@ public final class PiAgentSession implements PiInteractiveSession {
 
     private List<String> knownProviders() {
         var providers = new LinkedHashSet<String>();
+        providers.addAll(PACKAGE_AUTH_PROVIDERS);
         for (var model : modelSelectorModels) {
             providers.add(model.provider());
         }
@@ -1334,6 +1336,8 @@ public final class PiAgentSession implements PiInteractiveSession {
     private static String displayNameForProvider(String provider) {
         return switch (provider) {
             case "anthropic" -> "Anthropic";
+            case "github" -> "GitHub";
+            case "gitlab" -> "GitLab";
             case "openai" -> "OpenAI";
             case "google" -> "Google";
             case "bedrock" -> "AWS Bedrock";

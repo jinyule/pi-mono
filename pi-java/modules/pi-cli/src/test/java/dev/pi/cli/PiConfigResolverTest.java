@@ -5,10 +5,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import dev.pi.session.PackageSource;
 import dev.pi.session.PackageSourceManager;
 import dev.pi.session.SettingsManager;
+import dev.pi.session.AuthStorage;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -99,6 +101,38 @@ class PiConfigResolverTest {
         assertThat(commandRunner.commands).anyMatch(command -> command.contains("npm.cmd install @acme/theme-pack"));
     }
 
+    @Test
+    void resolveUsesSavedGithubCredentialsForMissingGitPackages() throws Exception {
+        var cwd = tempDir.resolve("workspace");
+        var agentDir = tempDir.resolve("agent");
+        Files.createDirectories(cwd);
+        Files.createDirectories(agentDir);
+        var installedPackage = agentDir.resolve("git").resolve("github.com").resolve("acme").resolve("private-pack");
+        var authStorage = AuthStorage.inMemory();
+        authStorage.setApiKey("github", "gh-private-token");
+        var commandRunner = new FakeCommandRunner(installedPackage, tempDir.resolve("global-node-modules"));
+        var settingsManager = SettingsManager.create(cwd, agentDir);
+        settingsManager.setPackages(List.of(new PackageSource(
+            "git:git@github.com:acme/private-pack.git",
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of("themes")
+        )));
+        var manager = new PackageSourceManager(cwd, agentDir, settingsManager, commandRunner, null, authStorage);
+        var resolver = new PiConfigResolver(settingsManager, manager);
+
+        var groups = resolver.resolve();
+
+        assertThat(groups).singleElement();
+        assertThat(findSection(groups, PiConfigResolver.ResourceType.THEMES))
+            .singleElement()
+            .extracting(PiConfigResolver.ResourceItem::displayName)
+            .isEqualTo("themes/private.json");
+        assertThat(commandRunner.environments)
+            .anySatisfy(environment -> assertThat(environment).containsEntry("GIT_CONFIG_VALUE_0", "Authorization: Bearer gh-private-token"));
+    }
+
     private static List<PiConfigResolver.ResourceItem> findSection(
         List<PiConfigResolver.ResourceGroup> groups,
         PiConfigResolver.ResourceType type
@@ -117,6 +151,7 @@ class PiConfigResolverTest {
         private final Path installedPackage;
         private final Path globalNpmRoot;
         private final List<String> commands = new ArrayList<>();
+        private final List<Map<String, String>> environments = new ArrayList<>();
 
         private FakeCommandRunner(Path installedPackage, Path globalNpmRoot) {
             this.installedPackage = installedPackage;
@@ -125,8 +160,14 @@ class PiConfigResolverTest {
 
         @Override
         public void run(List<String> command, Path cwd) {
+            run(command, cwd, Map.of());
+        }
+
+        @Override
+        public void run(List<String> command, Path cwd, Map<String, String> environment) {
             var joined = String.join(" ", command);
             commands.add(joined);
+            environments.add(Map.copyOf(environment));
             if (joined.contains("npm.cmd install @acme/theme-pack")) {
                 try {
                     Files.createDirectories(installedPackage.resolve("themes"));
@@ -135,11 +176,25 @@ class PiConfigResolverTest {
                     throw new IllegalStateException(exception);
                 }
             }
+            if (joined.contains("clone") && joined.contains("private-pack")) {
+                try {
+                    Files.createDirectories(installedPackage.resolve("themes"));
+                    Files.writeString(installedPackage.resolve("themes").resolve("private.json"), "{}");
+                } catch (Exception exception) {
+                    throw new IllegalStateException(exception);
+                }
+            }
         }
 
         @Override
         public String runCapture(List<String> command, Path cwd) {
+            return runCapture(command, cwd, Map.of());
+        }
+
+        @Override
+        public String runCapture(List<String> command, Path cwd, Map<String, String> environment) {
             commands.add(String.join(" ", command));
+            environments.add(Map.copyOf(environment));
             return globalNpmRoot.toString();
         }
     }

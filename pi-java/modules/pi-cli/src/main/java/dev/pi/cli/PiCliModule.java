@@ -143,7 +143,7 @@ public final class PiCliModule {
         this.keybindingsLoader = Objects.requireNonNull(keybindingsLoader, "keybindingsLoader");
         this.authStorage = Objects.requireNonNull(authStorage, "authStorage");
         this.packageCommandFactory = packageCommandFactory == null
-            ? () -> new PiPackageCommand(this.cwd, this.stdout, this.stderr)
+            ? () -> new PiPackageCommand(this.cwd, this.stdout, this.stderr, this.authStorage)
             : packageCommandFactory;
         this.sessionFactory = sessionFactory == null ? this::createDefaultSession : sessionFactory;
         this.application = PiCliApplication.builder(this.sessionFactory)
@@ -180,7 +180,7 @@ public final class PiCliModule {
         EditorKeybindings.setGlobal(loadedKeybindings.editorKeybindings());
         PiAppKeybindings.setGlobal(loadedKeybindings.appKeybindings());
         return packageCommandFactory.get().runIfMatched(argv)
-            .thenCompose(handled -> handled ? CompletableFuture.completedFuture(true) : new PiConfigCommand(cwd, stdout, terminalFactory).runIfMatched(argv))
+            .thenCompose(handled -> handled ? CompletableFuture.completedFuture(true) : new PiConfigCommand(cwd, stdout, terminalFactory, authStorage).runIfMatched(argv))
             .thenCompose(handled -> handled ? CompletableFuture.completedFuture(null) : application.run(argv));
     }
 
@@ -274,7 +274,7 @@ public final class PiCliModule {
     private PiInteractiveSession createDefaultSession(PiCliArgs args) throws Exception {
         var sessionManager = new PiCliSessionResolver(cwd).resolve(args);
         var settingsManager = SettingsManager.create(cwd);
-        var packageSourceDiscovery = new PackageSourceDiscovery(cwd, settingsManager, !args.offline());
+        var packageSourceDiscovery = new PackageSourceDiscovery(cwd, settingsManager, authStorage, !args.offline());
         var extensionSources = args.noExtensions()
             ? List.<Path>of()
             : mergePaths(cwd,

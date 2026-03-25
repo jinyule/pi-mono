@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -20,6 +21,7 @@ public final class PackageSourceManager {
     private final Path projectBaseDir;
     private final SettingsManager settingsManager;
     private final CommandRunner commandRunner;
+    private final AuthStorage authStorage;
     private Path globalNpmRoot;
     private boolean globalNpmRootResolved;
 
@@ -30,6 +32,19 @@ public final class PackageSourceManager {
             settingsManager,
             new ProcessCommandRunner(),
             null,
+            AuthStorage.inMemory(),
+            false
+        );
+    }
+
+    public PackageSourceManager(Path cwd, SettingsManager settingsManager, AuthStorage authStorage) {
+        this(
+            cwd,
+            PiAgentPaths.agentDir(),
+            settingsManager,
+            new ProcessCommandRunner(),
+            null,
+            authStorage,
             false
         );
     }
@@ -40,7 +55,17 @@ public final class PackageSourceManager {
         SettingsManager settingsManager,
         Path globalNpmRoot
     ) {
-        this(cwd, agentDir, settingsManager, new ProcessCommandRunner(), globalNpmRoot, globalNpmRoot != null);
+        this(cwd, agentDir, settingsManager, new ProcessCommandRunner(), globalNpmRoot, AuthStorage.inMemory(), globalNpmRoot != null);
+    }
+
+    public PackageSourceManager(
+        Path cwd,
+        Path agentDir,
+        SettingsManager settingsManager,
+        Path globalNpmRoot,
+        AuthStorage authStorage
+    ) {
+        this(cwd, agentDir, settingsManager, new ProcessCommandRunner(), globalNpmRoot, authStorage, globalNpmRoot != null);
     }
 
     public PackageSourceManager(
@@ -50,7 +75,18 @@ public final class PackageSourceManager {
         CommandRunner commandRunner,
         Path globalNpmRoot
     ) {
-        this(cwd, agentDir, settingsManager, commandRunner, globalNpmRoot, globalNpmRoot != null);
+        this(cwd, agentDir, settingsManager, commandRunner, globalNpmRoot, AuthStorage.inMemory(), globalNpmRoot != null);
+    }
+
+    public PackageSourceManager(
+        Path cwd,
+        Path agentDir,
+        SettingsManager settingsManager,
+        CommandRunner commandRunner,
+        Path globalNpmRoot,
+        AuthStorage authStorage
+    ) {
+        this(cwd, agentDir, settingsManager, commandRunner, globalNpmRoot, authStorage, globalNpmRoot != null);
     }
 
     private PackageSourceManager(
@@ -59,6 +95,7 @@ public final class PackageSourceManager {
         SettingsManager settingsManager,
         CommandRunner commandRunner,
         Path globalNpmRoot,
+        AuthStorage authStorage,
         boolean globalNpmRootResolved
     ) {
         this.cwd = Objects.requireNonNull(cwd, "cwd").toAbsolutePath().normalize();
@@ -66,6 +103,7 @@ public final class PackageSourceManager {
         this.projectBaseDir = this.cwd.resolve(".pi").toAbsolutePath().normalize();
         this.settingsManager = Objects.requireNonNull(settingsManager, "settingsManager");
         this.commandRunner = Objects.requireNonNull(commandRunner, "commandRunner");
+        this.authStorage = authStorage == null ? AuthStorage.inMemory() : authStorage;
         this.globalNpmRoot = globalNpmRoot == null ? null : globalNpmRoot.toAbsolutePath().normalize();
         this.globalNpmRootResolved = globalNpmRootResolved;
     }
@@ -232,7 +270,8 @@ public final class PackageSourceManager {
         } else {
             ensureGitIgnore(agentDir.resolve("git"));
         }
-        commandRunner.run(List.of("git", "clone", source.repo(), targetDir.toString()), cwd);
+        var auth = gitAuthConfig(source);
+        commandRunner.run(List.of("git", "clone", auth.remoteUrl(), targetDir.toString()), cwd, auth.environment());
         if (source.ref() != null && !source.ref().isBlank()) {
             commandRunner.run(List.of("git", "checkout", source.ref()), targetDir);
         }
@@ -247,7 +286,11 @@ public final class PackageSourceManager {
             installGit(source, scope);
             return;
         }
-        commandRunner.run(List.of("git", "fetch", "--prune", "origin"), targetDir);
+        var auth = gitAuthConfig(source);
+        if (!auth.remoteUrl().equals(source.repo())) {
+            commandRunner.run(List.of("git", "remote", "set-url", "origin", auth.remoteUrl()), targetDir, auth.environment());
+        }
+        commandRunner.run(List.of("git", "fetch", "--prune", "origin"), targetDir, auth.environment());
         try {
             commandRunner.run(List.of("git", "reset", "--hard", "@{upstream}"), targetDir);
         } catch (RuntimeException exception) {
@@ -577,6 +620,36 @@ public final class PackageSourceManager {
         return System.getProperty("os.name", "").toLowerCase(Locale.ROOT).contains("win");
     }
 
+    private GitAuthConfig gitAuthConfig(GitSource source) {
+        var providerId = authProviderForHost(source.host());
+        var token = providerId == null ? null : authStorage.getApiKey(providerId);
+        if (token == null || token.isBlank()) {
+            token = authStorage.getApiKey(source.host());
+        }
+        if (token == null || token.isBlank()) {
+            return new GitAuthConfig(source.repo(), Map.of());
+        }
+        return new GitAuthConfig(
+            "https://" + source.host() + "/" + source.path() + ".git",
+            Map.of(
+                "GIT_CONFIG_COUNT", "1",
+                "GIT_CONFIG_KEY_0", "http.https://" + source.host() + "/.extraHeader",
+                "GIT_CONFIG_VALUE_0", "Authorization: Bearer " + token
+            )
+        );
+    }
+
+    private static String authProviderForHost(String host) {
+        if (host == null || host.isBlank()) {
+            return null;
+        }
+        return switch (host.toLowerCase(Locale.ROOT)) {
+            case "github.com", "www.github.com" -> "github";
+            case "gitlab.com", "www.gitlab.com" -> "gitlab";
+            default -> null;
+        };
+    }
+
     public enum Scope {
         GLOBAL,
         PROJECT;
@@ -590,16 +663,32 @@ public final class PackageSourceManager {
         void run(List<String> command, Path cwd);
 
         String runCapture(List<String> command, Path cwd);
+
+        default void run(List<String> command, Path cwd, Map<String, String> environment) {
+            run(command, cwd);
+        }
+
+        default String runCapture(List<String> command, Path cwd, Map<String, String> environment) {
+            return runCapture(command, cwd);
+        }
     }
 
     private static final class ProcessCommandRunner implements CommandRunner {
         @Override
         public void run(List<String> command, Path cwd) {
+            run(command, cwd, Map.of());
+        }
+
+        @Override
+        public void run(List<String> command, Path cwd, Map<String, String> environment) {
             try {
-                var process = new ProcessBuilder(command)
+                var processBuilder = new ProcessBuilder(command)
                     .directory(cwd == null ? null : cwd.toFile())
-                    .redirectErrorStream(true)
-                    .start();
+                    .redirectErrorStream(true);
+                if (environment != null && !environment.isEmpty()) {
+                    processBuilder.environment().putAll(environment);
+                }
+                var process = processBuilder.start();
                 var output = new String(process.getInputStream().readAllBytes());
                 if (process.waitFor() != 0) {
                     throw new IllegalStateException(output.isBlank() ? "Command failed: " + String.join(" ", command) : output.trim());
@@ -614,11 +703,19 @@ public final class PackageSourceManager {
 
         @Override
         public String runCapture(List<String> command, Path cwd) {
+            return runCapture(command, cwd, Map.of());
+        }
+
+        @Override
+        public String runCapture(List<String> command, Path cwd, Map<String, String> environment) {
             try {
-                var process = new ProcessBuilder(command)
+                var processBuilder = new ProcessBuilder(command)
                     .directory(cwd == null ? null : cwd.toFile())
-                    .redirectErrorStream(true)
-                    .start();
+                    .redirectErrorStream(true);
+                if (environment != null && !environment.isEmpty()) {
+                    processBuilder.environment().putAll(environment);
+                }
+                var process = processBuilder.start();
                 var output = new String(process.getInputStream().readAllBytes());
                 if (process.waitFor() != 0) {
                     throw new IllegalStateException(output.isBlank() ? "Command failed: " + String.join(" ", command) : output.trim());
@@ -630,6 +727,15 @@ public final class PackageSourceManager {
                 }
                 throw new IllegalStateException("Failed to run command: " + String.join(" ", command), exception);
             }
+        }
+    }
+
+    private record GitAuthConfig(
+        String remoteUrl,
+        Map<String, String> environment
+    ) {
+        private GitAuthConfig {
+            environment = Map.copyOf(environment);
         }
     }
 

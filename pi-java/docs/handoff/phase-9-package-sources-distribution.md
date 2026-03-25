@@ -1,6 +1,6 @@
 # Phase 9 - package sources and distribution
 
-Updated: 2026-03-24
+Updated: 2026-03-25
 Status: in progress
 
 This file is the phase-9 index. Detailed handoff is split to keep each file under 100 lines.
@@ -22,9 +22,10 @@ Add the missing Java-side packaging surface that phase 8 deliberately deferred:
 3. `pi-java/docs/handoff/phase-9-package-sources-distribution-paths.md`
 4. `pi-java/docs/handoff/phase-9-package-sources-distribution-config.md`
 5. `pi-java/docs/handoff/phase-9-package-sources-distribution-resolution.md`
-6. `pi-java/docs/handoff/phase-9-package-sources-distribution-artifacts.md`
-7. `pi-java/docs/handoff/phase-9-package-sources-distribution-native-image.md`
-8. `pi-java/docs/handoff/phase-9-package-sources-distribution-packaged-assets.md`
+6. `pi-java/docs/handoff/phase-9-package-sources-distribution-auth-packages.md`
+7. `pi-java/docs/handoff/phase-9-package-sources-distribution-artifacts.md`
+8. `pi-java/docs/handoff/phase-9-package-sources-distribution-native-image.md`
+9. `pi-java/docs/handoff/phase-9-package-sources-distribution-packaged-assets.md`
 
 ## Current continuity point
 
@@ -36,4 +37,6 @@ Add the missing Java-side packaging surface that phase 8 deliberately deferred:
 - Java now has its first runnable distribution outputs too: `:pi-cli:fatJar`, `:pi-cli:piDistDir`, and `:pi-cli:piDistZip`.
 - Java now also builds a native `jpackage` app-image and zip via `:pi-cli:piAppImage` and `:pi-cli:piAppImageZip`.
 - Those distribution outputs now also carry the packaged `README.md`, `docs/`, and `examples/`, and Java now resolves those packaged asset roots explicitly via `PiPackagePaths`.
-- The next slice should build on those distribution outputs into installer packaging or auth-backed package management.
+- Saved auth tokens now also back private GitHub and GitLab package installs and updates, and those same credentials now flow through startup discovery and `config`.
+- Java login selectors now surface GitHub and GitLab so users can save package-host tokens without typing provider ids from memory.
+- The next slice should move back to installer packaging once WiX is available locally, or stay on auth UX if the package-host login flow needs more than token entry.

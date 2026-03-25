@@ -3,6 +3,7 @@ package dev.pi.cli;
 import dev.pi.session.PackageSource;
 import dev.pi.session.PackageSourceManager;
 import dev.pi.session.SettingsManager;
+import dev.pi.session.AuthStorage;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -17,9 +18,13 @@ final class PiPackageCommand {
     private final ManagerFactory managerFactory;
 
     PiPackageCommand(Path cwd, Appendable stdout, Appendable stderr) {
+        this(cwd, stdout, stderr, AuthStorage.create());
+    }
+
+    PiPackageCommand(Path cwd, Appendable stdout, Appendable stderr, AuthStorage authStorage) {
         this(cwd, stdout, stderr, path -> {
             var settingsManager = SettingsManager.create(path);
-            var manager = new PackageSourceManager(path, settingsManager);
+            var manager = new PackageSourceManager(path, settingsManager, authStorage);
             return new PackageManagerAdapter(settingsManager, manager);
         });
     }

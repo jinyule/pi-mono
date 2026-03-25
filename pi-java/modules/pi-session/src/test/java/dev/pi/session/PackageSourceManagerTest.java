@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -105,6 +106,59 @@ class PackageSourceManagerTest {
         assertThat(runner.invocations()).isEmpty();
     }
 
+    @Test
+    void installsGitSourceWithSavedGithubCredentials() throws Exception {
+        var cwd = tempDir.resolve("workspace");
+        var agentDir = tempDir.resolve("agent");
+        Files.createDirectories(cwd);
+        Files.createDirectories(agentDir);
+        var settingsManager = SettingsManager.create(cwd, agentDir);
+        var authStorage = AuthStorage.inMemory();
+        authStorage.setApiKey("github", "gh-private-token");
+        var runner = new RecordingCommandRunner(tempDir.resolve("global-node-modules"));
+        var manager = new PackageSourceManager(cwd, agentDir, settingsManager, runner, runner.globalNpmRoot(), authStorage);
+
+        manager.install("git:git@github.com:acme/private-pack.git", PackageSourceManager.Scope.PROJECT);
+
+        assertThat(runner.invocations())
+            .filteredOn(invocation -> invocation.command().size() >= 2 && "clone".equals(invocation.command().get(1)))
+            .singleElement()
+            .satisfies(invocation -> {
+                assertThat(invocation.command()).contains("https://github.com/acme/private-pack.git");
+                assertThat(invocation.environment())
+                    .containsEntry("GIT_CONFIG_KEY_0", "http.https://github.com/.extraHeader")
+                    .containsEntry("GIT_CONFIG_VALUE_0", "Authorization: Bearer gh-private-token");
+            });
+    }
+
+    @Test
+    void updatesGitSourceWithSavedGithubCredentials() throws Exception {
+        var cwd = tempDir.resolve("workspace");
+        var agentDir = tempDir.resolve("agent");
+        Files.createDirectories(cwd);
+        Files.createDirectories(agentDir.resolve("git").resolve("github.com").resolve("acme").resolve("private-pack"));
+        var settingsManager = SettingsManager.create(cwd, agentDir);
+        settingsManager.setPackages(List.of(new PackageSource("git:git@github.com:acme/private-pack.git")));
+        var authStorage = AuthStorage.inMemory();
+        authStorage.setApiKey("github", "gh-private-token");
+        var runner = new RecordingCommandRunner(tempDir.resolve("global-node-modules"));
+        var manager = new PackageSourceManager(cwd, agentDir, settingsManager, runner, runner.globalNpmRoot(), authStorage);
+
+        manager.update("git:git@github.com:acme/private-pack.git");
+
+        assertThat(runner.invocations())
+            .anySatisfy(invocation -> {
+                assertThat(invocation.command()).containsExactly("git", "remote", "set-url", "origin", "https://github.com/acme/private-pack.git");
+                assertThat(invocation.environment())
+                    .containsEntry("GIT_CONFIG_VALUE_0", "Authorization: Bearer gh-private-token");
+            })
+            .anySatisfy(invocation -> {
+                assertThat(invocation.command()).containsExactly("git", "fetch", "--prune", "origin");
+                assertThat(invocation.environment())
+                    .containsEntry("GIT_CONFIG_VALUE_0", "Authorization: Bearer gh-private-token");
+            });
+    }
+
     private static final class RecordingCommandRunner implements PackageSourceManager.CommandRunner {
         private final Path globalNpmRoot;
         private final List<Invocation> invocations = new ArrayList<>();
@@ -123,7 +177,12 @@ class PackageSourceManagerTest {
 
         @Override
         public void run(List<String> command, Path cwd) {
-            invocations.add(new Invocation(List.copyOf(command), cwd));
+            run(command, cwd, Map.of());
+        }
+
+        @Override
+        public void run(List<String> command, Path cwd, Map<String, String> environment) {
+            invocations.add(new Invocation(List.copyOf(command), cwd, Map.copyOf(environment)));
             try {
                 applySideEffects(command, cwd);
             } catch (IOException exception) {
@@ -133,7 +192,12 @@ class PackageSourceManagerTest {
 
         @Override
         public String runCapture(List<String> command, Path cwd) {
-            invocations.add(new Invocation(List.copyOf(command), cwd));
+            return runCapture(command, cwd, Map.of());
+        }
+
+        @Override
+        public String runCapture(List<String> command, Path cwd, Map<String, String> environment) {
+            invocations.add(new Invocation(List.copyOf(command), cwd, Map.copyOf(environment)));
             if (command.size() >= 3 && "root".equals(command.get(1)) && "-g".equals(command.get(2))) {
                 return globalNpmRoot.toString();
             }
@@ -220,6 +284,6 @@ class PackageSourceManagerTest {
         }
     }
 
-    private record Invocation(List<String> command, Path cwd) {
+    private record Invocation(List<String> command, Path cwd, Map<String, String> environment) {
     }
 }

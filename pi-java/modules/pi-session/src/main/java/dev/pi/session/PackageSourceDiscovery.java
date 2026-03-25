@@ -28,6 +28,10 @@ public final class PackageSourceDiscovery {
         this(new PackageSourceManager(cwd, settingsManager), installMissing);
     }
 
+    public PackageSourceDiscovery(Path cwd, SettingsManager settingsManager, AuthStorage authStorage, boolean installMissing) {
+        this(new PackageSourceManager(cwd, settingsManager, authStorage), installMissing);
+    }
+
     PackageSourceDiscovery(PackageSourceManager packageSourceManager, boolean installMissing) {
         this.packageSourceManager = Objects.requireNonNull(packageSourceManager, "packageSourceManager");
         this.installMissing = installMissing;

@@ -75,6 +75,24 @@ class PiAgentSessionAuthTest {
             .hasMessage("No saved credentials for anthropic");
     }
 
+    @Test
+    void authSelectionIncludesPackageProviders() {
+        var session = PiAgentSession.builder(
+            testModel(),
+            SessionManager.inMemory(tempDir.toString()),
+            SettingsManager.inMemory(),
+            InstructionResources.empty()
+        )
+            .authStorage(AuthStorage.inMemory())
+            .streamFunction(fakeAssistant("Ack"))
+            .modelSelectorModels(List.of(testModel()))
+            .build();
+
+        assertThat(session.authSelection().allProviders())
+            .extracting(PiInteractiveSession.AuthProvider::providerId)
+            .contains("anthropic", "github", "gitlab");
+    }
+
     private static Model testModel() {
         return new Model(
             "claude-sonnet",

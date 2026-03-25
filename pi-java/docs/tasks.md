@@ -1,6 +1,6 @@
 # pi-java implementation tasks
 
-Updated: 2026-03-24
+Updated: 2026-03-25
 
 ## Working rules
 
@@ -68,13 +68,14 @@ Updated: 2026-03-24
   - `pi-cli` now also has real distribution outputs: a runnable self-contained jar (`:pi-cli:fatJar`) plus a staged distribution directory and zip (`:pi-cli:piDistDir`, `:pi-cli:piDistZip`) with launch scripts and packaged changelog.
   - `pi-cli` now also builds a native app image and zip via `jpackage` (`:pi-cli:piAppImage`, `:pi-cli:piAppImageZip`), and the generated Windows launcher has been smoke-tested with `--version`.
   - Those staged distributions now also carry the packaged `README.md`, `docs/`, and `examples/`, and `PiPackagePaths` now resolves those packaged asset roots in the same workspace/override/code-source order as changelog lookup.
-  - Auth-backed package management and distribution outputs are still later phase-9 work.
+  - Saved auth tokens now also back private git package installs and updates across package commands, startup discovery, and `config`, and Java login selectors now expose GitHub and GitLab for that flow too.
+  - Windows installer packaging is still pending because this machine does not currently have the required WiX toolchain for `jpackage --type exe`.
 
 ## Current next slices
 
-1. Continue phase-9 distribution work from the new runnable jar/dist/native-image outputs into installer packaging.
-2. Decide whether Java should add auth-backed package management before or alongside installer work.
-3. Decide whether Java should stay with token-entry `/login` or later add full browser-driven OAuth flows.
+1. Continue phase-9 distribution work from the runnable jar/dist/native-image outputs into installer packaging once the installer toolchain is available.
+2. Decide whether Java should stay with token-entry `/login` for package hosts or later add fuller browser-driven login flows.
+3. Decide whether phase 9 should add private npm registry auth, or stop at git-host package auth for now.
 
 ## Milestones
 

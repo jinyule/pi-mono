@@ -2,6 +2,7 @@ package dev.pi.cli;
 
 import dev.pi.session.PackageSourceManager;
 import dev.pi.session.SettingsManager;
+import dev.pi.session.AuthStorage;
 import dev.pi.tui.Terminal;
 import dev.pi.tui.Tui;
 import java.io.IOException;
@@ -16,11 +17,17 @@ final class PiConfigCommand {
     private final Path cwd;
     private final Appendable stdout;
     private final Supplier<Terminal> terminalFactory;
+    private final AuthStorage authStorage;
 
     PiConfigCommand(Path cwd, Appendable stdout, Supplier<Terminal> terminalFactory) {
+        this(cwd, stdout, terminalFactory, AuthStorage.create());
+    }
+
+    PiConfigCommand(Path cwd, Appendable stdout, Supplier<Terminal> terminalFactory, AuthStorage authStorage) {
         this.cwd = Objects.requireNonNull(cwd, "cwd").toAbsolutePath().normalize();
         this.stdout = Objects.requireNonNull(stdout, "stdout");
         this.terminalFactory = Objects.requireNonNull(terminalFactory, "terminalFactory");
+        this.authStorage = Objects.requireNonNull(authStorage, "authStorage");
     }
 
     CompletionStage<Boolean> runIfMatched(String... argv) {
@@ -38,7 +45,7 @@ final class PiConfigCommand {
         }
 
         var settingsManager = SettingsManager.create(cwd);
-        var packageSourceManager = new PackageSourceManager(cwd, settingsManager);
+        var packageSourceManager = new PackageSourceManager(cwd, settingsManager, authStorage);
         var resolver = new PiConfigResolver(settingsManager, packageSourceManager);
         runSelector(resolver);
         return CompletableFuture.completedFuture(true);

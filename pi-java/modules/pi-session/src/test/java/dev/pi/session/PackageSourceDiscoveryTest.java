@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -155,9 +156,34 @@ class PackageSourceDiscoveryTest {
         )).containsExactly(projectPackage.resolve("themes").toAbsolutePath().normalize());
     }
 
+    @Test
+    void installsMissingGitPackagesWithSavedGithubCredentials() throws Exception {
+        var cwd = tempDir.resolve("workspace");
+        var agentDir = tempDir.resolve("agent");
+        Files.createDirectories(cwd);
+        Files.createDirectories(agentDir);
+        var installedPackage = agentDir.resolve("git").resolve("github.com").resolve("acme").resolve("private-pack");
+        var authStorage = AuthStorage.inMemory();
+        authStorage.setApiKey("github", "gh-private-token");
+        var commandRunner = new FakeCommandRunner(installedPackage);
+        var manager = new PackageSourceManager(cwd, agentDir, SettingsManager.inMemory(), commandRunner, null, authStorage);
+        var discovery = new PackageSourceDiscovery(manager, true);
+
+        var resolved = discovery.resolve(
+            List.of(new PackageSource("git:git@github.com:acme/private-pack.git", List.of(), List.of(), List.of(), List.of("themes"))),
+            List.of(),
+            PackageSourceDiscovery.ResourceType.THEMES
+        );
+
+        assertThat(resolved).containsExactly(installedPackage.resolve("themes").toAbsolutePath().normalize());
+        assertThat(commandRunner.environments)
+            .anySatisfy(environment -> assertThat(environment).containsEntry("GIT_CONFIG_VALUE_0", "Authorization: Bearer gh-private-token"));
+    }
+
     private static final class FakeCommandRunner implements PackageSourceManager.CommandRunner {
         private final Path installedPackage;
         private final List<String> commands = new ArrayList<>();
+        private final List<Map<String, String>> environments = new ArrayList<>();
 
         private FakeCommandRunner(Path installedPackage) {
             this.installedPackage = installedPackage;
@@ -165,8 +191,14 @@ class PackageSourceDiscoveryTest {
 
         @Override
         public void run(List<String> command, Path cwd) {
+            run(command, cwd, Map.of());
+        }
+
+        @Override
+        public void run(List<String> command, Path cwd, Map<String, String> environment) {
             var joined = String.join(" ", command);
             commands.add(joined);
+            environments.add(Map.copyOf(environment));
             if (joined.contains("install") && joined.contains("@acme/theme-pack")) {
                 try {
                     Files.createDirectories(installedPackage.resolve("themes"));
@@ -175,11 +207,25 @@ class PackageSourceDiscoveryTest {
                     throw new IllegalStateException(exception);
                 }
             }
+            if (joined.contains("clone") && joined.contains("private-pack")) {
+                try {
+                    Files.createDirectories(installedPackage.resolve("themes"));
+                    Files.writeString(installedPackage.resolve("themes").resolve("private.json"), "{}");
+                } catch (Exception exception) {
+                    throw new IllegalStateException(exception);
+                }
+            }
         }
 
         @Override
         public String runCapture(List<String> command, Path cwd) {
+            return runCapture(command, cwd, Map.of());
+        }
+
+        @Override
+        public String runCapture(List<String> command, Path cwd, Map<String, String> environment) {
             commands.add(String.join(" ", command));
+            environments.add(Map.copyOf(environment));
             return "";
         }
     }
