@@ -66,12 +66,13 @@ Updated: 2026-03-24
   - Java CLI now also exposes `config`, with a package-resource selector for enabling and disabling package-provided extensions, skills, prompts, and themes from configured sources.
   - Java now auto-installs missing remote package sources during startup resource resolution and `config`, and project package entries now win over duplicate global entries for the same package identity.
   - `pi-cli` now also has real distribution outputs: a runnable self-contained jar (`:pi-cli:fatJar`) plus a staged distribution directory and zip (`:pi-cli:piDistDir`, `:pi-cli:piDistZip`) with launch scripts and packaged changelog.
+  - `pi-cli` now also builds a native app image and zip via `jpackage` (`:pi-cli:piAppImage`, `:pi-cli:piAppImageZip`), and the generated Windows launcher has been smoke-tested with `--version`.
   - Auth-backed package management and distribution outputs are still later phase-9 work.
 
 ## Current next slices
 
-1. Continue phase-9 distribution work from the new runnable jar/dist outputs into native installer or image packaging.
-2. Decide whether Java should add auth-backed package management before or alongside native distribution work.
+1. Continue phase-9 distribution work from the new runnable jar/dist/native-image outputs into installer packaging or broader bundled assets.
+2. Decide whether Java should add auth-backed package management before or alongside installer work.
 3. Decide whether Java should stay with token-entry `/login` or later add full browser-driven OAuth flows.
 
 ## Milestones

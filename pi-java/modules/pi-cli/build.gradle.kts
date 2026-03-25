@@ -14,7 +14,10 @@ val cliMainClass = "dev.pi.cli.PiCliMain"
 val fatJarName = "pi-java-cli-all.jar"
 val distributionDir = layout.buildDirectory.dir("dist")
 val generatedScriptsDir = layout.buildDirectory.dir("generated/dist-scripts")
+val jpackageInputDir = layout.buildDirectory.dir("jpackage/input")
+val jpackageOutputDir = layout.buildDirectory.dir("jpackage/image")
 val packagedChangelog = rootProject.projectDir.parentFile.resolve("packages").resolve("coding-agent").resolve("CHANGELOG.md")
+val normalizedAppVersion = project.version.toString().substringBefore('-')
 
 application {
     mainClass.set(cliMainClass)
@@ -131,4 +134,49 @@ tasks.register<Zip>("piDistZip") {
     archiveVersion.set(project.version.toString())
     destinationDirectory.set(layout.buildDirectory.dir("distributions"))
     from(distributionDir)
+}
+
+tasks.register<Sync>("prepareJpackageInput") {
+    group = "distribution"
+    description = "Prepares the self-contained jar input directory for jpackage."
+    dependsOn(fatJar)
+    into(jpackageInputDir)
+    from(fatJar.flatMap { it.archiveFile })
+}
+
+tasks.register<Exec>("piAppImage") {
+    group = "distribution"
+    description = "Builds a native app-image for pi-java CLI via jpackage."
+    dependsOn("prepareJpackageInput")
+
+    inputs.dir(jpackageInputDir)
+    outputs.dir(jpackageOutputDir.map { it.dir("pi-java") })
+
+    doFirst {
+        delete(jpackageOutputDir)
+        jpackageOutputDir.get().asFile.mkdirs()
+    }
+
+    commandLine(
+        "jpackage",
+        "--type", "app-image",
+        "--input", jpackageInputDir.get().asFile.absolutePath,
+        "--dest", jpackageOutputDir.get().asFile.absolutePath,
+        "--name", "pi-java",
+        "--main-jar", fatJarName,
+        "--main-class", cliMainClass,
+        "--app-version", normalizedAppVersion,
+        "--vendor", "dev.pi",
+        "--description", "pi-java CLI"
+    )
+}
+
+tasks.register<Zip>("piAppImageZip") {
+    group = "distribution"
+    description = "Builds a zip archive of the native pi-java app-image."
+    dependsOn("piAppImage")
+    archiveBaseName.set("pi-java-app-image")
+    archiveVersion.set(project.version.toString())
+    destinationDirectory.set(layout.buildDirectory.dir("distributions"))
+    from(jpackageOutputDir.map { it.dir("pi-java") })
 }
