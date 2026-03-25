@@ -69,6 +69,7 @@ Updated: 2026-03-25
   - `pi-cli` now also builds a native app image and zip via `jpackage` (`:pi-cli:piAppImage`, `:pi-cli:piAppImageZip`), and the generated Windows launcher has been smoke-tested with `--version`.
   - Those staged distributions now also carry the packaged `README.md`, `docs/`, and `examples/`, and `PiPackagePaths` now resolves those packaged asset roots in the same workspace/override/code-source order as changelog lookup.
   - Saved auth tokens now also back private git package installs and updates across package commands, startup discovery, and `config`, and Java login selectors now expose GitHub and GitLab for that flow too.
+  - `pi-cli` now also assembles a release bundle directory via `:pi-cli:piReleaseBundle`, including versioned jar/zip artifacts, `SHA256SUMS.txt`, `release-manifest.json`, and smoke-tested artifact verification through `:pi-cli:piSmokeTestArtifacts`.
   - Windows installer packaging is still pending because this machine does not currently have the required WiX toolchain for `jpackage --type exe`.
 
 ## Current next slices

@@ -23,9 +23,10 @@ Add the missing Java-side packaging surface that phase 8 deliberately deferred:
 4. `pi-java/docs/handoff/phase-9-package-sources-distribution-config.md`
 5. `pi-java/docs/handoff/phase-9-package-sources-distribution-resolution.md`
 6. `pi-java/docs/handoff/phase-9-package-sources-distribution-auth-packages.md`
-7. `pi-java/docs/handoff/phase-9-package-sources-distribution-artifacts.md`
-8. `pi-java/docs/handoff/phase-9-package-sources-distribution-native-image.md`
-9. `pi-java/docs/handoff/phase-9-package-sources-distribution-packaged-assets.md`
+7. `pi-java/docs/handoff/phase-9-package-sources-distribution-release-bundle.md`
+8. `pi-java/docs/handoff/phase-9-package-sources-distribution-artifacts.md`
+9. `pi-java/docs/handoff/phase-9-package-sources-distribution-native-image.md`
+10. `pi-java/docs/handoff/phase-9-package-sources-distribution-packaged-assets.md`
 
 ## Current continuity point
 
@@ -39,4 +40,5 @@ Add the missing Java-side packaging surface that phase 8 deliberately deferred:
 - Those distribution outputs now also carry the packaged `README.md`, `docs/`, and `examples/`, and Java now resolves those packaged asset roots explicitly via `PiPackagePaths`.
 - Saved auth tokens now also back private GitHub and GitLab package installs and updates, and those same credentials now flow through startup discovery and `config`.
 - Java login selectors now surface GitHub and GitLab so users can save package-host tokens without typing provider ids from memory.
+- Java now also assembles a release bundle directory with versioned artifacts, checksums, a manifest, and smoke-tested artifact verification.
 - The next slice should move back to installer packaging once WiX is available locally, or stay on auth UX if the package-host login flow needs more than token entry.
